@@ -1,0 +1,11 @@
+[package]
+name = "spotify-tui"
+version = "0.1.0"
+authors = ["Rigellute <rigellute@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rspotify = "0.6.0"
+cursive = "0.12.0"
