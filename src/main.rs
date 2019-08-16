@@ -43,31 +43,46 @@ fn main() {
             let devices = spotify.device();
             println!("{:?}", devices);
 
+            // TODO: Create a step for selecting which device to play
             let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
-            let uris = vec!["spotify:track:3ZFwuJwUpIl0GeXsvF1ELf".to_owned()];
 
             let query = "abba";
             let tracks = match spotify.search_track(query, 10, 0, Some(Country::UnitedKingdom)) {
-                Ok(tracks) => tracks,
+                Ok(result) => result.tracks,
                 Err(_) => return (),
             };
 
-            // match spotify.start_playback(Some(device_id), None, Some(uris), for_position(0)) {
-            //     Ok(_) => println!("start playback successful"),
-            //     Err(e) => eprintln!("start playback failed {}", e),
-            // }
             let mut select = SelectView::new()
                 // Center the text horizontally
                 .h_align(HAlign::Center)
                 // Use keyboard to jump to the pressed letters
                 .autojump();
 
-            for item in &tracks.tracks.items {
-                select.add_item(&item.name, &item.uri);
+            for item in &tracks.items {
+                select.add_item(item.name.to_owned(), item.uri.to_owned());
             }
 
             // Sets the callback for when "Enter" is pressed.
-            select.set_on_submit(show_next_window);
+            select.set_on_submit(move |siv: &mut Cursive, song_id: &str| {
+                siv.pop_layer();
+                let selected_track = tracks
+                    .clone()
+                    .items
+                    .into_iter()
+                    .find(|item| item.uri == song_id);
+
+                let text = format!("Playing {}!", &selected_track.unwrap().name);
+                siv.add_layer(Dialog::around(TextView::new(text)).button("Quit", |s| s.quit()));
+                match spotify.start_playback(
+                    Some(device_id.to_owned()),
+                    None,
+                    Some(vec![song_id.to_owned()]),
+                    for_position(0),
+                ) {
+                    Ok(_) => println!("start playback successful"),
+                    Err(e) => eprintln!("start playback failed {}", e),
+                }
+            });
 
             // Let's override the `j` and `k` keys for navigation
             let select = OnEventView::new(select)
