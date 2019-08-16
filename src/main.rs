@@ -155,48 +155,21 @@ fn search_for_track(siv: &mut Cursive, query: &str) {
             artist: create_arist_string(&item.artists),
             name: item.name.clone(),
             album: item.album.name.clone(),
+            uri: item.uri.clone(),
         })
         .collect();
 
-    table::build_tracks_table(siv, items);
-
-    return;
-
-    let mut select = SelectView::new()
-        // Center the text horizontally
-        .h_align(HAlign::Center)
-        // Use keyboard to jump to the pressed letters
-        .autojump();
-
-    for item in &tracks.items {
-        select.add_item(item.name.to_owned(), item.uri.to_owned());
-    }
-
-    // Sets the callback for when "Enter" is pressed.
-    select.set_on_submit(show_tracks);
-
-    // Let's override the `j` and `k` keys for navigation
-    let select = OnEventView::new(select)
-        .on_pre_event_inner('k', |s, _| {
-            s.select_up(1);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner('j', |s, _| {
-            s.select_down(1);
-            Some(EventResult::Consumed(None))
-        });
-
-    // Let's add a BoxView to keep the list at a reasonable size
-    // (it can scroll anyway).
+    let mut table_view = table::build_tracks_table(siv);
+    table_view.set_items(items.clone());
+    table_view.set_on_submit(move |siv: &mut Cursive, row: usize, index: usize| {
+        play_track(siv, &items[index].uri);
+    });
     siv.add_layer(
-        Dialog::around(select.scrollable().fixed_size((20, 10)))
-            .title("What is the name of the track?"),
+        Dialog::around(table_view.with_id("table").min_size((100, 40))).title("Table View"),
     );
 }
 
-// Let's put the callback in a separate function to keep it clean,
-// but it's not required.
-fn show_tracks(siv: &mut Cursive, song_id: &str) {
+fn play_track(siv: &mut Cursive, song_id: &String) {
     siv.pop_layer();
     let Data { spotify, device_id } = siv.user_data::<Data>().unwrap();
 
