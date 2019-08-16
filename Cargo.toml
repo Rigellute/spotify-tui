@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 rspotify = "0.6.0"
 cursive = "0.12.0"
+cursive_table_view = "0.10.0"

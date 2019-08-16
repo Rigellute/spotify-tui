@@ -255,6 +255,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cursive_table_view"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cursive 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "darling"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1351,6 +1359,7 @@ name = "spotify-tui"
 version = "0.1.0"
 dependencies = [
  "cursive 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cursive_table_view 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rspotify 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1785,6 +1794,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum crossbeam-queue 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7c979cd6cfe72335896575c6b5688da489e420d36a27a0b9eb0c73db574b4a4b"
 "checksum crossbeam-utils 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)" = "04973fa96e96579258a5091af6003abde64af786b860f18622b82e026cca60e6"
 "checksum cursive 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b7ecc7282b5361471b607c26f44148205607e26d48a2fc65bd16e7619b1ebb78"
+"checksum cursive_table_view 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9dd5f62c7bef9a9fbbe65b39c5a7453e394bfca01034b7c22ac07cc330005a03"
 "checksum darling 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fcfbcb0c5961907597a7d1148e3af036268f2b773886b8bb3eeb1e1281d3d3d6"
 "checksum darling_core 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6afc018370c3bff3eb51f89256a6bdb18b4fdcda72d577982a14954a7a0b402c"
 "checksum darling_macro 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c6d8dac1c6f1d29a41c4712b4400f878cb4fcc4c7628f298dd75038e024998d1"
