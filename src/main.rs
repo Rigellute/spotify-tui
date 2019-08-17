@@ -1,9 +1,8 @@
 use cursive::align::HAlign;
-use cursive::event::EventResult;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{CircularFocus, Dialog, EditView, OnEventView, Panel, SelectView, TextView};
+use cursive::views::{CircularFocus, Dialog, EditView, OnEventView, Panel, TextView};
 use cursive::Cursive;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::artist::SimplifiedArtist;
@@ -21,6 +20,8 @@ struct Data {
 fn main() {
     // Initialize the cursive logger.
     cursive::logger::init();
+
+    // Start authorization with spotify
     let mut oauth = SpotifyOAuth::default()
         .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing")
         .build();
@@ -33,12 +34,10 @@ fn main() {
             let spotify = Spotify::default()
                 .client_credentials_manager(client_credential)
                 .build();
-            let devices = spotify.device();
-            println!("{:?}", devices);
-
-            let context = spotify.current_playing(None);
 
             // TODO: Create a step for selecting which device to play
+            let devices = spotify.device();
+            println!("{:?}", devices);
             let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
 
             let mut siv = Cursive::default();
@@ -49,6 +48,8 @@ fn main() {
             // We can quit by pressing `q`
             siv.add_global_callback('q', Cursive::quit);
 
+            // If a song is already playing, show it. This could be it's own component.
+            let context = spotify.current_playing(None);
             if let Ok(ctx) = context {
                 if let Some(c) = ctx {
                     if let Some(item) = c.item {
@@ -58,7 +59,7 @@ fn main() {
                                     TextView::new(format!(
                                         "Playing {} - {}",
                                         item.name,
-                                        create_arist_string(&item.artists)
+                                        create_artist_string(&item.artists)
                                     ))
                                     .scrollable(),
                                 ))
@@ -71,17 +72,8 @@ fn main() {
                 }
             };
 
+            // Attach data to siv to make it easier to access within the callbacks
             siv.set_user_data(Data { spotify, device_id });
-            siv.add_layer(
-                // Most views can be configured in a chainable way
-                CircularFocus::wrap_tab(
-                    Dialog::around(TextView::new("Use ctrl-f to search"))
-                        .title("Spotify TUI")
-                        .button("Ok", |s| {
-                            s.pop_layer();
-                        }),
-                ),
-            );
 
             siv.add_global_callback('q', cursive::Cursive::quit);
 
@@ -121,13 +113,12 @@ fn main() {
 }
 
 fn search_for_track(siv: &mut Cursive, query: &str) {
-    // First, remove the find popup
     siv.pop_layer();
 
     let data = siv.user_data::<Data>().unwrap();
     let tracks = match data
         .spotify
-        .search_track(query, 10, 0, Some(Country::UnitedKingdom))
+        .search_track(query, 20, 0, Some(Country::UnitedKingdom))
     {
         Ok(result) => result.tracks,
         Err(_) => return,
@@ -148,35 +139,36 @@ fn search_for_track(siv: &mut Cursive, query: &str) {
         return;
     }
 
+    // Now there are results, display them in a table
     let items: Vec<table::Track> = tracks
         .items
         .iter()
         .map(|item| table::Track {
-            artist: create_arist_string(&item.artists),
+            artist: create_artist_string(&item.artists),
             name: item.name.clone(),
             album: item.album.name.clone(),
             uri: item.uri.clone(),
         })
         .collect();
 
-    let mut table_view = table::build_tracks_table(siv);
+    let mut table_view = table::build_tracks_table();
     table_view.set_items(items.clone());
-    table_view.set_on_submit(move |siv: &mut Cursive, row: usize, index: usize| {
+
+    // When the user selects a song to play, start playing it
+    table_view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
         play_track(siv, &items[index].uri);
     });
-    siv.add_layer(
-        Dialog::around(table_view.with_id("table").min_size((100, 40))).title("Table View"),
-    );
+    siv.add_layer(Dialog::around(table_view.with_id("table").min_size((100, 40))).title("Tracks"));
 }
 
-fn play_track(siv: &mut Cursive, song_id: &String) {
+fn play_track(siv: &mut Cursive, uri: &str) {
     siv.pop_layer();
     let Data { spotify, device_id } = siv.user_data::<Data>().unwrap();
 
     match spotify.start_playback(
         Some(device_id.to_owned()),
         None,
-        Some(vec![song_id.to_owned()]),
+        Some(vec![uri.to_owned()]),
         for_position(0),
     ) {
         Ok(_) => println!("start playback successful"),
@@ -193,7 +185,7 @@ fn custom_theme_from_cursive(siv: &Cursive) -> Theme {
     theme
 }
 
-fn create_arist_string(artists: &Vec<SimplifiedArtist>) -> String {
+fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
     artists
         .iter()
         .fold("".to_string(), |artist_string, artist| {
