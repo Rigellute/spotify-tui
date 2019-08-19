@@ -18,6 +18,7 @@ use util::{Event, Events};
 struct App<'a> {
     items: Vec<Vec<&'a str>>,
     selected: usize,
+    focus_block: usize,
 }
 
 impl<'a> App<'a> {
@@ -32,6 +33,7 @@ impl<'a> App<'a> {
                 vec!["Row61", "Row62", "Row63"],
             ],
             selected: 0,
+            focus_block: 0,
         }
     }
 }
@@ -53,7 +55,7 @@ fn main() -> Result<(), failure::Error> {
     // Input
     loop {
         terminal.draw(|mut f| {
-            let selected_style = Style::default().fg(Color::Yellow).modifier(Modifier::BOLD);
+            let selected_style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
             let normal_style = Style::default().fg(Color::White);
             let header = ["Header1", "Header2", "Header3"];
             let rows = app.items.iter().enumerate().map(|(i, item)| {
@@ -67,16 +69,30 @@ fn main() -> Result<(), failure::Error> {
             let rects = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
-                .margin(5)
+                .margin(2)
                 .split(f.size());
 
             Block::default()
                 .title("Block")
                 .borders(Borders::ALL)
+                .border_style(Style::default().fg(if app.focus_block == 0 {
+                    Color::Green
+                } else {
+                    Color::White
+                }))
                 .render(&mut f, rects[0]);
 
             Table::new(header.into_iter(), rows)
-                .block(Block::default().borders(Borders::ALL).title("Table"))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Table")
+                        .border_style(Style::default().fg(if app.focus_block == 1 {
+                            Color::Green
+                        } else {
+                            Color::White
+                        })),
+                )
                 .widths(&[10, 10, 10])
                 .render(&mut f, rects[1]);
         })?;
@@ -85,6 +101,12 @@ fn main() -> Result<(), failure::Error> {
             Event::Input(key) => match key {
                 Key::Char('q') => {
                     break;
+                }
+                Key::Char('h') => {
+                    app.focus_block = 0;
+                }
+                Key::Char('l') => {
+                    app.focus_block = 1;
                 }
                 Key::Down => {
                     app.selected += 1;
