@@ -4,8 +4,10 @@ A Spotify client for the terminal.
 
 ### TODO
 
+- [ ] Add `clap` for the cli
 - [x] Add search for track
 - [x] Display search results in a table
+- [x] Allow user to start playing that song
 - [x] Show currently playing song
   - [ ] Can I connect to a socket to always be in sync? Or do I need to poll the API?
 - [ ] Handle device offline. Can we have an offline mode?
