@@ -29,7 +29,7 @@ enum ActiveBlock {
     SongTable,
 }
 
-struct App<'a> {
+struct App {
     // TODO: figure out how to store the actual response `SearchTracks`
     songs: Vec<Vec<String>>,
     song_ids: Vec<String>,
@@ -37,14 +37,14 @@ struct App<'a> {
     selected_song: usize,
     selected_playlist: Option<usize>,
     active_block: ActiveBlock,
-    playlists: Vec<&'a str>,
+    playlists: Vec<String>,
 }
 
-impl<'a> App<'a> {
-    fn new() -> App<'a> {
+impl App {
+    fn new() -> App {
         App {
             input: String::new(),
-            playlists: vec!["Liked songs", "Made for you"],
+            playlists: vec![],
             songs: vec![],
             song_ids: vec![],
             selected_song: 0,
@@ -55,25 +55,24 @@ impl<'a> App<'a> {
 }
 
 fn main() -> Result<(), failure::Error> {
-    // Terminal initialization
-    let stdout = io::stdout().into_raw_mode()?;
-    let stdout = MouseTerminal::from(stdout);
-    let stdout = AlternateScreen::from(stdout);
-    let backend = TermionBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-    terminal.hide_cursor()?;
-
-    let events = Events::new();
-
-    // App
-    let mut app = App::new();
-
     // Start authorization with spotify
     let mut oauth = SpotifyOAuth::default()
-        .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing")
+        .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing playlist-read-private")
         .build();
     match get_token(&mut oauth) {
         Some(token_info) => {
+            // Terminal initialization
+            let stdout = io::stdout().into_raw_mode()?;
+            let stdout = MouseTerminal::from(stdout);
+            let stdout = AlternateScreen::from(stdout);
+            let backend = TermionBackend::new(stdout);
+            let mut terminal = Terminal::new(backend)?;
+            terminal.hide_cursor()?;
+
+            let events = Events::new();
+
+            // App
+            let mut app = App::new();
             let client_credential = SpotifyClientCredentials::default()
                 .token_info(token_info)
                 .build();
@@ -85,6 +84,15 @@ fn main() -> Result<(), failure::Error> {
             // TODO: Create a step for selecting which device to play
             let devices = spotify.device();
             let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
+
+            let playlists = spotify.current_user_playlists(10, None);
+
+            app.playlists = playlists
+                .unwrap()
+                .items
+                .iter()
+                .map(|playlist| playlist.name.to_owned())
+                .collect();
 
             loop {
                 terminal.draw(|mut f| {
@@ -180,8 +188,8 @@ fn main() -> Result<(), failure::Error> {
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace
                 io::stdout().flush().ok();
 
-                match events.next()? {
-                    Event::Input(key) => match key {
+                if let Event::Input(key) = events.next()? {
+                    match key {
                         Key::Char('q') | Key::Ctrl('c') => {
                             break;
                         }
@@ -298,9 +306,8 @@ fn main() -> Result<(), failure::Error> {
                             }
                         }
                         _ => {}
-                    },
-                    _ => {}
-                };
+                    }
+                }
             }
         }
         None => println!("Auth failed"),
