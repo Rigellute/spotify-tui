@@ -56,271 +56,305 @@ impl App {
 
 fn main() -> Result<(), failure::Error> {
     // Start authorization with spotify
-    let mut oauth = SpotifyOAuth::default()
-        .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing playlist-read-private")
-        .build();
-    match get_token(&mut oauth) {
-        Some(token_info) => {
-            // Terminal initialization
-            let stdout = io::stdout().into_raw_mode()?;
-            let stdout = MouseTerminal::from(stdout);
-            let stdout = AlternateScreen::from(stdout);
-            let backend = TermionBackend::new(stdout);
-            let mut terminal = Terminal::new(backend)?;
-            terminal.hide_cursor()?;
+    // let mut oauth = SpotifyOAuth::default()
+    //     .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing playlist-read-private")
+    //     .build();
+    // match get_token(&mut oauth) {
+    //     Some(token_info) => {
+    // Terminal initialization
+    let stdout = io::stdout().into_raw_mode()?;
+    let stdout = MouseTerminal::from(stdout);
+    let stdout = AlternateScreen::from(stdout);
+    let backend = TermionBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.hide_cursor()?;
 
-            let events = Events::new();
+    let events = Events::new();
 
-            // App
-            let mut app = App::new();
-            let client_credential = SpotifyClientCredentials::default()
-                .token_info(token_info)
-                .build();
+    // App
+    let mut app = App::new();
 
-            let spotify = Spotify::default()
-                .client_credentials_manager(client_credential)
-                .build();
+    // let client_credential = SpotifyClientCredentials::default()
+    //     .token_info(token_info)
+    //     .build();
 
-            // TODO: Create a step for selecting which device to play
-            let devices = spotify.device();
-            let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
+    // let spotify = Spotify::default()
+    //     .client_credentials_manager(client_credential)
+    //     .build();
 
-            let playlists = spotify.current_user_playlists(10, None);
+    // // TODO: Create a step for selecting which device to play
+    // let devices = spotify.device();
+    // let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
 
-            app.playlists = playlists
-                .unwrap()
-                .items
-                .iter()
-                .map(|playlist| playlist.name.to_owned())
-                .collect();
+    // let playlists = spotify.current_user_playlists(10, None);
 
-            loop {
-                terminal.draw(|mut f| {
-                    let selected_style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
-                    let normal_style = Style::default().fg(Color::White);
-                    let header = ["Title", "Artist", "Album"];
-                    let rows = app.songs.iter().enumerate().map(|(i, item)| {
-                        if i == app.selected_song {
-                            Row::StyledData(item.iter(), selected_style)
-                        } else {
-                            Row::StyledData(item.iter(), normal_style)
-                        }
-                    });
+    // app.playlists = playlists
+    //     .unwrap()
+    //     .items
+    //     .iter()
+    //     .map(|playlist| playlist.name.to_owned())
+    //     .collect();
 
-                    let size = f.size();
-
-                    let parent_layout = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints([Constraint::Length(3), Constraint::Min(1)].as_ref())
-                        .margin(2)
-                        .split(size);
-
-                    {
-                        let chunks = Layout::default()
-                            .direction(Direction::Horizontal)
-                            .constraints([Constraint::Percentage(100)].as_ref())
-                            .split(parent_layout[0]);
-
-                        Paragraph::new([Text::raw(&app.input)].iter())
-                            .style(Style::default().fg(Color::Yellow))
-                            .block(
-                                Block::default()
-                                    .borders(Borders::ALL)
-                                    .title("Input")
-                                    .border_style(Style::default().fg(get_border_color(
-                                        &app.active_block,
-                                        ActiveBlock::Input,
-                                    ))),
-                            )
-                            .render(&mut f, chunks[0]);
-                    }
-
-                    // Playlist and song block
-                    {
-                        let chunks = Layout::default()
-                            .direction(Direction::Horizontal)
-                            .constraints(
-                                [Constraint::Percentage(20), Constraint::Percentage(80)].as_ref(),
-                            )
-                            .split(parent_layout[1]);
-
-                        SelectableList::default()
-                            .block(
-                                Block::default()
-                                    .title("Playlists")
-                                    .borders(Borders::ALL)
-                                    .border_style(Style::default().fg(get_border_color(
-                                        &app.active_block,
-                                        ActiveBlock::Playlist,
-                                    ))),
-                            )
-                            .items(&app.playlists)
-                            .select(app.selected_playlist)
-                            .highlight_style(
-                                Style::default()
-                                    .fg(Color::LightGreen)
-                                    .modifier(Modifier::BOLD),
-                            )
-                            .highlight_symbol(">")
-                            .render(&mut f, chunks[0]);
-
-                        Table::new(header.iter(), rows)
-                            .block(
-                                Block::default()
-                                    .borders(Borders::ALL)
-                                    .title("Songs")
-                                    .border_style(Style::default().fg(get_border_color(
-                                        &app.active_block,
-                                        ActiveBlock::SongTable,
-                                    ))),
-                            )
-                            .widths(&[40, 40, 40])
-                            .render(&mut f, chunks[1]);
-                    }
-                })?;
-
-                // Put the cursor back inside the input box
-                write!(
-                    terminal.backend_mut(),
-                    "{}",
-                    Goto(4 + app.input.len() as u16, 4)
-                )?;
-                // stdout is buffered, flush it to see the effect immediately when hitting backspace
-                io::stdout().flush().ok();
-
-                if let Event::Input(key) = events.next()? {
-                    match key {
-                        Key::Char('q') | Key::Ctrl('c') => {
-                            break;
-                        }
-                        Key::Char('/') => {
-                            app.active_block = ActiveBlock::Input;
-                        }
-                        Key::Ctrl('u') => {
-                            if app.active_block == ActiveBlock::Input {
-                                app.input = String::new();
-                            }
-                        }
-                        Key::Left | Key::Char('h') => match app.active_block {
-                            ActiveBlock::Playlist => {} // Could wrap around and go to SongTable, like tmux?
-                            ActiveBlock::SongTable => {
-                                app.active_block = ActiveBlock::Playlist;
-                            }
-                            ActiveBlock::Input => app.input.push('h'),
-                        },
-                        Key::Right | Key::Char('l') => match app.active_block {
-                            ActiveBlock::Playlist => {
-                                app.active_block = ActiveBlock::SongTable;
-                            }
-                            ActiveBlock::SongTable => {}
-                            ActiveBlock::Input => app.input.push('l'),
-                        },
-                        Key::Down | Key::Char('j') => match app.active_block {
-                            ActiveBlock::Playlist => {
-                                app.selected_playlist =
-                                    if let Some(selected_playlist) = app.selected_playlist {
-                                        if selected_playlist >= app.playlists.len() - 1 {
-                                            Some(0)
-                                        } else {
-                                            Some(selected_playlist + 1)
-                                        }
-                                    } else {
-                                        Some(0)
-                                    }
-                            }
-                            ActiveBlock::SongTable => {
-                                app.selected_song += 1;
-                                if app.selected_song > app.songs.len() - 1 {
-                                    app.selected_song = 0;
-                                }
-                            }
-                            ActiveBlock::Input => {
-                                // NOTE: this will also type `j` if the user presses the down arrow!
-                                app.input.push('j');
-                            }
-                        },
-                        Key::Up | Key::Char('k') => match app.active_block {
-                            ActiveBlock::Playlist => {
-                                app.selected_playlist =
-                                    if let Some(selected_playlist) = app.selected_playlist {
-                                        if selected_playlist > 0 {
-                                            Some(selected_playlist - 1)
-                                        } else {
-                                            Some(app.songs.len() - 1)
-                                        }
-                                    } else {
-                                        Some(0)
-                                    }
-                            }
-                            ActiveBlock::SongTable => {
-                                if app.selected_song > 0 {
-                                    app.selected_song -= 1;
-                                } else {
-                                    app.selected_song = app.songs.len() - 1;
-                                }
-                            }
-                            ActiveBlock::Input => {
-                                // NOTE: this will also type `k` if the user presses the down arrow!
-                                app.input.push('k')
-                            }
-                        },
-                        Key::Char('\n') => match app.active_block {
-                            ActiveBlock::Input => {
-                                let result = spotify
-                                    .search_track(&app.input, 20, 0, Some(Country::UnitedKingdom))
-                                    .expect("Failed to fetch spotify tracks");
-
-                                app.songs = display_songs(&result);
-                                app.song_ids = result
-                                    .tracks
-                                    .items
-                                    .iter()
-                                    .map(|item| item.uri.to_owned())
-                                    .collect();
-                                app.active_block = ActiveBlock::SongTable;
-                            }
-                            ActiveBlock::Playlist => {}
-                            ActiveBlock::SongTable => {
-                                if let Some(uri) = app.song_ids.get(app.selected_song) {
-                                    spotify
-                                        .start_playback(
-                                            Some(device_id.to_owned()),
-                                            None,
-                                            Some(vec![uri.to_owned()]),
-                                            for_position(0),
-                                        )
-                                        // TODO: handle playback errors
-                                        .unwrap();
-                                };
-
-;                            }
-                        },
-                        Key::Char(c) => {
-                            if app.active_block == ActiveBlock::Input {
-                                app.input.push(c);
-                            }
-                        }
-                        Key::Backspace => {
-                            if app.active_block == ActiveBlock::Input {
-                                app.input.pop();
-                            }
-                        }
-                        _ => {}
-                    }
+    loop {
+        terminal.draw(|mut f| {
+            let selected_style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
+            let normal_style = Style::default().fg(Color::White);
+            let header = ["Title", "Artist", "Album"];
+            let rows = app.songs.iter().enumerate().map(|(i, item)| {
+                if i == app.selected_song {
+                    Row::StyledData(item.iter(), selected_style)
+                } else {
+                    Row::StyledData(item.iter(), normal_style)
                 }
+            });
+
+            let parent_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(1),
+                        Constraint::Length(3),
+                    ]
+                    .as_ref(),
+                )
+                .margin(2)
+                .split(f.size());
+
+            // Search input and help
+            {
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+                    .split(parent_layout[0]);
+
+                Paragraph::new([Text::raw(&app.input)].iter())
+                    .style(Style::default().fg(Color::Yellow))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Input")
+                            .title_style(get_color(&app.active_block, ActiveBlock::Input))
+                            .border_style(get_color(&app.active_block, ActiveBlock::Input)),
+                    )
+                    .render(&mut f, chunks[0]);
+
+                let block = Block::default()
+                    .title("Help")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Gray))
+                    .title_style(Style::default().fg(Color::Gray));
+
+                Paragraph::new([Text::raw("Type: ?")].iter())
+                    .block(block)
+                    .style(Style::default().fg(Color::Gray))
+                    .render(&mut f, chunks[1]);
+            }
+
+            // Playlist and song block
+            {
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
+                    .split(parent_layout[1]);
+
+                SelectableList::default()
+                    .block(
+                        Block::default()
+                            .title("Playlists")
+                            .borders(Borders::ALL)
+                            .title_style(get_color(&app.active_block, ActiveBlock::Playlist))
+                            .border_style(get_color(&app.active_block, ActiveBlock::Playlist)),
+                    )
+                    .items(&app.playlists)
+                    .select(app.selected_playlist)
+                    .highlight_style(
+                        Style::default()
+                            .fg(Color::LightGreen)
+                            .modifier(Modifier::BOLD),
+                    )
+                    .highlight_symbol(">")
+                    .render(&mut f, chunks[0]);
+
+                Table::new(header.iter(), rows)
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Songs")
+                            .title_style(get_color(&app.active_block, ActiveBlock::SongTable))
+                            .border_style(get_color(&app.active_block, ActiveBlock::SongTable)),
+                    )
+                    .widths(&[40, 40, 40])
+                    .render(&mut f, chunks[1]);
+            }
+
+            {
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(100)].as_ref())
+                    .split(parent_layout[2]);
+                Paragraph::new([Text::raw(&app.input)].iter())
+                    .style(Style::default().fg(Color::Yellow))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Playing")
+                            .title_style(Style::default().fg(Color::Magenta)),
+                    )
+                    .render(&mut f, chunks[0]);
+            }
+        })?;
+
+        // Put the cursor back inside the input box
+        write!(
+            terminal.backend_mut(),
+            "{}",
+            Goto(4 + app.input.len() as u16, 4)
+        )?;
+        // stdout is buffered, flush it to see the effect immediately when hitting backspace
+        io::stdout().flush().ok();
+
+        if let Event::Input(key) = events.next()? {
+            // Match events for different app states
+            match app.active_block {
+                ActiveBlock::Input => match key {
+                    Key::Char('q') | Key::Ctrl('c') => {
+                        break;
+                    }
+                    Key::Ctrl('u') => {
+                        if app.active_block == ActiveBlock::Input {
+                            app.input = String::new();
+                        }
+                    }
+                    Key::Esc => {
+                        if app.active_block == ActiveBlock::Input {
+                            app.active_block = ActiveBlock::Playlist;
+                        }
+                    }
+                    Key::Char('\n') => {
+
+                        // let result = spotify
+                        //     .search_track(&app.input, 20, 0, Some(Country::UnitedKingdom))
+                        //     .expect("Failed to fetch spotify tracks");
+
+                        // app.songs = display_songs(&result);
+                        // app.song_ids = result
+                        //     .tracks
+                        //     .items
+                        //     .iter()
+                        //     .map(|item| item.uri.to_owned())
+                        //     .collect();
+                        // app.active_block = ActiveBlock::SongTable;
+                    }
+                    Key::Char(c) => {
+                        if app.active_block == ActiveBlock::Input {
+                            app.input.push(c);
+                        }
+                    }
+                    Key::Backspace => {
+                        if app.active_block == ActiveBlock::Input {
+                            app.input.pop();
+                        }
+                    }
+                    _ => {}
+                },
+                ActiveBlock::Playlist => match key {
+                    Key::Char('q') | Key::Ctrl('c') => {
+                        break;
+                    }
+                    Key::Right | Key::Char('l') => {
+                        app.active_block = ActiveBlock::SongTable;
+                    }
+                    Key::Down | Key::Char('j') => {
+                        if !app.playlists.is_empty() {
+                            app.selected_playlist =
+                                if let Some(selected_playlist) = app.selected_playlist {
+                                    if selected_playlist >= app.playlists.len() - 1 {
+                                        Some(0)
+                                    } else {
+                                        Some(selected_playlist + 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                        }
+                    }
+                    Key::Up | Key::Char('k') => {
+                        if !app.playlists.is_empty() {
+                            app.selected_playlist =
+                                if let Some(selected_playlist) = app.selected_playlist {
+                                    if selected_playlist > 0 {
+                                        Some(selected_playlist - 1)
+                                    } else {
+                                        Some(app.playlists.len() - 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                        }
+                    }
+                    Key::Char('/') => {
+                        app.active_block = ActiveBlock::Input;
+                    }
+                    _ => {}
+                },
+                ActiveBlock::SongTable => match key {
+                    Key::Char('q') | Key::Ctrl('c') => {
+                        break;
+                    }
+                    Key::Left | Key::Char('h') => {
+                        app.active_block = ActiveBlock::Playlist;
+                    }
+                    Key::Down | Key::Char('j') => {
+                        if !app.songs.is_empty() {
+                            app.selected_song += 1;
+                            if app.selected_song > app.songs.len() - 1 {
+                                app.selected_song = 0;
+                            }
+                        }
+                    }
+                    Key::Up | Key::Char('k') => {
+                        if !app.songs.is_empty() {
+                            if app.selected_song > 0 {
+                                app.selected_song -= 1;
+                            } else {
+                                app.selected_song = app.songs.len() - 1;
+                            }
+                        }
+                    }
+                    Key::Char('/') => {
+                        app.active_block = ActiveBlock::Input;
+                    }
+                    Key::Char('\n') => {
+                        // if let Some(uri) = app.song_ids.get(app.selected_song) {
+                        //     spotify
+                        //         .start_playback(
+                        //             Some(device_id.to_owned()),
+                        //             None,
+                        //             Some(vec![uri.to_owned()]),
+                        //             for_position(0),
+                        //         )
+                        //         // TODO: handle playback errors
+                        //         .unwrap();
+                        // };
+                    }
+                    _ => {}
+                },
             }
         }
-        None => println!("Auth failed"),
     }
+    // }
+    // None => println!("Auth failed"),
+    // }
 
     Ok(())
 }
 
-fn get_border_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Color {
+fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
     if *active_block == block_to_match {
-        Color::Green
+        Style::default().fg(Color::LightCyan)
     } else {
-        Color::White
+        Style::default().fg(Color::Reset)
     }
 }
 
