@@ -150,7 +150,7 @@ fn main() -> Result<(), failure::Error> {
                             .render(&mut f, chunks[1]);
                     } else {
                         let selected_style = Style::default()
-                            .fg(Color::LightGreen)
+                            .fg(Color::LightCyan)
                             .modifier(Modifier::BOLD);
                         let normal_style = Style::default().fg(Color::White);
                         let header = ["Title", "Artist", "Album"];
@@ -239,10 +239,11 @@ fn main() -> Result<(), failure::Error> {
                                         )),
                                 )
                                 .items(&app.playlists)
+                                .style(Style::default().fg(Color::White))
                                 .select(app.selected_playlist)
                                 .highlight_style(
                                     Style::default()
-                                        .fg(Color::LightGreen)
+                                        .fg(Color::LightCyan)
                                         .modifier(Modifier::BOLD),
                                 )
                                 .render(&mut f, chunks[0]);
@@ -289,7 +290,8 @@ fn main() -> Result<(), failure::Error> {
                                     Block::default()
                                         .borders(Borders::ALL)
                                         .title("Playing")
-                                        .title_style(Style::default().fg(Color::Reset)),
+                                        .title_style(Style::default().fg(Color::Gray))
+                                        .border_style(Style::default().fg(Color::Gray)),
                                 )
                                 .render(&mut f, chunks[0]);
                         }
@@ -454,9 +456,9 @@ fn main() -> Result<(), failure::Error> {
 
 fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
     if *active_block == block_to_match {
-        Style::default().fg(Color::LightGreen)
+        Style::default().fg(Color::LightCyan)
     } else {
-        Style::default().fg(Color::Reset)
+        Style::default().fg(Color::Gray)
     }
 }
 
