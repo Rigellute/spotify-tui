@@ -32,28 +32,25 @@ enum ActiveBlock {
 }
 
 struct App {
-    // TODO: figure out how to store the actual response `SearchTracks`
-    songs: Vec<Vec<String>>,
-    song_ids: Vec<String>,
+    active_block: ActiveBlock,
     current_playing_song: Option<FullTrack>,
     input: String,
-    selected_song: usize,
-    selected_playlist: Option<usize>,
-    active_block: ActiveBlock,
     playlists: Vec<String>,
+    searched_tracks: Option<SearchTracks>,
+    selected_playlist: Option<usize>,
+    select_song_index: usize,
 }
 
 impl App {
     fn new() -> App {
         App {
-            input: String::new(),
-            current_playing_song: None,
-            playlists: vec![],
-            songs: vec![],
-            song_ids: vec![],
-            selected_song: 0,
-            selected_playlist: None,
             active_block: ActiveBlock::Playlist,
+            current_playing_song: None,
+            input: String::new(),
+            playlists: vec![],
+            searched_tracks: None,
+            selected_playlist: None,
+            select_song_index: 0,
         }
     }
 }
@@ -152,15 +149,6 @@ fn main() -> Result<(), failure::Error> {
                         let selected_style = Style::default()
                             .fg(Color::LightCyan)
                             .modifier(Modifier::BOLD);
-                        let normal_style = Style::default().fg(Color::White);
-                        let header = ["Title", "Artist", "Album"];
-                        let rows = app.songs.iter().enumerate().map(|(i, item)| {
-                            if i == app.selected_song {
-                                Row::StyledData(item.iter(), selected_style)
-                            } else {
-                                Row::StyledData(item.iter(), normal_style)
-                            }
-                        });
 
                         let parent_layout = Layout::default()
                             .direction(Direction::Vertical)
@@ -248,10 +236,28 @@ fn main() -> Result<(), failure::Error> {
                                 )
                                 .render(&mut f, chunks[0]);
 
+                            let normal_style = Style::default().fg(Color::White);
+                            let header = ["Title", "Artist", "Album"];
+
+                            let formatted_songs = match &app.searched_tracks {
+                                Some(result) => display_songs(&result),
+                                None => vec![],
+                            };
+
+                            let selected_song_index = app.select_song_index;
+                            let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
+                                if i == selected_song_index {
+                                    Row::StyledData(item.into_iter(), selected_style)
+                                } else {
+                                    Row::StyledData(item.into_iter(), normal_style)
+                                }
+                            });
+
                             Table::new(header.iter(), rows)
                                 .block(
                                     Block::default()
                                         .borders(Borders::ALL)
+                                        .style(Style::default().fg(Color::White))
                                         .title("Songs")
                                         .title_style(get_color(
                                             &app.active_block,
@@ -262,6 +268,7 @@ fn main() -> Result<(), failure::Error> {
                                             ActiveBlock::SongTable,
                                         )),
                                 )
+                                .style(Style::default().fg(Color::White))
                                 .widths(&[40, 40, 40])
                                 .render(&mut f, chunks[1]);
                         }
@@ -329,13 +336,8 @@ fn main() -> Result<(), failure::Error> {
                                     .search_track(&app.input, 20, 0, Some(Country::UnitedKingdom))
                                     .expect("Failed to fetch spotify tracks");
 
-                                app.songs = display_songs(&result);
-                                app.song_ids = result
-                                    .tracks
-                                    .items
-                                    .iter()
-                                    .map(|item| item.uri.to_owned())
-                                    .collect();
+                                app.searched_tracks = Some(result);
+
                                 app.active_block = ActiveBlock::SongTable;
                             }
                             Key::Char(c) => {
@@ -400,38 +402,51 @@ fn main() -> Result<(), failure::Error> {
                             Key::Left | Key::Char('h') => {
                                 app.active_block = ActiveBlock::Playlist;
                             }
-                            Key::Down | Key::Char('j') => {
-                                if !app.songs.is_empty() {
-                                    app.selected_song += 1;
-                                    if app.selected_song > app.songs.len() - 1 {
-                                        app.selected_song = 0;
+                            Key::Down | Key::Char('j') => match &app.searched_tracks {
+                                Some(result) => {
+                                    if !result.tracks.items.is_empty() {
+                                        app.select_song_index += 1;
+                                        if app.select_song_index > result.tracks.items.len() - 1 {
+                                            app.select_song_index = 0;
+                                        }
                                     }
                                 }
-                            }
-                            Key::Up | Key::Char('k') => {
-                                if !app.songs.is_empty() {
-                                    if app.selected_song > 0 {
-                                        app.selected_song -= 1;
-                                    } else {
-                                        app.selected_song = app.songs.len() - 1;
+                                None => (),
+                            },
+                            Key::Up | Key::Char('k') => match &app.searched_tracks {
+                                Some(result) => {
+                                    if !result.tracks.items.is_empty() {
+                                        if app.select_song_index > 0 {
+                                            app.select_song_index -= 1;
+                                        } else {
+                                            app.select_song_index = result.tracks.items.len() - 1;
+                                        }
                                     }
                                 }
-                            }
+                                None => (),
+                            },
                             Key::Char('/') => {
                                 app.active_block = ActiveBlock::Input;
                             }
                             Key::Char('\n') => {
-                                if let Some(uri) = app.song_ids.get(app.selected_song) {
-                                    spotify
-                                        .start_playback(
-                                            Some(device_id.to_owned()),
-                                            None,
-                                            Some(vec![uri.to_owned()]),
-                                            for_position(0),
-                                        )
-                                        // TODO: handle playback errors
-                                        .unwrap();
-                                };
+                                match &app.searched_tracks {
+                                    Some(results) => {
+                                        if let Some(track) =
+                                            results.tracks.items.get(app.select_song_index)
+                                        {
+                                            spotify
+                                                .start_playback(
+                                                    Some(device_id.to_owned()),
+                                                    None,
+                                                    Some(vec![track.uri.to_owned()]),
+                                                    for_position(0),
+                                                )
+                                                // TODO: handle playback errors
+                                                .unwrap();
+                                        };
+                                    }
+                                    None => (),
+                                }
                             }
                             _ => {}
                         },
@@ -448,7 +463,7 @@ fn main() -> Result<(), failure::Error> {
                 }
             }
         }
-        None => println!("Auth failed"),
+        None => println!("Spotify auth failed"),
     }
 
     Ok(())
