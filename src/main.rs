@@ -5,6 +5,8 @@ use std::io::{self, Write};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::offset::for_position;
+use rspotify::spotify::model::page::Page;
+use rspotify::spotify::model::playlist::SimplifiedPlaylist;
 use rspotify::spotify::model::search::SearchTracks;
 use rspotify::spotify::model::track::FullTrack;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
@@ -16,7 +18,7 @@ use termion::input::MouseTerminal;
 use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 use tui::backend::TermionBackend;
-use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Terminal;
@@ -35,9 +37,9 @@ struct App {
     active_block: ActiveBlock,
     current_playing_song: Option<FullTrack>,
     input: String,
-    playlists: Vec<String>,
+    playlists: Option<Page<SimplifiedPlaylist>>,
     searched_tracks: Option<SearchTracks>,
-    selected_playlist: Option<usize>,
+    selected_playlist_index: Option<usize>,
     select_song_index: usize,
 }
 
@@ -47,9 +49,9 @@ impl App {
             active_block: ActiveBlock::Playlist,
             current_playing_song: None,
             input: String::new(),
-            playlists: vec![],
+            playlists: None,
             searched_tracks: None,
-            selected_playlist: None,
+            selected_playlist_index: None,
             select_song_index: 0,
         }
     }
@@ -89,12 +91,13 @@ fn main() -> Result<(), failure::Error> {
 
             let playlists = spotify.current_user_playlists(10, None);
 
-            app.playlists = playlists
-                .unwrap()
-                .items
-                .iter()
-                .map(|playlist| playlist.name.to_owned())
-                .collect();
+            match playlists {
+                Ok(p) => {
+                    app.playlists = Some(p);
+                }
+                // TODO: do something when there is an error
+                Err(_e) => (),
+            };
 
             let context = spotify.current_playing(None);
             if let Ok(ctx) = context {
@@ -106,50 +109,44 @@ fn main() -> Result<(), failure::Error> {
             loop {
                 terminal.draw(|mut f| {
                     if app.active_block == ActiveBlock::HelpMenu {
-                        // TODO: refactor to use a table
                         let chunks = Layout::default()
                             .direction(Direction::Vertical)
-                            .constraints(
-                                [
-                                    Constraint::Percentage(33),
-                                    Constraint::Percentage(33),
-                                    Constraint::Percentage(33),
-                                ]
-                                .as_ref(),
-                            )
-                            .margin(5)
+                            .constraints([Constraint::Percentage(100)].as_ref())
+                            .margin(2)
                             .split(f.size());
-                        let playlist_and_song_table = [
-                            "Use the up and down arrow keys or vim style `j`/`k` to move selection",
-                            "Press enter to select",
-                        ]
-                        .join("\n");
 
-                        let input_mode = [
-                            "To enter input mode, type `/`",
-                            "Use <ctrl+u> to delete input",
-                            "Press enter to search",
-                        ]
-                        .join("\n");
+                        let white = Style::default().fg(Color::White);
+                        let gray = Style::default().fg(Color::White);
+                        let header = ["Active block", "Event", "Description"];
 
-                        let block = Block::default()
-                            .borders(Borders::ALL)
-                            .title_style(Style::default().modifier(Modifier::BOLD));
+                        // Would be nice to share the same source of truth as the event match below
+                        let help_rows = vec![
+                            vec!["Playlist/Song block", "j", "Move selection down"],
+                            vec!["Playlist/Song blocks", "k", "Move selection up"],
+                            vec!["General", "/", "Enter input for search"],
+                            vec!["General", "q", "Go back/quit"],
+                            vec!["General", "<ctrl+c>", "Quit"],
+                            vec!["Input", "<ctrl+u>", "Delete input"],
+                            vec!["Input", "Enter", "Search with input text"],
+                        ];
 
-                        Paragraph::new([Text::raw(playlist_and_song_table)].iter())
-                            .block(block.clone().title("Playlist and Song table block"))
-                            .alignment(Alignment::Left)
+                        let rows = help_rows
+                            .into_iter()
+                            .map(|item| Row::StyledData(item.into_iter(), gray));
+
+                        Table::new(header.iter(), rows)
+                            .block(
+                                Block::default()
+                                    .borders(Borders::ALL)
+                                    .style(white)
+                                    .title("Help")
+                                    .title_style(gray)
+                                    .border_style(gray),
+                            )
+                            .style(Style::default().fg(Color::White))
+                            .widths(&[30, 30, 30])
                             .render(&mut f, chunks[0]);
-
-                        Paragraph::new([Text::raw(input_mode)].iter())
-                            .block(block.clone().title("Input mode"))
-                            .alignment(Alignment::Left)
-                            .render(&mut f, chunks[1]);
                     } else {
-                        let selected_style = Style::default()
-                            .fg(Color::LightCyan)
-                            .modifier(Modifier::BOLD);
-
                         let parent_layout = Layout::default()
                             .direction(Direction::Vertical)
                             .constraints(
@@ -196,7 +193,7 @@ fn main() -> Result<(), failure::Error> {
                                 .border_style(Style::default().fg(Color::Gray))
                                 .title_style(Style::default().fg(Color::Gray));
 
-                            Paragraph::new([Text::raw("Type: ?")].iter())
+                            Paragraph::new([Text::raw("Type ?")].iter())
                                 .block(block)
                                 .style(Style::default().fg(Color::Gray))
                                 .render(&mut f, chunks[1]);
@@ -212,6 +209,13 @@ fn main() -> Result<(), failure::Error> {
                                 )
                                 .split(parent_layout[1]);
 
+                            let playlist_items = match &app.playlists {
+                                Some(p) => {
+                                    p.items.iter().map(|item| item.name.to_owned()).collect()
+                                }
+                                None => vec![],
+                            };
+
                             SelectableList::default()
                                 .block(
                                     Block::default()
@@ -226,9 +230,9 @@ fn main() -> Result<(), failure::Error> {
                                             ActiveBlock::Playlist,
                                         )),
                                 )
-                                .items(&app.playlists)
+                                .items(&playlist_items)
                                 .style(Style::default().fg(Color::White))
-                                .select(app.selected_playlist)
+                                .select(app.selected_playlist_index)
                                 .highlight_style(
                                     Style::default()
                                         .fg(Color::LightCyan)
@@ -243,6 +247,9 @@ fn main() -> Result<(), failure::Error> {
                                 Some(result) => display_songs(&result),
                                 None => vec![],
                             };
+                            let selected_style = Style::default()
+                                .fg(Color::LightCyan)
+                                .modifier(Modifier::BOLD);
 
                             let selected_song_index = app.select_song_index;
                             let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
@@ -362,34 +369,44 @@ fn main() -> Result<(), failure::Error> {
                             Key::Right | Key::Char('l') => {
                                 app.active_block = ActiveBlock::SongTable;
                             }
-                            Key::Down | Key::Char('j') => {
-                                if !app.playlists.is_empty() {
-                                    app.selected_playlist =
-                                        if let Some(selected_playlist) = app.selected_playlist {
-                                            if selected_playlist >= app.playlists.len() - 1 {
+                            Key::Down | Key::Char('j') => match &app.playlists {
+                                Some(p) => {
+                                    if !p.items.is_empty() {
+                                        app.selected_playlist_index =
+                                            if let Some(selected_playlist_index) =
+                                                app.selected_playlist_index
+                                            {
+                                                if selected_playlist_index >= p.items.len() - 1 {
+                                                    Some(0)
+                                                } else {
+                                                    Some(selected_playlist_index + 1)
+                                                }
+                                            } else {
                                                 Some(0)
-                                            } else {
-                                                Some(selected_playlist + 1)
                                             }
-                                        } else {
-                                            Some(0)
-                                        }
+                                    }
                                 }
-                            }
-                            Key::Up | Key::Char('k') => {
-                                if !app.playlists.is_empty() {
-                                    app.selected_playlist =
-                                        if let Some(selected_playlist) = app.selected_playlist {
-                                            if selected_playlist > 0 {
-                                                Some(selected_playlist - 1)
+                                None => (),
+                            },
+                            Key::Up | Key::Char('k') => match &app.playlists {
+                                Some(p) => {
+                                    if !p.items.is_empty() {
+                                        app.selected_playlist_index =
+                                            if let Some(selected_playlist_index) =
+                                                app.selected_playlist_index
+                                            {
+                                                if selected_playlist_index > 0 {
+                                                    Some(selected_playlist_index - 1)
+                                                } else {
+                                                    Some(p.items.len() - 1)
+                                                }
                                             } else {
-                                                Some(app.playlists.len() - 1)
+                                                Some(0)
                                             }
-                                        } else {
-                                            Some(0)
-                                        }
+                                    }
                                 }
-                            }
+                                None => (),
+                            },
                             Key::Char('/') => {
                                 app.active_block = ActiveBlock::Input;
                             }
@@ -451,10 +468,10 @@ fn main() -> Result<(), failure::Error> {
                             _ => {}
                         },
                         ActiveBlock::HelpMenu => match key {
-                            Key::Char('q') | Key::Ctrl('c') => {
+                            Key::Ctrl('c') => {
                                 break;
                             }
-                            Key::Esc => {
+                            Key::Char('q') | Key::Esc => {
                                 app.active_block = ActiveBlock::Playlist;
                             }
                             _ => {}
