@@ -6,7 +6,7 @@ use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::page::Page;
-use rspotify::spotify::model::playlist::SimplifiedPlaylist;
+use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
 use rspotify::spotify::model::search::SearchTracks;
 use rspotify::spotify::model::track::FullTrack;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
@@ -25,6 +25,8 @@ use tui::Terminal;
 
 use util::{Event, Events};
 
+const LIMIT: u32 = 20;
+
 #[derive(PartialEq)]
 enum ActiveBlock {
     Input,
@@ -38,7 +40,9 @@ struct App {
     current_playing_song: Option<FullTrack>,
     input: String,
     playlists: Option<Page<SimplifiedPlaylist>>,
+    playlist_tracks: Vec<PlaylistTrack>,
     searched_tracks: Option<SearchTracks>,
+    songs_for_table: Vec<FullTrack>,
     selected_playlist_index: Option<usize>,
     select_song_index: usize,
 }
@@ -50,7 +54,9 @@ impl App {
             current_playing_song: None,
             input: String::new(),
             playlists: None,
+            playlist_tracks: vec![],
             searched_tracks: None,
+            songs_for_table: vec![],
             selected_playlist_index: None,
             select_song_index: 0,
         }
@@ -243,10 +249,8 @@ fn main() -> Result<(), failure::Error> {
                             let normal_style = Style::default().fg(Color::White);
                             let header = ["Title", "Artist", "Album"];
 
-                            let formatted_songs = match &app.searched_tracks {
-                                Some(result) => display_songs(&result),
-                                None => vec![],
-                            };
+                            let formatted_songs = display_songs(&app.songs_for_table);
+
                             let selected_style = Style::default()
                                 .fg(Color::LightCyan)
                                 .modifier(Modifier::BOLD);
@@ -340,9 +344,15 @@ fn main() -> Result<(), failure::Error> {
                             }
                             Key::Char('\n') => {
                                 let result = spotify
-                                    .search_track(&app.input, 20, 0, Some(Country::UnitedKingdom))
+                                    .search_track(
+                                        &app.input,
+                                        LIMIT,
+                                        0,
+                                        Some(Country::UnitedKingdom),
+                                    )
                                     .expect("Failed to fetch spotify tracks");
 
+                                app.songs_for_table = result.tracks.items.clone();
                                 app.searched_tracks = Some(result);
 
                                 app.active_block = ActiveBlock::SongTable;
@@ -410,6 +420,38 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('/') => {
                                 app.active_block = ActiveBlock::Input;
                             }
+                            Key::Char('\n') => {
+                                if let Some(playlists) = &app.playlists {
+                                    if let Some(selected_playlist_index) =
+                                        app.selected_playlist_index
+                                    {
+                                        if let Some(selected_playlist) =
+                                            playlists.items.get(selected_playlist_index)
+                                        {
+                                            let playlist_id = &selected_playlist.id;
+                                            if let Ok(playlist_tracks) = spotify
+                                                .user_playlist_tracks(
+                                                    "spotify",
+                                                    &playlist_id,
+                                                    None,
+                                                    Some(LIMIT),
+                                                    None,
+                                                    None,
+                                                )
+                                            {
+                                                app.songs_for_table = playlist_tracks
+                                                    .items
+                                                    .clone()
+                                                    .into_iter()
+                                                    .map(|item| item.track)
+                                                    .collect::<Vec<FullTrack>>();
+
+                                                app.playlist_tracks = playlist_tracks.items;
+                                            };
+                                        }
+                                    }
+                                }
+                            }
                             _ => {}
                         },
                         ActiveBlock::SongTable => match key {
@@ -419,51 +461,39 @@ fn main() -> Result<(), failure::Error> {
                             Key::Left | Key::Char('h') => {
                                 app.active_block = ActiveBlock::Playlist;
                             }
-                            Key::Down | Key::Char('j') => match &app.searched_tracks {
-                                Some(result) => {
-                                    if !result.tracks.items.is_empty() {
-                                        app.select_song_index += 1;
-                                        if app.select_song_index > result.tracks.items.len() - 1 {
-                                            app.select_song_index = 0;
-                                        }
+                            Key::Down | Key::Char('j') => {
+                                if !app.songs_for_table.is_empty() {
+                                    app.select_song_index += 1;
+                                    if app.select_song_index > app.songs_for_table.len() - 1 {
+                                        app.select_song_index = 0;
                                     }
                                 }
-                                None => (),
-                            },
-                            Key::Up | Key::Char('k') => match &app.searched_tracks {
-                                Some(result) => {
-                                    if !result.tracks.items.is_empty() {
-                                        if app.select_song_index > 0 {
-                                            app.select_song_index -= 1;
-                                        } else {
-                                            app.select_song_index = result.tracks.items.len() - 1;
-                                        }
+                            }
+                            Key::Up | Key::Char('k') => {
+                                if !app.songs_for_table.is_empty() {
+                                    if app.select_song_index > 0 {
+                                        app.select_song_index -= 1;
+                                    } else {
+                                        app.select_song_index = app.songs_for_table.len() - 1;
                                     }
                                 }
-                                None => (),
-                            },
+                            }
                             Key::Char('/') => {
                                 app.active_block = ActiveBlock::Input;
                             }
                             Key::Char('\n') => {
-                                match &app.searched_tracks {
-                                    Some(results) => {
-                                        if let Some(track) =
-                                            results.tracks.items.get(app.select_song_index)
-                                        {
-                                            spotify
-                                                .start_playback(
-                                                    Some(device_id.to_owned()),
-                                                    None,
-                                                    Some(vec![track.uri.to_owned()]),
-                                                    for_position(0),
-                                                )
-                                                // TODO: handle playback errors
-                                                .unwrap();
-                                        };
-                                    }
-                                    None => (),
-                                }
+                                if let Some(track) = app.songs_for_table.get(app.select_song_index)
+                                {
+                                    spotify
+                                        .start_playback(
+                                            Some(device_id.to_owned()),
+                                            None,
+                                            Some(vec![track.uri.to_owned()]),
+                                            for_position(0),
+                                        )
+                                        // TODO: handle playback errors
+                                        .unwrap();
+                                };
                             }
                             _ => {}
                         },
@@ -502,10 +532,8 @@ fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
         })
 }
 
-fn display_songs(track_search_results: &SearchTracks) -> Vec<Vec<String>> {
+fn display_songs(track_search_results: &Vec<FullTrack>) -> Vec<Vec<String>> {
     track_search_results
-        .tracks
-        .items
         .iter()
         .map(|item| {
             vec![
