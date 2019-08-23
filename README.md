@@ -16,15 +16,17 @@ A Spotify client for the terminal.
 - [ ] Cache the currently selected `device_id`.
 - [ ] Show a help dialog (or table?) with all the supported commands.
   - Could use a global callback of `?`
-- [ ] Figure out how to position views properly - put the currently playing component at the bottom.
 - [ ] Could show the song progress? Might be tricky.
 - [ ] Add global callback to handle pressing `space`, which should pause/start the current song.
 - [ ] Add search for album
 - [ ] Add search for artist
-- [ ] Show users playlists on start up
-- [ ] Within the playlist view (one big table?), let the user use `ctrl + d/u` to move through pages in search results
+- [x] Show users playlists on start up
+- [ ] Within the song table view, let the user use `ctrl + d/u` to move through pages in search results
+- [ ] Pass `playlist_id` into uri list when playing a song within a playlist
+- [ ] Implement vim style `H M L` for jumping `high medium low` within the table view
+- [ ] On pressing play, update the currently playing view
 
 ### Libraries used
 
-- [cursive](https://github.com/gyscos/cursive)
+- [tui-rs](https://github.com/fdehau/tui-rs)
 - [rspotify](https://github.com/ramsayleung/rspotify)
