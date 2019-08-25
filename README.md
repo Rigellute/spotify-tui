@@ -2,6 +2,10 @@
 
 A Spotify client for the terminal.
 
+### Limitations
+
+It seems you need to have the spotify app open in order to play songs.
+
 ### TODO
 
 - [ ] Add `clap` for the cli
@@ -30,6 +34,7 @@ A Spotify client for the terminal.
 - [ ] Let user define custom theme?
 - [ ] Let the user press `i` on selected song to get more information about it
 - [ ] Let user "like" a song could use `*`?
+- [x] Add error block on api errors
 
 ### Libraries used
 
