@@ -4,6 +4,7 @@ use std::io::{self, Write};
 
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::artist::SimplifiedArtist;
+use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::page::Page;
 use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
@@ -34,10 +35,13 @@ enum ActiveBlock {
     SongTable,
     HelpMenu,
     ApiError,
+    SelectDevice,
 }
 
 struct App {
     active_block: ActiveBlock,
+    devices: Option<DevicePayload>,
+    device_id: Option<String>,
     current_playing_song: Option<FullTrack>,
     input: String,
     playlists: Option<Page<SimplifiedPlaylist>>,
@@ -47,12 +51,15 @@ struct App {
     selected_playlist_index: Option<usize>,
     select_song_index: usize,
     api_error: String,
+    selected_device_index: Option<usize>,
 }
 
 impl App {
     fn new() -> App {
         App {
             active_block: ActiveBlock::Playlist,
+            devices: None,
+            device_id: None,
             api_error: String::new(),
             current_playing_song: None,
             input: String::new(),
@@ -62,6 +69,7 @@ impl App {
             songs_for_table: vec![],
             selected_playlist_index: None,
             select_song_index: 0,
+            selected_device_index: None,
         }
     }
 }
@@ -94,17 +102,12 @@ fn main() -> Result<(), failure::Error> {
                 .client_credentials_manager(client_credential)
                 .build();
 
-            // TODO: Create a step for selecting which device to play
-            let devices = spotify.device();
-            let device_id = String::from("2577b0ea0b00e3d2c0d276d8f9629dde8645e3d8");
-
             let playlists = spotify.current_user_playlists(LIMIT, None);
 
             match playlists {
                 Ok(p) => {
                     app.playlists = Some(p);
                 }
-                // TODO: do something when there is an error
                 Err(e) => {
                     app.active_block = ActiveBlock::ApiError;
                     app.api_error = e.to_string();
@@ -126,6 +129,9 @@ fn main() -> Result<(), failure::Error> {
                         }
                         ActiveBlock::ApiError => {
                             draw_api_error(&mut f, &app);
+                        }
+                        ActiveBlock::SelectDevice => {
+                            draw_device_list(&mut f, &app);
                         }
                         _ => {
                             let parent_layout = Layout::default()
@@ -210,6 +216,17 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('q') | Key::Ctrl('c') => {
                                 break;
                             }
+                            Key::Char('d') => match spotify.device() {
+                                Ok(devices) => {
+                                    app.active_block = ActiveBlock::SelectDevice;
+                                    app.devices = Some(devices);
+                                }
+
+                                Err(e) => {
+                                    app.active_block = ActiveBlock::ApiError;
+                                    app.api_error = e.to_string();
+                                }
+                            },
                             Key::Char('?') => {
                                 app.active_block = ActiveBlock::HelpMenu;
                             }
@@ -296,6 +313,13 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('q') | Key::Ctrl('c') => {
                                 break;
                             }
+                            Key::Char('d') => {
+                                let devices = spotify.device();
+                                if let Ok(devices) = devices {
+                                    app.active_block = ActiveBlock::SelectDevice;
+                                    app.devices = Some(devices);
+                                }
+                            }
                             Key::Left | Key::Char('h') => {
                                 app.active_block = ActiveBlock::Playlist;
                             }
@@ -342,11 +366,13 @@ fn main() -> Result<(), failure::Error> {
                                             _ => None,
                                         };
 
+                                    let device_id = app.device_id.take();
+
                                     // I need to pass in different arguments here, how can this be
                                     // nicer?
                                     if let Some(context_uri) = context_uri {
                                         match spotify.start_playback(
-                                            Some(device_id.to_owned()),
+                                            device_id,
                                             Some(context_uri),
                                             None,
                                             for_position(app.select_song_index as u32),
@@ -361,7 +387,7 @@ fn main() -> Result<(), failure::Error> {
                                         }
                                     } else {
                                         match spotify.start_playback(
-                                            Some(device_id.to_owned()),
+                                            device_id,
                                             None,
                                             Some(vec![track.uri.to_owned()]),
                                             for_position(0),
@@ -395,6 +421,62 @@ fn main() -> Result<(), failure::Error> {
                             Key::Esc => {
                                 app.active_block = ActiveBlock::Playlist;
                             }
+                            _ => {}
+                        },
+                        ActiveBlock::SelectDevice => match key {
+                            Key::Char('q') | Key::Ctrl('c') => {
+                                break;
+                            }
+                            Key::Esc => {
+                                app.active_block = ActiveBlock::Playlist;
+                            }
+                            Key::Down | Key::Char('j') => match &app.devices {
+                                Some(p) => {
+                                    if !p.devices.is_empty() {
+                                        app.selected_device_index =
+                                            if let Some(selected_device_index) =
+                                                app.selected_device_index
+                                            {
+                                                if selected_device_index >= p.devices.len() - 1 {
+                                                    Some(0)
+                                                } else {
+                                                    Some(selected_device_index + 1)
+                                                }
+                                            } else {
+                                                Some(0)
+                                            }
+                                    }
+                                }
+                                None => (),
+                            },
+                            Key::Up | Key::Char('k') => match &app.devices {
+                                Some(p) => {
+                                    if !p.devices.is_empty() {
+                                        app.selected_device_index =
+                                            if let Some(selected_device_index) =
+                                                app.selected_device_index
+                                            {
+                                                if selected_device_index > 0 {
+                                                    Some(selected_device_index - 1)
+                                                } else {
+                                                    Some(p.devices.len() - 1)
+                                                }
+                                            } else {
+                                                Some(0)
+                                            }
+                                    }
+                                }
+                                None => (),
+                            },
+                            Key::Char('\n') => match (&app.devices, app.selected_device_index) {
+                                (Some(devices), Some(index)) => {
+                                    if let Some(device) = devices.devices.get(index) {
+                                        app.device_id = Some(device.id.to_owned());
+                                        app.active_block = ActiveBlock::Playlist;
+                                    }
+                                }
+                                _ => (),
+                            },
                             _ => {}
                         },
                     }
@@ -458,6 +540,7 @@ where
         vec!["General", "q", "Quit"],
         vec!["General", "<ctrl+c>", "Quit"],
         vec!["General", "<Esc>", "Go back"],
+        vec!["General", "d", "Select device to play music on"],
         vec!["Input", "<ctrl+u>", "Delete input"],
         vec!["Input", "Enter", "Search with input text"],
     ];
@@ -633,6 +716,51 @@ where
                 .title("Error")
                 .title_style(Style::default().fg(Color::Red))
                 .border_style(Style::default().fg(Color::Red)),
+        )
+        .render(f, chunks[0]);
+}
+
+fn draw_device_list<B>(f: &mut Frame<B>, app: &App)
+where
+    B: Backend,
+{
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(100)].as_ref())
+        .margin(10)
+        .split(f.size());
+
+    let no_device_message = vec!["No devices found: Make sure a device has is active".to_string()];
+    let items = match &app.devices {
+        Some(items) => {
+            if items.devices.is_empty() {
+                no_device_message
+            } else {
+                items
+                    .devices
+                    .iter()
+                    .map(|device| device.name.to_owned())
+                    .collect()
+            }
+        }
+        None => no_device_message,
+    };
+
+    SelectableList::default()
+        .block(
+            Block::default()
+                .title("Devices")
+                .borders(Borders::ALL)
+                .title_style(Style::default().fg(Color::LightCyan))
+                .border_style(Style::default().fg(Color::Gray)),
+        )
+        .items(&items)
+        .style(Style::default().fg(Color::White))
+        .select(app.selected_device_index)
+        .highlight_style(
+            Style::default()
+                .fg(Color::LightCyan)
+                .modifier(Modifier::BOLD),
         )
         .render(f, chunks[0]);
 }
