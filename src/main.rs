@@ -287,38 +287,39 @@ fn main() -> Result<(), failure::Error> {
                                 app.active_block = ActiveBlock::Input;
                             }
                             Key::Char('\n') => {
-                                if let Some(spotify) = &app.spotify {
-                                    if let Some(playlists) = &app.playlists {
-                                        if let Some(selected_playlist_index) =
-                                            app.selected_playlist_index
+                                match (&app.spotify, &app.playlists, &app.selected_playlist_index) {
+                                    (
+                                        Some(spotify),
+                                        Some(playlists),
+                                        Some(selected_playlist_index),
+                                    ) => {
+                                        if let Some(selected_playlist) =
+                                            playlists.items.get(selected_playlist_index.to_owned())
                                         {
-                                            if let Some(selected_playlist) =
-                                                playlists.items.get(selected_playlist_index)
+                                            let playlist_id = selected_playlist.id.to_owned();
+                                            if let Ok(playlist_tracks) = spotify
+                                                .user_playlist_tracks(
+                                                    "spotify",
+                                                    &playlist_id,
+                                                    None,
+                                                    Some(LIMIT),
+                                                    None,
+                                                    None,
+                                                )
                                             {
-                                                let playlist_id = &selected_playlist.id;
-                                                if let Ok(playlist_tracks) = spotify
-                                                    .user_playlist_tracks(
-                                                        "spotify",
-                                                        &playlist_id,
-                                                        None,
-                                                        Some(LIMIT),
-                                                        None,
-                                                        None,
-                                                    )
-                                                {
-                                                    app.songs_for_table = playlist_tracks
-                                                        .items
-                                                        .clone()
-                                                        .into_iter()
-                                                        .map(|item| item.track)
-                                                        .collect::<Vec<FullTrack>>();
+                                                app.songs_for_table = playlist_tracks
+                                                    .items
+                                                    .clone()
+                                                    .into_iter()
+                                                    .map(|item| item.track)
+                                                    .collect::<Vec<FullTrack>>();
 
-                                                    app.playlist_tracks = playlist_tracks.items;
-                                                    app.active_block = ActiveBlock::SongTable;
-                                                };
-                                            }
+                                                app.playlist_tracks = playlist_tracks.items;
+                                                app.active_block = ActiveBlock::SongTable;
+                                            };
                                         }
                                     }
+                                    _ => {}
                                 }
                             }
                             _ => {}
