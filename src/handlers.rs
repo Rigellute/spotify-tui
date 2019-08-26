@@ -4,19 +4,16 @@ use rspotify::spotify::model::track::FullTrack;
 use rspotify::spotify::senum::Country;
 
 use termion::event::Key;
+
 pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Ctrl('u') => {
-            if app.active_block == ActiveBlock::Input {
-                app.input = String::new();
-            }
+            app.input = String::new();
             None
         }
         Key::Esc => {
-            if app.active_block == ActiveBlock::Input {
-                app.active_block = ActiveBlock::Playlist;
-            }
+            app.active_block = ActiveBlock::Playlist;
             None
         }
         Key::Char('\n') => {
@@ -33,15 +30,11 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Char(c) => {
-            if app.active_block == ActiveBlock::Input {
-                app.input.push(c);
-            }
+            app.input.push(c);
             None
         }
         Key::Backspace => {
-            if app.active_block == ActiveBlock::Input {
-                app.input.pop();
-            }
+            app.input.pop();
             None
         }
         _ => None,
@@ -326,5 +319,86 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             _ => None,
         },
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_input_handler_quits() {
+        let mut app = App::new();
+
+        let result = input_handler(Key::Char('q'), &mut app);
+        assert_eq!(result, Some(EventLoop::Exit));
+
+        let result = input_handler(Key::Ctrl('c'), &mut app);
+        assert_eq!(result, Some(EventLoop::Exit));
+    }
+
+    #[test]
+    fn test_input_handler_clear_input_on_ctrl_u() {
+        let mut app = App::new();
+
+        app.input = "My text".to_string();
+
+        let result = input_handler(Key::Ctrl('u'), &mut app);
+
+        assert_eq!(result, None);
+        assert_eq!(app.input, "".to_string());
+    }
+
+    #[test]
+    fn test_input_handler_esc_back_to_playlist() {
+        let mut app = App::new();
+
+        let result = input_handler(Key::Esc, &mut app);
+
+        assert_eq!(result, None);
+        assert_eq!(app.active_block, ActiveBlock::Playlist);
+    }
+
+    #[test]
+    fn test_input_handler_on_enter_text() {
+        let mut app = App::new();
+
+        app.input = "My tex".to_string();
+
+        let result = input_handler(Key::Char('t'), &mut app);
+
+        assert_eq!(result, None);
+        assert_eq!(app.input, "My text".to_string());
+    }
+
+    #[test]
+    fn test_input_handler_backspace() {
+        let mut app = App::new();
+
+        app.input = "My text".to_string();
+
+        let result = input_handler(Key::Backspace, &mut app);
+
+        assert_eq!(result, None);
+        assert_eq!(app.input, "My tex".to_string());
+    }
+
+    #[test]
+    fn test_playlist_handler_quit() {
+        let mut app = App::new();
+
+        let result = playlist_handler(Key::Char('q'), &mut app);
+        assert_eq!(result, Some(EventLoop::Exit));
+
+        let result = playlist_handler(Key::Ctrl('c'), &mut app);
+        assert_eq!(result, Some(EventLoop::Exit));
+    }
+
+    #[test]
+    fn test_playlist_handler_activate_help_menu() {
+        let mut app = App::new();
+
+        let result = playlist_handler(Key::Char('?'), &mut app);
+        assert_eq!(result, None);
+        assert_eq!(app.active_block, ActiveBlock::HelpMenu);
     }
 }

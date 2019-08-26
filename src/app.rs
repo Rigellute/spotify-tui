@@ -7,12 +7,12 @@ use rspotify::spotify::model::track::FullTrack;
 
 pub const LIMIT: u32 = 20;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum EventLoop {
     Exit,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum ActiveBlock {
     Input,
     Playlist,
