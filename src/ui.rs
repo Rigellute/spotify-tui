@@ -139,9 +139,7 @@ where
         .style(Style::default().fg(Color::White))
         .select(app.selected_playlist_index)
         .highlight_style(
-            Style::default()
-                .fg(Color::LightCyan)
-                .modifier(Modifier::BOLD),
+            get_color(&app.active_block, ActiveBlock::Playlist).modifier(Modifier::BOLD),
         )
         .render(f, chunks[0]);
 
@@ -157,9 +155,8 @@ where
 
     let formatted_songs = display_songs(&app.songs_for_table);
 
-    let selected_style = Style::default()
-        .fg(Color::LightCyan)
-        .modifier(Modifier::BOLD);
+    let selected_style =
+        get_color(&app.active_block, ActiveBlock::SongTable).modifier(Modifier::BOLD);
 
     let selected_song_index = app.select_song_index;
     let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
