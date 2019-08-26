@@ -7,7 +7,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
 
-pub fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
+fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
     if *active_block == block_to_match {
         Style::default().fg(Color::LightCyan)
     } else {
@@ -15,7 +15,7 @@ pub fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Sty
     }
 }
 
-pub fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
+fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
     artists
         .iter()
         .map(|artist| artist.name.to_string())
@@ -23,7 +23,7 @@ pub fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
         .join(", ")
 }
 
-pub fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
+fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
     track_search_results
         .iter()
         .map(|item| {
@@ -127,31 +127,131 @@ where
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
         .split(layout_chunk);
 
+    draw_playlist_block(f, app, chunks[0]);
+
+    // This should be a home page?
+    draw_search_results(f, app, chunks[1]);
+}
+
+pub fn draw_playlist_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
     let playlist_items = match &app.playlists {
         Some(p) => p.items.iter().map(|item| item.name.to_owned()).collect(),
         None => vec![],
     };
 
-    SelectableList::default()
-        .block(
-            Block::default()
-                .title("Playlists")
-                .borders(Borders::ALL)
-                .title_style(get_color(&app.active_block, ActiveBlock::Playlist))
-                .border_style(get_color(&app.active_block, ActiveBlock::Playlist)),
-        )
-        .items(&playlist_items)
-        .style(Style::default().fg(Color::White))
-        .select(app.selected_playlist_index)
-        .highlight_style(
-            get_color(&app.active_block, ActiveBlock::Playlist).modifier(Modifier::BOLD),
-        )
-        .render(f, chunks[0]);
-
-    draw_song_table(f, app, chunks[1]);
+    draw_selectable_list(
+        f,
+        app,
+        layout_chunk,
+        "Playlists",
+        &playlist_items,
+        ActiveBlock::MyPlaylist,
+    );
 }
 
-pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(layout_chunk);
+
+    {
+        let song_artist_block = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+            .split(chunks[0]);
+
+        let songs = match &app.searched_tracks {
+            Some(r) => r
+                .tracks
+                .items
+                .iter()
+                // TODO: reuse the function formatting this text for `playing` block
+                .map(|item| item.name.to_owned() + " - " + &create_artist_string(&item.artists))
+                .collect(),
+            None => vec![],
+        };
+        draw_selectable_list(
+            f,
+            app,
+            song_artist_block[0],
+            "Songs",
+            &songs,
+            ActiveBlock::SongSearch,
+        );
+
+        let artists = match &app.searched_artists {
+            Some(r) => r
+                .artists
+                .items
+                .iter()
+                .map(|item| item.name.to_owned())
+                .collect(),
+            None => vec![],
+        };
+
+        draw_selectable_list(
+            f,
+            app,
+            song_artist_block[1],
+            "Artists",
+            &artists,
+            ActiveBlock::ArtistSearch,
+        );
+    }
+
+    {
+        let albums_playlist_block = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+            .split(chunks[1]);
+
+        let albums = match &app.searched_albums {
+            Some(r) => r
+                .albums
+                .items
+                .iter()
+                .map(|item| item.name.to_owned())
+                .collect(),
+            None => vec![],
+        };
+
+        draw_selectable_list(
+            f,
+            app,
+            albums_playlist_block[0],
+            "Albums",
+            &albums,
+            ActiveBlock::AlbumSearch,
+        );
+
+        let playlists = match &app.searched_albums {
+            Some(r) => r
+                .albums
+                .items
+                .iter()
+                .map(|item| item.name.to_owned())
+                .collect(),
+            None => vec![],
+        };
+        draw_selectable_list(
+            f,
+            app,
+            albums_playlist_block[1],
+            "Playlists",
+            &playlists,
+            ActiveBlock::PlaylistSearch,
+        );
+    }
+}
+
+pub fn _draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
@@ -293,4 +393,29 @@ where
                 .modifier(Modifier::BOLD),
         )
         .render(f, chunks[0]);
+}
+
+pub fn draw_selectable_list<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    title: &str,
+    items: &[String],
+    active_block: ActiveBlock,
+) where
+    B: Backend,
+{
+    SelectableList::default()
+        .block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .title_style(get_color(&app.active_block, active_block))
+                .border_style(get_color(&app.active_block, active_block)),
+        )
+        .items(items)
+        .style(Style::default().fg(Color::White))
+        .select(app.selected_playlist_index)
+        .highlight_style(get_color(&app.active_block, active_block).modifier(Modifier::BOLD))
+        .render(f, layout_chunk);
 }

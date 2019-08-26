@@ -127,7 +127,7 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         }
-                        ActiveBlock::Playlist => {
+                        ActiveBlock::MyPlaylist => {
                             if let Some(event) = handlers::playlist_handler(key, &mut app) {
                                 if event == EventLoop::Exit {
                                     break;

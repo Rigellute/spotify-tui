@@ -13,13 +13,16 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Esc => {
-            app.active_block = ActiveBlock::Playlist;
+            app.active_block = ActiveBlock::MyPlaylist;
             None
         }
         Key::Char('\n') => {
             if let Some(spotify) = &app.spotify {
+                // TODO: This should be definable by the user
+                let country = Some(Country::UnitedKingdom);
                 let result = spotify
-                    .search_track(&app.input, LIMIT, 0, Some(Country::UnitedKingdom))
+                    .search_track(&app.input, LIMIT / 2, 0, country)
+                    // TODO handle the error properly
                     .expect("Failed to fetch spotify tracks");
 
                 app.songs_for_table = result.tracks.items.clone();
@@ -28,6 +31,22 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
                 app.active_block = ActiveBlock::SongTable;
+
+                // Can I run these functions in parellel?
+                let result = spotify
+                    .search_artist(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .expect("Failed to fetch artists");
+                app.searched_artists = Some(result);
+
+                let result = spotify
+                    .search_album(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .expect("Failed to fetch albums");
+                app.searched_albums = Some(result);
+
+                let result = spotify
+                    .search_playlist(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .expect("Failed to fetch playlists");
+                app.searched_playlists = Some(result);
             }
             None
         }
@@ -156,7 +175,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Left | Key::Char('h') => {
-            app.active_block = ActiveBlock::Playlist;
+            app.active_block = ActiveBlock::MyPlaylist;
             None
         }
         Key::Down | Key::Char('j') => {
@@ -249,7 +268,7 @@ pub fn help_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::Playlist;
+            app.active_block = ActiveBlock::MyPlaylist;
             None
         }
         _ => None,
@@ -260,7 +279,7 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::Playlist;
+            app.active_block = ActiveBlock::MyPlaylist;
             None
         }
         _ => None,
@@ -271,7 +290,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::Playlist;
+            app.active_block = ActiveBlock::MyPlaylist;
             None
         }
         Key::Down | Key::Char('j') => match &app.devices {
@@ -314,7 +333,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             (Some(devices), Some(index)) => {
                 if let Some(device) = devices.devices.get(index) {
                     app.device_id = Some(device.id.to_owned());
-                    app.active_block = ActiveBlock::Playlist;
+                    app.active_block = ActiveBlock::MyPlaylist;
                 }
                 None
             }
@@ -357,7 +376,7 @@ mod tests {
         let result = input_handler(Key::Esc, &mut app);
 
         assert_eq!(result, None);
-        assert_eq!(app.active_block, ActiveBlock::Playlist);
+        assert_eq!(app.active_block, ActiveBlock::MyPlaylist);
     }
 
     #[test]
