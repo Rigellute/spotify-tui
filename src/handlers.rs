@@ -25,6 +25,8 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 app.songs_for_table = result.tracks.items.clone();
                 app.searched_tracks = Some(result);
 
+                // On searching for a track, clear the playlist selection
+                app.selected_playlist_index = None;
                 app.active_block = ActiveBlock::SongTable;
             }
             None

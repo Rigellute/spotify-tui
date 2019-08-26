@@ -145,6 +145,13 @@ where
         )
         .render(f, chunks[0]);
 
+    draw_song_table(f, app, chunks[1]);
+}
+
+pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
     let normal_style = Style::default().fg(Color::White);
     let header = ["Title", "Artist", "Album"];
 
@@ -174,7 +181,7 @@ where
         )
         .style(Style::default().fg(Color::White))
         .widths(&[40, 40, 40])
-        .render(f, chunks[1]);
+        .render(f, layout_chunk);
 }
 
 pub fn draw_playing_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
