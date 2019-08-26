@@ -47,6 +47,7 @@ struct App {
     playlists: Option<Page<SimplifiedPlaylist>>,
     playlist_tracks: Vec<PlaylistTrack>,
     searched_tracks: Option<SearchTracks>,
+    spotify: Option<Spotify>,
     songs_for_table: Vec<FullTrack>,
     selected_playlist_index: Option<usize>,
     select_song_index: usize,
@@ -66,6 +67,7 @@ impl App {
             playlists: None,
             playlist_tracks: vec![],
             searched_tracks: None,
+            spotify: None,
             songs_for_table: vec![],
             selected_playlist_index: None,
             select_song_index: 0,
@@ -102,24 +104,28 @@ fn main() -> Result<(), failure::Error> {
                 .client_credentials_manager(client_credential)
                 .build();
 
-            let playlists = spotify.current_user_playlists(LIMIT, None);
+            app.spotify = Some(spotify);
 
-            match playlists {
-                Ok(p) => {
-                    app.playlists = Some(p);
-                }
-                Err(e) => {
-                    app.active_block = ActiveBlock::ApiError;
-                    app.api_error = e.to_string();
-                }
-            };
+            if let Some(spotify) = &app.spotify {
+                let playlists = spotify.current_user_playlists(LIMIT, None);
 
-            let context = spotify.current_playing(None);
-            if let Ok(ctx) = context {
-                if let Some(c) = ctx {
-                    app.current_playing_song = c.item;
-                }
-            };
+                match playlists {
+                    Ok(p) => {
+                        app.playlists = Some(p);
+                    }
+                    Err(e) => {
+                        app.active_block = ActiveBlock::ApiError;
+                        app.api_error = e.to_string();
+                    }
+                };
+
+                let context = spotify.current_playing(None);
+                if let Ok(ctx) = context {
+                    if let Some(c) = ctx {
+                        app.current_playing_song = c.item;
+                    }
+                };
+            }
 
             loop {
                 terminal.draw(|mut f| {
@@ -186,19 +192,21 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                             Key::Char('\n') => {
-                                let result = spotify
-                                    .search_track(
-                                        &app.input,
-                                        LIMIT,
-                                        0,
-                                        Some(Country::UnitedKingdom),
-                                    )
-                                    .expect("Failed to fetch spotify tracks");
+                                if let Some(spotify) = &app.spotify {
+                                    let result = spotify
+                                        .search_track(
+                                            &app.input,
+                                            LIMIT,
+                                            0,
+                                            Some(Country::UnitedKingdom),
+                                        )
+                                        .expect("Failed to fetch spotify tracks");
 
-                                app.songs_for_table = result.tracks.items.clone();
-                                app.searched_tracks = Some(result);
+                                    app.songs_for_table = result.tracks.items.clone();
+                                    app.searched_tracks = Some(result);
 
-                                app.active_block = ActiveBlock::SongTable;
+                                    app.active_block = ActiveBlock::SongTable;
+                                }
                             }
                             Key::Char(c) => {
                                 if app.active_block == ActiveBlock::Input {
@@ -216,17 +224,21 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('q') | Key::Ctrl('c') => {
                                 break;
                             }
-                            Key::Char('d') => match spotify.device() {
-                                Ok(devices) => {
-                                    app.active_block = ActiveBlock::SelectDevice;
-                                    app.devices = Some(devices);
-                                }
+                            Key::Char('d') => {
+                                if let Some(spotify) = &app.spotify {
+                                    match spotify.device() {
+                                        Ok(devices) => {
+                                            app.active_block = ActiveBlock::SelectDevice;
+                                            app.devices = Some(devices);
+                                        }
 
-                                Err(e) => {
-                                    app.active_block = ActiveBlock::ApiError;
-                                    app.api_error = e.to_string();
+                                        Err(e) => {
+                                            app.active_block = ActiveBlock::ApiError;
+                                            app.api_error = e.to_string();
+                                        }
+                                    }
                                 }
-                            },
+                            }
                             Key::Char('?') => {
                                 app.active_block = ActiveBlock::HelpMenu;
                             }
@@ -275,34 +287,36 @@ fn main() -> Result<(), failure::Error> {
                                 app.active_block = ActiveBlock::Input;
                             }
                             Key::Char('\n') => {
-                                if let Some(playlists) = &app.playlists {
-                                    if let Some(selected_playlist_index) =
-                                        app.selected_playlist_index
-                                    {
-                                        if let Some(selected_playlist) =
-                                            playlists.items.get(selected_playlist_index)
+                                if let Some(spotify) = &app.spotify {
+                                    if let Some(playlists) = &app.playlists {
+                                        if let Some(selected_playlist_index) =
+                                            app.selected_playlist_index
                                         {
-                                            let playlist_id = &selected_playlist.id;
-                                            if let Ok(playlist_tracks) = spotify
-                                                .user_playlist_tracks(
-                                                    "spotify",
-                                                    &playlist_id,
-                                                    None,
-                                                    Some(LIMIT),
-                                                    None,
-                                                    None,
-                                                )
+                                            if let Some(selected_playlist) =
+                                                playlists.items.get(selected_playlist_index)
                                             {
-                                                app.songs_for_table = playlist_tracks
-                                                    .items
-                                                    .clone()
-                                                    .into_iter()
-                                                    .map(|item| item.track)
-                                                    .collect::<Vec<FullTrack>>();
+                                                let playlist_id = &selected_playlist.id;
+                                                if let Ok(playlist_tracks) = spotify
+                                                    .user_playlist_tracks(
+                                                        "spotify",
+                                                        &playlist_id,
+                                                        None,
+                                                        Some(LIMIT),
+                                                        None,
+                                                        None,
+                                                    )
+                                                {
+                                                    app.songs_for_table = playlist_tracks
+                                                        .items
+                                                        .clone()
+                                                        .into_iter()
+                                                        .map(|item| item.track)
+                                                        .collect::<Vec<FullTrack>>();
 
-                                                app.playlist_tracks = playlist_tracks.items;
-                                                app.active_block = ActiveBlock::SongTable;
-                                            };
+                                                    app.playlist_tracks = playlist_tracks.items;
+                                                    app.active_block = ActiveBlock::SongTable;
+                                                };
+                                            }
                                         }
                                     }
                                 }
@@ -314,10 +328,11 @@ fn main() -> Result<(), failure::Error> {
                                 break;
                             }
                             Key::Char('d') => {
-                                let devices = spotify.device();
-                                if let Ok(devices) = devices {
-                                    app.active_block = ActiveBlock::SelectDevice;
-                                    app.devices = Some(devices);
+                                if let Some(spotify) = &app.spotify {
+                                    if let Ok(devices) = spotify.device() {
+                                        app.active_block = ActiveBlock::SelectDevice;
+                                        app.devices = Some(devices);
+                                    }
                                 }
                             }
                             Key::Left | Key::Char('h') => {
@@ -349,8 +364,6 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('\n') => {
                                 if let Some(track) = app.songs_for_table.get(app.select_song_index)
                                 {
-                                    app.current_playing_song = Some(track.to_owned());
-
                                     let context_uri =
                                         match (&app.selected_playlist_index, &app.playlists) {
                                             (Some(selected_playlist_index), Some(playlists)) => {
@@ -370,34 +383,38 @@ fn main() -> Result<(), failure::Error> {
 
                                     // I need to pass in different arguments here, how can this be
                                     // nicer?
-                                    if let Some(context_uri) = context_uri {
-                                        match spotify.start_playback(
-                                            device_id,
-                                            Some(context_uri),
-                                            None,
-                                            for_position(app.select_song_index as u32),
-                                        ) {
-                                            Ok(_r) => {
-                                                app.current_playing_song = Some(track.to_owned());
+                                    if let Some(spotify) = &app.spotify {
+                                        if let Some(context_uri) = context_uri {
+                                            match spotify.start_playback(
+                                                device_id,
+                                                Some(context_uri),
+                                                None,
+                                                for_position(app.select_song_index as u32),
+                                            ) {
+                                                Ok(_r) => {
+                                                    app.current_playing_song =
+                                                        Some(track.to_owned());
+                                                }
+                                                Err(e) => {
+                                                    app.active_block = ActiveBlock::ApiError;
+                                                    app.api_error = e.to_string();
+                                                }
                                             }
-                                            Err(e) => {
-                                                app.active_block = ActiveBlock::ApiError;
-                                                app.api_error = e.to_string();
-                                            }
-                                        }
-                                    } else {
-                                        match spotify.start_playback(
-                                            device_id,
-                                            None,
-                                            Some(vec![track.uri.to_owned()]),
-                                            for_position(0),
-                                        ) {
-                                            Ok(_r) => {
-                                                app.current_playing_song = Some(track.to_owned());
-                                            }
-                                            Err(e) => {
-                                                app.active_block = ActiveBlock::ApiError;
-                                                app.api_error = e.to_string();
+                                        } else {
+                                            match spotify.start_playback(
+                                                device_id,
+                                                None,
+                                                Some(vec![track.uri.to_owned()]),
+                                                for_position(0),
+                                            ) {
+                                                Ok(_r) => {
+                                                    app.current_playing_song =
+                                                        Some(track.to_owned());
+                                                }
+                                                Err(e) => {
+                                                    app.active_block = ActiveBlock::ApiError;
+                                                    app.api_error = e.to_string();
+                                                }
                                             }
                                         }
                                     }
