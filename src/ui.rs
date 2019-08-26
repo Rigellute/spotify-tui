@@ -56,11 +56,16 @@ where
         vec!["Playlist/Song blocks", "k", "Move selection up"],
         vec!["General", "/", "Enter input for search"],
         vec!["General", "q", "Quit"],
-        vec!["General", "<ctrl+c>", "Quit"],
+        vec!["General", "<Ctrl+c>", "Quit"],
         vec!["General", "<Esc>", "Go back"],
         vec!["General", "d", "Select device to play music on"],
-        vec!["Input", "<ctrl+u>", "Delete input"],
-        vec!["Input", "Enter", "Search with input text"],
+        vec!["Input", "<Ctrl+u>", "Delete input"],
+        vec!["Input", "<Enter>", "Search with input text"],
+        vec![
+            "Input",
+            "<Esc>",
+            "Escape from the input back to playlist view",
+        ],
     ];
 
     let rows = help_rows
@@ -77,7 +82,7 @@ where
                 .border_style(gray),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[30, 30, 30])
+        .widths(&[30, 20, 30])
         .render(f, chunks[0]);
 }
 
@@ -252,7 +257,10 @@ where
         .margin(10)
         .split(f.size());
 
-    let no_device_message = vec!["No devices found: Make sure a device has is active".to_string()];
+    let no_device_message = vec![
+        "No devices found: Make sure a device has is active".to_string(),
+        "\nHint: Press `d` to go to device selection menu".to_string(),
+    ];
     let items = match &app.devices {
         Some(items) => {
             if items.devices.is_empty() {
