@@ -14,10 +14,10 @@ pub enum EventLoop {
     Exit,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
     Input,
-    MyPlaylist,
+    MyPlaylists,
     SongTable,
     HelpMenu,
     ApiError,
@@ -51,7 +51,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
-            active_block: ActiveBlock::MyPlaylist,
+            active_block: ActiveBlock::MyPlaylists,
             devices: None,
             device_id: None,
             api_error: String::new(),

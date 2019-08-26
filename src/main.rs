@@ -127,7 +127,7 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         }
-                        ActiveBlock::MyPlaylist => {
+                        ActiveBlock::MyPlaylists => {
                             if let Some(event) = handlers::playlist_handler(key, &mut app) {
                                 if event == EventLoop::Exit {
                                     break;
@@ -162,11 +162,15 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         }
+                        ActiveBlock::AlbumSearch => {}
+                        ActiveBlock::SongSearch => {}
+                        ActiveBlock::ArtistSearch => {}
+                        ActiveBlock::PlaylistSearch => {}
                     }
                 }
             }
         }
-        None => println!("Spotify auth failed"),
+        None => println!("\nSpotify auth failed"),
     }
 
     Ok(())

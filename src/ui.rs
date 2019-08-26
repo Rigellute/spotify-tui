@@ -148,7 +148,7 @@ where
         layout_chunk,
         "Playlists",
         &playlist_items,
-        ActiveBlock::MyPlaylist,
+        ActiveBlock::MyPlaylists,
     );
 }
 

@@ -13,7 +13,7 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylist;
+            app.active_block = ActiveBlock::MyPlaylists;
             None
         }
         Key::Char('\n') => {
@@ -175,7 +175,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Left | Key::Char('h') => {
-            app.active_block = ActiveBlock::MyPlaylist;
+            app.active_block = ActiveBlock::MyPlaylists;
             None
         }
         Key::Down | Key::Char('j') => {
@@ -268,7 +268,7 @@ pub fn help_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylist;
+            app.active_block = ActiveBlock::MyPlaylists;
             None
         }
         _ => None,
@@ -279,7 +279,7 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylist;
+            app.active_block = ActiveBlock::MyPlaylists;
             None
         }
         _ => None,
@@ -290,7 +290,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylist;
+            app.active_block = ActiveBlock::MyPlaylists;
             None
         }
         Key::Down | Key::Char('j') => match &app.devices {
@@ -333,7 +333,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             (Some(devices), Some(index)) => {
                 if let Some(device) = devices.devices.get(index) {
                     app.device_id = Some(device.id.to_owned());
-                    app.active_block = ActiveBlock::MyPlaylist;
+                    app.active_block = ActiveBlock::MyPlaylists;
                 }
                 None
             }
@@ -376,7 +376,7 @@ mod tests {
         let result = input_handler(Key::Esc, &mut app);
 
         assert_eq!(result, None);
-        assert_eq!(app.active_block, ActiveBlock::MyPlaylist);
+        assert_eq!(app.active_block, ActiveBlock::MyPlaylists);
     }
 
     #[test]
