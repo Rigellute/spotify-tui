@@ -7,6 +7,23 @@ use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
 
+fn format_song(song: &Option<FullTrack>) -> [Text<'static>; 3] {
+    match song {
+        Some(s) => [
+            Text::styled(
+                s.name.to_owned(),
+                Style::default().fg(Color::Magenta).modifier(Modifier::BOLD),
+            ),
+            Text::raw(" - "),
+            Text::styled(
+                create_artist_string(&s.artists),
+                Style::default().fg(Color::White),
+            ),
+        ],
+        None => [Text::raw(""), Text::raw(""), Text::raw("")],
+    }
+}
+
 fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
     if *active_block == block_to_match {
         Style::default().fg(Color::LightCyan)
@@ -177,6 +194,7 @@ where
                 .collect(),
             None => vec![],
         };
+
         draw_selectable_list(
             f,
             app,
@@ -251,7 +269,7 @@ where
     }
 }
 
-pub fn _draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
@@ -295,17 +313,7 @@ where
         .constraints([Constraint::Percentage(100)].as_ref())
         .split(layout_chunk);
 
-    let playing_text = match &app.current_playing_song {
-        Some(s) => [
-            Text::styled(&s.name, Style::default().fg(Color::Magenta)),
-            Text::raw(" - "),
-            Text::styled(
-                create_artist_string(&s.artists),
-                Style::default().fg(Color::White),
-            ),
-        ],
-        None => [Text::raw(""), Text::raw(""), Text::raw("")],
-    };
+    let playing_text = format_song(&app.current_playing_song);
 
     Paragraph::new(playing_text.iter())
         .style(Style::default().fg(Color::Yellow))
@@ -361,6 +369,7 @@ where
         "No devices found: Make sure a device has is active".to_string(),
         "\nHint: Press `d` to go to device selection menu".to_string(),
     ];
+
     let items = match &app.devices {
         Some(items) => {
             if items.devices.is_empty() {
