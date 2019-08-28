@@ -5,6 +5,29 @@ use rspotify::spotify::senum::Country;
 
 use termion::event::Key;
 
+fn on_down_press_handler<T>(selection_data: &[T], selection_index: usize) -> usize {
+    if !selection_data.is_empty() {
+        let next_index = selection_index + 1;
+        if next_index > selection_data.len() - 1 {
+            return 0;
+        } else {
+            return next_index;
+        }
+    }
+    0
+}
+
+fn on_up_press_handler<T>(selection_data: &[T], selection_index: usize) -> usize {
+    if !selection_data.is_empty() {
+        if selection_index > 0 {
+            return selection_index - 1;
+        } else {
+            return selection_data.len() - 1;
+        }
+    }
+    0
+}
+
 pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
@@ -91,17 +114,9 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         }
         Key::Down | Key::Char('j') => match &app.playlists {
             Some(p) => {
-                if !p.items.is_empty() {
-                    app.selected_playlist_index =
-                        if let Some(selected_playlist_index) = app.selected_playlist_index {
-                            if selected_playlist_index >= p.items.len() - 1 {
-                                Some(0)
-                            } else {
-                                Some(selected_playlist_index + 1)
-                            }
-                        } else {
-                            Some(0)
-                        }
+                if let Some(selected_playlist_index) = app.selected_playlist_index {
+                    let next_index = on_down_press_handler(&p.items, selected_playlist_index);
+                    app.selected_playlist_index = Some(next_index);
                 }
                 None
             }
@@ -109,17 +124,9 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         },
         Key::Up | Key::Char('k') => match &app.playlists {
             Some(p) => {
-                if !p.items.is_empty() {
-                    app.selected_playlist_index =
-                        if let Some(selected_playlist_index) = app.selected_playlist_index {
-                            if selected_playlist_index > 0 {
-                                Some(selected_playlist_index - 1)
-                            } else {
-                                Some(p.items.len() - 1)
-                            }
-                        } else {
-                            Some(0)
-                        }
+                if let Some(selected_playlist_index) = app.selected_playlist_index {
+                    let next_index = on_up_press_handler(&p.items, selected_playlist_index);
+                    app.selected_playlist_index = Some(next_index);
                 }
                 None
             }
@@ -179,12 +186,8 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Down | Key::Char('j') => {
-            if !app.songs_for_table.is_empty() {
-                app.select_song_index += 1;
-                if app.select_song_index > app.songs_for_table.len() - 1 {
-                    app.select_song_index = 0;
-                }
-            }
+            let next_index = on_down_press_handler(&app.songs_for_table, app.select_song_index);
+            app.select_song_index = next_index;
             None
         }
         Key::Char('?') => {
@@ -192,13 +195,8 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Up | Key::Char('k') => {
-            if !app.songs_for_table.is_empty() {
-                if app.select_song_index > 0 {
-                    app.select_song_index -= 1;
-                } else {
-                    app.select_song_index = app.songs_for_table.len() - 1;
-                }
-            }
+            let next_index = on_up_press_handler(&app.songs_for_table, app.select_song_index);
+            app.select_song_index = next_index;
             None
         }
         Key::Char('/') => {
@@ -295,17 +293,9 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         }
         Key::Down | Key::Char('j') => match &app.devices {
             Some(p) => {
-                if !p.devices.is_empty() {
-                    app.selected_device_index =
-                        if let Some(selected_device_index) = app.selected_device_index {
-                            if selected_device_index >= p.devices.len() - 1 {
-                                Some(0)
-                            } else {
-                                Some(selected_device_index + 1)
-                            }
-                        } else {
-                            Some(0)
-                        }
+                if let Some(selected_device_index) = app.selected_device_index {
+                    let next_index = on_down_press_handler(&p.devices, selected_device_index);
+                    app.selected_playlist_index = Some(next_index);
                 }
                 None
             }
@@ -313,17 +303,9 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         },
         Key::Up | Key::Char('k') => match &app.devices {
             Some(p) => {
-                if !p.devices.is_empty() {
-                    app.selected_device_index =
-                        if let Some(selected_device_index) = app.selected_device_index {
-                            if selected_device_index > 0 {
-                                Some(selected_device_index - 1)
-                            } else {
-                                Some(p.devices.len() - 1)
-                            }
-                        } else {
-                            Some(0)
-                        }
+                if let Some(selected_device_index) = app.selected_device_index {
+                    let next_index = on_up_press_handler(&p.devices, selected_device_index);
+                    app.selected_playlist_index = Some(next_index);
                 }
                 None
             }
@@ -421,5 +403,35 @@ mod tests {
         let result = playlist_handler(Key::Char('?'), &mut app);
         assert_eq!(result, None);
         assert_eq!(app.active_block, ActiveBlock::HelpMenu);
+    }
+
+    #[test]
+    fn test_on_down_press_handler() {
+        let data = vec!["Choice 1", "Choice 2", "Choice 3"];
+
+        let index = 0;
+        let next_index = on_down_press_handler(&data, index);
+
+        assert_eq!(next_index, 1);
+
+        // Selection wrap if on last item
+        let index = data.len() - 1;
+        let next_index = on_down_press_handler(&data, index);
+        assert_eq!(next_index, 0);
+    }
+
+    #[test]
+    fn test_on_up_press_handler() {
+        let data = vec!["Choice 1", "Choice 2", "Choice 3"];
+
+        let index = data.len() - 1;
+        let next_index = on_up_press_handler(&data, index);
+
+        assert_eq!(next_index, index - 1);
+
+        // Selection wrap if on first item
+        let index = 0;
+        let next_index = on_up_press_handler(&data, index);
+        assert_eq!(next_index, data.len() - 1);
     }
 }
