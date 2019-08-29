@@ -43,6 +43,7 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             if let Some(spotify) = &app.spotify {
                 // TODO: This should be definable by the user
                 let country = Some(Country::UnitedKingdom);
+
                 let result = spotify
                     .search_track(&app.input, LIMIT / 2, 0, country)
                     // TODO handle the error properly
@@ -89,19 +90,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
-            if let Some(spotify) = &app.spotify {
-                match spotify.device() {
-                    Ok(devices) => {
-                        app.active_block = ActiveBlock::SelectDevice;
-                        app.devices = Some(devices);
-                    }
-
-                    Err(e) => {
-                        app.active_block = ActiveBlock::ApiError;
-                        app.api_error = e.to_string();
-                    }
-                }
-            }
+            handle_get_devices(app);
             None
         }
         Key::Char('?') => {
@@ -173,12 +162,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
-            if let Some(spotify) = &app.spotify {
-                if let Ok(devices) = spotify.device() {
-                    app.active_block = ActiveBlock::SelectDevice;
-                    app.devices = Some(devices);
-                }
-            }
+            handle_get_devices(app);
             None
         }
         Key::Left | Key::Char('h') => {
@@ -295,7 +279,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             Some(p) => {
                 if let Some(selected_device_index) = app.selected_device_index {
                     let next_index = on_down_press_handler(&p.devices, selected_device_index);
-                    app.selected_playlist_index = Some(next_index);
+                    app.selected_device_index = Some(next_index);
                 }
                 None
             }
@@ -305,7 +289,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             Some(p) => {
                 if let Some(selected_device_index) = app.selected_device_index {
                     let next_index = on_up_press_handler(&p.devices, selected_device_index);
-                    app.selected_playlist_index = Some(next_index);
+                    app.selected_device_index = Some(next_index);
                 }
                 None
             }
@@ -322,6 +306,20 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             _ => None,
         },
         _ => None,
+    }
+}
+
+fn handle_get_devices(app: &mut App) {
+    if let Some(spotify) = &app.spotify {
+        if let Ok(result) = spotify.device() {
+            app.active_block = ActiveBlock::SelectDevice;
+
+            if !result.devices.is_empty() {
+                app.devices = Some(result);
+                // Select the first device in the list
+                app.selected_device_index = Some(0);
+            }
+        }
     }
 }
 

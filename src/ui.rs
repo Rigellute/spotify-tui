@@ -24,8 +24,8 @@ fn format_song(song: &Option<FullTrack>) -> [Text<'static>; 3] {
     }
 }
 
-fn get_color(active_block: &ActiveBlock, block_to_match: ActiveBlock) -> Style {
-    if *active_block == block_to_match {
+fn get_color(active_block: ActiveBlock, block_to_match: ActiveBlock) -> Style {
+    if active_block == block_to_match {
         Style::default().fg(Color::LightCyan)
     } else {
         Style::default().fg(Color::Gray)
@@ -118,8 +118,8 @@ where
             Block::default()
                 .borders(Borders::ALL)
                 .title("Input")
-                .title_style(get_color(&app.active_block, ActiveBlock::Input))
-                .border_style(get_color(&app.active_block, ActiveBlock::Input)),
+                .title_style(get_color(app.active_block, ActiveBlock::Input))
+                .border_style(get_color(app.active_block, ActiveBlock::Input)),
         )
         .render(f, chunks[0]);
 
@@ -146,8 +146,20 @@ where
 
     draw_playlist_block(f, app, chunks[0]);
 
-    // This should be a home page?
-    draw_search_results(f, app, chunks[1]);
+    match app.active_block {
+        ActiveBlock::SongTable => {
+            draw_song_table(f, app, chunks[1]);
+        }
+        ActiveBlock::AlbumSearch
+        | ActiveBlock::ArtistSearch
+        | ActiveBlock::PlaylistSearch
+        | ActiveBlock::SongSearch => {
+            draw_search_results(f, app, chunks[1]);
+        }
+        _ => {
+            draw_home(f, app, chunks[1]);
+        }
+    }
 }
 
 pub fn draw_playlist_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -279,7 +291,7 @@ where
     let formatted_songs = display_songs(&app.songs_for_table);
 
     let selected_style =
-        get_color(&app.active_block, ActiveBlock::SongTable).modifier(Modifier::BOLD);
+        get_color(app.active_block, ActiveBlock::SongTable).modifier(Modifier::BOLD);
 
     let selected_song_index = app.select_song_index;
     let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
@@ -296,8 +308,8 @@ where
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White))
                 .title("Songs")
-                .title_style(get_color(&app.active_block, ActiveBlock::SongTable))
-                .border_style(get_color(&app.active_block, ActiveBlock::SongTable)),
+                .title_style(get_color(app.active_block, ActiveBlock::SongTable))
+                .border_style(get_color(app.active_block, ActiveBlock::SongTable)),
         )
         .style(Style::default().fg(Color::White))
         .widths(&[40, 40, 40])
@@ -337,11 +349,18 @@ where
         .margin(10)
         .split(f.size());
 
-    let playing_text = [
+    let mut playing_text = vec![
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
         Text::styled("\nPress <Esc> to return", Style::default().fg(Color::White)),
     ];
+
+    if app.device_id.is_none() {
+        playing_text.push(Text::styled(
+            "\nHint: Press `d` to go to device selection menu",
+            Style::default().fg(Color::LightMagenta),
+        ))
+    }
 
     Paragraph::new(playing_text.iter())
         .style(Style::default().fg(Color::White))
@@ -355,6 +374,17 @@ where
         .render(f, chunks[0]);
 }
 
+// TODO: fill out home page
+fn draw_home<B>(f: &mut Frame<B>, _app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    Block::default()
+        .title("Home")
+        .borders(Borders::ALL)
+        .render(f, layout_chunk);
+}
+
 pub fn draw_device_list<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
@@ -365,10 +395,7 @@ where
         .margin(10)
         .split(f.size());
 
-    let no_device_message = vec![
-        "No devices found: Make sure a device has is active".to_string(),
-        "\nHint: Press `d` to go to device selection menu".to_string(),
-    ];
+    let no_device_message = vec!["No devices found: Make sure a device has is active".to_string()];
 
     let items = match &app.devices {
         Some(items) => {
@@ -419,12 +446,12 @@ pub fn draw_selectable_list<B>(
             Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .title_style(get_color(&app.active_block, active_block))
-                .border_style(get_color(&app.active_block, active_block)),
+                .title_style(get_color(app.active_block, active_block))
+                .border_style(get_color(app.active_block, active_block)),
         )
         .items(items)
         .style(Style::default().fg(Color::White))
         .select(app.selected_playlist_index)
-        .highlight_style(get_color(&app.active_block, active_block).modifier(Modifier::BOLD))
+        .highlight_style(get_color(app.active_block, active_block).modifier(Modifier::BOLD))
         .render(f, layout_chunk);
 }

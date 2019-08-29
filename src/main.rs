@@ -55,6 +55,8 @@ fn main() -> Result<(), failure::Error> {
                 match playlists {
                     Ok(p) => {
                         app.playlists = Some(p);
+                        // Select the first playlist
+                        app.selected_playlist_index = Some(0);
                     }
                     Err(e) => {
                         app.active_block = ActiveBlock::ApiError;
@@ -166,6 +168,7 @@ fn main() -> Result<(), failure::Error> {
                         ActiveBlock::SongSearch => {}
                         ActiveBlock::ArtistSearch => {}
                         ActiveBlock::PlaylistSearch => {}
+                        ActiveBlock::Home => {}
                     }
                 }
             }
