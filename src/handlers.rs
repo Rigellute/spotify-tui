@@ -512,6 +512,7 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             }
             None
         }
+        // Handle pressing enter when block is selected to start playing track
         Key::Char('\n') => {
             match app.search_results.hovered_block {
                 SearchResultBlock::AlbumSearch => {
@@ -534,6 +535,7 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             };
             None
         }
+        // Add `s` to "see more" on each option
         _ => None,
     }
 }
