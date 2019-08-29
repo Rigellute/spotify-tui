@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App};
+use super::app::{ActiveBlock, App, SearchResultBlock};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
@@ -24,11 +24,11 @@ fn format_song(song: &Option<FullTrack>) -> [Text<'static>; 3] {
     }
 }
 
-fn get_color(active_block: ActiveBlock, block_to_match: ActiveBlock) -> Style {
-    if active_block == block_to_match {
-        Style::default().fg(Color::LightCyan)
-    } else {
-        Style::default().fg(Color::Gray)
+fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
+    match (is_active, is_hovered) {
+        (true, _) => Style::default().fg(Color::LightCyan),
+        (false, true) => Style::default().fg(Color::Magenta),
+        _ => Style::default().fg(Color::Gray),
     }
 }
 
@@ -112,14 +112,16 @@ where
         .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
         .split(layout_chunk);
 
+    let highlight_state = (app.active_block == ActiveBlock::Input, false);
+
     Paragraph::new([Text::raw(&app.input)].iter())
         .style(Style::default().fg(Color::Yellow))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Input")
-                .title_style(get_color(app.active_block, ActiveBlock::Input))
-                .border_style(get_color(app.active_block, ActiveBlock::Input)),
+                .title_style(get_color(highlight_state))
+                .border_style(get_color(highlight_state)),
         )
         .render(f, chunks[0]);
 
@@ -146,14 +148,12 @@ where
 
     draw_playlist_block(f, app, chunks[0]);
 
+    // Handle which nested block to display
     match app.active_block {
         ActiveBlock::SongTable => {
             draw_song_table(f, app, chunks[1]);
         }
-        ActiveBlock::AlbumSearch
-        | ActiveBlock::ArtistSearch
-        | ActiveBlock::PlaylistSearch
-        | ActiveBlock::SongSearch => {
+        ActiveBlock::SearchResultBlock => {
             draw_search_results(f, app, chunks[1]);
         }
         _ => {
@@ -171,13 +171,15 @@ where
         None => vec![],
     };
 
+    let highlight_state = (app.active_block == ActiveBlock::MyPlaylists, false);
+
     draw_selectable_list(
         f,
-        app,
         layout_chunk,
         "Playlists",
         &playlist_items,
-        ActiveBlock::MyPlaylists,
+        highlight_state,
+        app.selected_playlist_index,
     );
 }
 
@@ -196,7 +198,7 @@ where
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
             .split(chunks[0]);
 
-        let songs = match &app.searched_tracks {
+        let songs = match &app.search_results.tracks {
             Some(r) => r
                 .tracks
                 .items
@@ -209,14 +211,17 @@ where
 
         draw_selectable_list(
             f,
-            app,
             song_artist_block[0],
             "Songs",
             &songs,
-            ActiveBlock::SongSearch,
+            (
+                app.search_results.selected_block == SearchResultBlock::SongSearch,
+                app.search_results.hovered_block == SearchResultBlock::SongSearch,
+            ),
+            app.search_results.selected_tracks_index,
         );
 
-        let artists = match &app.searched_artists {
+        let artists = match &app.search_results.artists {
             Some(r) => r
                 .artists
                 .items
@@ -228,11 +233,14 @@ where
 
         draw_selectable_list(
             f,
-            app,
             song_artist_block[1],
             "Artists",
             &artists,
-            ActiveBlock::ArtistSearch,
+            (
+                app.search_results.selected_block == SearchResultBlock::ArtistSearch,
+                app.search_results.hovered_block == SearchResultBlock::ArtistSearch,
+            ),
+            app.search_results.selected_artists_index,
         );
     }
 
@@ -242,7 +250,7 @@ where
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
             .split(chunks[1]);
 
-        let albums = match &app.searched_albums {
+        let albums = match &app.search_results.albums {
             Some(r) => r
                 .albums
                 .items
@@ -254,16 +262,19 @@ where
 
         draw_selectable_list(
             f,
-            app,
             albums_playlist_block[0],
             "Albums",
             &albums,
-            ActiveBlock::AlbumSearch,
+            (
+                app.search_results.selected_block == SearchResultBlock::AlbumSearch,
+                app.search_results.hovered_block == SearchResultBlock::AlbumSearch,
+            ),
+            app.search_results.selected_artists_index,
         );
 
-        let playlists = match &app.searched_albums {
+        let playlists = match &app.search_results.playlists {
             Some(r) => r
-                .albums
+                .playlists
                 .items
                 .iter()
                 .map(|item| item.name.to_owned())
@@ -272,11 +283,14 @@ where
         };
         draw_selectable_list(
             f,
-            app,
             albums_playlist_block[1],
             "Playlists",
             &playlists,
-            ActiveBlock::PlaylistSearch,
+            (
+                app.search_results.selected_block == SearchResultBlock::PlaylistSearch,
+                app.search_results.hovered_block == SearchResultBlock::PlaylistSearch,
+            ),
+            app.search_results.selected_playlists_index,
         );
     }
 }
@@ -290,8 +304,9 @@ where
 
     let formatted_songs = display_songs(&app.songs_for_table);
 
-    let selected_style =
-        get_color(app.active_block, ActiveBlock::SongTable).modifier(Modifier::BOLD);
+    let highlight_state = (app.active_block == ActiveBlock::SongTable, false);
+
+    let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
     let selected_song_index = app.select_song_index;
     let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
@@ -308,8 +323,8 @@ where
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White))
                 .title("Songs")
-                .title_style(get_color(app.active_block, ActiveBlock::SongTable))
-                .border_style(get_color(app.active_block, ActiveBlock::SongTable)),
+                .title_style(get_color(highlight_state))
+                .border_style(get_color(highlight_state)),
         )
         .style(Style::default().fg(Color::White))
         .widths(&[40, 40, 40])
@@ -433,11 +448,11 @@ where
 
 pub fn draw_selectable_list<B>(
     f: &mut Frame<B>,
-    app: &App,
     layout_chunk: Rect,
     title: &str,
     items: &[String],
-    active_block: ActiveBlock,
+    highlight_state: (bool, bool),
+    selected_index: Option<usize>,
 ) where
     B: Backend,
 {
@@ -446,12 +461,12 @@ pub fn draw_selectable_list<B>(
             Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .title_style(get_color(app.active_block, active_block))
-                .border_style(get_color(app.active_block, active_block)),
+                .title_style(get_color(highlight_state))
+                .border_style(get_color(highlight_state)),
         )
         .items(items)
         .style(Style::default().fg(Color::White))
-        .select(app.selected_playlist_index)
-        .highlight_style(get_color(app.active_block, active_block).modifier(Modifier::BOLD))
+        .select(selected_index)
+        .highlight_style(get_color(highlight_state).modifier(Modifier::BOLD))
         .render(f, layout_chunk);
 }

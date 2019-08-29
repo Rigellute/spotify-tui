@@ -16,7 +16,7 @@ use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::Terminal;
 
-use app::{ActiveBlock, App, EventLoop, LIMIT};
+use app::{ActiveBlock, App, EventLoop};
 use util::{Event, Events};
 
 fn main() -> Result<(), failure::Error> {
@@ -50,7 +50,7 @@ fn main() -> Result<(), failure::Error> {
             app.spotify = Some(spotify);
 
             if let Some(spotify) = &app.spotify {
-                let playlists = spotify.current_user_playlists(LIMIT, None);
+                let playlists = spotify.current_user_playlists(app.large_search_limit, None);
 
                 match playlists {
                     Ok(p) => {
@@ -164,10 +164,13 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         }
-                        ActiveBlock::AlbumSearch => {}
-                        ActiveBlock::SongSearch => {}
-                        ActiveBlock::ArtistSearch => {}
-                        ActiveBlock::PlaylistSearch => {}
+                        ActiveBlock::SearchResultBlock => {
+                            if let Some(event) = handlers::search_results_handler(key, &mut app) {
+                                if event == EventLoop::Exit {
+                                    break;
+                                }
+                            }
+                        }
                         ActiveBlock::Home => {}
                     }
                 }

@@ -1,9 +1,37 @@
-use super::app::{ActiveBlock, App, EventLoop, LIMIT};
+use super::app::{ActiveBlock, App, EventLoop, SearchResultBlock};
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::track::FullTrack;
 use rspotify::spotify::senum::Country;
 
 use termion::event::Key;
+
+fn down_event(key: Key) -> bool {
+    match key {
+        Key::Down | Key::Char('j') | Key::Ctrl('n') => true,
+        _ => false,
+    }
+}
+
+fn up_event(key: Key) -> bool {
+    match key {
+        Key::Up | Key::Char('k') | Key::Ctrl('p') => true,
+        _ => false,
+    }
+}
+
+fn left_event(key: Key) -> bool {
+    match key {
+        Key::Left | Key::Char('h') => true,
+        _ => false,
+    }
+}
+
+fn right_event(key: Key) -> bool {
+    match key {
+        Key::Right | Key::Char('l') => true,
+        _ => false,
+    }
+}
 
 fn on_down_press_handler<T>(selection_data: &[T], selection_index: usize) -> usize {
     if !selection_data.is_empty() {
@@ -45,32 +73,47 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 let country = Some(Country::UnitedKingdom);
 
                 let result = spotify
-                    .search_track(&app.input, LIMIT / 2, 0, country)
+                    .search_track(&app.input, app.small_search_limit, 0, country)
                     // TODO handle the error properly
                     .expect("Failed to fetch spotify tracks");
 
                 app.songs_for_table = result.tracks.items.clone();
-                app.searched_tracks = Some(result);
+                app.search_results.tracks = Some(result);
 
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
-                app.active_block = ActiveBlock::SongTable;
+                app.active_block = ActiveBlock::SearchResultBlock;
 
                 // Can I run these functions in parellel?
                 let result = spotify
-                    .search_artist(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .search_artist(
+                        &app.input,
+                        app.small_search_limit,
+                        0,
+                        Some(Country::UnitedKingdom),
+                    )
                     .expect("Failed to fetch artists");
-                app.searched_artists = Some(result);
+                app.search_results.artists = Some(result);
 
                 let result = spotify
-                    .search_album(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .search_album(
+                        &app.input,
+                        app.small_search_limit,
+                        0,
+                        Some(Country::UnitedKingdom),
+                    )
                     .expect("Failed to fetch albums");
-                app.searched_albums = Some(result);
+                app.search_results.albums = Some(result);
 
                 let result = spotify
-                    .search_playlist(&app.input, LIMIT / 2, 0, Some(Country::UnitedKingdom))
+                    .search_playlist(
+                        &app.input,
+                        app.small_search_limit,
+                        0,
+                        Some(Country::UnitedKingdom),
+                    )
                     .expect("Failed to fetch playlists");
-                app.searched_playlists = Some(result);
+                app.search_results.playlists = Some(result);
             }
             None
         }
@@ -97,11 +140,15 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             app.active_block = ActiveBlock::HelpMenu;
             None
         }
-        Key::Right | Key::Char('l') => {
-            app.active_block = ActiveBlock::SongTable;
+        k if right_event(k) => {
+            if app.selected_playlist_index.is_some() {
+                app.active_block = ActiveBlock::SongTable;
+            } else if !app.input.is_empty() {
+                app.active_block = ActiveBlock::SearchResultBlock;
+            }
             None
         }
-        Key::Down | Key::Char('j') => match &app.playlists {
+        k if down_event(k) => match &app.playlists {
             Some(p) => {
                 if let Some(selected_playlist_index) = app.selected_playlist_index {
                     let next_index = on_down_press_handler(&p.items, selected_playlist_index);
@@ -111,7 +158,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             }
             None => None,
         },
-        Key::Up | Key::Char('k') => match &app.playlists {
+        k if up_event(k) => match &app.playlists {
             Some(p) => {
                 if let Some(selected_playlist_index) = app.selected_playlist_index {
                     let next_index = on_up_press_handler(&p.items, selected_playlist_index);
@@ -135,7 +182,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                         "spotify",
                         &playlist_id,
                         None,
-                        Some(LIMIT),
+                        Some(app.large_search_limit),
                         None,
                         None,
                     ) {
@@ -165,11 +212,11 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             handle_get_devices(app);
             None
         }
-        Key::Left | Key::Char('h') => {
+        k if left_event(k) => {
             app.active_block = ActiveBlock::MyPlaylists;
             None
         }
-        Key::Down | Key::Char('j') => {
+        k if down_event(k) => {
             let next_index = on_down_press_handler(&app.songs_for_table, app.select_song_index);
             app.select_song_index = next_index;
             None
@@ -178,7 +225,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             app.active_block = ActiveBlock::HelpMenu;
             None
         }
-        Key::Up | Key::Char('k') => {
+        k if up_event(k) => {
             let next_index = on_up_press_handler(&app.songs_for_table, app.select_song_index);
             app.select_song_index = next_index;
             None
@@ -253,6 +300,10 @@ pub fn help_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             app.active_block = ActiveBlock::MyPlaylists;
             None
         }
+        Key::Char('d') => {
+            handle_get_devices(app);
+            None
+        }
         _ => None,
     }
 }
@@ -262,6 +313,176 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
+            None
+        }
+        Key::Char('d') => {
+            handle_get_devices(app);
+            None
+        }
+        _ => None,
+    }
+}
+
+pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+    match key {
+        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
+        Key::Char('d') => {
+            handle_get_devices(app);
+            None
+        }
+        Key::Char('?') => {
+            app.active_block = ActiveBlock::HelpMenu;
+            None
+        }
+        Key::Esc => {
+            app.search_results.selected_block = SearchResultBlock::Empty;
+            None
+        }
+        k if down_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                // Start selecting within the selected block
+                match app.search_results.selected_block {
+                    SearchResultBlock::AlbumSearch => {
+                        if let Some(index) = app.search_results.selected_album_index {
+                            if let Some(result) = &app.search_results.albums {
+                                let next_index = on_down_press_handler(&result.albums.items, index);
+                                app.search_results.selected_album_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::SongSearch => {
+                        if let Some(index) = app.search_results.selected_tracks_index {
+                            if let Some(result) = &app.search_results.tracks {
+                                let next_index = on_down_press_handler(&result.tracks.items, index);
+                                app.search_results.selected_tracks_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        if let Some(index) = app.search_results.selected_artists_index {
+                            if let Some(result) = &app.search_results.artists {
+                                let next_index =
+                                    on_down_press_handler(&result.artists.items, index);
+                                app.search_results.selected_artists_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        if let Some(index) = app.search_results.selected_playlists_index {
+                            if let Some(result) = &app.search_results.playlists {
+                                let next_index =
+                                    on_down_press_handler(&result.playlists.items, index);
+                                app.search_results.selected_playlists_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::Empty => {}
+                }
+            } else {
+                match app.search_results.hovered_block {
+                    SearchResultBlock::AlbumSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                }
+            }
+            None
+        }
+        k if up_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                // Start selecting within the selected block
+            } else {
+                match app.search_results.hovered_block {
+                    SearchResultBlock::AlbumSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                }
+            }
+            None
+        }
+        k if left_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                // Start selecting within the selected block
+            } else {
+                match app.search_results.hovered_block {
+                    SearchResultBlock::AlbumSearch => {
+                        app.active_block = ActiveBlock::MyPlaylists;
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.active_block = ActiveBlock::MyPlaylists;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                }
+            }
+            None
+        }
+        k if right_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                // Start selecting within the selected block
+            } else {
+                match app.search_results.hovered_block {
+                    SearchResultBlock::AlbumSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                }
+            }
+            None
+        }
+        Key::Char('\n') => {
+            match app.search_results.hovered_block {
+                SearchResultBlock::AlbumSearch => {
+                    app.search_results.selected_album_index = Some(0);
+                    app.search_results.selected_block = SearchResultBlock::AlbumSearch;
+                }
+                SearchResultBlock::SongSearch => {
+                    app.search_results.selected_tracks_index = Some(0);
+                    app.search_results.selected_block = SearchResultBlock::SongSearch;
+                }
+                SearchResultBlock::ArtistSearch => {
+                    app.search_results.selected_artists_index = Some(0);
+                    app.search_results.selected_block = SearchResultBlock::ArtistSearch;
+                }
+                SearchResultBlock::PlaylistSearch => {
+                    app.search_results.selected_playlists_index = Some(0);
+                    app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
+                }
+                SearchResultBlock::Empty => {}
+            };
             None
         }
         _ => None,
@@ -275,7 +496,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             app.active_block = ActiveBlock::MyPlaylists;
             None
         }
-        Key::Down | Key::Char('j') => match &app.devices {
+        k if down_event(k) => match &app.devices {
             Some(p) => {
                 if let Some(selected_device_index) = app.selected_device_index {
                     let next_index = on_down_press_handler(&p.devices, selected_device_index);
@@ -285,7 +506,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             }
             None => None,
         },
-        Key::Up | Key::Char('k') => match &app.devices {
+        k if up_event(k) => match &app.devices {
             Some(p) => {
                 if let Some(selected_device_index) = app.selected_device_index {
                     let next_index = on_up_press_handler(&p.devices, selected_device_index);
