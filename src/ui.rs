@@ -269,7 +269,7 @@ where
                 app.search_results.selected_block == SearchResultBlock::AlbumSearch,
                 app.search_results.hovered_block == SearchResultBlock::AlbumSearch,
             ),
-            app.search_results.selected_artists_index,
+            app.search_results.selected_album_index,
         );
 
         let playlists = match &app.search_results.playlists {

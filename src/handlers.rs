@@ -323,6 +323,19 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     }
 }
 
+// fn handle_selected_block_down_event<T>(
+//     selected_index: Option<usize>,
+//     data: Option<&[T]>,
+// ) -> Option<usize> {
+//     if let Some(index) = selected_index {
+//         if let Some(result) = data {
+//             let next_index = on_down_press_handler(&result.albums.items, index);
+//             return Some(next_index);
+//         }
+//     }
+//     None
+// }
+
 pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
@@ -400,6 +413,42 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         k if up_event(k) => {
             if app.search_results.selected_block != SearchResultBlock::Empty {
                 // Start selecting within the selected block
+                match app.search_results.selected_block {
+                    SearchResultBlock::AlbumSearch => {
+                        if let Some(index) = app.search_results.selected_album_index {
+                            if let Some(result) = &app.search_results.albums {
+                                let next_index = on_up_press_handler(&result.albums.items, index);
+                                app.search_results.selected_album_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::SongSearch => {
+                        if let Some(index) = app.search_results.selected_tracks_index {
+                            if let Some(result) = &app.search_results.tracks {
+                                let next_index = on_up_press_handler(&result.tracks.items, index);
+                                app.search_results.selected_tracks_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        if let Some(index) = app.search_results.selected_artists_index {
+                            if let Some(result) = &app.search_results.artists {
+                                let next_index = on_up_press_handler(&result.artists.items, index);
+                                app.search_results.selected_artists_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        if let Some(index) = app.search_results.selected_playlists_index {
+                            if let Some(result) = &app.search_results.playlists {
+                                let next_index =
+                                    on_up_press_handler(&result.playlists.items, index);
+                                app.search_results.selected_playlists_index = Some(next_index);
+                            }
+                        }
+                    }
+                    SearchResultBlock::Empty => {}
+                }
             } else {
                 match app.search_results.hovered_block {
                     SearchResultBlock::AlbumSearch => {
