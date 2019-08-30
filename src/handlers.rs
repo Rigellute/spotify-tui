@@ -1,4 +1,5 @@
-use super::app::{ActiveBlock, App, EventLoop, SearchResultBlock};
+use super::app::{ActiveBlock, App, EventLoop, SearchResultBlock, SongTableContext};
+use failure::err_msg;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::track::FullTrack;
 use rspotify::spotify::senum::Country;
@@ -174,6 +175,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         }
         Key::Char('\n') => match (&app.spotify, &app.playlists, &app.selected_playlist_index) {
             (Some(spotify), Some(playlists), Some(selected_playlist_index)) => {
+                app.song_table_context = Some(SongTableContext::MyPlaylists);
                 if let Some(selected_playlist) =
                     playlists.items.get(selected_playlist_index.to_owned())
                 {
@@ -235,58 +237,48 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Char('\n') => {
-            if let Some(track) = app.songs_for_table.get(app.select_song_index) {
-                let context_uri = match (&app.selected_playlist_index, &app.playlists) {
-                    (Some(selected_playlist_index), Some(playlists)) => {
-                        if let Some(selected_playlist) =
-                            playlists.items.get(selected_playlist_index.to_owned())
+            match &app.song_table_context {
+                Some(context) => match context {
+                    SongTableContext::MyPlaylists => {
+                        if let Some(track) = app.songs_for_table.get(app.select_song_index.clone())
                         {
-                            Some(selected_playlist.uri.to_owned())
-                        } else {
-                            None
-                        }
-                    }
-                    _ => None,
-                };
+                            let context_uri = match (&app.selected_playlist_index, &app.playlists) {
+                                (Some(selected_playlist_index), Some(playlists)) => {
+                                    if let Some(selected_playlist) =
+                                        playlists.items.get(selected_playlist_index.to_owned())
+                                    {
+                                        Some(selected_playlist.uri.to_owned())
+                                    } else {
+                                        None
+                                    }
+                                }
+                                _ => None,
+                            };
 
-                let device_id = app.device_id.take();
-
-                // I need to pass in different arguments here, how can this be
-                // nicer?
-                if let Some(spotify) = &app.spotify {
-                    if let Some(context_uri) = context_uri {
-                        match spotify.start_playback(
-                            device_id,
-                            Some(context_uri),
-                            None,
-                            for_position(app.select_song_index as u32),
-                        ) {
-                            Ok(_r) => {
-                                app.current_playing_song = Some(track.to_owned());
-                            }
-                            Err(e) => {
-                                app.active_block = ActiveBlock::ApiError;
-                                app.api_error = e.to_string();
-                            }
-                        }
-                    } else {
-                        match spotify.start_playback(
-                            device_id,
-                            None,
-                            Some(vec![track.uri.to_owned()]),
-                            for_position(0),
-                        ) {
-                            Ok(_r) => {
-                                app.current_playing_song = Some(track.to_owned());
-                            }
-                            Err(e) => {
-                                app.active_block = ActiveBlock::ApiError;
-                                app.api_error = e.to_string();
-                            }
-                        }
+                            match start_playback(
+                                app,
+                                context_uri,
+                                None,
+                                Some(app.select_song_index.clone()),
+                            ) {
+                                Ok(_r) => {
+                                    app.current_playing_song = Some(track.to_owned());
+                                }
+                                Err(e) => {
+                                    app.active_block = ActiveBlock::ApiError;
+                                    app.api_error = e.to_string();
+                                }
+                            };
+                        };
                     }
-                }
+                    SongTableContext::AlbumSearch => {}
+                    SongTableContext::SongSearch => {}
+                    SongTableContext::ArtistSearch => {}
+                    SongTableContext::PlaylistSearch => {}
+                },
+                None => {}
             };
+
             None
         }
         _ => None,
@@ -322,19 +314,6 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         _ => None,
     }
 }
-
-// fn handle_selected_block_down_event<T>(
-//     selected_index: Option<usize>,
-//     data: Option<&[T]>,
-// ) -> Option<usize> {
-//     if let Some(index) = selected_index {
-//         if let Some(result) = data {
-//             let next_index = on_down_press_handler(&result.albums.items, index);
-//             return Some(next_index);
-//         }
-//     }
-//     None
-// }
 
 pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
@@ -514,25 +493,56 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         }
         // Handle pressing enter when block is selected to start playing track
         Key::Char('\n') => {
-            match app.search_results.hovered_block {
-                SearchResultBlock::AlbumSearch => {
-                    app.search_results.selected_album_index = Some(0);
-                    app.search_results.selected_block = SearchResultBlock::AlbumSearch;
-                }
-                SearchResultBlock::SongSearch => {
-                    app.search_results.selected_tracks_index = Some(0);
-                    app.search_results.selected_block = SearchResultBlock::SongSearch;
-                }
-                SearchResultBlock::ArtistSearch => {
-                    app.search_results.selected_artists_index = Some(0);
-                    app.search_results.selected_block = SearchResultBlock::ArtistSearch;
-                }
-                SearchResultBlock::PlaylistSearch => {
-                    app.search_results.selected_playlists_index = Some(0);
-                    app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
-                }
-                SearchResultBlock::Empty => {}
-            };
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                match app.search_results.selected_block {
+                    SearchResultBlock::AlbumSearch => {
+                        match (
+                            app.search_results.selected_album_index,
+                            &app.search_results.albums,
+                        ) {
+                            (Some(index), Some(albums_result)) => {
+                                if let Some(album) = albums_result.albums.items.get(index) {
+                                    // TODO: play the selected album
+                                };
+                            }
+                            _ => {}
+                        }
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.search_results.selected_tracks_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.selected_artists_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::ArtistSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.selected_playlists_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                };
+            } else {
+                match app.search_results.hovered_block {
+                    SearchResultBlock::AlbumSearch => {
+                        app.search_results.selected_album_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::AlbumSearch;
+                    }
+                    SearchResultBlock::SongSearch => {
+                        app.search_results.selected_tracks_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::SongSearch;
+                    }
+                    SearchResultBlock::ArtistSearch => {
+                        app.search_results.selected_artists_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::ArtistSearch;
+                    }
+                    SearchResultBlock::PlaylistSearch => {
+                        app.search_results.selected_playlists_index = Some(0);
+                        app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
+                    }
+                    SearchResultBlock::Empty => {}
+                };
+            }
             None
         }
         // Add `s` to "see more" on each option
@@ -592,6 +602,37 @@ fn handle_get_devices(app: &mut App) {
                 app.selected_device_index = Some(0);
             }
         }
+    }
+}
+
+fn start_playback(
+    app: &App,
+    context_uri: Option<String>,
+    uris: Option<Vec<String>>,
+    offset: Option<usize>,
+) -> Result<(), failure::Error> {
+    let (uris, context_uri) = if context_uri.is_some() {
+        (None, context_uri)
+    } else {
+        (uris, None)
+    };
+
+    let offset = match offset {
+        Some(o) => o,
+        None => 0,
+    };
+
+    match &app.device_id {
+        Some(device_id) => match &app.spotify {
+            Some(spotify) => spotify.start_playback(
+                Some(device_id.to_string()),
+                context_uri,
+                uris,
+                for_position(offset as u32),
+            ),
+            None => Err(err_msg("Spotify is not ready to be used".to_string())),
+        },
+        None => Err(err_msg("No device_id selected")),
     }
 }
 

@@ -33,6 +33,16 @@ pub enum ActiveBlock {
     SongTable,
 }
 
+// Is it possible to compose enums?
+#[derive(PartialEq, Debug)]
+pub enum SongTableContext {
+    MyPlaylists,
+    AlbumSearch,
+    SongSearch,
+    ArtistSearch,
+    PlaylistSearch,
+}
+
 pub struct SearchResult {
     pub albums: Option<SearchAlbums>,
     pub artists: Option<SearchArtists>,
@@ -58,6 +68,7 @@ pub struct App {
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub search_results: SearchResult,
+    pub song_table_context: Option<SongTableContext>,
     pub select_song_index: usize,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
@@ -91,6 +102,7 @@ impl App {
                 tracks: None,
             },
             select_song_index: 0,
+            song_table_context: None,
             selected_device_index: None,
             selected_playlist_index: None,
             songs_for_table: vec![],
