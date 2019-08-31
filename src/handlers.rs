@@ -181,31 +181,14 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             app.active_block = ActiveBlock::Input;
             None
         }
-        Key::Char('\n') => match (&app.spotify, &app.playlists, &app.selected_playlist_index) {
-            (Some(spotify), Some(playlists), Some(selected_playlist_index)) => {
+        Key::Char('\n') => match (&app.playlists, &app.selected_playlist_index) {
+            (Some(playlists), Some(selected_playlist_index)) => {
                 app.song_table_context = Some(SongTableContext::MyPlaylists);
                 if let Some(selected_playlist) =
                     playlists.items.get(selected_playlist_index.to_owned())
                 {
                     let playlist_id = selected_playlist.id.to_owned();
-                    if let Ok(playlist_tracks) = spotify.user_playlist_tracks(
-                        "spotify",
-                        &playlist_id,
-                        None,
-                        Some(app.large_search_limit),
-                        None,
-                        None,
-                    ) {
-                        app.songs_for_table = playlist_tracks
-                            .items
-                            .clone()
-                            .into_iter()
-                            .map(|item| item.track)
-                            .collect::<Vec<FullTrack>>();
-
-                        app.playlist_tracks = playlist_tracks.items;
-                        app.active_block = ActiveBlock::SongTable;
-                    };
+                    get_playlist_tracks(playlist_id, app);
                 }
                 None
             }
@@ -249,8 +232,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             match &app.song_table_context {
                 Some(context) => match context {
                     SongTableContext::MyPlaylists => {
-                        if let Some(track) = app.songs_for_table.get(app.select_song_index.clone())
-                        {
+                        if let Some(track) = app.songs_for_table.get(app.select_song_index) {
                             let context_uri = match (&app.selected_playlist_index, &app.playlists) {
                                 (Some(selected_playlist_index), Some(playlists)) => {
                                     if let Some(selected_playlist) =
@@ -268,7 +250,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                                 app,
                                 context_uri,
                                 None,
-                                Some(app.select_song_index.clone()),
+                                Some(app.select_song_index),
                             ) {
                                 Ok(_r) => {
                                     app.current_playing_song = Some(track.to_owned());
@@ -283,7 +265,42 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                     SongTableContext::AlbumSearch => {}
                     SongTableContext::SongSearch => {}
                     SongTableContext::ArtistSearch => {}
-                    SongTableContext::PlaylistSearch => {}
+                    SongTableContext::PlaylistSearch => {
+                        if let Some(track) = app.songs_for_table.get(app.select_song_index) {
+                            let context_uri = match (
+                                &app.search_results.selected_playlists_index,
+                                &app.search_results.playlists,
+                            ) {
+                                (Some(selected_playlist_index), Some(playlist_result)) => {
+                                    if let Some(selected_playlist) = playlist_result
+                                        .playlists
+                                        .items
+                                        .get(selected_playlist_index.to_owned())
+                                    {
+                                        Some(selected_playlist.uri.to_owned())
+                                    } else {
+                                        None
+                                    }
+                                }
+                                _ => None,
+                            };
+
+                            match start_playback(
+                                app,
+                                context_uri,
+                                None,
+                                Some(app.select_song_index),
+                            ) {
+                                Ok(_r) => {
+                                    app.current_playing_song = Some(track.to_owned());
+                                }
+                                Err(e) => {
+                                    app.active_block = ActiveBlock::ApiError;
+                                    app.api_error = e.to_string();
+                                }
+                            };
+                        };
+                    }
                 },
                 None => {}
             };
@@ -504,51 +521,53 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             if app.search_results.selected_block != SearchResultBlock::Empty {
                 match app.search_results.selected_block {
                     SearchResultBlock::AlbumSearch => {
-                        match (
+                        if let (Some(index), Some(albums_result)) = (
                             app.search_results.selected_album_index,
                             &app.search_results.albums,
                         ) {
-                            (Some(index), Some(albums_result)) => {
-                                if let Some(album) = albums_result.albums.items.get(index) {
-                                    // TODO: play the selected album
-                                };
-                            }
-                            _ => {}
+                            if let Some(album) = albums_result.albums.items.get(index) {
+                                // TODO: Go to album table
+                            };
                         }
                     }
                     SearchResultBlock::SongSearch => {
-                        match (
+                        if let (Some(index), Some(result)) = (
                             app.search_results.selected_tracks_index,
                             &app.search_results.tracks,
                         ) {
-                            (Some(index), Some(result)) => {
-                                if let Some(track) = result.tracks.items.get(index) {
-                                    match start_playback(
-                                        app,
-                                        None,
-                                        Some(vec![track.uri.to_owned()]),
-                                        Some(0),
-                                    ) {
-                                        Ok(_r) => {
-                                            app.current_playing_song = Some(track.to_owned());
-                                        }
-                                        Err(e) => {
-                                            app.active_block = ActiveBlock::ApiError;
-                                            app.api_error = e.to_string();
-                                        }
-                                    };
+                            if let Some(track) = result.tracks.items.get(index) {
+                                match start_playback(
+                                    app,
+                                    None,
+                                    Some(vec![track.uri.to_owned()]),
+                                    Some(0),
+                                ) {
+                                    Ok(_r) => {
+                                        app.current_playing_song = Some(track.to_owned());
+                                    }
+                                    Err(e) => {
+                                        app.active_block = ActiveBlock::ApiError;
+                                        app.api_error = e.to_string();
+                                    }
                                 };
-                            }
-                            _ => {}
-                        }
+                            };
+                        };
                     }
                     SearchResultBlock::ArtistSearch => {
-                        app.search_results.selected_artists_index = Some(0);
-                        app.search_results.selected_block = SearchResultBlock::ArtistSearch;
+                        // TODO: Go to artist view (not yet implemented)
                     }
                     SearchResultBlock::PlaylistSearch => {
-                        app.search_results.selected_playlists_index = Some(0);
-                        app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
+                        if let (Some(index), Some(playlists_result)) = (
+                            app.search_results.selected_playlists_index,
+                            &app.search_results.playlists,
+                        ) {
+                            if let Some(playlist) = playlists_result.playlists.items.get(index) {
+                                // Go to playlist tracks table
+                                app.song_table_context = Some(SongTableContext::PlaylistSearch);
+                                let playlist_id = playlist.id.to_owned();
+                                get_playlist_tracks(playlist_id, app);
+                            };
+                        }
                     }
                     SearchResultBlock::Empty => {}
                 };
@@ -663,6 +682,32 @@ fn start_playback(
             None => Err(err_msg("Spotify is not ready to be used".to_string())),
         },
         None => Err(err_msg("No device_id selected")),
+    }
+}
+
+fn get_playlist_tracks(playlist_id: String, app: &mut App) {
+    match &app.spotify {
+        Some(spotify) => {
+            if let Ok(playlist_tracks) = spotify.user_playlist_tracks(
+                "spotify",
+                &playlist_id,
+                None,
+                Some(app.large_search_limit),
+                None,
+                None,
+            ) {
+                app.songs_for_table = playlist_tracks
+                    .items
+                    .clone()
+                    .into_iter()
+                    .map(|item| item.track)
+                    .collect::<Vec<FullTrack>>();
+
+                app.playlist_tracks = playlist_tracks.items;
+                app.active_block = ActiveBlock::SongTable;
+            };
+        }
+        None => {}
     }
 }
 
