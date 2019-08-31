@@ -6,6 +6,8 @@ use rspotify::spotify::senum::Country;
 
 use termion::event::Key;
 
+// NOTE: This file is getting large, the functions here are getting too complicated.
+// TODO: Break down into separate handler files
 fn down_event(key: Key) -> bool {
     match key {
         Key::Down | Key::Char('j') | Key::Ctrl('n') => true,
