@@ -3,3 +3,4 @@
 
 .env
 .spotify_token_cache.json 
+.cached_device_id.txt
