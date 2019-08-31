@@ -69,7 +69,7 @@ fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) 
     }
 }
 
-pub fn input_handler(key: Key, app: &mut App) {
+fn input_handler(key: Key, app: &mut App) {
     match key {
         Key::Ctrl('u') => {
             app.input = String::new();
@@ -136,7 +136,7 @@ pub fn input_handler(key: Key, app: &mut App) {
     }
 }
 
-pub fn playlist_handler(key: Key, app: &mut App) {
+fn playlist_handler(key: Key, app: &mut App) {
     match key {
         Key::Char('d') => {
             app.handle_get_devices();
@@ -193,7 +193,7 @@ pub fn playlist_handler(key: Key, app: &mut App) {
     }
 }
 
-pub fn song_table_handler(key: Key, app: &mut App) {
+fn song_table_handler(key: Key, app: &mut App) {
     match key {
         Key::Char('d') => {
             app.handle_get_devices();
@@ -297,7 +297,7 @@ pub fn song_table_handler(key: Key, app: &mut App) {
     };
 }
 
-pub fn help_menu_handler(key: Key, app: &mut App) {
+fn help_menu_handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
@@ -309,7 +309,7 @@ pub fn help_menu_handler(key: Key, app: &mut App) {
     };
 }
 
-pub fn api_error_menu_handler(key: Key, app: &mut App) {
+fn api_error_menu_handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
@@ -321,7 +321,7 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) {
     };
 }
 
-pub fn search_results_handler(key: Key, app: &mut App) {
+fn search_results_handler(key: Key, app: &mut App) {
     match key {
         Key::Char('d') => {
             app.handle_get_devices();
@@ -570,7 +570,7 @@ pub fn search_results_handler(key: Key, app: &mut App) {
     }
 }
 
-pub fn select_device_handler(key: Key, app: &mut App) {
+fn select_device_handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
@@ -618,6 +618,34 @@ pub fn select_device_handler(key: Key, app: &mut App) {
             };
         }
         _ => {}
+    }
+}
+
+pub fn handle_app(app: &mut App, key: Key) {
+    // Match events for different app states
+    match app.active_block {
+        ActiveBlock::Input => {
+            input_handler(key, app);
+        }
+        ActiveBlock::MyPlaylists => {
+            playlist_handler(key, app);
+        }
+        ActiveBlock::SongTable => {
+            song_table_handler(key, app);
+        }
+        ActiveBlock::HelpMenu => {
+            help_menu_handler(key, app);
+        }
+        ActiveBlock::Error => {
+            api_error_menu_handler(key, app);
+        }
+        ActiveBlock::SelectDevice => {
+            select_device_handler(key, app);
+        }
+        ActiveBlock::SearchResultBlock => {
+            search_results_handler(key, app);
+        }
+        ActiveBlock::Home => {}
     }
 }
 

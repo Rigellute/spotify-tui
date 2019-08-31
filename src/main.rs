@@ -146,7 +146,7 @@ fn main() -> Result<(), failure::Error> {
                 if let Event::Input(key) = events.next()? {
                     match key {
                         Key::Char('q') | Key::Ctrl('c') => break,
-                        _ => handle_app(&mut app, key),
+                        _ => handlers::handle_app(&mut app, key),
                     }
                 }
             }
@@ -155,32 +155,4 @@ fn main() -> Result<(), failure::Error> {
     }
 
     Ok(())
-}
-
-fn handle_app(app: &mut App, key: Key) {
-    // Match events for different app states
-    match app.active_block {
-        ActiveBlock::Input => {
-            handlers::input_handler(key, app);
-        }
-        ActiveBlock::MyPlaylists => {
-            handlers::playlist_handler(key, app);
-        }
-        ActiveBlock::SongTable => {
-            handlers::song_table_handler(key, app);
-        }
-        ActiveBlock::HelpMenu => {
-            handlers::help_menu_handler(key, app);
-        }
-        ActiveBlock::Error => {
-            handlers::api_error_menu_handler(key, app);
-        }
-        ActiveBlock::SelectDevice => {
-            handlers::select_device_handler(key, app);
-        }
-        ActiveBlock::SearchResultBlock => {
-            handlers::search_results_handler(key, app);
-        }
-        ActiveBlock::Home => {}
-    }
 }
