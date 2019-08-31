@@ -462,46 +462,40 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         k if left_event(k) => {
-            if app.search_results.selected_block != SearchResultBlock::Empty {
-                // Start selecting within the selected block
-            } else {
-                match app.search_results.hovered_block {
-                    SearchResultBlock::AlbumSearch => {
-                        app.active_block = ActiveBlock::MyPlaylists;
-                    }
-                    SearchResultBlock::SongSearch => {
-                        app.active_block = ActiveBlock::MyPlaylists;
-                    }
-                    SearchResultBlock::ArtistSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
-                    }
-                    SearchResultBlock::PlaylistSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
-                    }
-                    SearchResultBlock::Empty => {}
+            app.search_results.selected_block = SearchResultBlock::Empty;
+            match app.search_results.hovered_block {
+                SearchResultBlock::AlbumSearch => {
+                    app.active_block = ActiveBlock::MyPlaylists;
                 }
+                SearchResultBlock::SongSearch => {
+                    app.active_block = ActiveBlock::MyPlaylists;
+                }
+                SearchResultBlock::ArtistSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                }
+                SearchResultBlock::PlaylistSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                }
+                SearchResultBlock::Empty => {}
             }
             None
         }
         k if right_event(k) => {
-            if app.search_results.selected_block != SearchResultBlock::Empty {
-                // Start selecting within the selected block
-            } else {
-                match app.search_results.hovered_block {
-                    SearchResultBlock::AlbumSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
-                    }
-                    SearchResultBlock::SongSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
-                    }
-                    SearchResultBlock::ArtistSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::SongSearch;
-                    }
-                    SearchResultBlock::PlaylistSearch => {
-                        app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
-                    }
-                    SearchResultBlock::Empty => {}
+            app.search_results.selected_block = SearchResultBlock::Empty;
+            match app.search_results.hovered_block {
+                SearchResultBlock::AlbumSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
                 }
+                SearchResultBlock::SongSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+                }
+                SearchResultBlock::ArtistSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::SongSearch;
+                }
+                SearchResultBlock::PlaylistSearch => {
+                    app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+                }
+                SearchResultBlock::Empty => {}
             }
             None
         }
@@ -523,8 +517,30 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                         }
                     }
                     SearchResultBlock::SongSearch => {
-                        app.search_results.selected_tracks_index = Some(0);
-                        app.search_results.selected_block = SearchResultBlock::SongSearch;
+                        match (
+                            app.search_results.selected_tracks_index,
+                            &app.search_results.tracks,
+                        ) {
+                            (Some(index), Some(result)) => {
+                                if let Some(track) = result.tracks.items.get(index) {
+                                    match start_playback(
+                                        app,
+                                        None,
+                                        Some(vec![track.uri.to_owned()]),
+                                        Some(0),
+                                    ) {
+                                        Ok(_r) => {
+                                            app.current_playing_song = Some(track.to_owned());
+                                        }
+                                        Err(e) => {
+                                            app.active_block = ActiveBlock::ApiError;
+                                            app.api_error = e.to_string();
+                                        }
+                                    };
+                                };
+                            }
+                            _ => {}
+                        }
                     }
                     SearchResultBlock::ArtistSearch => {
                         app.search_results.selected_artists_index = Some(0);
