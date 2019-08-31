@@ -144,7 +144,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
-            handle_get_devices(app);
+            app.handle_get_devices();
             None
         }
         Key::Char('?') => {
@@ -202,7 +202,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
-            handle_get_devices(app);
+            app.handle_get_devices();
             None
         }
         k if left_event(k) => {
@@ -256,7 +256,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                                     app.current_playing_song = Some(track.to_owned());
                                 }
                                 Err(e) => {
-                                    app.active_block = ActiveBlock::ApiError;
+                                    app.active_block = ActiveBlock::Error;
                                     app.api_error = e.to_string();
                                 }
                             };
@@ -295,7 +295,7 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                                     app.current_playing_song = Some(track.to_owned());
                                 }
                                 Err(e) => {
-                                    app.active_block = ActiveBlock::ApiError;
+                                    app.active_block = ActiveBlock::Error;
                                     app.api_error = e.to_string();
                                 }
                             };
@@ -319,7 +319,7 @@ pub fn help_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Char('d') => {
-            handle_get_devices(app);
+            app.handle_get_devices();
             None
         }
         _ => None,
@@ -334,7 +334,7 @@ pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         Key::Char('d') => {
-            handle_get_devices(app);
+            app.handle_get_devices();
             None
         }
         _ => None,
@@ -345,7 +345,7 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
     match key {
         Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
-            handle_get_devices(app);
+            app.handle_get_devices();
             None
         }
         Key::Char('?') => {
@@ -546,7 +546,7 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                                         app.current_playing_song = Some(track.to_owned());
                                     }
                                     Err(e) => {
-                                        app.active_block = ActiveBlock::ApiError;
+                                        app.active_block = ActiveBlock::Error;
                                         app.api_error = e.to_string();
                                     }
                                 };
@@ -628,29 +628,22 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         },
         Key::Char('\n') => match (&app.devices, app.selected_device_index) {
             (Some(devices), Some(index)) => {
-                if let Some(device) = devices.devices.get(index) {
-                    app.device_id = Some(device.id.to_owned());
+                if let Some(device) = &devices.devices.get(index) {
+                    app.device_id = Some(device.id.clone());
                     app.active_block = ActiveBlock::MyPlaylists;
+                    match app.set_cached_device_token(device.id.clone()) {
+                        Ok(()) => {}
+                        Err(e) => {
+                            app.active_block = ActiveBlock::Error;
+                            app.api_error = e.to_string();
+                        }
+                    };
                 }
                 None
             }
             _ => None,
         },
         _ => None,
-    }
-}
-
-fn handle_get_devices(app: &mut App) {
-    if let Some(spotify) = &app.spotify {
-        if let Ok(result) = spotify.device() {
-            app.active_block = ActiveBlock::SelectDevice;
-
-            if !result.devices.is_empty() {
-                app.devices = Some(result);
-                // Select the first device in the list
-                app.selected_device_index = Some(0);
-            }
-        }
     }
 }
 

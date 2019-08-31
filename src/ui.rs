@@ -67,7 +67,7 @@ where
     let gray = Style::default().fg(Color::White);
     let header = ["Active block", "Event", "Description"];
 
-    // Would be nice to share the same source of truth as the event match below
+    // Would be nice to share the same source of truth as the event matches in `src/handlers`
     let help_rows = vec![
         vec!["Playlist/Song block", "j", "Move selection down"],
         vec!["Playlist/Song blocks", "k", "Move selection up"],

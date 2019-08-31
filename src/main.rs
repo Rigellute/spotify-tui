@@ -49,6 +49,17 @@ fn main() -> Result<(), failure::Error> {
 
             app.spotify = Some(spotify);
 
+            // Now that spotify is ready, check if the user has already selected a device_id to
+            // play music on, if not send them to the device selection view
+            match app.get_cached_device_token() {
+                Ok(device_id) => {
+                    app.device_id = Some(device_id);
+                }
+                Err(e) => {
+                    app.handle_get_devices();
+                }
+            }
+
             if let Some(spotify) = &app.spotify {
                 let playlists = spotify.current_user_playlists(app.large_search_limit, None);
 
@@ -59,7 +70,7 @@ fn main() -> Result<(), failure::Error> {
                         app.selected_playlist_index = Some(0);
                     }
                     Err(e) => {
-                        app.active_block = ActiveBlock::ApiError;
+                        app.active_block = ActiveBlock::Error;
                         app.api_error = e.to_string();
                     }
                 };
@@ -78,7 +89,7 @@ fn main() -> Result<(), failure::Error> {
                         ActiveBlock::HelpMenu => {
                             ui::draw_help_menu(&mut f);
                         }
-                        ActiveBlock::ApiError => {
+                        ActiveBlock::Error => {
                             ui::draw_api_error(&mut f, &app);
                         }
                         ActiveBlock::SelectDevice => {
@@ -162,7 +173,7 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         }
-                        ActiveBlock::ApiError => {
+                        ActiveBlock::Error => {
                             if let Some(event) = handlers::api_error_menu_handler(key, &mut app) {
                                 if event == EventLoop::Exit {
                                     break;
