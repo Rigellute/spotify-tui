@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App, EventLoop, SearchResultBlock, SongTableContext};
+use super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
 use failure::err_msg;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::track::FullTrack;
@@ -69,16 +69,13 @@ fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) 
     }
 }
 
-pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn input_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Ctrl('u') => {
             app.input = String::new();
-            None
         }
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
-            None
         }
         Key::Char('\n') => {
             if let Some(spotify) = &app.spotify {
@@ -128,30 +125,24 @@ pub fn input_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                     .expect("Failed to fetch playlists");
                 app.search_results.playlists = Some(result);
             }
-            None
         }
         Key::Char(c) => {
             app.input.push(c);
-            None
         }
         Key::Backspace => {
             app.input.pop();
-            None
         }
-        _ => None,
+        _ => {}
     }
 }
 
-pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn playlist_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
             app.handle_get_devices();
-            None
         }
         Key::Char('?') => {
             app.active_block = ActiveBlock::HelpMenu;
-            None
         }
         k if right_event(k) => {
             if app.selected_playlist_index.is_some() {
@@ -159,76 +150,71 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             } else if !app.input.is_empty() {
                 app.active_block = ActiveBlock::SearchResultBlock;
             }
-            None
         }
-        k if down_event(k) => match &app.playlists {
-            Some(p) => {
-                if let Some(selected_playlist_index) = app.selected_playlist_index {
-                    let next_index = on_down_press_handler(&p.items, Some(selected_playlist_index));
+        k if down_event(k) => {
+            match &app.playlists {
+                Some(p) => {
+                    if let Some(selected_playlist_index) = app.selected_playlist_index {
+                        let next_index =
+                            on_down_press_handler(&p.items, Some(selected_playlist_index));
+                        app.selected_playlist_index = Some(next_index);
+                    }
+                }
+                None => {}
+            };
+        }
+        k if up_event(k) => {
+            match &app.playlists {
+                Some(p) => {
+                    let next_index = on_up_press_handler(&p.items, app.selected_playlist_index);
                     app.selected_playlist_index = Some(next_index);
                 }
-                None
-            }
-            None => None,
-        },
-        k if up_event(k) => match &app.playlists {
-            Some(p) => {
-                let next_index = on_up_press_handler(&p.items, app.selected_playlist_index);
-                app.selected_playlist_index = Some(next_index);
-                None
-            }
-            None => None,
-        },
+                None => {}
+            };
+        }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
-            None
         }
-        Key::Char('\n') => match (&app.playlists, &app.selected_playlist_index) {
-            (Some(playlists), Some(selected_playlist_index)) => {
-                app.song_table_context = Some(SongTableContext::MyPlaylists);
-                if let Some(selected_playlist) =
-                    playlists.items.get(selected_playlist_index.to_owned())
-                {
-                    let playlist_id = selected_playlist.id.to_owned();
-                    get_playlist_tracks(playlist_id, app);
+        Key::Char('\n') => {
+            match (&app.playlists, &app.selected_playlist_index) {
+                (Some(playlists), Some(selected_playlist_index)) => {
+                    app.song_table_context = Some(SongTableContext::MyPlaylists);
+                    if let Some(selected_playlist) =
+                        playlists.items.get(selected_playlist_index.to_owned())
+                    {
+                        let playlist_id = selected_playlist.id.to_owned();
+                        get_playlist_tracks(playlist_id, app);
+                    }
                 }
-                None
-            }
-            _ => None,
-        },
-        _ => None,
+                _ => {}
+            };
+        }
+        _ => {}
     }
 }
 
-pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn song_table_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
             app.handle_get_devices();
-            None
         }
         k if left_event(k) => {
             app.active_block = ActiveBlock::MyPlaylists;
-            None
         }
         k if down_event(k) => {
             let next_index =
                 on_down_press_handler(&app.songs_for_table, Some(app.select_song_index));
             app.select_song_index = next_index;
-            None
         }
         Key::Char('?') => {
             app.active_block = ActiveBlock::HelpMenu;
-            None
         }
         k if up_event(k) => {
             let next_index = on_up_press_handler(&app.songs_for_table, Some(app.select_song_index));
             app.select_song_index = next_index;
-            None
         }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
-            None
         }
         Key::Char('\n') => {
             match &app.song_table_context {
@@ -306,57 +292,45 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 },
                 None => {}
             };
-
-            None
         }
-        _ => None,
-    }
+        _ => {}
+    };
 }
 
-pub fn help_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn help_menu_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
-            None
         }
         Key::Char('d') => {
             app.handle_get_devices();
-            None
         }
-        _ => None,
-    }
+        _ => {}
+    };
 }
 
-pub fn api_error_menu_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn api_error_menu_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
-            None
         }
         Key::Char('d') => {
             app.handle_get_devices();
-            None
         }
-        _ => None,
-    }
+        _ => (),
+    };
 }
 
-pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn search_results_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Char('d') => {
             app.handle_get_devices();
-            None
         }
         Key::Char('?') => {
             app.active_block = ActiveBlock::HelpMenu;
-            None
         }
         Key::Esc => {
             app.search_results.selected_block = SearchResultBlock::Empty;
-            None
         }
         k if down_event(k) => {
             if app.search_results.selected_block != SearchResultBlock::Empty {
@@ -417,7 +391,6 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                     SearchResultBlock::Empty => {}
                 }
             }
-            None
         }
         k if up_event(k) => {
             if app.search_results.selected_block != SearchResultBlock::Empty {
@@ -478,7 +451,6 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                     SearchResultBlock::Empty => {}
                 }
             }
-            None
         }
         k if left_event(k) => {
             app.search_results.selected_block = SearchResultBlock::Empty;
@@ -497,7 +469,6 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 }
                 SearchResultBlock::Empty => {}
             }
-            None
         }
         k if right_event(k) => {
             app.search_results.selected_block = SearchResultBlock::Empty;
@@ -516,7 +487,6 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 }
                 SearchResultBlock::Empty => {}
             }
-            None
         }
         // Handle pressing enter when block is selected to start playing track
         Key::Char('\n') => {
@@ -594,58 +564,60 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                     SearchResultBlock::Empty => {}
                 };
             }
-            None
         }
         // Add `s` to "see more" on each option
-        _ => None,
+        _ => {}
     }
 }
 
-pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
+pub fn select_device_handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('q') | Key::Ctrl('c') => Some(EventLoop::Exit),
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
-            None
         }
-        k if down_event(k) => match &app.devices {
-            Some(p) => {
-                if let Some(selected_device_index) = app.selected_device_index {
-                    let next_index = on_down_press_handler(&p.devices, Some(selected_device_index));
-                    app.selected_device_index = Some(next_index);
+        k if down_event(k) => {
+            match &app.devices {
+                Some(p) => {
+                    if let Some(selected_device_index) = app.selected_device_index {
+                        let next_index =
+                            on_down_press_handler(&p.devices, Some(selected_device_index));
+                        app.selected_device_index = Some(next_index);
+                    }
                 }
-                None
-            }
-            None => None,
-        },
-        k if up_event(k) => match &app.devices {
-            Some(p) => {
-                if let Some(selected_device_index) = app.selected_device_index {
-                    let next_index = on_up_press_handler(&p.devices, Some(selected_device_index));
-                    app.selected_device_index = Some(next_index);
+                None => {}
+            };
+        }
+        k if up_event(k) => {
+            match &app.devices {
+                Some(p) => {
+                    if let Some(selected_device_index) = app.selected_device_index {
+                        let next_index =
+                            on_up_press_handler(&p.devices, Some(selected_device_index));
+                        app.selected_device_index = Some(next_index);
+                    }
                 }
-                None
-            }
-            None => None,
-        },
-        Key::Char('\n') => match (&app.devices, app.selected_device_index) {
-            (Some(devices), Some(index)) => {
-                if let Some(device) = &devices.devices.get(index) {
-                    app.device_id = Some(device.id.clone());
-                    app.active_block = ActiveBlock::MyPlaylists;
-                    match app.set_cached_device_token(device.id.clone()) {
-                        Ok(()) => {}
-                        Err(e) => {
-                            app.active_block = ActiveBlock::Error;
-                            app.api_error = e.to_string();
-                        }
-                    };
+                None => {}
+            };
+        }
+        Key::Char('\n') => {
+            match (&app.devices, app.selected_device_index) {
+                (Some(devices), Some(index)) => {
+                    if let Some(device) = &devices.devices.get(index) {
+                        app.device_id = Some(device.id.clone());
+                        app.active_block = ActiveBlock::MyPlaylists;
+                        match app.set_cached_device_token(device.id.clone()) {
+                            Ok(()) => {}
+                            Err(e) => {
+                                app.active_block = ActiveBlock::Error;
+                                app.api_error = e.to_string();
+                            }
+                        };
+                    }
                 }
-                None
-            }
-            _ => None,
-        },
-        _ => None,
+                _ => {}
+            };
+        }
+        _ => {}
     }
 }
 
@@ -709,16 +681,6 @@ fn get_playlist_tracks(playlist_id: String, app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_input_handler_quits() {
-        let mut app = App::new();
-
-        let result = input_handler(Key::Char('q'), &mut app);
-        assert_eq!(result, Some(EventLoop::Exit));
-
-        let result = input_handler(Key::Ctrl('c'), &mut app);
-        assert_eq!(result, Some(EventLoop::Exit));
-    }
 
     #[test]
     fn test_input_handler_clear_input_on_ctrl_u() {
@@ -726,9 +688,8 @@ mod tests {
 
         app.input = "My text".to_string();
 
-        let result = input_handler(Key::Ctrl('u'), &mut app);
+        input_handler(Key::Ctrl('u'), &mut app);
 
-        assert_eq!(result, None);
         assert_eq!(app.input, "".to_string());
     }
 
@@ -736,9 +697,8 @@ mod tests {
     fn test_input_handler_esc_back_to_playlist() {
         let mut app = App::new();
 
-        let result = input_handler(Key::Esc, &mut app);
+        input_handler(Key::Esc, &mut app);
 
-        assert_eq!(result, None);
         assert_eq!(app.active_block, ActiveBlock::MyPlaylists);
     }
 
@@ -748,9 +708,8 @@ mod tests {
 
         app.input = "My tex".to_string();
 
-        let result = input_handler(Key::Char('t'), &mut app);
+        input_handler(Key::Char('t'), &mut app);
 
-        assert_eq!(result, None);
         assert_eq!(app.input, "My text".to_string());
     }
 
@@ -760,29 +719,16 @@ mod tests {
 
         app.input = "My text".to_string();
 
-        let result = input_handler(Key::Backspace, &mut app);
+        input_handler(Key::Backspace, &mut app);
 
-        assert_eq!(result, None);
         assert_eq!(app.input, "My tex".to_string());
-    }
-
-    #[test]
-    fn test_playlist_handler_quit() {
-        let mut app = App::new();
-
-        let result = playlist_handler(Key::Char('q'), &mut app);
-        assert_eq!(result, Some(EventLoop::Exit));
-
-        let result = playlist_handler(Key::Ctrl('c'), &mut app);
-        assert_eq!(result, Some(EventLoop::Exit));
     }
 
     #[test]
     fn test_playlist_handler_activate_help_menu() {
         let mut app = App::new();
 
-        let result = playlist_handler(Key::Char('?'), &mut app);
-        assert_eq!(result, None);
+        playlist_handler(Key::Char('?'), &mut app);
         assert_eq!(app.active_block, ActiveBlock::HelpMenu);
     }
 

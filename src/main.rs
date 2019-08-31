@@ -9,6 +9,7 @@ use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
 use termion::cursor::Goto;
+use termion::event::Key;
 use termion::input::MouseTerminal;
 use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
@@ -16,7 +17,7 @@ use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::Terminal;
 
-use app::{ActiveBlock, App, EventLoop};
+use app::{ActiveBlock, App};
 use util::{Event, Events};
 
 fn main() -> Result<(), failure::Error> {
@@ -143,58 +144,9 @@ fn main() -> Result<(), failure::Error> {
                 io::stdout().flush().ok();
 
                 if let Event::Input(key) = events.next()? {
-                    // Match events for different app states
-                    match app.active_block {
-                        ActiveBlock::Input => {
-                            if let Some(event) = handlers::input_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::MyPlaylists => {
-                            if let Some(event) = handlers::playlist_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::SongTable => {
-                            if let Some(event) = handlers::song_table_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::HelpMenu => {
-                            if let Some(event) = handlers::help_menu_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::Error => {
-                            if let Some(event) = handlers::api_error_menu_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::SelectDevice => {
-                            if let Some(event) = handlers::select_device_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::SearchResultBlock => {
-                            if let Some(event) = handlers::search_results_handler(key, &mut app) {
-                                if event == EventLoop::Exit {
-                                    break;
-                                }
-                            }
-                        }
-                        ActiveBlock::Home => {}
+                    match key {
+                        Key::Char('q') | Key::Ctrl('c') => break,
+                        _ => handle_app(&mut app, key),
                     }
                 }
             }
@@ -203,4 +155,32 @@ fn main() -> Result<(), failure::Error> {
     }
 
     Ok(())
+}
+
+fn handle_app(app: &mut App, key: Key) {
+    // Match events for different app states
+    match app.active_block {
+        ActiveBlock::Input => {
+            handlers::input_handler(key, app);
+        }
+        ActiveBlock::MyPlaylists => {
+            handlers::playlist_handler(key, app);
+        }
+        ActiveBlock::SongTable => {
+            handlers::song_table_handler(key, app);
+        }
+        ActiveBlock::HelpMenu => {
+            handlers::help_menu_handler(key, app);
+        }
+        ActiveBlock::Error => {
+            handlers::api_error_menu_handler(key, app);
+        }
+        ActiveBlock::SelectDevice => {
+            handlers::select_device_handler(key, app);
+        }
+        ActiveBlock::SearchResultBlock => {
+            handlers::search_results_handler(key, app);
+        }
+        ActiveBlock::Home => {}
+    }
 }

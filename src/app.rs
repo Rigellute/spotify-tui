@@ -11,11 +11,6 @@ use std::io::Write;
 use std::path::PathBuf;
 
 #[derive(PartialEq, Debug)]
-pub enum EventLoop {
-    Exit,
-}
-
-#[derive(PartialEq, Debug)]
 pub enum SearchResultBlock {
     AlbumSearch,
     SongSearch,
