@@ -110,6 +110,18 @@ fn main() -> Result<(), failure::Error> {
                     }
                 })?;
 
+                if app.active_block == ActiveBlock::Input {
+                    match terminal.show_cursor() {
+                        Ok(_r) => {}
+                        Err(_e) => {}
+                    };
+                } else {
+                    match terminal.hide_cursor() {
+                        Ok(_r) => {}
+                        Err(_e) => {}
+                    };
+                }
+
                 // Put the cursor back inside the input box
                 write!(
                     terminal.backend_mut(),
