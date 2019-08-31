@@ -34,16 +34,21 @@ fn right_event(key: Key) -> bool {
     }
 }
 
-fn on_down_press_handler<T>(selection_data: &[T], selection_index: usize) -> usize {
-    if !selection_data.is_empty() {
-        let next_index = selection_index + 1;
-        if next_index > selection_data.len() - 1 {
-            return 0;
-        } else {
-            return next_index;
+fn on_down_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
+    match selection_index {
+        Some(selection_index) => {
+            if !selection_data.is_empty() {
+                let next_index = selection_index + 1;
+                if next_index > selection_data.len() - 1 {
+                    return 0;
+                } else {
+                    return next_index;
+                }
+            }
+            0
         }
+        None => 0,
     }
-    0
 }
 
 fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
@@ -157,7 +162,7 @@ pub fn playlist_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         k if down_event(k) => match &app.playlists {
             Some(p) => {
                 if let Some(selected_playlist_index) = app.selected_playlist_index {
-                    let next_index = on_down_press_handler(&p.items, selected_playlist_index);
+                    let next_index = on_down_press_handler(&p.items, Some(selected_playlist_index));
                     app.selected_playlist_index = Some(next_index);
                 }
                 None
@@ -222,7 +227,8 @@ pub fn song_table_handler(key: Key, app: &mut App) -> Option<EventLoop> {
             None
         }
         k if down_event(k) => {
-            let next_index = on_down_press_handler(&app.songs_for_table, app.select_song_index);
+            let next_index =
+                on_down_press_handler(&app.songs_for_table, Some(app.select_song_index));
             app.select_song_index = next_index;
             None
         }
@@ -338,37 +344,39 @@ pub fn search_results_handler(key: Key, app: &mut App) -> Option<EventLoop> {
                 // Start selecting within the selected block
                 match app.search_results.selected_block {
                     SearchResultBlock::AlbumSearch => {
-                        if let Some(index) = app.search_results.selected_album_index {
-                            if let Some(result) = &app.search_results.albums {
-                                let next_index = on_down_press_handler(&result.albums.items, index);
-                                app.search_results.selected_album_index = Some(next_index);
-                            }
+                        if let Some(result) = &app.search_results.albums {
+                            let next_index = on_down_press_handler(
+                                &result.albums.items,
+                                app.search_results.selected_album_index,
+                            );
+                            app.search_results.selected_album_index = Some(next_index);
                         }
                     }
                     SearchResultBlock::SongSearch => {
-                        if let Some(index) = app.search_results.selected_tracks_index {
-                            if let Some(result) = &app.search_results.tracks {
-                                let next_index = on_down_press_handler(&result.tracks.items, index);
-                                app.search_results.selected_tracks_index = Some(next_index);
-                            }
+                        if let Some(result) = &app.search_results.tracks {
+                            let next_index = on_down_press_handler(
+                                &result.tracks.items,
+                                app.search_results.selected_tracks_index,
+                            );
+                            app.search_results.selected_tracks_index = Some(next_index);
                         }
                     }
                     SearchResultBlock::ArtistSearch => {
-                        if let Some(index) = app.search_results.selected_artists_index {
-                            if let Some(result) = &app.search_results.artists {
-                                let next_index =
-                                    on_down_press_handler(&result.artists.items, index);
-                                app.search_results.selected_artists_index = Some(next_index);
-                            }
+                        if let Some(result) = &app.search_results.artists {
+                            let next_index = on_down_press_handler(
+                                &result.artists.items,
+                                app.search_results.selected_artists_index,
+                            );
+                            app.search_results.selected_artists_index = Some(next_index);
                         }
                     }
                     SearchResultBlock::PlaylistSearch => {
-                        if let Some(index) = app.search_results.selected_playlists_index {
-                            if let Some(result) = &app.search_results.playlists {
-                                let next_index =
-                                    on_down_press_handler(&result.playlists.items, index);
-                                app.search_results.selected_playlists_index = Some(next_index);
-                            }
+                        if let Some(result) = &app.search_results.playlists {
+                            let next_index = on_down_press_handler(
+                                &result.playlists.items,
+                                app.search_results.selected_playlists_index,
+                            );
+                            app.search_results.selected_playlists_index = Some(next_index);
                         }
                     }
                     SearchResultBlock::Empty => {}
@@ -566,7 +574,7 @@ pub fn select_device_handler(key: Key, app: &mut App) -> Option<EventLoop> {
         k if down_event(k) => match &app.devices {
             Some(p) => {
                 if let Some(selected_device_index) = app.selected_device_index {
-                    let next_index = on_down_press_handler(&p.devices, selected_device_index);
+                    let next_index = on_down_press_handler(&p.devices, Some(selected_device_index));
                     app.selected_device_index = Some(next_index);
                 }
                 None
@@ -727,13 +735,13 @@ mod tests {
         let data = vec!["Choice 1", "Choice 2", "Choice 3"];
 
         let index = 0;
-        let next_index = on_down_press_handler(&data, index);
+        let next_index = on_down_press_handler(&data, Some(index));
 
         assert_eq!(next_index, 1);
 
         // Selection wrap if on last item
         let index = data.len() - 1;
-        let next_index = on_down_press_handler(&data, index);
+        let next_index = on_down_press_handler(&data, Some(index));
         assert_eq!(next_index, 0);
     }
 
