@@ -234,20 +234,7 @@ fn song_table_handler(key: Key, app: &mut App) {
                                 _ => None,
                             };
 
-                            match start_playback(
-                                app,
-                                context_uri,
-                                None,
-                                Some(app.select_song_index),
-                            ) {
-                                Ok(_r) => {
-                                    app.current_playing_song = Some(track.to_owned());
-                                }
-                                Err(e) => {
-                                    app.active_block = ActiveBlock::Error;
-                                    app.api_error = e.to_string();
-                                }
-                            };
+                            start_playback(app, context_uri, None, Some(app.select_song_index));
                         };
                     }
                     SongTableContext::AlbumSearch => {}
@@ -273,20 +260,7 @@ fn song_table_handler(key: Key, app: &mut App) {
                                 _ => None,
                             };
 
-                            match start_playback(
-                                app,
-                                context_uri,
-                                None,
-                                Some(app.select_song_index),
-                            ) {
-                                Ok(_r) => {
-                                    app.current_playing_song = Some(track.to_owned());
-                                }
-                                Err(e) => {
-                                    app.active_block = ActiveBlock::Error;
-                                    app.api_error = e.to_string();
-                                }
-                            };
+                            start_playback(app, context_uri, None, Some(app.select_song_index));
                         };
                     }
                 },
@@ -508,20 +482,12 @@ fn search_results_handler(key: Key, app: &mut App) {
                             &app.search_results.tracks,
                         ) {
                             if let Some(track) = result.tracks.items.get(index) {
-                                match start_playback(
+                                start_playback(
                                     app,
                                     None,
                                     Some(vec![track.uri.to_owned()]),
                                     Some(0),
-                                ) {
-                                    Ok(_r) => {
-                                        app.current_playing_song = Some(track.to_owned());
-                                    }
-                                    Err(e) => {
-                                        app.active_block = ActiveBlock::Error;
-                                        app.api_error = e.to_string();
-                                    }
-                                };
+                                );
                             };
                         };
                     }
@@ -650,11 +616,11 @@ pub fn handle_app(app: &mut App, key: Key) {
 }
 
 fn start_playback(
-    app: &App,
+    app: &mut App,
     context_uri: Option<String>,
     uris: Option<Vec<String>>,
     offset: Option<usize>,
-) -> Result<(), failure::Error> {
+) {
     let (uris, context_uri) = if context_uri.is_some() {
         (None, context_uri)
     } else {
@@ -666,7 +632,7 @@ fn start_playback(
         None => 0,
     };
 
-    match &app.device_id {
+    let result = match &app.device_id {
         Some(device_id) => match &app.spotify {
             Some(spotify) => spotify.start_playback(
                 Some(device_id.to_string()),
@@ -677,6 +643,16 @@ fn start_playback(
             None => Err(err_msg("Spotify is not ready to be used".to_string())),
         },
         None => Err(err_msg("No device_id selected")),
+    };
+
+    match result {
+        Ok(()) => {
+            app.get_currently_playing();
+        }
+        Err(e) => {
+            app.active_block = ActiveBlock::Error;
+            app.api_error = e.to_string();
+        }
     }
 }
 

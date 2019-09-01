@@ -56,7 +56,7 @@ fn main() -> Result<(), failure::Error> {
                 Ok(device_id) => {
                     app.device_id = Some(device_id);
                 }
-                Err(e) => {
+                Err(_e) => {
                     app.handle_get_devices();
                 }
             }
@@ -75,14 +75,9 @@ fn main() -> Result<(), failure::Error> {
                         app.api_error = e.to_string();
                     }
                 };
-
-                let context = spotify.current_playing(None);
-                if let Ok(ctx) = context {
-                    if let Some(c) = ctx {
-                        app.current_playing_song = c.item;
-                    }
-                };
             }
+
+            app.poll_currently_playing();
 
             loop {
                 terminal.draw(|mut f| {
@@ -103,7 +98,7 @@ fn main() -> Result<(), failure::Error> {
                                     [
                                         Constraint::Length(3),
                                         Constraint::Min(1),
-                                        Constraint::Length(3),
+                                        Constraint::Length(6),
                                     ]
                                     .as_ref(),
                                 )
@@ -143,10 +138,16 @@ fn main() -> Result<(), failure::Error> {
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace
                 io::stdout().flush().ok();
 
-                if let Event::Input(key) = events.next()? {
-                    match key {
-                        Key::Char('q') | Key::Ctrl('c') => break,
-                        _ => handlers::handle_app(&mut app, key),
+                match events.next()? {
+                    Event::Input(key) => {
+                        match key {
+                            // Global key presses
+                            Key::Char('q') | Key::Ctrl('c') => break,
+                            _ => handlers::handle_app(&mut app, key),
+                        }
+                    }
+                    Event::Tick => {
+                        app.update_on_tick();
                     }
                 }
             }

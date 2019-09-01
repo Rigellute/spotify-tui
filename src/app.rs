@@ -1,4 +1,5 @@
 use rspotify::spotify::client::Spotify;
+use rspotify::spotify::model::context::SimplifiedPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::page::Page;
 use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
@@ -9,6 +10,7 @@ use rspotify::spotify::model::track::FullTrack;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 #[derive(PartialEq, Debug)]
 pub enum SearchResultBlock {
@@ -59,7 +61,7 @@ pub struct App {
     pub small_search_limit: u32,
     pub active_block: ActiveBlock,
     pub api_error: String,
-    pub current_playing_song: Option<FullTrack>,
+    pub current_playing_context: Option<SimplifiedPlayingContext>,
     pub device_id: Option<String>,
     pub devices: Option<DevicePayload>,
     pub input: String,
@@ -71,8 +73,10 @@ pub struct App {
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
     pub songs_for_table: Vec<FullTrack>,
+    pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
     path_to_cached_device_id: PathBuf,
+    instant_since_last_currently_playing_poll: Instant,
 }
 
 impl App {
@@ -82,7 +86,7 @@ impl App {
             small_search_limit: 4,
             active_block: ActiveBlock::MyPlaylists,
             api_error: String::new(),
-            current_playing_song: None,
+            current_playing_context: None,
             device_id: None,
             devices: None,
             input: String::new(),
@@ -102,11 +106,13 @@ impl App {
             },
             select_song_index: 0,
             song_table_context: None,
+            song_progress_ms: 0,
             selected_device_index: None,
             selected_playlist_index: None,
             songs_for_table: vec![],
             spotify: None,
             path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
+            instant_since_last_currently_playing_poll: Instant::now(),
         }
     }
 
@@ -131,6 +137,53 @@ impl App {
                     self.devices = Some(result);
                     // Select the first device in the list
                     self.selected_device_index = Some(0);
+                }
+            }
+        }
+    }
+
+    pub fn get_currently_playing(&mut self) {
+        if let Some(spotify) = &self.spotify {
+            let context = spotify.current_playing(None);
+            if let Ok(ctx) = context {
+                if let Some(c) = ctx {
+                    if c.is_playing {
+                        self.current_playing_context = Some(c);
+                        self.instant_since_last_currently_playing_poll = Instant::now();
+                    }
+                }
+            };
+        }
+    }
+
+    pub fn poll_currently_playing(&mut self) {
+        // Poll every 5 seconds
+        let poll_interval_ms = 5_000;
+
+        let elapsed = self
+            .instant_since_last_currently_playing_poll
+            .elapsed()
+            .as_millis();
+
+        if elapsed >= poll_interval_ms {
+            self.instant_since_last_currently_playing_poll = Instant::now();
+        }
+    }
+
+    pub fn update_on_tick(&mut self) {
+        if let Some(current_playing_context) = &self.current_playing_context {
+            if let Some(track) = &current_playing_context.item {
+                if current_playing_context.is_playing {
+                    let elapsed = self
+                        .instant_since_last_currently_playing_poll
+                        .elapsed()
+                        .as_millis() as u128;
+
+                    if elapsed < track.duration_ms as u128 {
+                        self.song_progress_ms = elapsed;
+                    } else {
+                        self.song_progress_ms = track.duration_ms.into();
+                    }
                 }
             }
         }

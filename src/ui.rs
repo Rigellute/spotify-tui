@@ -4,24 +4,21 @@ use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Paragraph, Row, SelectableList, Table, Text, Widget};
+use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
 
-fn format_song(song: &Option<FullTrack>) -> [Text<'static>; 3] {
-    match song {
-        Some(s) => [
-            Text::styled(
-                s.name.to_owned(),
-                Style::default().fg(Color::Magenta).modifier(Modifier::BOLD),
-            ),
-            Text::raw(" - "),
-            Text::styled(
-                create_artist_string(&s.artists),
-                Style::default().fg(Color::White),
-            ),
-        ],
-        None => [Text::raw(""), Text::raw(""), Text::raw("")],
-    }
+fn format_song(song: &FullTrack) -> [Text<'static>; 3] {
+    [
+        Text::styled(
+            song.name.to_owned(),
+            Style::default().fg(Color::Magenta).modifier(Modifier::BOLD),
+        ),
+        Text::raw(" - "),
+        Text::styled(
+            create_artist_string(&song.artists),
+            Style::default().fg(Color::White),
+        ),
+    ]
 }
 
 fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
@@ -336,22 +333,45 @@ where
     B: Backend,
 {
     let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(100)].as_ref())
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .margin(1)
         .split(layout_chunk);
 
-    let playing_text = format_song(&app.current_playing_song);
-
-    Paragraph::new(playing_text.iter())
-        .style(Style::default().fg(Color::Yellow))
-        .block(
+    // If no track is playing, render paragraph showing which device is selected, if no selected
+    // give hint to choose a device
+    if let Some(current_playing_context) = &app.current_playing_context {
+        if let Some(track_item) = &current_playing_context.item {
+            let playing_text = format_song(track_item);
             Block::default()
                 .borders(Borders::ALL)
                 .title("Playing")
                 .title_style(Style::default().fg(Color::Gray))
-                .border_style(Style::default().fg(Color::Gray)),
-        )
-        .render(f, chunks[0]);
+                .border_style(Style::default().fg(Color::Gray))
+                .render(f, layout_chunk);
+
+            Paragraph::new(playing_text.iter())
+                .style(Style::default().fg(Color::Yellow))
+                .block(Block::default().title("Track"))
+                .render(f, chunks[0]);
+
+            let perc = (app.song_progress_ms as f64 / track_item.duration_ms as f64) * 100 as f64;
+            Gauge::default()
+                .block(Block::default().title(""))
+                .style(
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .bg(Color::Black)
+                        .modifier(Modifier::ITALIC | Modifier::BOLD),
+                )
+                .percent(perc as u16)
+                .label(&display_track_progress(
+                    app.song_progress_ms,
+                    track_item.duration_ms,
+                ))
+                .render(f, chunks[1]);
+        }
+    }
 }
 
 pub fn draw_api_error<B>(f: &mut Frame<B>, app: &App)
@@ -469,4 +489,28 @@ pub fn draw_selectable_list<B>(
         .select(selected_index)
         .highlight_style(get_color(highlight_state).modifier(Modifier::BOLD))
         .render(f, layout_chunk);
+}
+
+fn millis_to_minutes(millis: u128) -> String {
+    let minutes = millis / 60000;
+    let seconds = (millis % 60000) / 1000;
+    let seconds_display = if seconds < 10 {
+        format!("0{}", seconds)
+    } else {
+        format!("{}", seconds)
+    };
+
+    if seconds == 60 {
+        format!("{}:00", minutes + 1)
+    } else {
+        format!("{}:{}", minutes, seconds_display)
+    }
+}
+
+fn display_track_progress(progress: u128, track_duration: u32) -> String {
+    let duration = millis_to_minutes(track_duration as u128);
+    let progress_display = millis_to_minutes(progress);
+    let remaining = millis_to_minutes(track_duration as u128 - progress);
+
+    format!("{}/{} (-{})", progress_display, duration, remaining,)
 }
