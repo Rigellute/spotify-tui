@@ -80,40 +80,18 @@ fn main() -> Result<(), failure::Error> {
             app.get_currently_playing();
 
             loop {
-                terminal.draw(|mut f| {
-                    match app.active_block {
-                        ActiveBlock::HelpMenu => {
-                            ui::draw_help_menu(&mut f);
-                        }
-                        ActiveBlock::Error => {
-                            ui::draw_api_error(&mut f, &app);
-                        }
-                        ActiveBlock::SelectDevice => {
-                            ui::draw_device_list(&mut f, &app);
-                        }
-                        _ => {
-                            let parent_layout = Layout::default()
-                                .direction(Direction::Vertical)
-                                .constraints(
-                                    [
-                                        Constraint::Length(3),
-                                        Constraint::Min(1),
-                                        Constraint::Length(6),
-                                    ]
-                                    .as_ref(),
-                                )
-                                .margin(2)
-                                .split(f.size());
-
-                            // Search input and help
-                            ui::draw_input_and_help_box(&mut f, &app, parent_layout[0]);
-
-                            // Playlist and song block
-                            ui::draw_main_layout(&mut f, &app, parent_layout[1]);
-
-                            // Currently playing
-                            ui::draw_playing_block(&mut f, &app, parent_layout[2]);
-                        }
+                terminal.draw(|mut f| match app.active_block {
+                    ActiveBlock::HelpMenu => {
+                        ui::draw_help_menu(&mut f);
+                    }
+                    ActiveBlock::Error => {
+                        ui::draw_api_error(&mut f, &app);
+                    }
+                    ActiveBlock::SelectDevice => {
+                        ui::draw_device_list(&mut f, &app);
+                    }
+                    _ => {
+                        ui::draw_main_layout(&mut f, &app);
                     }
                 })?;
 

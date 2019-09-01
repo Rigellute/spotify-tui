@@ -135,7 +135,34 @@ where
         .render(f, chunks[1]);
 }
 
-pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
+where
+    B: Backend,
+{
+    let parent_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(3),
+                Constraint::Min(1),
+                Constraint::Length(6),
+            ]
+            .as_ref(),
+        )
+        .margin(2)
+        .split(f.size());
+
+    // Search input and help
+    draw_input_and_help_box(f, app, parent_layout[0]);
+
+    // Nested main block with potential routes
+    draw_routes(f, app, parent_layout[1]);
+
+    // Currently playing
+    draw_playing_block(f, app, parent_layout[2]);
+}
+
+pub fn draw_routes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
