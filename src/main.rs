@@ -135,6 +135,7 @@ fn main() -> Result<(), failure::Error> {
                     "{}",
                     Goto(4 + app.input.len() as u16, 4)
                 )?;
+
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace
                 io::stdout().flush().ok();
 
@@ -143,6 +144,10 @@ fn main() -> Result<(), failure::Error> {
                         match key {
                             // Global key presses
                             Key::Char('q') | Key::Ctrl('c') => break,
+                            Key::Char('-') => {
+                                // Navigate back one step
+                                app.navigation_stack.pop();
+                            }
                             _ => handlers::handle_app(&mut app, key),
                         }
                     }

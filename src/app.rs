@@ -10,7 +10,16 @@ use rspotify::spotify::model::track::FullTrack;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+
+#[derive(PartialEq, Debug)]
+pub enum Routes {
+    Search,
+    Album(String /* album id */),
+    Artist(String /* artist id */),
+    TrackInfo(String /* track id*/),
+    SongTable,
+}
 
 #[derive(PartialEq, Debug)]
 pub enum SearchResultBlock {
@@ -58,6 +67,7 @@ pub struct SearchResult {
 
 pub struct App {
     pub large_search_limit: u32,
+    pub navigation_stack: Vec<Routes>,
     pub small_search_limit: u32,
     pub active_block: ActiveBlock,
     pub api_error: String,
@@ -83,6 +93,7 @@ impl App {
     pub fn new() -> App {
         App {
             large_search_limit: 20,
+            navigation_stack: vec![],
             small_search_limit: 4,
             active_block: ActiveBlock::MyPlaylists,
             api_error: String::new(),
@@ -190,5 +201,9 @@ impl App {
                 }
             }
         }
+    }
+
+    pub fn get_current_route(&self) -> Option<&Routes> {
+        self.navigation_stack.last()
     }
 }

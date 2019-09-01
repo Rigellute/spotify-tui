@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
+use super::app::{ActiveBlock, App, Routes, SearchResultBlock, SongTableContext};
 use failure::err_msg;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::track::FullTrack;
@@ -93,6 +93,7 @@ fn input_handler(key: Key, app: &mut App) {
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
                 app.active_block = ActiveBlock::SearchResultBlock;
+                app.navigation_stack.push(Routes::Search);
 
                 // Can I run these functions in parellel?
                 let result = spotify
@@ -145,11 +146,24 @@ fn playlist_handler(key: Key, app: &mut App) {
             app.active_block = ActiveBlock::HelpMenu;
         }
         k if right_event(k) => {
-            if app.selected_playlist_index.is_some() {
-                app.active_block = ActiveBlock::SongTable;
-            } else if !app.input.is_empty() {
-                app.active_block = ActiveBlock::SearchResultBlock;
-            }
+            let active_route = app.get_current_route();
+
+            match active_route {
+                Some(route) => match route {
+                    Routes::Search => {
+                        app.active_block = ActiveBlock::SearchResultBlock;
+                    }
+                    Routes::SongTable => {
+                        app.active_block = ActiveBlock::SongTable;
+                    }
+                    Routes::Album(_album_id) => {}
+                    Routes::Artist(_artist_id) => {}
+                    Routes::TrackInfo(_track_id) => {}
+                },
+                None => {
+                    app.active_block = ActiveBlock::Home;
+                }
+            };
         }
         k if down_event(k) => {
             match &app.playlists {
@@ -535,6 +549,14 @@ fn search_results_handler(key: Key, app: &mut App) {
         _ => {}
     }
 }
+fn home_handler(key: Key, app: &mut App) {
+    match key {
+        k if left_event(k) => {
+            app.active_block = ActiveBlock::MyPlaylists;
+        }
+        _ => {}
+    }
+}
 
 fn select_device_handler(key: Key, app: &mut App) {
     match key {
@@ -611,7 +633,9 @@ pub fn handle_app(app: &mut App, key: Key) {
         ActiveBlock::SearchResultBlock => {
             search_results_handler(key, app);
         }
-        ActiveBlock::Home => {}
+        ActiveBlock::Home => {
+            home_handler(key, app);
+        }
     }
 }
 
@@ -676,6 +700,7 @@ fn get_playlist_tracks(playlist_id: String, app: &mut App) {
 
                 app.playlist_tracks = playlist_tracks.items;
                 app.active_block = ActiveBlock::SongTable;
+                app.navigation_stack.push(Routes::SongTable);
             };
         }
         None => {}

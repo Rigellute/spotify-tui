@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App, SearchResultBlock};
+use super::app::{ActiveBlock, App, Routes, SearchResultBlock};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
@@ -45,6 +45,7 @@ fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
                 item.name.to_owned(),
                 create_artist_string(&item.artists),
                 item.album.name.to_owned(),
+                millis_to_minutes(item.duration_ms as u128),
             ]
         })
         .collect()
@@ -145,15 +146,23 @@ where
 
     draw_playlist_block(f, app, chunks[0]);
 
-    // Handle which nested block to display
-    match app.active_block {
-        ActiveBlock::SongTable => {
-            draw_song_table(f, app, chunks[1]);
+    let active_route = app.get_current_route();
+
+    match active_route {
+        Some(route) => {
+            match route {
+                Routes::Search => {
+                    draw_search_results(f, app, chunks[1]);
+                }
+                Routes::SongTable => {
+                    draw_song_table(f, app, chunks[1]);
+                }
+                Routes::Album(_album_id) => {}
+                Routes::Artist(_artist_id) => {}
+                Routes::TrackInfo(_track_id) => {}
+            };
         }
-        ActiveBlock::SearchResultBlock => {
-            draw_search_results(f, app, chunks[1]);
-        }
-        _ => {
+        None => {
             draw_home(f, app, chunks[1]);
         }
     }
@@ -297,7 +306,7 @@ where
     B: Backend,
 {
     let normal_style = Style::default().fg(Color::White);
-    let header = ["Title", "Artist", "Album"];
+    let header = ["Title", "Artist", "Album", "Length"];
 
     let formatted_songs = display_songs(&app.songs_for_table);
 
@@ -324,7 +333,7 @@ where
                 .border_style(get_color(highlight_state)),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[40, 40, 40])
+        .widths(&[35, 35, 35, 10])
         .render(f, layout_chunk);
 }
 
@@ -410,13 +419,16 @@ where
 }
 
 // TODO: fill out home page
-fn draw_home<B>(f: &mut Frame<B>, _app: &App, layout_chunk: Rect)
+fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
+    let highlight_state = (app.active_block == ActiveBlock::Home, false);
     Block::default()
         .title("Home")
         .borders(Borders::ALL)
+        .title_style(get_color(highlight_state))
+        .border_style(get_color(highlight_state))
         .render(f, layout_chunk);
 }
 
