@@ -140,6 +140,10 @@ fn playlist_handler(key: Key, app: &mut App) {
         Key::Char('d') => {
             app.handle_get_devices();
         }
+        // Press space to toggle playback
+        Key::Char(' ') => {
+            app.toggle_playback();
+        }
         Key::Char('?') => {
             app.active_block = ActiveBlock::HelpMenu;
         }
@@ -291,6 +295,10 @@ fn help_menu_handler(key: Key, app: &mut App) {
         Key::Esc => {
             app.active_block = ActiveBlock::MyPlaylists;
         }
+        // Press space to toggle playback
+        Key::Char(' ') => {
+            app.toggle_playback();
+        }
         Key::Char('d') => {
             app.handle_get_devices();
         }
@@ -314,6 +322,10 @@ fn search_results_handler(key: Key, app: &mut App) {
     match key {
         Key::Char('d') => {
             app.handle_get_devices();
+        }
+        // Press space to toggle playback
+        Key::Char(' ') => {
+            app.toggle_playback();
         }
         Key::Char('?') => {
             app.active_block = ActiveBlock::HelpMenu;
@@ -489,8 +501,32 @@ fn search_results_handler(key: Key, app: &mut App) {
                             &app.search_results.selected_album_index,
                             &app.search_results.albums,
                         ) {
-                            if let Some(_album) = albums_result.albums.items.get(index.to_owned()) {
-                                // TODO: Go to album table
+                            if let Some(album) = albums_result.albums.items.get(index.to_owned()) {
+                                if let Some(album_id) = &album.id {
+                                    app.song_table_context = Some(SongTableContext::AlbumSearch);
+                                    if let Some(spotify) = &app.spotify {
+                                        match spotify.album_track(
+                                            album_id,
+                                            app.large_search_limit,
+                                            0,
+                                        ) {
+                                            Ok(album_tracks) => {
+                                                // TODO: that query returns SimplifiedTrack rather
+                                                // than FullTrack
+                                                //
+                                                // app.songs_for_table = album_tracks.items.clone();
+
+                                                // app.playlist_tracks = playlist_tracks.items;
+                                                // app.active_block = ActiveBlock::SongTable;
+                                                // app.navigation_stack.push(Routes::SongTable);
+                                            }
+                                            Err(e) => {
+                                                app.active_block = ActiveBlock::Error;
+                                                app.api_error = e.to_string();
+                                            }
+                                        }
+                                    }
+                                }
                             };
                         }
                     }
@@ -575,6 +611,19 @@ fn home_handler(key: Key, app: &mut App) {
     match key {
         k if left_event(k) => {
             app.active_block = ActiveBlock::MyPlaylists;
+        }
+        Key::Char('d') => {
+            app.handle_get_devices();
+        }
+        Key::Char('?') => {
+            app.active_block = ActiveBlock::HelpMenu;
+        }
+        Key::Char('/') => {
+            app.active_block = ActiveBlock::Input;
+        }
+        // Press space to toggle playback
+        Key::Char(' ') => {
+            app.toggle_playback();
         }
         _ => {}
     }
