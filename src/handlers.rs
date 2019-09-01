@@ -209,8 +209,9 @@ fn song_table_handler(key: Key, app: &mut App) {
         Key::Char('d') => {
             app.handle_get_devices();
         }
+        // Press space to toggle playback
         Key::Char(' ') => {
-            app.pause_playback();
+            app.toggle_playback();
         }
         k if left_event(k) => {
             app.active_block = ActiveBlock::MyPlaylists;

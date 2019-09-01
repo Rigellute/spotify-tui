@@ -14,6 +14,13 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
+#[derive(Clone)]
+pub struct PlaybackParams {
+    context_uri: Option<String>,
+    uris: Option<Vec<String>>,
+    offset: Option<usize>,
+}
+
 #[derive(PartialEq, Debug)]
 pub enum Routes {
     Search,
@@ -89,6 +96,7 @@ pub struct App {
     pub spotify: Option<Spotify>,
     path_to_cached_device_id: PathBuf,
     instant_since_last_currently_playing_poll: Instant,
+    pub playback_params: PlaybackParams,
 }
 
 impl App {
@@ -124,6 +132,11 @@ impl App {
             selected_playlist_index: None,
             songs_for_table: vec![],
             spotify: None,
+            playback_params: PlaybackParams {
+                context_uri: None,
+                uris: None,
+                offset: None,
+            },
             path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
             instant_since_last_currently_playing_poll: Instant::now(),
         }
@@ -182,7 +195,7 @@ impl App {
     }
 
     pub fn update_on_tick(&mut self) {
-        &self.poll_currently_playing();
+        self.poll_currently_playing();
         if let Some(current_playing_context) = &self.current_playing_context {
             if let (Some(track), Some(progress_ms)) = (
                 &current_playing_context.item,
@@ -223,6 +236,26 @@ impl App {
         }
     }
 
+    pub fn toggle_playback(&mut self) {
+        if let Some(current_playing_context) = &self.current_playing_context {
+            if current_playing_context.is_playing {
+                self.pause_playback();
+            } else {
+                // Ideally I should be able to pass in the `progress_ms` to start_playback, but
+                // this does not yet work https://github.com/ramsayleung/rspotify/issues/51
+                if let Some(_progress_ms) = current_playing_context.progress_ms {
+                    let PlaybackParams {
+                        context_uri,
+                        uris,
+                        offset,
+                    } = &self.playback_params.clone();
+
+                    self.start_playback(context_uri.to_owned(), uris.to_owned(), offset.to_owned());
+                }
+            }
+        }
+    }
+
     pub fn start_playback(
         &mut self,
         context_uri: Option<String>,
@@ -244,8 +277,8 @@ impl App {
             Some(device_id) => match &self.spotify {
                 Some(spotify) => spotify.start_playback(
                     Some(device_id.to_string()),
-                    context_uri,
-                    uris,
+                    context_uri.clone(),
+                    uris.clone(),
                     for_position(offset as u32),
                 ),
                 None => Err(err_msg("Spotify is not ready to be used".to_string())),
@@ -256,6 +289,11 @@ impl App {
         match result {
             Ok(()) => {
                 self.get_currently_playing();
+                self.playback_params = PlaybackParams {
+                    context_uri: context_uri,
+                    uris,
+                    offset: Some(offset),
+                }
             }
             Err(e) => {
                 self.active_block = ActiveBlock::Error;
