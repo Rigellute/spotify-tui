@@ -147,16 +147,14 @@ impl App {
             let context = spotify.current_playing(None);
             if let Ok(ctx) = context {
                 if let Some(c) = ctx {
-                    if c.is_playing {
-                        self.current_playing_context = Some(c);
-                        self.instant_since_last_currently_playing_poll = Instant::now();
-                    }
+                    self.current_playing_context = Some(c);
+                    self.instant_since_last_currently_playing_poll = Instant::now();
                 }
             };
         }
     }
 
-    pub fn poll_currently_playing(&mut self) {
+    fn poll_currently_playing(&mut self) {
         // Poll every 5 seconds
         let poll_interval_ms = 5_000;
 
@@ -166,18 +164,23 @@ impl App {
             .as_millis();
 
         if elapsed >= poll_interval_ms {
-            self.instant_since_last_currently_playing_poll = Instant::now();
+            self.get_currently_playing();
         }
     }
 
     pub fn update_on_tick(&mut self) {
+        &self.poll_currently_playing();
         if let Some(current_playing_context) = &self.current_playing_context {
-            if let Some(track) = &current_playing_context.item {
+            if let (Some(track), Some(progress_ms)) = (
+                &current_playing_context.item,
+                current_playing_context.progress_ms,
+            ) {
                 if current_playing_context.is_playing {
                     let elapsed = self
                         .instant_since_last_currently_playing_poll
                         .elapsed()
-                        .as_millis() as u128;
+                        .as_millis()
+                        + progress_ms as u128;
 
                     if elapsed < track.duration_ms as u128 {
                         self.song_progress_ms = elapsed;

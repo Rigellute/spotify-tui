@@ -77,7 +77,7 @@ fn main() -> Result<(), failure::Error> {
                 };
             }
 
-            app.poll_currently_playing();
+            app.get_currently_playing();
 
             loop {
                 terminal.draw(|mut f| {
