@@ -20,6 +20,9 @@ It seems you need to have the spotify app open in order to play songs.
 - [ ] Let user define custom theme?
 - [ ] Within the list/table views, let the user use `ctrl + d/u` to move up and down pages in search results
 - [ ] Implement track seek
+- [ ] Implement album screen (could just be selectable table list?)
+- [ ] Implement artist screen (show top tracks, albums, other artist recommendations?)
+- [ ] Let user press `p` to start playing an album or playlist
 - [x] Add error block on api errors
 - [x] Add search for album
 - [x] Add search for artist
