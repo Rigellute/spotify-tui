@@ -1,6 +1,8 @@
+use failure::err_msg;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::context::SimplifiedPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
+use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::page::Page;
 use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
 use rspotify::spotify::model::search::{
@@ -191,9 +193,9 @@ impl App {
                         .instant_since_last_currently_playing_poll
                         .elapsed()
                         .as_millis()
-                        + progress_ms as u128;
+                        + u128::from(progress_ms);
 
-                    if elapsed < track.duration_ms as u128 {
+                    if elapsed < u128::from(track.duration_ms) {
                         self.song_progress_ms = elapsed;
                     } else {
                         self.song_progress_ms = track.duration_ms.into();
@@ -205,5 +207,60 @@ impl App {
 
     pub fn get_current_route(&self) -> Option<&Routes> {
         self.navigation_stack.last()
+    }
+
+    pub fn pause_playback(&mut self) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.device_id) {
+            match spotify.pause_playback(Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_currently_playing();
+                }
+                Err(e) => {
+                    self.active_block = ActiveBlock::Error;
+                    self.api_error = e.to_string();
+                }
+            };
+        }
+    }
+
+    pub fn start_playback(
+        &mut self,
+        context_uri: Option<String>,
+        uris: Option<Vec<String>>,
+        offset: Option<usize>,
+    ) {
+        let (uris, context_uri) = if context_uri.is_some() {
+            (None, context_uri)
+        } else {
+            (uris, None)
+        };
+
+        let offset = match offset {
+            Some(o) => o,
+            None => 0,
+        };
+
+        let result = match &self.device_id {
+            Some(device_id) => match &self.spotify {
+                Some(spotify) => spotify.start_playback(
+                    Some(device_id.to_string()),
+                    context_uri,
+                    uris,
+                    for_position(offset as u32),
+                ),
+                None => Err(err_msg("Spotify is not ready to be used".to_string())),
+            },
+            None => Err(err_msg("No device_id selected")),
+        };
+
+        match result {
+            Ok(()) => {
+                self.get_currently_playing();
+            }
+            Err(e) => {
+                self.active_block = ActiveBlock::Error;
+                self.api_error = e.to_string();
+            }
+        }
     }
 }

@@ -45,7 +45,7 @@ fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
                 item.name.to_owned(),
                 create_artist_string(&item.artists),
                 item.album.name.to_owned(),
-                millis_to_minutes(item.duration_ms as u128),
+                millis_to_minutes(u128::from(item.duration_ms)),
             ]
         })
         .collect()
@@ -364,7 +364,8 @@ where
                 .block(Block::default().title("Track"))
                 .render(f, chunks[0]);
 
-            let perc = (app.song_progress_ms as f64 / track_item.duration_ms as f64) * 100 as f64;
+            let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
+
             Gauge::default()
                 .block(Block::default().title(""))
                 .style(
@@ -520,9 +521,9 @@ fn millis_to_minutes(millis: u128) -> String {
 }
 
 fn display_track_progress(progress: u128, track_duration: u32) -> String {
-    let duration = millis_to_minutes(track_duration as u128);
+    let duration = millis_to_minutes(u128::from(track_duration));
     let progress_display = millis_to_minutes(progress);
-    let remaining = millis_to_minutes(track_duration as u128 - progress);
+    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
 
     format!("{}/{} (-{})", progress_display, duration, remaining,)
 }
