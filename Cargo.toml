@@ -1,5 +1,10 @@
 [package]
 name = "spotify-tui"
+description = "A terminal user interface for Spotify"
+homepage = "https://github.com/Rigellute/spotify-tui"
+repository = "https://github.com/Rigellute/spotify-tui"
+keywords = ["spotify", "tui", "cli"]
+categories = ["command-line-utilities"]
 version = "0.1.0"
 authors = ["Rigellute <rigellute@gmail.com>"]
 edition = "2018"
