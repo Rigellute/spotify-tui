@@ -10,19 +10,21 @@ It seems you need to have the spotify app open in order to play songs.
 
 - [ ] Add `clap` for the cli
 - [ ] Add global callback to handle pressing `space`, which should pause/start the current song.
-- [ ] Create a `localhost` server with pretty landing page for spotify auth redirect. This should simply explain to the user that they need to copy the url into the terminal.
-- [x] Implement routes (e.g. search, open playlist, go back to search or search, open artist, open album, play track, go back to album etc.)
-- [x] Implement stack navigation for routes
 - [ ] Add recommendations and recently played to home page
+- [ ] Create a `localhost` server with pretty landing page for spotify auth redirect. This should simply explain to the user that they need to copy the url into the terminal.
+- [ ] Fix previous state on navigating back: Make the stack navigation contain active block state (including all the indexes)
+- [ ] Implement album screen (could just be selectable table list?)
+- [ ] Implement artist screen (show top tracks, albums, other artist recommendations?)
+- [ ] Implement left right events to move cursor within the input
+- [ ] Implement shuffle
+- [ ] Implement track seek
 - [ ] Implement vim style `H M L` for jumping `high medium low` within the table view?
 - [ ] Let the user press `i` on selected song to get more information about it
 - [ ] Let user "like" a song could use `*` event?
 - [ ] Let user define custom theme?
-- [ ] Within the list/table views, let the user use `ctrl + d/u` to move up and down pages in search results
-- [ ] Implement track seek
-- [ ] Implement album screen (could just be selectable table list?)
-- [ ] Implement artist screen (show top tracks, albums, other artist recommendations?)
 - [ ] Let user press `p` to start playing an album or playlist
+- [ ] Within the list/table views, let the user use `ctrl + d/u` to move up and down pages in search results
+- [ ] Implement a key event for opening the context of the currently playing track. Perhaps need to focus on player and from there jump to album/playlist
 - [x] Add error block on api errors
 - [x] Add search for album
 - [x] Add search for artist
@@ -31,6 +33,8 @@ It seems you need to have the spotify app open in order to play songs.
 - [x] Cache the currently selected `device_id`.
 - [x] Could show the song progress? Might be tricky. Use termion [gauge](https://github.com/fdehau/tui-rs/blob/master/examples/gauge.rs)?
 - [x] Display search results in a table
+- [x] Implement routes (e.g. search, open playlist, go back to search or search, open artist, open album, play track, go back to album etc.)
+- [x] Implement stack navigation for routes
 - [x] Let the user choose which device they want to play songs on.
 - [x] On in active blocks show current selection as bold but as WHITE (nor CYAN)
 - [x] On pressing play, update the currently playing view
