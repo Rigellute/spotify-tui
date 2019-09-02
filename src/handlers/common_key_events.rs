@@ -1,0 +1,97 @@
+use termion::event::Key;
+
+pub fn down_event(key: Key) -> bool {
+    match key {
+        Key::Down | Key::Char('j') | Key::Ctrl('n') => true,
+        _ => false,
+    }
+}
+
+pub fn up_event(key: Key) -> bool {
+    match key {
+        Key::Up | Key::Char('k') | Key::Ctrl('p') => true,
+        _ => false,
+    }
+}
+
+pub fn left_event(key: Key) -> bool {
+    match key {
+        Key::Left | Key::Char('h') => true,
+        _ => false,
+    }
+}
+
+pub fn right_event(key: Key) -> bool {
+    match key {
+        Key::Right | Key::Char('l') => true,
+        _ => false,
+    }
+}
+
+pub fn on_down_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
+    match selection_index {
+        Some(selection_index) => {
+            if !selection_data.is_empty() {
+                let next_index = selection_index + 1;
+                if next_index > selection_data.len() - 1 {
+                    return 0;
+                } else {
+                    return next_index;
+                }
+            }
+            0
+        }
+        None => 0,
+    }
+}
+
+pub fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
+    match selection_index {
+        Some(selection_index) => {
+            if !selection_data.is_empty() {
+                if selection_index > 0 {
+                    return selection_index - 1;
+                } else {
+                    return selection_data.len() - 1;
+                }
+            }
+            0
+        }
+        None => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_on_down_press_handler() {
+        let data = vec!["Choice 1", "Choice 2", "Choice 3"];
+
+        let index = 0;
+        let next_index = on_down_press_handler(&data, Some(index));
+
+        assert_eq!(next_index, 1);
+
+        // Selection wrap if on last item
+        let index = data.len() - 1;
+        let next_index = on_down_press_handler(&data, Some(index));
+        assert_eq!(next_index, 0);
+    }
+
+    #[test]
+    fn test_on_up_press_handler() {
+        let data = vec!["Choice 1", "Choice 2", "Choice 3"];
+
+        let index = data.len() - 1;
+        let next_index = on_up_press_handler(&data, Some(index));
+
+        assert_eq!(next_index, index - 1);
+
+        // Selection wrap if on first item
+        let index = 0;
+        let next_index = on_up_press_handler(&data, Some(index));
+        assert_eq!(next_index, data.len() - 1);
+    }
+}

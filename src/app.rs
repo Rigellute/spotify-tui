@@ -301,4 +301,31 @@ impl App {
             }
         }
     }
+
+    pub fn get_playlist_tracks(&mut self, playlist_id: String) {
+        match &self.spotify {
+            Some(spotify) => {
+                if let Ok(playlist_tracks) = spotify.user_playlist_tracks(
+                    "spotify",
+                    &playlist_id,
+                    None,
+                    Some(self.large_search_limit),
+                    None,
+                    None,
+                ) {
+                    self.songs_for_table = playlist_tracks
+                        .items
+                        .clone()
+                        .into_iter()
+                        .map(|item| item.track)
+                        .collect::<Vec<FullTrack>>();
+
+                    self.playlist_tracks = playlist_tracks.items;
+                    self.active_block = ActiveBlock::SongTable;
+                    self.navigation_stack.push(Routes::SongTable);
+                };
+            }
+            None => {}
+        }
+    }
 }
