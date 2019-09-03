@@ -376,8 +376,8 @@ where
 
     // If no track is playing, render paragraph showing which device is selected, if no selected
     // give hint to choose a device
-    if let Some(current_playing_context) = &app.current_playing_context {
-        if let Some(track_item) = &current_playing_context.item {
+    if let Some(current_playback_context) = &app.current_playback_context {
+        if let Some(track_item) = &current_playback_context.item {
             let playing_text = format_song(track_item);
             Block::default()
                 .borders(Borders::ALL)
@@ -393,8 +393,16 @@ where
 
             let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
 
+            let shuffle_text = if current_playback_context.shuffle_state {
+                "On"
+            } else {
+                "Off"
+            };
+
+            let title = &format!("Shuffle: {}", shuffle_text);
+
             Gauge::default()
-                .block(Block::default().title(""))
+                .block(Block::default().title(title))
                 .style(
                     Style::default()
                         .fg(Color::Magenta)

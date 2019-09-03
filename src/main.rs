@@ -76,7 +76,7 @@ fn main() -> Result<(), failure::Error> {
                 };
             }
 
-            app.get_currently_playing();
+            app.get_current_playback();
 
             loop {
                 terminal.draw(|mut f| match app.active_block {

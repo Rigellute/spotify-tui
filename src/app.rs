@@ -1,6 +1,6 @@
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
-use rspotify::spotify::model::context::SimplifiedPlayingContext;
+use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::page::Page;
@@ -80,7 +80,7 @@ pub struct App {
     pub small_search_limit: u32,
     pub active_block: ActiveBlock,
     pub api_error: String,
-    pub current_playing_context: Option<SimplifiedPlayingContext>,
+    pub current_playback_context: Option<FullPlayingContext>,
     pub device_id: Option<String>,
     pub devices: Option<DevicePayload>,
     pub input: String,
@@ -95,7 +95,7 @@ pub struct App {
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
     path_to_cached_device_id: PathBuf,
-    instant_since_last_currently_playing_poll: Instant,
+    instant_since_last_current_playback_poll: Instant,
     pub playback_params: PlaybackParams,
 }
 
@@ -107,7 +107,7 @@ impl App {
             small_search_limit: 4,
             active_block: ActiveBlock::MyPlaylists,
             api_error: String::new(),
-            current_playing_context: None,
+            current_playback_context: None,
             device_id: None,
             devices: None,
             input: String::new(),
@@ -138,7 +138,7 @@ impl App {
                 offset: None,
             },
             path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
-            instant_since_last_currently_playing_poll: Instant::now(),
+            instant_since_last_current_playback_poll: Instant::now(),
         }
     }
 
@@ -168,42 +168,42 @@ impl App {
         }
     }
 
-    pub fn get_currently_playing(&mut self) {
+    pub fn get_current_playback(&mut self) {
         if let Some(spotify) = &self.spotify {
-            let context = spotify.current_playing(None);
+            let context = spotify.current_playback(None);
             if let Ok(ctx) = context {
                 if let Some(c) = ctx {
-                    self.current_playing_context = Some(c);
-                    self.instant_since_last_currently_playing_poll = Instant::now();
+                    self.current_playback_context = Some(c);
+                    self.instant_since_last_current_playback_poll = Instant::now();
                 }
             };
         }
     }
 
-    fn poll_currently_playing(&mut self) {
+    fn poll_current_playback(&mut self) {
         // Poll every 5 seconds
         let poll_interval_ms = 5_000;
 
         let elapsed = self
-            .instant_since_last_currently_playing_poll
+            .instant_since_last_current_playback_poll
             .elapsed()
             .as_millis();
 
         if elapsed >= poll_interval_ms {
-            self.get_currently_playing();
+            self.get_current_playback();
         }
     }
 
     pub fn update_on_tick(&mut self) {
-        self.poll_currently_playing();
-        if let Some(current_playing_context) = &self.current_playing_context {
+        self.poll_current_playback();
+        if let Some(current_playback_context) = &self.current_playback_context {
             if let (Some(track), Some(progress_ms)) = (
-                &current_playing_context.item,
-                current_playing_context.progress_ms,
+                &current_playback_context.item,
+                current_playback_context.progress_ms,
             ) {
-                if current_playing_context.is_playing {
+                if current_playback_context.is_playing {
                     let elapsed = self
-                        .instant_since_last_currently_playing_poll
+                        .instant_since_last_current_playback_poll
                         .elapsed()
                         .as_millis()
                         + u128::from(progress_ms);
@@ -226,7 +226,7 @@ impl App {
         if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.device_id) {
             match spotify.pause_playback(Some(device_id.to_string())) {
                 Ok(()) => {
-                    self.get_currently_playing();
+                    self.get_current_playback();
                 }
                 Err(e) => {
                     self.active_block = ActiveBlock::Error;
@@ -237,13 +237,13 @@ impl App {
     }
 
     pub fn toggle_playback(&mut self) {
-        if let Some(current_playing_context) = &self.current_playing_context {
-            if current_playing_context.is_playing {
+        if let Some(current_playback_context) = &self.current_playback_context {
+            if current_playback_context.is_playing {
                 self.pause_playback();
             } else {
                 // Ideally I should be able to pass in the `progress_ms` to start_playback, but
                 // this does not yet work https://github.com/ramsayleung/rspotify/issues/51
-                if let Some(_progress_ms) = current_playing_context.progress_ms {
+                if let Some(_progress_ms) = current_playback_context.progress_ms {
                     let PlaybackParams {
                         context_uri,
                         uris,
@@ -288,7 +288,7 @@ impl App {
 
         match result {
             Ok(()) => {
-                self.get_currently_playing();
+                self.get_current_playback();
                 self.playback_params = PlaybackParams {
                     context_uri: context_uri,
                     uris,
