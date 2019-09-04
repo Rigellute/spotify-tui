@@ -1,3 +1,4 @@
+mod album;
 mod common_key_events;
 mod error_menu;
 mod help_menu;
@@ -37,6 +38,9 @@ pub fn handle_app(app: &mut App, key: Key) {
         }
         ActiveBlock::Home => {
             home::handler(key, app);
+        }
+        ActiveBlock::Album => {
+            album::handler(key, app);
         }
     }
 }

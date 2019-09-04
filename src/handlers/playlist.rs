@@ -25,7 +25,7 @@ pub fn handler(key: Key, app: &mut App) {
                     Routes::SongTable => {
                         app.active_block = ActiveBlock::SongTable;
                     }
-                    Routes::Album(_album_id) => {}
+                    Routes::Album => {}
                     Routes::Artist(_artist_id) => {}
                     Routes::TrackInfo(_track_id) => {}
                 },

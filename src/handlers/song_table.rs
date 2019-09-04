@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
+use super::super::app::{ActiveBlock, App, SongTableContext};
 use super::common_key_events;
 use termion::event::Key;
 

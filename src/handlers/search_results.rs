@@ -1,4 +1,6 @@
-use super::super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
+use super::super::app::{
+    ActiveBlock, App, Routes, SearchResultBlock, SelectedAlbum, SongTableContext,
+};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -131,20 +133,21 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                 &app.search_results.selected_album_index,
                 &app.search_results.albums,
             ) {
-                if let Some(album) = albums_result.albums.items.get(index.to_owned()) {
+                if let Some(album) = albums_result.albums.items.get(index.to_owned()).cloned() {
                     if let Some(album_id) = &album.id {
                         app.song_table_context = Some(SongTableContext::AlbumSearch);
                         if let Some(spotify) = &app.spotify {
-                            match spotify.album_track(album_id, app.large_search_limit, 0) {
-                                Ok(album_tracks) => {
-                                    // TODO: that query returns SimplifiedTrack rather
-                                    // than FullTrack
-                                    //
-                                    // app.songs_for_table = album_tracks.items.clone();
+                            match spotify.album_track(&album_id.clone(), app.large_search_limit, 0)
+                            {
+                                Ok(tracks) => {
+                                    app.selected_album = Some(SelectedAlbum {
+                                        album,
+                                        tracks,
+                                        selected_index: Some(0),
+                                    });
 
-                                    // app.playlist_tracks = playlist_tracks.items;
-                                    // app.active_block = ActiveBlock::SongTable;
-                                    // app.navigation_stack.push(Routes::SongTable);
+                                    app.active_block = ActiveBlock::Album;
+                                    app.navigation_stack.push(Routes::Album);
                                 }
                                 Err(e) => {
                                     app.active_block = ActiveBlock::Error;

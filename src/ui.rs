@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App, Routes, SearchResultBlock};
+use super::app::{ActiveBlock, App, Routes, SearchResultBlock, LIBRARY_OPTIONS};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
@@ -171,7 +171,7 @@ where
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
         .split(layout_chunk);
 
-    draw_playlist_block(f, app, chunks[0]);
+    draw_user_block(f, app, chunks[0]);
 
     let active_route = app.get_current_route();
 
@@ -184,7 +184,9 @@ where
                 Routes::SongTable => {
                     draw_song_table(f, app, chunks[1]);
                 }
-                Routes::Album(_album_id) => {}
+                Routes::Album => {
+                    draw_album_table(f, app, chunks[1]);
+                }
                 Routes::Artist(_artist_id) => {}
                 Routes::TrackInfo(_track_id) => {}
             };
@@ -193,6 +195,20 @@ where
             draw_home(f, app, chunks[1]);
         }
     }
+}
+
+pub fn draw_library_block<B>(f: &mut Frame<B>, _app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    draw_selectable_list(
+        f,
+        layout_chunk,
+        "Library",
+        &LIBRARY_OPTIONS,
+        (false, false),
+        None, // TODO: make this selectable
+    );
 }
 
 pub fn draw_playlist_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -214,6 +230,19 @@ where
         highlight_state,
         app.selected_playlist_index,
     );
+}
+
+pub fn draw_user_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+        .split(layout_chunk);
+
+    draw_library_block(f, app, chunks[0]);
+    draw_playlist_block(f, app, chunks[1]);
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -328,6 +357,60 @@ where
     }
 }
 
+pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let normal_style = Style::default().fg(Color::White);
+    let header = ["#", "Title", "Length"];
+
+    if let Some(selected_album) = &app.selected_album {
+        let formatted_songs = selected_album
+            .tracks
+            .items
+            .iter()
+            .map(|item| {
+                vec![
+                    item.track_number.to_string(),
+                    item.name.to_owned(),
+                    millis_to_minutes(u128::from(item.duration_ms)),
+                ]
+            })
+            .collect::<Vec<Vec<String>>>();
+
+        let highlight_state = (app.active_block == ActiveBlock::Album, false);
+
+        let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
+
+        if let Some(selected_index) = selected_album.selected_index {
+            let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
+                if i == selected_index {
+                    Row::StyledData(item.into_iter(), selected_style)
+                } else {
+                    Row::StyledData(item.into_iter(), normal_style)
+                }
+            });
+
+            Table::new(header.iter(), rows)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .title(&format!(
+                            "{} by {}",
+                            selected_album.album.name,
+                            create_artist_string(&selected_album.album.artists)
+                        ))
+                        .title_style(get_color(highlight_state))
+                        .border_style(get_color(highlight_state)),
+                )
+                .style(Style::default().fg(Color::White))
+                .widths(&[10, 50, 10])
+                .render(f, layout_chunk);
+        }
+    };
+}
+
 pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
@@ -379,19 +462,19 @@ where
     if let Some(current_playback_context) = &app.current_playback_context {
         if let Some(track_item) = &current_playback_context.item {
             let playing_text = format_song(track_item);
+
+            let play_title = if current_playback_context.is_playing {
+                "Playing"
+            } else {
+                "Paused"
+            };
+
             Block::default()
                 .borders(Borders::ALL)
-                .title("Playing")
+                .title(play_title)
                 .title_style(Style::default().fg(Color::Gray))
                 .border_style(Style::default().fg(Color::Gray))
                 .render(f, layout_chunk);
-
-            Paragraph::new(playing_text.iter())
-                .style(Style::default().fg(Color::Yellow))
-                .block(Block::default().title("Track"))
-                .render(f, chunks[0]);
-
-            let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
 
             let shuffle_text = if current_playback_context.shuffle_state {
                 "On"
@@ -399,10 +482,16 @@ where
                 "Off"
             };
 
-            let title = &format!("Shuffle: {}", shuffle_text);
+            let title = format!("Track (shuffle: {})", shuffle_text).to_owned();
+            Paragraph::new(playing_text.iter())
+                .style(Style::default().fg(Color::Yellow))
+                .block(Block::default().title(&title))
+                .render(f, chunks[0]);
+
+            let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
 
             Gauge::default()
-                .block(Block::default().title(title))
+                .block(Block::default().title(""))
                 .style(
                     Style::default()
                         .fg(Color::Magenta)
@@ -514,15 +603,16 @@ where
         .render(f, chunks[0]);
 }
 
-pub fn draw_selectable_list<B>(
+pub fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
     layout_chunk: Rect,
     title: &str,
-    items: &[String],
+    items: &[S],
     highlight_state: (bool, bool),
     selected_index: Option<usize>,
 ) where
     B: Backend,
+    S: std::convert::AsRef<str>,
 {
     SelectableList::default()
         .block(

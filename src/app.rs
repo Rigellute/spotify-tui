@@ -1,5 +1,6 @@
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
+use rspotify::spotify::model::album::SimplifiedAlbum;
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
@@ -8,11 +9,20 @@ use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
 use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
-use rspotify::spotify::model::track::FullTrack;
+use rspotify::spotify::model::track::{FullTrack, SimplifiedTrack};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
+
+pub const LIBRARY_OPTIONS: [&str; 6] = [
+    "Made For You",
+    "Recently Played",
+    "Liked Songs",
+    "Albums",
+    "Artists",
+    "Podcasts",
+];
 
 #[derive(Clone)]
 pub struct PlaybackParams {
@@ -21,10 +31,10 @@ pub struct PlaybackParams {
     offset: Option<usize>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Routes {
     Search,
-    Album(String /* album id */),
+    Album,
     Artist(String /* artist id */),
     TrackInfo(String /* track id*/),
     SongTable,
@@ -41,6 +51,7 @@ pub enum SearchResultBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
+    Album,
     Error,
     HelpMenu,
     Home,
@@ -74,7 +85,15 @@ pub struct SearchResult {
     pub selected_block: SearchResultBlock,
 }
 
+#[derive(Clone)]
+pub struct SelectedAlbum {
+    pub album: SimplifiedAlbum,
+    pub tracks: Page<SimplifiedTrack>,
+    pub selected_index: Option<usize>,
+}
+
 pub struct App {
+    pub selected_album: Option<SelectedAlbum>,
     pub large_search_limit: u32,
     pub navigation_stack: Vec<Routes>,
     pub small_search_limit: u32,
@@ -102,6 +121,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
+            selected_album: None,
             large_search_limit: 20,
             navigation_stack: vec![],
             small_search_limit: 4,
@@ -290,7 +310,7 @@ impl App {
             Ok(()) => {
                 self.get_current_playback();
                 self.playback_params = PlaybackParams {
-                    context_uri: context_uri,
+                    context_uri,
                     uris,
                     offset: Some(offset),
                 }
