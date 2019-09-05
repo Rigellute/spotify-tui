@@ -4,6 +4,9 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
+        Key::Esc => {
+            app.active_block = ActiveBlock::Empty;
+        }
         k if common_key_events::left_event(k) => {
             app.active_block = ActiveBlock::MyPlaylists;
         }
@@ -15,6 +18,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
+            app.hovered_block = ActiveBlock::Input;
         }
         // Press space to toggle playback
         Key::Char(' ') => {

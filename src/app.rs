@@ -43,7 +43,6 @@ pub enum Routes {
     Search,
     Album,
     Artist(String /* artist id */),
-    TrackInfo(String /* track id*/),
     SongTable,
 }
 
@@ -59,14 +58,15 @@ pub enum SearchResultBlock {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
     Album,
-    Library,
+    Empty,
     Error,
     HelpMenu,
     Home,
     Input,
+    Library,
     MyPlaylists,
-    SelectDevice,
     SearchResultBlock,
+    SelectDevice,
     SongTable,
 }
 
@@ -107,6 +107,7 @@ pub struct App {
     pub navigation_stack: Vec<Routes>,
     pub small_search_limit: u32,
     pub active_block: ActiveBlock,
+    pub hovered_block: ActiveBlock,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
     pub device_id: Option<String>,
@@ -140,7 +141,8 @@ impl App {
             large_search_limit: 20,
             navigation_stack: vec![],
             small_search_limit: 4,
-            active_block: ActiveBlock::Library,
+            active_block: ActiveBlock::Empty,
+            hovered_block: ActiveBlock::Library,
             api_error: String::new(),
             current_playback_context: None,
             device_id: None,

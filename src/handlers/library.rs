@@ -6,7 +6,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            // Go back to hover mode
+            app.active_block = ActiveBlock::Empty;
         }
         Key::Char('d') => {
             app.handle_get_devices();
@@ -33,7 +33,10 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
+            app.hovered_block = ActiveBlock::Input;
         }
+        // This should probably be an array of structs with enums rather than just using indexes
+        // like this
         Key::Char('\n') => match app.library.selected_index {
             // Made For You,
             0 => {}

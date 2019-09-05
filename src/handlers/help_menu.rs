@@ -4,7 +4,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            app.active_block = ActiveBlock::Library;
         }
         // Press space to toggle playback
         Key::Char(' ') => {

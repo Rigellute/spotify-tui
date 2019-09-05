@@ -4,6 +4,9 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
+        Key::Esc => {
+            app.active_block = ActiveBlock::Empty;
+        }
         Key::Char('d') => {
             app.handle_get_devices();
         }
@@ -15,9 +18,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.active_block = ActiveBlock::HelpMenu;
         }
         k if common_key_events::right_event(k) => {
-            let active_route = app.get_current_route();
-
-            match active_route {
+            match app.get_current_route() {
                 Some(route) => match route {
                     Routes::Search => {
                         app.active_block = ActiveBlock::SearchResultBlock;
@@ -25,9 +26,10 @@ pub fn handler(key: Key, app: &mut App) {
                     Routes::SongTable => {
                         app.active_block = ActiveBlock::SongTable;
                     }
-                    Routes::Album => {}
+                    Routes::Album => {
+                        app.active_block = ActiveBlock::Album;
+                    }
                     Routes::Artist(_artist_id) => {}
-                    Routes::TrackInfo(_track_id) => {}
                 },
                 None => {
                     app.active_block = ActiveBlock::Home;
@@ -62,6 +64,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
+            app.hovered_block = ActiveBlock::Input;
         }
         Key::Char('\n') => {
             if let (Some(playlists), Some(selected_playlist_index)) =

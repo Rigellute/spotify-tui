@@ -110,7 +110,10 @@ where
         .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
         .split(layout_chunk);
 
-    let highlight_state = (app.active_block == ActiveBlock::Input, false);
+    let highlight_state = (
+        app.active_block == ActiveBlock::Input,
+        app.hovered_block == ActiveBlock::Input,
+    );
 
     Paragraph::new([Text::raw(&app.input)].iter())
         .style(Style::default().fg(Color::Yellow))
@@ -188,7 +191,6 @@ where
                     draw_album_table(f, app, chunks[1]);
                 }
                 Routes::Artist(_artist_id) => {}
-                Routes::TrackInfo(_track_id) => {}
             };
         }
         None => {
@@ -201,7 +203,10 @@ pub fn draw_library_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let highlight_state = (app.active_block == ActiveBlock::Library, false);
+    let highlight_state = (
+        app.active_block == ActiveBlock::Library,
+        app.hovered_block == ActiveBlock::Library,
+    );
     draw_selectable_list(
         f,
         layout_chunk,
@@ -221,7 +226,10 @@ where
         None => vec![],
     };
 
-    let highlight_state = (app.active_block == ActiveBlock::MyPlaylists, false);
+    let highlight_state = (
+        app.active_block == ActiveBlock::MyPlaylists,
+        app.hovered_block == ActiveBlock::MyPlaylists,
+    );
 
     draw_selectable_list(
         f,
@@ -244,6 +252,17 @@ where
 
     draw_library_block(f, app, chunks[0]);
     draw_playlist_block(f, app, chunks[1]);
+}
+
+fn get_search_results_highlight_state(
+    app: &App,
+    block_to_match: SearchResultBlock,
+) -> (bool, bool) {
+    (
+        app.search_results.selected_block == block_to_match,
+        app.hovered_block == ActiveBlock::SearchResultBlock
+            && app.search_results.hovered_block == block_to_match,
+    )
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -277,10 +296,7 @@ where
             song_artist_block[0],
             "Songs",
             &songs,
-            (
-                app.search_results.selected_block == SearchResultBlock::SongSearch,
-                app.search_results.hovered_block == SearchResultBlock::SongSearch,
-            ),
+            get_search_results_highlight_state(app, SearchResultBlock::SongSearch),
             app.search_results.selected_tracks_index,
         );
 
@@ -299,10 +315,7 @@ where
             song_artist_block[1],
             "Artists",
             &artists,
-            (
-                app.search_results.selected_block == SearchResultBlock::ArtistSearch,
-                app.search_results.hovered_block == SearchResultBlock::ArtistSearch,
-            ),
+            get_search_results_highlight_state(app, SearchResultBlock::ArtistSearch),
             app.search_results.selected_artists_index,
         );
     }
@@ -328,10 +341,7 @@ where
             albums_playlist_block[0],
             "Albums",
             &albums,
-            (
-                app.search_results.selected_block == SearchResultBlock::AlbumSearch,
-                app.search_results.hovered_block == SearchResultBlock::AlbumSearch,
-            ),
+            get_search_results_highlight_state(app, SearchResultBlock::AlbumSearch),
             app.search_results.selected_album_index,
         );
 
@@ -349,10 +359,7 @@ where
             albums_playlist_block[1],
             "Playlists",
             &playlists,
-            (
-                app.search_results.selected_block == SearchResultBlock::PlaylistSearch,
-                app.search_results.hovered_block == SearchResultBlock::PlaylistSearch,
-            ),
+            get_search_results_highlight_state(app, SearchResultBlock::PlaylistSearch),
             app.search_results.selected_playlists_index,
         );
     }
@@ -379,7 +386,10 @@ where
             })
             .collect::<Vec<Vec<String>>>();
 
-        let highlight_state = (app.active_block == ActiveBlock::Album, false);
+        let highlight_state = (
+            app.active_block == ActiveBlock::Album,
+            app.hovered_block == ActiveBlock::Album,
+        );
 
         let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
@@ -421,7 +431,10 @@ where
 
     let formatted_songs = display_songs(&app.songs_for_table);
 
-    let highlight_state = (app.active_block == ActiveBlock::SongTable, false);
+    let highlight_state = (
+        app.active_block == ActiveBlock::SongTable,
+        app.hovered_block == ActiveBlock::SongTable,
+    );
 
     let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
@@ -522,7 +535,10 @@ where
     let mut playing_text = vec![
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
-        Text::styled("\nPress <Esc> to return", Style::default().fg(Color::White)),
+        Text::styled(
+            "\nPress <Enter> to return",
+            Style::default().fg(Color::White),
+        ),
     ];
 
     if app.device_id.is_none() {
@@ -549,7 +565,10 @@ fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let highlight_state = (app.active_block == ActiveBlock::Home, false);
+    let highlight_state = (
+        app.active_block == ActiveBlock::Home,
+        app.hovered_block == ActiveBlock::Home,
+    );
     Block::default()
         .title("Home")
         .borders(Borders::ALL)

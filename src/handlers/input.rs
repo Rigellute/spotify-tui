@@ -9,7 +9,9 @@ pub fn handler(key: Key, app: &mut App) {
             app.input = String::new();
         }
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            // IDEA: Perhaps this should return to previous hovered_block?
+            app.active_block = ActiveBlock::Empty;
+            app.hovered_block = ActiveBlock::Library;
         }
         Key::Char('\n') => {
             if let Some(spotify) = &app.spotify {
@@ -27,6 +29,7 @@ pub fn handler(key: Key, app: &mut App) {
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
                 app.active_block = ActiveBlock::SearchResultBlock;
+                app.hovered_block = ActiveBlock::SearchResultBlock;
                 app.navigation_stack.push(Routes::Search);
 
                 // Can I run these functions in parellel?

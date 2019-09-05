@@ -3,7 +3,7 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Esc => {
+        Key::Char('\n') => {
             app.active_block = ActiveBlock::MyPlaylists;
         }
         Key::Char('d') => {

@@ -147,6 +147,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                                     });
 
                                     app.active_block = ActiveBlock::Album;
+                                    app.hovered_block = ActiveBlock::Album;
                                     app.navigation_stack.push(Routes::Album);
                                 }
                                 Err(e) => {
@@ -230,7 +231,6 @@ fn handle_enter_event_on_hovered_block(app: &mut App) {
     };
 }
 
-// TODO: break this down into smaller functions and add tests
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Char('d') => {
@@ -245,6 +245,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('/') => {
             app.active_block = ActiveBlock::Input;
+            app.hovered_block = ActiveBlock::Input;
         }
         Key::Esc => {
             app.search_results.selected_block = SearchResultBlock::Empty;
@@ -267,10 +268,12 @@ pub fn handler(key: Key, app: &mut App) {
             app.search_results.selected_block = SearchResultBlock::Empty;
             match app.search_results.hovered_block {
                 SearchResultBlock::AlbumSearch => {
-                    app.active_block = ActiveBlock::MyPlaylists;
+                    app.hovered_block = ActiveBlock::Library;
+                    app.active_block = ActiveBlock::Empty;
                 }
                 SearchResultBlock::SongSearch => {
-                    app.active_block = ActiveBlock::MyPlaylists;
+                    app.hovered_block = ActiveBlock::Library;
+                    app.active_block = ActiveBlock::Empty;
                 }
                 SearchResultBlock::ArtistSearch => {
                     app.search_results.hovered_block = SearchResultBlock::SongSearch;
