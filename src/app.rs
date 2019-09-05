@@ -1,6 +1,6 @@
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
-use rspotify::spotify::model::album::SimplifiedAlbum;
+use rspotify::spotify::model::album::{SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
@@ -9,7 +9,7 @@ use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
 use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
-use rspotify::spotify::model::track::{FullTrack, SimplifiedTrack};
+use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -23,6 +23,13 @@ pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Artists",
     "Podcasts",
 ];
+
+#[derive(Clone)]
+pub struct Library {
+    pub selected_index: usize,
+    pub saved_tracks: Option<Page<SavedTrack>>,
+    pub saved_albums: Option<Page<SavedAlbum>>,
+}
 
 #[derive(Clone)]
 pub struct PlaybackParams {
@@ -52,6 +59,7 @@ pub enum SearchResultBlock {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
     Album,
+    Library,
     Error,
     HelpMenu,
     Home,
@@ -70,6 +78,7 @@ pub enum SongTableContext {
     SongSearch,
     ArtistSearch,
     PlaylistSearch,
+    SavedTracks,
 }
 
 pub struct SearchResult {
@@ -116,16 +125,22 @@ pub struct App {
     path_to_cached_device_id: PathBuf,
     instant_since_last_current_playback_poll: Instant,
     pub playback_params: PlaybackParams,
+    pub library: Library,
 }
 
 impl App {
     pub fn new() -> App {
         App {
             selected_album: None,
+            library: Library {
+                saved_tracks: None,
+                saved_albums: None,
+                selected_index: 0,
+            },
             large_search_limit: 20,
             navigation_stack: vec![],
             small_search_limit: 4,
-            active_block: ActiveBlock::MyPlaylists,
+            active_block: ActiveBlock::Library,
             api_error: String::new(),
             current_playback_context: None,
             device_id: None,

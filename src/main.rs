@@ -19,11 +19,18 @@ use tui::Terminal;
 use app::{ActiveBlock, App};
 use util::{Event, Events};
 
+const SCOPES: [&str; 6] = [
+    "user-modify-playback-state",
+    "user-read-playback-state",
+    "user-read-private",
+    "user-read-currently-playing",
+    "playlist-read-private",
+    "user-library-read",
+];
+
 fn main() -> Result<(), failure::Error> {
     // Start authorization with spotify
-    let mut oauth = SpotifyOAuth::default()
-        .scope("user-modify-playback-state user-read-playback-state user-read-private user-read-currently-playing playlist-read-private")
-        .build();
+    let mut oauth = SpotifyOAuth::default().scope(&SCOPES.join(" ")).build();
     match get_token(&mut oauth) {
         Some(token_info) => {
             // Terminal initialization

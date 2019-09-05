@@ -55,6 +55,18 @@ pub fn handler(key: Key, app: &mut App) {
                             app.start_playback(context_uri, None, Some(app.select_song_index));
                         };
                     }
+                    SongTableContext::SavedTracks => {
+                        if let Some(saved_tracks) = &app.library.saved_tracks.clone() {
+                            // TODO get context for saved tracks
+                            if let Some(item) = saved_tracks.items.get(app.select_song_index) {
+                                app.start_playback(
+                                    None,
+                                    Some(vec![item.track.uri.to_owned()]),
+                                    Some(0),
+                                );
+                            };
+                        };
+                    }
                     SongTableContext::AlbumSearch => {}
                     SongTableContext::SongSearch => {}
                     SongTableContext::ArtistSearch => {}

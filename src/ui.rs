@@ -197,17 +197,18 @@ where
     }
 }
 
-pub fn draw_library_block<B>(f: &mut Frame<B>, _app: &App, layout_chunk: Rect)
+pub fn draw_library_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
+    let highlight_state = (app.active_block == ActiveBlock::Library, false);
     draw_selectable_list(
         f,
         layout_chunk,
         "Library",
         &LIBRARY_OPTIONS,
-        (false, false),
-        None, // TODO: make this selectable
+        highlight_state,
+        Some(app.library.selected_index),
     );
 }
 
@@ -405,7 +406,7 @@ where
                         .border_style(get_color(highlight_state)),
                 )
                 .style(Style::default().fg(Color::White))
-                .widths(&[10, 50, 10])
+                .widths(&[3, 50, 10])
                 .render(f, layout_chunk);
         }
     };

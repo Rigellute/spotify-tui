@@ -4,6 +4,7 @@ mod error_menu;
 mod help_menu;
 mod home;
 mod input;
+mod library;
 mod playlist;
 mod search_results;
 mod select_device;
@@ -41,6 +42,9 @@ pub fn handle_app(app: &mut App, key: Key) {
         }
         ActiveBlock::Album => {
             album::handler(key, app);
+        }
+        ActiveBlock::Library => {
+            library::handler(key, app);
         }
     }
 }
