@@ -73,6 +73,7 @@ pub fn handler(key: Key, app: &mut App) {
         _ => {}
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

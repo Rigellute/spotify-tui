@@ -39,7 +39,8 @@ pub fn handler(key: Key, app: &mut App) {
             if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {
                     app.device_id = Some(device.id.clone());
-                    app.active_block = ActiveBlock::MyPlaylists;
+                    app.active_block = ActiveBlock::Library;
+                    app.hovered_block = ActiveBlock::Library;
                     match app.set_cached_device_token(device.id.clone()) {
                         Ok(()) => {}
                         Err(e) => {
