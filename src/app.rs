@@ -10,6 +10,7 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -23,6 +24,12 @@ pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Artists",
     "Podcasts",
 ];
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ClientConfig {
+    pub client_id: String,
+    pub client_secret: String,
+}
 
 #[derive(Clone)]
 pub struct Library {

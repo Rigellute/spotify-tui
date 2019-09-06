@@ -3,15 +3,11 @@ mod handlers;
 mod ui;
 mod util;
 
-use dirs;
-use failure::err_msg;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
 use termion::cursor::Goto;
 use termion::event::Key;
 use termion::input::MouseTerminal;
@@ -38,41 +34,8 @@ struct ClientConfig {
     client_secret: String,
 }
 
-fn get_config() -> Result<ClientConfig, failure::Error> {
-    match dirs::home_dir() {
-        Some(home) => {
-            let path = Path::new(&home);
-            let file_name = "client.yml";
-            let config_path = path.join(".config/spotify-tui");
-
-            if config_path.exists() {
-                let config_string = fs::read_to_string(config_path.join(file_name))?;
-                let config_yml: ClientConfig = serde_yaml::from_str(&config_string)?;
-
-                return Ok(config_yml);
-            } else {
-                println!("Config does not exist, creating it");
-                fs::create_dir(&config_path)?;
-                let mut new_config = fs::File::create(&config_path.join(file_name))?;
-                let content = ClientConfig {
-                    client_id: "abddfslkjsj1234".to_string(),
-                    client_secret: "abddfslkjsj1234".to_string(),
-                };
-
-                let content_yml = serde_yaml::to_string(&content)?;
-                write!(new_config, "{}", content_yml)?;
-                return Err(err_msg(format!(
-                    "Add your spotify client_id and client_secret to {}",
-                    config_path.display()
-                )));
-            }
-        }
-        None => Err(err_msg("No $HOME directory found for client config")),
-    }
-}
-
 fn main() -> Result<(), failure::Error> {
-    let client_config = get_config()?;
+    let client_config = util::get_config()?;
 
     // Start authorization with spotify
     let mut oauth = SpotifyOAuth::default()
