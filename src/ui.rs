@@ -11,7 +11,7 @@ fn format_song(song: &FullTrack) -> [Text<'static>; 3] {
     [
         Text::styled(
             song.name.to_owned(),
-            Style::default().fg(Color::Magenta).modifier(Modifier::BOLD),
+            Style::default().fg(Color::White).modifier(Modifier::BOLD),
         ),
         Text::raw(" - "),
         Text::styled(
@@ -74,10 +74,10 @@ where
         vec!["General", "<Ctrl+c>", "Quit"],
         vec!["General", "<Esc>", "Go back"],
         vec!["General", "d", "Select device to play music on"],
-        vec!["Input", "<Ctrl+u>", "Delete input"],
-        vec!["Input", "<Enter>", "Search with input text"],
+        vec!["Search input", "<Ctrl+u>", "Delete input"],
+        vec!["Search input", "<Enter>", "Search with input text"],
         vec![
-            "Input",
+            "Search input",
             "<Esc>",
             "Escape from the input back to playlist view",
         ],
@@ -120,7 +120,7 @@ where
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Input")
+                .title("Search")
                 .title_style(get_color(highlight_state))
                 .border_style(get_color(highlight_state)),
         )
@@ -491,7 +491,10 @@ where
 
             Block::default()
                 .borders(Borders::ALL)
-                .title(play_title)
+                .title(&format!(
+                    "{} ({})",
+                    play_title, current_playback_context.device.name
+                ))
                 .title_style(Style::default().fg(Color::Gray))
                 .border_style(Style::default().fg(Color::Gray))
                 .render(f, layout_chunk);
@@ -502,10 +505,14 @@ where
                 "Off"
             };
 
-            let title = format!("Track (shuffle: {})", shuffle_text).to_owned();
+            let title = format!("Shuffle: {}", shuffle_text).to_owned();
             Paragraph::new(playing_text.iter())
                 .style(Style::default().fg(Color::Yellow))
-                .block(Block::default().title(&title))
+                .block(
+                    Block::default()
+                        .title(&title)
+                        .title_style(Style::default().fg(Color::Blue)),
+                )
                 .render(f, chunks[0]);
 
             let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
@@ -589,9 +596,26 @@ where
 {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(100)].as_ref())
+        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
         .margin(10)
         .split(f.size());
+
+    let device_instructions = vec![
+        "To play tracks, please select a device.",
+        "This devices needs to remain open in order for playback to work.",
+        "Your choice here will be cached so you can jump straight back in.",
+        "You can change playback device at any time by pressing `d`.",
+    ];
+
+    Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
+        .style(Style::default().fg(Color::White))
+        .block(
+            Block::default()
+                .borders(Borders::NONE)
+                .title("Welcome to spotify-tui!")
+                .title_style(Style::default().fg(Color::Cyan).modifier(Modifier::BOLD)),
+        )
+        .render(f, chunks[0]);
 
     let no_device_message = vec!["No devices found: Make sure a device has is active".to_string()];
 
@@ -626,7 +650,7 @@ where
                 .fg(Color::LightCyan)
                 .modifier(Modifier::BOLD),
         )
-        .render(f, chunks[0]);
+        .render(f, chunks[1]);
 }
 
 pub fn draw_selectable_list<B, S>(

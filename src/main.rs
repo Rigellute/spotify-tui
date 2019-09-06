@@ -43,7 +43,7 @@ fn main() -> Result<(), failure::Error> {
 
             let events = Events::new();
 
-            // App
+            // Initialise app state
             let mut app = App::new();
 
             let client_credential = SpotifyClientCredentials::default()
