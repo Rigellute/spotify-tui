@@ -142,7 +142,7 @@ fn main() -> Result<(), failure::Error> {
                         ui::draw_help_menu(&mut f);
                     }
                     ActiveBlock::Error => {
-                        ui::draw_api_error(&mut f, &app);
+                        ui::draw_error_screen(&mut f, &app);
                     }
                     ActiveBlock::SelectDevice => {
                         ui::draw_device_list(&mut f, &app);

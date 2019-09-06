@@ -92,7 +92,7 @@ where
             Block::default()
                 .borders(Borders::ALL)
                 .style(white)
-                .title("Help")
+                .title("Help (press <Esc> to go back)")
                 .title_style(gray)
                 .border_style(gray),
         )
@@ -535,7 +535,7 @@ where
     }
 }
 
-pub fn draw_api_error<B>(f: &mut Frame<B>, app: &App)
+pub fn draw_error_screen<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {

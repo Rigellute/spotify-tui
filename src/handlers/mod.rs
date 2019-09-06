@@ -1,7 +1,7 @@
 mod album;
 mod common_key_events;
 mod empty;
-mod error_menu;
+mod error_screen;
 mod help_menu;
 mod home;
 mod input;
@@ -30,7 +30,7 @@ pub fn handle_app(app: &mut App, key: Key) {
             help_menu::handler(key, app);
         }
         ActiveBlock::Error => {
-            error_menu::handler(key, app);
+            error_screen::handler(key, app);
         }
         ActiveBlock::SelectDevice => {
             select_device::handler(key, app);
