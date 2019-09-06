@@ -104,6 +104,18 @@ where
         vec!["Search input", "<Enter>", "Search with input text"],
         vec![
             "Search input",
+            "<Left Arrow Key>",
+            "Move cursor one space left",
+        ],
+        vec![
+            "Search input",
+            "<Right Arrow Key>",
+            "Move cursor one space right",
+        ],
+        vec!["Search input", "<Ctrl+a>", "Jump to start of input"],
+        vec!["Search input", "<Ctrl+e>", "Jump to end of input"],
+        vec![
+            "Search input",
             "<Esc>",
             "Escape from the input back to hovered block",
         ],

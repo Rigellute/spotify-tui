@@ -131,7 +131,7 @@ fn main() -> Result<(), failure::Error> {
                 write!(
                     terminal.backend_mut(),
                     "{}",
-                    Goto(4 + app.input.len() as u16, 4)
+                    Goto(4 + app.input_cursor_position, 4)
                 )?;
 
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace

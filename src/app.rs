@@ -120,6 +120,7 @@ pub struct App {
     pub device_id: Option<String>,
     pub devices: Option<DevicePayload>,
     pub input: String,
+    pub input_cursor_position: u16,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub search_results: SearchResult,
@@ -155,6 +156,7 @@ impl App {
             device_id: None,
             devices: None,
             input: String::new(),
+            input_cursor_position: 0,
             playlist_tracks: vec![],
             playlists: None,
             search_results: SearchResult {

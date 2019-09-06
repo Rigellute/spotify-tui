@@ -1,5 +1,6 @@
 use super::super::app::{ActiveBlock, App, Routes};
 use rspotify::spotify::senum::Country;
+use std::convert::TryInto;
 use termion::event::Key;
 
 // Handle events when the search input block is active
@@ -7,6 +8,23 @@ pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Ctrl('u') => {
             app.input = String::new();
+            app.input_cursor_position = 0;
+        }
+        Key::Ctrl('e') => {
+            app.input_cursor_position = app.input.len().try_into().unwrap();
+        }
+        Key::Ctrl('a') => {
+            app.input_cursor_position = 0;
+        }
+        Key::Left => {
+            if app.input.len() > 0 {
+                app.input_cursor_position -= 1;
+            }
+        }
+        Key::Right => {
+            if app.input_cursor_position < app.input.len().try_into().unwrap() {
+                app.input_cursor_position += 1;
+            }
         }
         Key::Esc => {
             // IDEA: Perhaps this should return to previous hovered_block?
@@ -65,10 +83,15 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Char(c) => {
-            app.input.push(c);
+            app.input
+                .insert(app.input_cursor_position.try_into().unwrap(), c);
+            app.input_cursor_position += 1;
         }
         Key::Backspace => {
-            app.input.pop();
+            if app.input.len() > 0 {
+                app.input.pop();
+                app.input_cursor_position -= 1;
+            }
         }
         _ => {}
     }
