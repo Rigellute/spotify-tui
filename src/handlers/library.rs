@@ -56,6 +56,7 @@ pub fn handler(key: Key, app: &mut App) {
 
                             app.library.saved_tracks = Some(saved_tracks);
                             app.active_block = ActiveBlock::SongTable;
+                            app.hovered_block = ActiveBlock::SongTable;
                             app.song_table_context = Some(SongTableContext::SavedTracks);
                             app.navigation_stack.push(Routes::SongTable);
                         }
