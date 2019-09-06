@@ -602,8 +602,8 @@ where
 
     let device_instructions = vec![
         "To play tracks, please select a device.",
-        "This devices needs to remain open in order for playback to work.",
-        "Your choice here will be cached so you can jump straight back in.",
+        "The official spotify app needs to remain open on your selected device in order for playback to work.",
+        "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`.",
         "You can change playback device at any time by pressing `d`.",
     ];
 
