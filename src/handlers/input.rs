@@ -95,7 +95,7 @@ mod tests {
 
         handler(Key::Esc, &mut app);
 
-        assert_eq!(app.active_block, ActiveBlock::MyPlaylists);
+        assert_eq!(app.active_block, ActiveBlock::Empty);
     }
 
     #[test]

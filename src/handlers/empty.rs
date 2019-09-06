@@ -77,3 +77,118 @@ pub fn handler(key: Key, app: &mut App) {
         _ => (),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn help_menu() {
+        let mut app = App::new();
+
+        handler(Key::Char('?'), &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::HelpMenu);
+    }
+
+    #[test]
+    fn go_to_search_input() {
+        let mut app = App::new();
+
+        handler(Key::Char('/'), &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Input);
+        assert_eq!(app.hovered_block, ActiveBlock::Input);
+    }
+
+    #[test]
+    fn on_enter() {
+        let mut app = App::new();
+
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::Library;
+
+        handler(Key::Char('\n'), &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Library);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+    }
+
+    #[test]
+    fn on_down_press() {
+        let mut app = App::new();
+
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::Library;
+
+        handler(Key::Down, &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+        assert_eq!(app.hovered_block, ActiveBlock::MyPlaylists);
+
+        // TODO: test the other cases when they are implemented
+    }
+
+    #[test]
+    fn on_up_press() {
+        let mut app = App::new();
+
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::MyPlaylists;
+
+        handler(Key::Up, &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+    }
+
+    #[test]
+    fn on_left_press() {
+        let mut app = App::new();
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::Album;
+
+        handler(Key::Left, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+
+        app.hovered_block = ActiveBlock::Home;
+        handler(Key::Left, &mut app);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+
+        app.hovered_block = ActiveBlock::SongTable;
+        handler(Key::Left, &mut app);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+    }
+
+    #[test]
+    fn on_right_press() {
+        let mut app = App::new();
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::Library;
+
+        app.navigation_stack.push(Routes::Album);
+        handler(Key::Right, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::Album);
+        assert_eq!(app.hovered_block, ActiveBlock::Album);
+
+        app.hovered_block = ActiveBlock::MyPlaylists;
+        app.navigation_stack.push(Routes::Search);
+        handler(Key::Right, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::SearchResultBlock);
+        assert_eq!(app.hovered_block, ActiveBlock::SearchResultBlock);
+
+        app.hovered_block = ActiveBlock::Library;
+        app.navigation_stack.push(Routes::SongTable);
+        handler(Key::Right, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::SongTable);
+        assert_eq!(app.hovered_block, ActiveBlock::SongTable);
+
+        app.navigation_stack = vec![];
+        app.active_block = ActiveBlock::Empty;
+        app.hovered_block = ActiveBlock::Library;
+        handler(Key::Right, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+        assert_eq!(app.hovered_block, ActiveBlock::Home);
+    }
+}
