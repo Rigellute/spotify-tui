@@ -9,14 +9,14 @@ You need to have the spotify app open in order to play songs, but you can contro
 ### TODO
 
 - [ ] Add `clap` for the cli
-- [ ] Add global callback to handle pressing `space`, which should pause/start the current song.
+- [x] Add global callback to handle pressing `space`, which should pause/start the current song.
 - [ ] Add recommendations and recently played to home page
 - [ ] Create a pretty landing page for spotify auth redirect. This should simply explain to the user that they need to copy the url into the terminal. Should deploy this to as a static site.
 - [ ] Fix previous state on navigating back: Make the stack navigation contain active block state (including all the indexes)
-- [ ] Implement album screen (could just be selectable table list?)
+- [x] Implement album screen (could just be selectable table list?)
 - [ ] Implement artist screen (show top tracks, albums, other artist recommendations?)
 - [ ] Implement left right events to move cursor within the input
-- [ ] Implement shuffle
+- [x] Implement shuffle
 - [ ] Implement track seek
 - [ ] Implement vim style `H M L` for jumping `high medium low` within the table view?
 - [ ] Let the user press `i` on selected song to get more information about it
