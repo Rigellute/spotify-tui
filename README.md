@@ -4,14 +4,14 @@ A Spotify client for the terminal.
 
 ### Limitations
 
-It seems you need to have the spotify app open in order to play songs.
+You need to have the spotify app open in order to play songs, but you can control all your devices with this app.
 
 ### TODO
 
 - [ ] Add `clap` for the cli
 - [ ] Add global callback to handle pressing `space`, which should pause/start the current song.
 - [ ] Add recommendations and recently played to home page
-- [ ] Create a `localhost` server with pretty landing page for spotify auth redirect. This should simply explain to the user that they need to copy the url into the terminal.
+- [ ] Create a pretty landing page for spotify auth redirect. This should simply explain to the user that they need to copy the url into the terminal. Should deploy this to as a static site.
 - [ ] Fix previous state on navigating back: Make the stack navigation contain active block state (including all the indexes)
 - [ ] Implement album screen (could just be selectable table list?)
 - [ ] Implement artist screen (show top tracks, albums, other artist recommendations?)
