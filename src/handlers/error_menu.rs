@@ -4,7 +4,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Char('\n') => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            app.active_block = ActiveBlock::Empty;
         }
         Key::Char('d') => {
             app.handle_get_devices();
