@@ -331,7 +331,13 @@ where
                 .albums
                 .items
                 .iter()
-                .map(|item| item.name.to_owned())
+                .map(|item| {
+                    format!(
+                        "{} - {}",
+                        item.name.to_owned(),
+                        create_artist_string(&item.artists)
+                    )
+                })
                 .collect(),
             None => vec![],
         };
