@@ -15,7 +15,8 @@ pub fn handler(key: Key, app: &mut App) {
             app.toggle_playback();
         }
         k if common_key_events::left_event(k) => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            app.active_block = ActiveBlock::Empty;
+            app.hovered_block = ActiveBlock::Library;
         }
         k if common_key_events::down_event(k) => {
             if let Some(selected_album) = &mut app.selected_album {
@@ -53,4 +54,48 @@ pub fn handler(key: Key, app: &mut App) {
         }
         _ => {}
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn help_menu() {
+        let mut app = App::new();
+
+        handler(Key::Char('?'), &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::HelpMenu);
+    }
+
+    #[test]
+    fn on_left_press() {
+        let mut app = App::new();
+        app.active_block = ActiveBlock::Album;
+        app.hovered_block = ActiveBlock::Album;
+
+        handler(Key::Left, &mut app);
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+        assert_eq!(app.hovered_block, ActiveBlock::Library);
+    }
+
+    #[test]
+    fn go_to_search_input() {
+        let mut app = App::new();
+
+        handler(Key::Char('/'), &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Input);
+        assert_eq!(app.hovered_block, ActiveBlock::Input);
+    }
+
+    #[test]
+    fn on_esc() {
+        let mut app = App::new();
+
+        handler(Key::Esc, &mut app);
+
+        assert_eq!(app.active_block, ActiveBlock::Empty);
+    }
 }
