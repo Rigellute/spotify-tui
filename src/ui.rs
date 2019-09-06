@@ -63,23 +63,49 @@ where
 
     let white = Style::default().fg(Color::White);
     let gray = Style::default().fg(Color::White);
-    let header = ["Active block", "Event", "Description"];
+    let header = ["Context", "Event", "Description"];
 
     // Would be nice to share the same source of truth as the event matches in `src/handlers`
     let help_rows = vec![
-        vec!["Playlist/Song block", "j", "Move selection down"],
-        vec!["Playlist/Song blocks", "k", "Move selection up"],
+        vec![
+            "General",
+            "h | <Left Arrow Key>",
+            "Move hovered-block/active-block selection left",
+        ],
+        vec![
+            "General",
+            "j | <Down Arrow Key> | <Ctrl+n>",
+            "Move hovered-block/active-block selection down",
+        ],
+        vec![
+            "General",
+            "k | <Up Arrow Key> | <Ctrl+p>",
+            "Move hovered-block/selection up",
+        ],
+        vec![
+            "General",
+            "k | <Right Arrow Key>",
+            "Move hovered-block/selection right",
+        ],
         vec!["General", "/", "Enter input for search"],
         vec!["General", "q", "Quit"],
         vec!["General", "<Ctrl+c>", "Quit"],
-        vec!["General", "<Esc>", "Go back"],
+        vec!["General", "<Space>", "Pause/Resume playback"],
+        vec!["General", "<Enter>", "Enter active mode"],
+        vec!["General", "-", "Go back"],
         vec!["General", "d", "Select device to play music on"],
+        vec!["Selected block", "<Esc>", "Enter hover mode"],
+        vec![
+            "Selected block",
+            "<Enter>",
+            "Start playback or enter album/artist/playlist",
+        ],
         vec!["Search input", "<Ctrl+u>", "Delete input"],
         vec!["Search input", "<Enter>", "Search with input text"],
         vec![
             "Search input",
             "<Esc>",
-            "Escape from the input back to playlist view",
+            "Escape from the input back to hovered block",
         ],
     ];
 
@@ -97,7 +123,7 @@ where
                 .border_style(gray),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[30, 20, 30])
+        .widths(&[20, 40, 50])
         .render(f, chunks[0]);
 }
 
