@@ -59,14 +59,12 @@ pub fn handler(key: Key, app: &mut App) {
                         };
                     }
                     SongTableContext::SavedTracks => {
-                        if let Some(saved_tracks) = &app.library.saved_tracks.clone() {
+                        if let Some(saved_tracks) = &app.library.saved_tracks.get_saved_tracks(None)
+                        {
                             // TODO get context for saved tracks
                             if let Some(item) = saved_tracks.items.get(app.select_song_index) {
-                                app.start_playback(
-                                    None,
-                                    Some(vec![item.track.uri.to_owned()]),
-                                    Some(0),
-                                );
+                                let track_uri = item.track.uri.to_owned();
+                                app.start_playback(None, Some(vec![track_uri]), Some(0));
                             };
                         };
                     }
@@ -96,6 +94,38 @@ pub fn handler(key: Key, app: &mut App) {
                             app.start_playback(context_uri, None, Some(app.select_song_index));
                         };
                     }
+                },
+                None => {}
+            };
+        }
+        // Scroll down
+        Key::Ctrl('d') => {
+            match &app.song_table_context {
+                Some(context) => match context {
+                    SongTableContext::MyPlaylists => {}
+                    SongTableContext::SavedTracks => {
+                        app.get_current_user_saved_tracks_next();
+                    }
+                    SongTableContext::AlbumSearch => {}
+                    SongTableContext::SongSearch => {}
+                    SongTableContext::ArtistSearch => {}
+                    SongTableContext::PlaylistSearch => {}
+                },
+                None => {}
+            };
+        }
+        // Scroll up
+        Key::Ctrl('u') => {
+            match &app.song_table_context {
+                Some(context) => match context {
+                    SongTableContext::MyPlaylists => {}
+                    SongTableContext::SavedTracks => {
+                        app.get_current_user_saved_tracks_previous();
+                    }
+                    SongTableContext::AlbumSearch => {}
+                    SongTableContext::SongSearch => {}
+                    SongTableContext::ArtistSearch => {}
+                    SongTableContext::PlaylistSearch => {}
                 },
                 None => {}
             };

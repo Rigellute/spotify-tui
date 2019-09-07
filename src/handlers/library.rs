@@ -1,6 +1,5 @@
-use super::super::app::{ActiveBlock, App, RouteId, SongTableContext, LIBRARY_OPTIONS};
+use super::super::app::{ActiveBlock, App, LIBRARY_OPTIONS};
 use super::common_key_events;
-use rspotify::spotify::model::track::FullTrack;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
@@ -43,25 +42,7 @@ pub fn handler(key: Key, app: &mut App) {
             1 => {}
             // Liked Songs,
             2 => {
-                if let Some(spotify) = &app.spotify {
-                    match spotify.current_user_saved_tracks(app.large_search_limit, None) {
-                        Ok(saved_tracks) => {
-                            app.songs_for_table = saved_tracks
-                                .items
-                                .clone()
-                                .into_iter()
-                                .map(|item| item.track)
-                                .collect::<Vec<FullTrack>>();
-
-                            app.library.saved_tracks = Some(saved_tracks);
-                            app.song_table_context = Some(SongTableContext::SavedTracks);
-                            app.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
-                        }
-                        Err(e) => {
-                            app.handle_error(e);
-                        }
-                    }
-                }
+                app.get_current_user_saved_tracks(None);
             }
             // Albums,
             3 => {}

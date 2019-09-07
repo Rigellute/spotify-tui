@@ -25,6 +25,28 @@ pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Podcasts",
 ];
 
+#[derive(Clone)]
+pub struct ScrollableResultPages<T> {
+    index: usize,
+    pages: Vec<T>,
+}
+
+impl<T> ScrollableResultPages<T> {
+    pub fn new() -> ScrollableResultPages<T> {
+        ScrollableResultPages {
+            index: 0,
+            pages: vec![],
+        }
+    }
+
+    pub fn get_saved_tracks(&self, at_index: Option<usize>) -> Option<&T> {
+        match at_index {
+            Some(index) => self.pages.get(index),
+            None => self.pages.get(self.index),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
     pub client_id: String,
@@ -34,7 +56,7 @@ pub struct ClientConfig {
 #[derive(Clone)]
 pub struct Library {
     pub selected_index: usize,
-    pub saved_tracks: Option<Page<SavedTrack>>,
+    pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
     pub saved_albums: Option<Page<SavedAlbum>>,
 }
 
@@ -151,7 +173,7 @@ impl App {
         App {
             selected_album: None,
             library: Library {
-                saved_tracks: None,
+                saved_tracks: ScrollableResultPages::new(),
                 saved_albums: None,
                 selected_index: 0,
             },
@@ -437,5 +459,68 @@ impl App {
 
     pub fn pop_to_root_navigation_stack(&mut self) {
         self.navigation_stack.truncate(1);
+    }
+
+    pub fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_tracks(self.large_search_limit, offset) {
+                Ok(saved_tracks) => {
+                    self.songs_for_table = saved_tracks
+                        .items
+                        .clone()
+                        .into_iter()
+                        .map(|item| item.track)
+                        .collect::<Vec<FullTrack>>();
+
+                    self.library.saved_tracks.pages.push(saved_tracks);
+                    self.library.saved_tracks.index = self.library.saved_tracks.pages.len() - 1;
+                    self.song_table_context = Some(SongTableContext::SavedTracks);
+                    self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
+    }
+
+    pub fn get_current_user_saved_tracks_next(&mut self) {
+        // Before fetching the next tracks, check if we have already fetched them
+        match self
+            .library
+            .saved_tracks
+            .get_saved_tracks(Some(self.library.saved_tracks.index + 1))
+        {
+            Some(saved_tracks) => {
+                self.songs_for_table = saved_tracks
+                    .items
+                    .clone()
+                    .into_iter()
+                    .map(|item| item.track)
+                    .collect::<Vec<FullTrack>>();
+                self.library.saved_tracks.index += 1
+            }
+            None => {
+                if let Some(saved_tracks) = &self.library.saved_tracks.get_saved_tracks(None) {
+                    let offset = Some(saved_tracks.offset + saved_tracks.limit);
+                    self.get_current_user_saved_tracks(offset);
+                }
+            }
+        }
+    }
+
+    pub fn get_current_user_saved_tracks_previous(&mut self) {
+        if self.library.saved_tracks.index > 0 {
+            self.library.saved_tracks.index -= 1;
+        }
+
+        if let Some(saved_tracks) = &self.library.saved_tracks.get_saved_tracks(None) {
+            self.songs_for_table = saved_tracks
+                .items
+                .clone()
+                .into_iter()
+                .map(|item| item.track)
+                .collect::<Vec<FullTrack>>();
+        }
     }
 }
