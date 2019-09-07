@@ -399,7 +399,7 @@ impl App {
 
     pub fn pop_navigation_stack(&mut self) {
         // Always keep one route (Home) at the root of the stack
-        if self.navigation_stack.len() > 0 {
+        if self.navigation_stack.len() > 1 {
             self.navigation_stack.pop();
         }
     }
