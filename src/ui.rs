@@ -1,4 +1,4 @@
-use super::app::{ActiveBlock, App, Routes, SearchResultBlock, LIBRARY_OPTIONS};
+use super::app::{ActiveBlock, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
@@ -148,9 +148,11 @@ where
         .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
         .split(layout_chunk);
 
+    let current_route = app.get_current_route();
+
     let highlight_state = (
-        app.active_block == ActiveBlock::Input,
-        app.hovered_block == ActiveBlock::Input,
+        current_route.active_block == ActiveBlock::Input,
+        current_route.hovered_block == ActiveBlock::Input,
     );
 
     Paragraph::new([Text::raw(&app.input)].iter())
@@ -214,36 +216,36 @@ where
 
     draw_user_block(f, app, chunks[0]);
 
-    let active_route = app.get_current_route();
+    let current_route = app.get_current_route();
 
-    match active_route {
-        Some(route) => {
-            match route {
-                Routes::Search => {
-                    draw_search_results(f, app, chunks[1]);
-                }
-                Routes::SongTable => {
-                    draw_song_table(f, app, chunks[1]);
-                }
-                Routes::Album => {
-                    draw_album_table(f, app, chunks[1]);
-                }
-                Routes::Artist(_artist_id) => {}
-            };
+    match current_route.id {
+        RouteId::Search => {
+            draw_search_results(f, app, chunks[1]);
         }
-        None => {
+        RouteId::SongTable => {
+            draw_song_table(f, app, chunks[1]);
+        }
+        RouteId::Album => {
+            draw_album_table(f, app, chunks[1]);
+        }
+        RouteId::Artist => {
+            // TODO
+        }
+        RouteId::Home => {
             draw_home(f, app, chunks[1]);
         }
-    }
+        _ => {}
+    };
 }
 
 pub fn draw_library_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
+    let current_route = app.get_current_route();
     let highlight_state = (
-        app.active_block == ActiveBlock::Library,
-        app.hovered_block == ActiveBlock::Library,
+        current_route.active_block == ActiveBlock::Library,
+        current_route.hovered_block == ActiveBlock::Library,
     );
     draw_selectable_list(
         f,
@@ -264,9 +266,11 @@ where
         None => vec![],
     };
 
+    let current_route = app.get_current_route();
+
     let highlight_state = (
-        app.active_block == ActiveBlock::MyPlaylists,
-        app.hovered_block == ActiveBlock::MyPlaylists,
+        current_route.active_block == ActiveBlock::MyPlaylists,
+        current_route.hovered_block == ActiveBlock::MyPlaylists,
     );
 
     draw_selectable_list(
@@ -296,9 +300,10 @@ fn get_search_results_highlight_state(
     app: &App,
     block_to_match: SearchResultBlock,
 ) -> (bool, bool) {
+    let current_route = app.get_current_route();
     (
         app.search_results.selected_block == block_to_match,
-        app.hovered_block == ActiveBlock::SearchResultBlock
+        current_route.hovered_block == ActiveBlock::SearchResultBlock
             && app.search_results.hovered_block == block_to_match,
     )
 }
@@ -430,9 +435,10 @@ where
             })
             .collect::<Vec<Vec<String>>>();
 
+        let current_route = app.get_current_route();
         let highlight_state = (
-            app.active_block == ActiveBlock::Album,
-            app.hovered_block == ActiveBlock::Album,
+            current_route.active_block == ActiveBlock::Album,
+            current_route.hovered_block == ActiveBlock::Album,
         );
 
         let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
@@ -475,9 +481,10 @@ where
 
     let formatted_songs = display_songs(&app.songs_for_table);
 
+    let current_route = app.get_current_route();
     let highlight_state = (
-        app.active_block == ActiveBlock::SongTable,
-        app.hovered_block == ActiveBlock::SongTable,
+        current_route.active_block == ActiveBlock::SongTable,
+        current_route.hovered_block == ActiveBlock::SongTable,
     );
 
     let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
@@ -613,9 +620,10 @@ fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
+    let current_route = app.get_current_route();
     let highlight_state = (
-        app.active_block == ActiveBlock::Home,
-        app.hovered_block == ActiveBlock::Home,
+        current_route.active_block == ActiveBlock::Home,
+        current_route.hovered_block == ActiveBlock::Home,
     );
     Block::default()
         .title("Home")

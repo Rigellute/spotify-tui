@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, Routes, SongTableContext, LIBRARY_OPTIONS};
+use super::super::app::{ActiveBlock, App, RouteId, SongTableContext, LIBRARY_OPTIONS};
 use super::common_key_events;
 use rspotify::spotify::model::track::FullTrack;
 use termion::event::Key;
@@ -6,7 +6,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
         Key::Char('d') => {
             app.handle_get_devices();
@@ -22,7 +22,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.library.selected_index = next_index;
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::up_event(k) => {
             let next_index = common_key_events::on_up_press_handler(
@@ -32,8 +32,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.library.selected_index = next_index;
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         // This should probably be an array of structs with enums rather than just using indexes
         // like this
@@ -55,14 +54,11 @@ pub fn handler(key: Key, app: &mut App) {
                                 .collect::<Vec<FullTrack>>();
 
                             app.library.saved_tracks = Some(saved_tracks);
-                            app.active_block = ActiveBlock::SongTable;
-                            app.hovered_block = ActiveBlock::SongTable;
                             app.song_table_context = Some(SongTableContext::SavedTracks);
-                            app.navigation_stack.push(Routes::SongTable);
+                            app.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
                         }
                         Err(e) => {
-                            app.active_block = ActiveBlock::Error;
-                            app.api_error = e.to_string();
+                            app.handle_error(e);
                         }
                     }
                 }

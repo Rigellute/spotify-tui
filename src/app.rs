@@ -45,14 +45,6 @@ pub struct PlaybackParams {
     offset: Option<usize>,
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum Routes {
-    Search,
-    Album,
-    Artist(String /* artist id */),
-    SongTable,
-}
-
 #[derive(PartialEq, Debug)]
 pub enum SearchResultBlock {
     AlbumSearch,
@@ -75,6 +67,25 @@ pub enum ActiveBlock {
     SearchResultBlock,
     SelectDevice,
     SongTable,
+    Artist,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum RouteId {
+    Home,
+    SelectedDevice,
+    Error,
+    HelpMenu,
+    Search,
+    Album,
+    Artist,
+    SongTable,
+}
+
+pub struct Route {
+    pub id: RouteId,
+    pub active_block: ActiveBlock,
+    pub hovered_block: ActiveBlock,
 }
 
 // Is it possible to compose enums?
@@ -111,10 +122,8 @@ pub struct SelectedAlbum {
 pub struct App {
     pub selected_album: Option<SelectedAlbum>,
     pub large_search_limit: u32,
-    pub navigation_stack: Vec<Routes>,
+    navigation_stack: Vec<Route>,
     pub small_search_limit: u32,
-    pub active_block: ActiveBlock,
-    pub hovered_block: ActiveBlock,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
     pub device_id: Option<String>,
@@ -147,10 +156,13 @@ impl App {
                 selected_index: 0,
             },
             large_search_limit: 20,
-            navigation_stack: vec![],
+            navigation_stack: vec![Route {
+                id: RouteId::Home,
+                active_block: ActiveBlock::Empty,
+                hovered_block: ActiveBlock::Library,
+            }],
             small_search_limit: 4,
-            active_block: ActiveBlock::Empty,
-            hovered_block: ActiveBlock::Library,
+
             api_error: String::new(),
             current_playback_context: None,
             device_id: None,
@@ -204,7 +216,7 @@ impl App {
     pub fn handle_get_devices(&mut self) {
         if let Some(spotify) = &self.spotify {
             if let Ok(result) = spotify.device() {
-                self.active_block = ActiveBlock::SelectDevice;
+                self.push_navigation_stack(RouteId::SelectedDevice, ActiveBlock::SelectDevice);
                 if !result.devices.is_empty() {
                     self.devices = Some(result);
                     // Select the first device in the list
@@ -264,10 +276,6 @@ impl App {
         }
     }
 
-    pub fn get_current_route(&self) -> Option<&Routes> {
-        self.navigation_stack.last()
-    }
-
     pub fn pause_playback(&mut self) {
         if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.device_id) {
             match spotify.pause_playback(Some(device_id.to_string())) {
@@ -275,11 +283,15 @@ impl App {
                     self.get_current_playback();
                 }
                 Err(e) => {
-                    self.active_block = ActiveBlock::Error;
-                    self.api_error = e.to_string();
+                    self.handle_error(e);
                 }
             };
         }
+    }
+
+    pub fn handle_error(&mut self, e: failure::Error) {
+        self.push_navigation_stack(RouteId::Error, ActiveBlock::Error);
+        self.api_error = e.to_string();
     }
 
     pub fn toggle_playback(&mut self) {
@@ -342,8 +354,7 @@ impl App {
                 }
             }
             Err(e) => {
-                self.active_block = ActiveBlock::Error;
-                self.api_error = e.to_string();
+                self.handle_error(e);
             }
         }
     }
@@ -367,11 +378,64 @@ impl App {
                         .collect::<Vec<FullTrack>>();
 
                     self.playlist_tracks = playlist_tracks.items;
-                    self.active_block = ActiveBlock::SongTable;
-                    self.navigation_stack.push(Routes::SongTable);
+                    self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
                 };
             }
             None => {}
         }
+    }
+
+    pub fn push_navigation_stack(
+        &mut self,
+        next_route_id: RouteId,
+        next_active_block: ActiveBlock,
+    ) {
+        self.navigation_stack.push(Route {
+            id: next_route_id,
+            active_block: next_active_block,
+            hovered_block: next_active_block,
+        });
+    }
+
+    pub fn pop_navigation_stack(&mut self) {
+        // Always keep one route (Home) at the root of the stack
+        if self.navigation_stack.len() > 0 {
+            self.navigation_stack.pop();
+        }
+    }
+
+    pub fn get_current_route(&self) -> &Route {
+        // There should always be at least one route. But there must be better way of handling
+        // this? `unwrap` seems too dangerous
+        self.navigation_stack.last().unwrap()
+    }
+
+    fn get_current_route_mut(&mut self) -> &mut Route {
+        self.navigation_stack.last_mut().unwrap()
+    }
+
+    pub fn set_current_route_state(
+        &mut self,
+        active_block: Option<ActiveBlock>,
+        hovered_block: Option<ActiveBlock>,
+    ) {
+        let mut current_route = self.get_current_route_mut();
+        match (active_block, hovered_block) {
+            (Some(active), Some(hovered)) => {
+                current_route.active_block = active;
+                current_route.hovered_block = hovered;
+            }
+            (Some(active), None) => {
+                current_route.active_block = active;
+            }
+            (None, Some(hovered)) => {
+                current_route.hovered_block = hovered;
+            }
+            (None, None) => {}
+        }
+    }
+
+    pub fn pop_to_root_navigation_stack(&mut self) {
+        self.navigation_stack.truncate(1);
     }
 }

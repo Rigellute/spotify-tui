@@ -1,5 +1,5 @@
 use super::super::app::{
-    ActiveBlock, App, Routes, SearchResultBlock, SelectedAlbum, SongTableContext,
+    ActiveBlock, App, RouteId, SearchResultBlock, SelectedAlbum, SongTableContext,
 };
 use super::common_key_events;
 use termion::event::Key;
@@ -146,13 +146,10 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                                         selected_index: Some(0),
                                     });
 
-                                    app.active_block = ActiveBlock::Album;
-                                    app.hovered_block = ActiveBlock::Album;
-                                    app.navigation_stack.push(Routes::Album);
+                                    app.push_navigation_stack(RouteId::Album, ActiveBlock::Album);
                                 }
                                 Err(e) => {
-                                    app.active_block = ActiveBlock::Error;
-                                    app.api_error = e.to_string();
+                                    app.handle_error(e);
                                 }
                             }
                         }
@@ -241,11 +238,10 @@ pub fn handler(key: Key, app: &mut App) {
             app.toggle_playback();
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Esc => {
             app.search_results.selected_block = SearchResultBlock::Empty;
@@ -268,12 +264,16 @@ pub fn handler(key: Key, app: &mut App) {
             app.search_results.selected_block = SearchResultBlock::Empty;
             match app.search_results.hovered_block {
                 SearchResultBlock::AlbumSearch => {
-                    app.hovered_block = ActiveBlock::Library;
-                    app.active_block = ActiveBlock::Empty;
+                    app.set_current_route_state(
+                        Some(ActiveBlock::Empty),
+                        Some(ActiveBlock::Library),
+                    );
                 }
                 SearchResultBlock::SongSearch => {
-                    app.hovered_block = ActiveBlock::Library;
-                    app.active_block = ActiveBlock::Empty;
+                    app.set_current_route_state(
+                        Some(ActiveBlock::Empty),
+                        Some(ActiveBlock::Library),
+                    );
                 }
                 SearchResultBlock::ArtistSearch => {
                     app.search_results.hovered_block = SearchResultBlock::SongSearch;

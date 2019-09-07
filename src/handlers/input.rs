@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, Routes};
+use super::super::app::{ActiveBlock, App, RouteId};
 use rspotify::spotify::senum::Country;
 use std::convert::TryInto;
 use termion::event::Key;
@@ -27,9 +27,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Esc => {
-            // IDEA: Perhaps this should return to previous hovered_block?
-            app.active_block = ActiveBlock::Empty;
-            app.hovered_block = ActiveBlock::Library;
+            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         Key::Char('\n') => {
             if let Some(spotify) = &app.spotify {
@@ -43,12 +41,6 @@ pub fn handler(key: Key, app: &mut App) {
 
                 app.songs_for_table = result.tracks.items.clone();
                 app.search_results.tracks = Some(result);
-
-                // On searching for a track, clear the playlist selection
-                app.selected_playlist_index = None;
-                app.active_block = ActiveBlock::SearchResultBlock;
-                app.hovered_block = ActiveBlock::SearchResultBlock;
-                app.navigation_stack.push(Routes::Search);
 
                 // Can I run these functions in parellel?
                 let result = spotify
@@ -80,6 +72,10 @@ pub fn handler(key: Key, app: &mut App) {
                     )
                     .expect("Failed to fetch playlists");
                 app.search_results.playlists = Some(result);
+
+                // On searching for a track, clear the playlist selection
+                app.selected_playlist_index = None;
+                app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
             }
         }
         Key::Char(c) => {
@@ -116,9 +112,11 @@ mod tests {
     fn test_input_handler_esc_back_to_playlist() {
         let mut app = App::new();
 
+        app.set_current_route_state(Some(ActiveBlock::MyPlaylists), None);
         handler(Key::Esc, &mut app);
 
-        assert_eq!(app.active_block, ActiveBlock::Empty);
+        let current_route = app.get_current_route();
+        assert_eq!(current_route.active_block, ActiveBlock::Empty);
     }
 
     #[test]
@@ -126,6 +124,7 @@ mod tests {
         let mut app = App::new();
 
         app.input = "My tex".to_string();
+        app.input_cursor_position = app.input.len().try_into().unwrap();
 
         handler(Key::Char('t'), &mut app);
 
@@ -137,6 +136,7 @@ mod tests {
         let mut app = App::new();
 
         app.input = "My text".to_string();
+        app.input_cursor_position = app.input.len().try_into().unwrap();
 
         handler(Key::Backspace, &mut app);
 

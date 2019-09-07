@@ -91,8 +91,7 @@ fn main() -> Result<(), failure::Error> {
                         app.selected_playlist_index = Some(0);
                     }
                     Err(e) => {
-                        app.active_block = ActiveBlock::Error;
-                        app.api_error = e.to_string();
+                        app.handle_error(e);
                     }
                 };
             }
@@ -100,7 +99,8 @@ fn main() -> Result<(), failure::Error> {
             app.get_current_playback();
 
             loop {
-                terminal.draw(|mut f| match app.active_block {
+                let current_route = app.get_current_route();
+                terminal.draw(|mut f| match current_route.active_block {
                     ActiveBlock::HelpMenu => {
                         ui::draw_help_menu(&mut f);
                     }
@@ -115,7 +115,7 @@ fn main() -> Result<(), failure::Error> {
                     }
                 })?;
 
-                if app.active_block == ActiveBlock::Input {
+                if current_route.active_block == ActiveBlock::Input {
                     match terminal.show_cursor() {
                         Ok(_r) => {}
                         Err(_e) => {}
@@ -144,7 +144,7 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('q') | Key::Ctrl('c') => break,
                             Key::Char('-') => {
                                 // Navigate back one step
-                                app.navigation_stack.pop();
+                                app.pop_navigation_stack();
                             }
                             _ => handlers::handle_app(&mut app, key),
                         }

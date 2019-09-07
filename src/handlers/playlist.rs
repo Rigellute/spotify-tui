@@ -1,11 +1,11 @@
-use super::super::app::{ActiveBlock, App, Routes, SongTableContext};
+use super::super::app::{ActiveBlock, App, RouteId, SongTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
         Key::Char('d') => {
             app.handle_get_devices();
@@ -15,25 +15,26 @@ pub fn handler(key: Key, app: &mut App) {
             app.toggle_playback();
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::right_event(k) => {
-            match app.get_current_route() {
-                Some(route) => match route {
-                    Routes::Search => {
-                        app.active_block = ActiveBlock::SearchResultBlock;
-                    }
-                    Routes::SongTable => {
-                        app.active_block = ActiveBlock::SongTable;
-                    }
-                    Routes::Album => {
-                        app.active_block = ActiveBlock::Album;
-                    }
-                    Routes::Artist(_artist_id) => {}
-                },
-                None => {
-                    app.active_block = ActiveBlock::Home;
+            match app.get_current_route().id {
+                RouteId::Search => {
+                    app.set_current_route_state(Some(ActiveBlock::SearchResultBlock), None);
                 }
+                RouteId::SongTable => {
+                    app.set_current_route_state(Some(ActiveBlock::SongTable), None);
+                }
+                RouteId::Album => {
+                    app.set_current_route_state(Some(ActiveBlock::Album), None);
+                }
+                RouteId::Artist => {
+                    // TODO
+                }
+                RouteId::Home => {
+                    app.set_current_route_state(Some(ActiveBlock::Home), None);
+                }
+                _ => {}
             };
         }
         k if common_key_events::down_event(k) => {
@@ -63,8 +64,7 @@ pub fn handler(key: Key, app: &mut App) {
             };
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
             if let (Some(playlists), Some(selected_playlist_index)) =
@@ -92,6 +92,7 @@ mod tests {
         let mut app = App::new();
 
         handler(Key::Char('?'), &mut app);
-        assert_eq!(app.active_block, ActiveBlock::HelpMenu);
+        let current_route = app.get_current_route();
+        assert_eq!(current_route.active_block, ActiveBlock::HelpMenu);
     }
 }

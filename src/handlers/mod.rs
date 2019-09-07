@@ -16,7 +16,11 @@ use termion::event::Key;
 
 pub fn handle_app(app: &mut App, key: Key) {
     // Match events for different app states
-    match app.active_block {
+    let current_route = app.get_current_route();
+    match current_route.active_block {
+        ActiveBlock::Artist => {
+            // TODO
+        }
         ActiveBlock::Input => {
             input::handler(key, app);
         }

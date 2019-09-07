@@ -5,7 +5,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            app.set_current_route_state(Some(ActiveBlock::MyPlaylists), None);
         }
         k if common_key_events::down_event(k) => {
             match &app.devices {
@@ -39,13 +39,12 @@ pub fn handler(key: Key, app: &mut App) {
             if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {
                     app.device_id = Some(device.id.clone());
-                    app.active_block = ActiveBlock::Library;
-                    app.hovered_block = ActiveBlock::Library;
                     match app.set_cached_device_token(device.id.clone()) {
-                        Ok(()) => {}
+                        Ok(()) => {
+                            app.pop_navigation_stack();
+                        }
                         Err(e) => {
-                            app.active_block = ActiveBlock::Error;
-                            app.api_error = e.to_string();
+                            app.handle_error(e);
                         }
                     };
                 }

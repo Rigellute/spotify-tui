@@ -5,7 +5,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
         Key::Char('d') => {
             app.handle_get_devices();
@@ -15,8 +15,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.toggle_playback();
         }
         k if common_key_events::left_event(k) => {
-            app.active_block = ActiveBlock::Empty;
-            app.hovered_block = ActiveBlock::Library;
+            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         k if common_key_events::down_event(k) => {
             if let Some(selected_album) = &mut app.selected_album {
@@ -28,7 +27,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::up_event(k) => {
             if let Some(selected_album) = &mut app.selected_album {
@@ -40,8 +39,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
             if let Some(selected_album) = &app.selected_album.clone() {
@@ -58,26 +56,28 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::app::RouteId;
     use super::*;
 
     #[test]
     fn help_menu() {
         let mut app = App::new();
-
+        app.push_navigation_stack(RouteId::Album, ActiveBlock::Album);
         handler(Key::Char('?'), &mut app);
+        let current_route = app.get_current_route();
 
-        assert_eq!(app.active_block, ActiveBlock::HelpMenu);
+        assert_eq!(current_route.active_block, ActiveBlock::HelpMenu);
     }
 
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.active_block = ActiveBlock::Album;
-        app.hovered_block = ActiveBlock::Album;
+        app.set_current_route_state(Some(ActiveBlock::Album), Some(ActiveBlock::Album));
 
         handler(Key::Left, &mut app);
-        assert_eq!(app.active_block, ActiveBlock::Empty);
-        assert_eq!(app.hovered_block, ActiveBlock::Library);
+        let current_route = app.get_current_route();
+        assert_eq!(current_route.active_block, ActiveBlock::Empty);
+        assert_eq!(current_route.hovered_block, ActiveBlock::Library);
     }
 
     #[test]
@@ -86,8 +86,9 @@ mod tests {
 
         handler(Key::Char('/'), &mut app);
 
-        assert_eq!(app.active_block, ActiveBlock::Input);
-        assert_eq!(app.hovered_block, ActiveBlock::Input);
+        let current_route = app.get_current_route();
+        assert_eq!(current_route.active_block, ActiveBlock::Input);
+        assert_eq!(current_route.hovered_block, ActiveBlock::Input);
     }
 
     #[test]
@@ -96,6 +97,7 @@ mod tests {
 
         handler(Key::Esc, &mut app);
 
-        assert_eq!(app.active_block, ActiveBlock::Empty);
+        let current_route = app.get_current_route();
+        assert_eq!(current_route.active_block, ActiveBlock::Empty);
     }
 }

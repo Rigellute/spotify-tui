@@ -5,20 +5,19 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
         k if common_key_events::left_event(k) => {
-            app.active_block = ActiveBlock::MyPlaylists;
+            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         Key::Char('d') => {
             app.handle_get_devices();
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         // Press space to toggle playback
         Key::Char(' ') => {

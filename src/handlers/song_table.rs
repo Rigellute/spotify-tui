@@ -5,7 +5,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
         Key::Char('d') => {
             app.handle_get_devices();
@@ -15,8 +15,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.toggle_playback();
         }
         k if common_key_events::left_event(k) => {
-            app.hovered_block = ActiveBlock::Library;
-            app.active_block = ActiveBlock::Empty;
+            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         k if common_key_events::down_event(k) => {
             let next_index = common_key_events::on_down_press_handler(
@@ -26,7 +25,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.select_song_index = next_index;
         }
         Key::Char('?') => {
-            app.active_block = ActiveBlock::HelpMenu;
+            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::up_event(k) => {
             let next_index = common_key_events::on_up_press_handler(
@@ -36,8 +35,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.select_song_index = next_index;
         }
         Key::Char('/') => {
-            app.active_block = ActiveBlock::Input;
-            app.hovered_block = ActiveBlock::Input;
+            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
             match &app.song_table_context {
