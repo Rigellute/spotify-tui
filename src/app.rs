@@ -45,6 +45,12 @@ impl<T> ScrollableResultPages<T> {
             None => self.pages.get(self.index),
         }
     }
+
+    pub fn add_ages(&mut self, new_pages: T) {
+        self.pages.push(new_pages);
+        // Whenever a new page is added, set the active index to the end of the vector
+        self.index = self.pages.len() - 1;
+    }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -407,6 +413,8 @@ impl App {
         }
     }
 
+    // The navigation_stack actually only controls the large block to the right of `library` and
+    // `playlists`
     pub fn push_navigation_stack(
         &mut self,
         next_route_id: RouteId,
@@ -468,8 +476,7 @@ impl App {
                         .map(|item| item.track)
                         .collect::<Vec<FullTrack>>();
 
-                    self.library.saved_tracks.pages.push(saved_tracks);
-                    self.library.saved_tracks.index = self.library.saved_tracks.pages.len() - 1;
+                    self.library.saved_tracks.add_ages(saved_tracks);
                     self.song_table_context = Some(SongTableContext::SavedTracks);
                     self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
                 }

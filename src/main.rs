@@ -81,6 +81,8 @@ fn main() -> Result<(), failure::Error> {
                 }
             }
 
+            // Would be better to run `current_user_playlists` and `get_current_playback` after the
+            // rendering loop has started
             if let Some(spotify) = &app.spotify {
                 let playlists = spotify.current_user_playlists(app.large_search_limit, None);
 
