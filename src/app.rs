@@ -457,10 +457,6 @@ impl App {
         }
     }
 
-    pub fn pop_to_root_navigation_stack(&mut self) {
-        self.navigation_stack.truncate(1);
-    }
-
     pub fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks(self.large_search_limit, offset) {

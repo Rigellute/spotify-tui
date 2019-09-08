@@ -208,7 +208,6 @@ mod tests {
         assert_eq!(current_route.active_block, ActiveBlock::SongTable);
         assert_eq!(current_route.hovered_block, ActiveBlock::SongTable);
 
-        app.pop_to_root_navigation_stack();
         app.push_navigation_stack(RouteId::Home, ActiveBlock::Home);
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         handler(Key::Right, &mut app);
