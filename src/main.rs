@@ -80,26 +80,7 @@ fn main() -> Result<(), failure::Error> {
                     app.handle_get_devices();
                 }
             }
-
-            // Would be better to run `current_user_playlists` and `get_current_playback` after the
-            // rendering loop has started
-            if let Some(spotify) = &app.spotify {
-                let playlists = spotify.current_user_playlists(app.large_search_limit, None);
-
-                match playlists {
-                    Ok(p) => {
-                        app.playlists = Some(p);
-                        // Select the first playlist
-                        app.selected_playlist_index = Some(0);
-                    }
-                    Err(e) => {
-                        app.handle_error(e);
-                    }
-                };
-            }
-
-            app.get_current_playback();
-
+            let mut is_first_render = true;
             loop {
                 let current_route = app.get_current_route();
                 terminal.draw(|mut f| match current_route.active_block {
@@ -156,6 +137,29 @@ fn main() -> Result<(), failure::Error> {
                     Event::Tick => {
                         app.update_on_tick();
                     }
+                }
+
+                // Delay spotify request until first render, will have the effect of improving
+                // startup speed
+                if is_first_render {
+                    if let Some(spotify) = &app.spotify {
+                        let playlists =
+                            spotify.current_user_playlists(app.large_search_limit, None);
+
+                        match playlists {
+                            Ok(p) => {
+                                app.playlists = Some(p);
+                                // Select the first playlist
+                                app.selected_playlist_index = Some(0);
+                            }
+                            Err(e) => {
+                                app.handle_error(e);
+                            }
+                        };
+                    }
+
+                    app.get_current_playback();
+                    is_first_render = false;
                 }
             }
         }
