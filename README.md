@@ -2,7 +2,7 @@
 
 A Spotify client for the terminal written in Rust.
 
-![Demo](https://user-images.githubusercontent.com/12150276/64544624-3a798480-d31f-11e9-8ecf-35e369563a26.gif)
+![Demo](https://user-images.githubusercontent.com/12150276/64545371-84af3580-d320-11e9-867d-c368fd888b3b.gif)
 
 ### Limitations
 
