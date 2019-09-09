@@ -7,20 +7,6 @@ use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
 
-fn format_song(song: &FullTrack) -> [Text<'static>; 3] {
-    [
-        Text::styled(
-            song.name.to_owned(),
-            Style::default().fg(Color::White).modifier(Modifier::BOLD),
-        ),
-        Text::raw(" - "),
-        Text::styled(
-            create_artist_string(&song.artists),
-            Style::default().fg(Color::White),
-        ),
-    ]
-}
-
 fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
     match (is_active, is_hovered) {
         (true, _) => Style::default().fg(Color::LightCyan),
@@ -526,8 +512,6 @@ where
     // give hint to choose a device
     if let Some(current_playback_context) = &app.current_playback_context {
         if let Some(track_item) = &current_playback_context.item {
-            let playing_text = format_song(track_item);
-
             let play_title = if current_playback_context.is_playing {
                 "Playing"
             } else {
