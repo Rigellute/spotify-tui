@@ -143,10 +143,12 @@ fn main() -> Result<(), failure::Error> {
                     Event::Input(key) => {
                         match key {
                             // Global key presses
-                            Key::Char('q') | Key::Ctrl('c') => break,
-                            Key::Char('-') => {
+                            Key::Ctrl('c') => break,
+                            Key::Char('q') | Key::Char('-') => {
                                 // Navigate back one step
-                                app.pop_navigation_stack();
+                                if let None = app.pop_navigation_stack() {
+                                    break;
+                                };
                             }
                             _ => handlers::handle_app(&mut app, key),
                         }
