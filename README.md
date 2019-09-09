@@ -2,6 +2,8 @@
 
 A Spotify client for the terminal written in Rust.
 
+![Demo](https://user-images.githubusercontent.com/12150276/64545371-84af3580-d320-11e9-867d-c368fd888b3b.gif)
+
 ### Limitations
 
 You need to have the spotify app open in order to play songs, but you can control all your devices with this app.
