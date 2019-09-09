@@ -140,6 +140,13 @@ pub struct SearchResult {
     pub selected_block: SearchResultBlock,
 }
 
+#[derive(Default)]
+pub struct TrackTable {
+    pub tracks: Vec<FullTrack>,
+    pub selected_index: usize,
+    pub context: Option<SongTableContext>,
+}
+
 #[derive(Clone)]
 pub struct SelectedAlbum {
     pub album: SimplifiedAlbum,
@@ -148,30 +155,28 @@ pub struct SelectedAlbum {
 }
 
 pub struct App {
-    pub selected_album: Option<SelectedAlbum>,
-    pub large_search_limit: u32,
+    instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
-    pub small_search_limit: u32,
+    path_to_cached_device_id: PathBuf,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
     pub device_id: Option<String>,
     pub devices: Option<DevicePayload>,
     pub input: String,
     pub input_cursor_position: u16,
+    pub large_search_limit: u32,
+    pub library: Library,
+    pub playback_params: PlaybackParams,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub search_results: SearchResult,
-    pub song_table_context: Option<SongTableContext>,
-    pub select_song_index: usize,
+    pub selected_album: Option<SelectedAlbum>,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
-    pub songs_for_table: Vec<FullTrack>,
+    pub small_search_limit: u32,
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
-    path_to_cached_device_id: PathBuf,
-    instant_since_last_current_playback_poll: Instant,
-    pub playback_params: PlaybackParams,
-    pub library: Library,
+    pub track_table: TrackTable,
 }
 
 impl App {
@@ -183,12 +188,12 @@ impl App {
                 saved_albums: None,
                 selected_index: 0,
             },
-            large_search_limit: 20,
             navigation_stack: vec![Route {
                 id: RouteId::Home,
                 active_block: ActiveBlock::Empty,
                 hovered_block: ActiveBlock::Library,
             }],
+            large_search_limit: 20,
             small_search_limit: 4,
 
             api_error: String::new(),
@@ -211,13 +216,11 @@ impl App {
                 selected_tracks_index: None,
                 tracks: None,
             },
-            select_song_index: 0,
-            song_table_context: None,
             song_progress_ms: 0,
             selected_device_index: None,
             selected_playlist_index: None,
-            songs_for_table: vec![],
             spotify: None,
+            track_table: Default::default(),
             playback_params: PlaybackParams {
                 context_uri: None,
                 uris: None,
@@ -398,7 +401,7 @@ impl App {
                     None,
                     None,
                 ) {
-                    self.songs_for_table = playlist_tracks
+                    self.track_table.tracks = playlist_tracks
                         .items
                         .clone()
                         .into_iter()
@@ -469,7 +472,7 @@ impl App {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks(self.large_search_limit, offset) {
                 Ok(saved_tracks) => {
-                    self.songs_for_table = saved_tracks
+                    self.track_table.tracks = saved_tracks
                         .items
                         .clone()
                         .into_iter()
@@ -477,7 +480,7 @@ impl App {
                         .collect::<Vec<FullTrack>>();
 
                     self.library.saved_tracks.add_ages(saved_tracks);
-                    self.song_table_context = Some(SongTableContext::SavedTracks);
+                    self.track_table.context = Some(SongTableContext::SavedTracks);
                     self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
                 }
                 Err(e) => {
@@ -495,7 +498,7 @@ impl App {
             .get_saved_tracks(Some(self.library.saved_tracks.index + 1))
         {
             Some(saved_tracks) => {
-                self.songs_for_table = saved_tracks
+                self.track_table.tracks = saved_tracks
                     .items
                     .clone()
                     .into_iter()
@@ -518,7 +521,7 @@ impl App {
         }
 
         if let Some(saved_tracks) = &self.library.saved_tracks.get_saved_tracks(None) {
-            self.songs_for_table = saved_tracks
+            self.track_table.tracks = saved_tracks
                 .items
                 .clone()
                 .into_iter()

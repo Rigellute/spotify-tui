@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, SongTableContext};
+use super::super::app::{ActiveBlock, App, SongTableContext, TrackTable};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -19,29 +19,34 @@ pub fn handler(key: Key, app: &mut App) {
         }
         k if common_key_events::down_event(k) => {
             let next_index = common_key_events::on_down_press_handler(
-                &app.songs_for_table,
-                Some(app.select_song_index),
+                &app.track_table.tracks,
+                Some(app.track_table.selected_index),
             );
-            app.select_song_index = next_index;
+            app.track_table.selected_index = next_index;
         }
         Key::Char('?') => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::up_event(k) => {
             let next_index = common_key_events::on_up_press_handler(
-                &app.songs_for_table,
-                Some(app.select_song_index),
+                &app.track_table.tracks,
+                Some(app.track_table.selected_index),
             );
-            app.select_song_index = next_index;
+            app.track_table.selected_index = next_index;
         }
         Key::Char('/') => {
             app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
-            match &app.song_table_context {
+            let TrackTable {
+                context,
+                selected_index,
+                tracks,
+            } = &app.track_table;
+            match &context {
                 Some(context) => match context {
                     SongTableContext::MyPlaylists => {
-                        if let Some(_track) = app.songs_for_table.get(app.select_song_index) {
+                        if let Some(_track) = tracks.get(*selected_index) {
                             let context_uri = match (&app.selected_playlist_index, &app.playlists) {
                                 (Some(selected_playlist_index), Some(playlists)) => {
                                     if let Some(selected_playlist) =
@@ -55,14 +60,20 @@ pub fn handler(key: Key, app: &mut App) {
                                 _ => None,
                             };
 
-                            app.start_playback(context_uri, None, Some(app.select_song_index));
+                            app.start_playback(
+                                context_uri,
+                                None,
+                                Some(app.track_table.selected_index),
+                            );
                         };
                     }
                     SongTableContext::SavedTracks => {
                         if let Some(saved_tracks) = &app.library.saved_tracks.get_saved_tracks(None)
                         {
                             // TODO get context for saved tracks
-                            if let Some(item) = saved_tracks.items.get(app.select_song_index) {
+                            if let Some(item) =
+                                saved_tracks.items.get(app.track_table.selected_index)
+                            {
                                 let track_uri = item.track.uri.to_owned();
                                 app.start_playback(None, Some(vec![track_uri]), Some(0));
                             };
@@ -72,7 +83,12 @@ pub fn handler(key: Key, app: &mut App) {
                     SongTableContext::SongSearch => {}
                     SongTableContext::ArtistSearch => {}
                     SongTableContext::PlaylistSearch => {
-                        if let Some(_track) = app.songs_for_table.get(app.select_song_index) {
+                        let TrackTable {
+                            selected_index,
+                            tracks,
+                            ..
+                        } = &app.track_table;
+                        if let Some(_track) = tracks.get(*selected_index) {
                             let context_uri = match (
                                 &app.search_results.selected_playlists_index,
                                 &app.search_results.playlists,
@@ -91,7 +107,11 @@ pub fn handler(key: Key, app: &mut App) {
                                 _ => None,
                             };
 
-                            app.start_playback(context_uri, None, Some(app.select_song_index));
+                            app.start_playback(
+                                context_uri,
+                                None,
+                                Some(app.track_table.selected_index),
+                            );
                         };
                     }
                 },
@@ -100,7 +120,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         // Scroll down
         Key::Ctrl('d') => {
-            match &app.song_table_context {
+            match &app.track_table.context {
                 Some(context) => match context {
                     SongTableContext::MyPlaylists => {}
                     SongTableContext::SavedTracks => {
@@ -116,7 +136,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         // Scroll up
         Key::Ctrl('u') => {
-            match &app.song_table_context {
+            match &app.track_table.context {
                 Some(context) => match context {
                     SongTableContext::MyPlaylists => {}
                     SongTableContext::SavedTracks => {

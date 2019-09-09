@@ -479,7 +479,7 @@ where
     let normal_style = Style::default().fg(Color::White);
     let header = ["Title", "Artist", "Album", "Length"];
 
-    let formatted_songs = display_songs(&app.songs_for_table);
+    let formatted_songs = display_songs(&app.track_table.tracks);
 
     let current_route = app.get_current_route();
     let highlight_state = (
@@ -489,7 +489,7 @@ where
 
     let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
-    let selected_song_index = app.select_song_index;
+    let selected_song_index = app.track_table.selected_index;
     let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
         if i == selected_song_index {
             Row::StyledData(item.into_iter(), selected_style)
@@ -534,31 +534,38 @@ where
                 "Paused"
             };
 
-            Block::default()
-                .borders(Borders::ALL)
-                .title(&format!(
-                    "{} ({})",
-                    play_title, current_playback_context.device.name
-                ))
-                .title_style(Style::default().fg(Color::Gray))
-                .border_style(Style::default().fg(Color::Gray))
-                .render(f, layout_chunk);
-
             let shuffle_text = if current_playback_context.shuffle_state {
                 "On"
             } else {
                 "Off"
             };
 
-            let title = format!("Shuffle: {}", shuffle_text).to_owned();
-            Paragraph::new(playing_text.iter())
-                .style(Style::default().fg(Color::Yellow))
-                .block(
-                    Block::default()
-                        .title(&title)
-                        .title_style(Style::default().fg(Color::Blue)),
-                )
-                .render(f, chunks[0]);
+            let title = format!(
+                "{} ({} | Shuffle: {})",
+                play_title, current_playback_context.device.name, shuffle_text
+            );
+
+            Block::default()
+                .borders(Borders::ALL)
+                .title(&title)
+                .title_style(Style::default().fg(Color::Gray))
+                .border_style(Style::default().fg(Color::Gray))
+                .render(f, layout_chunk);
+
+            Paragraph::new(
+                [Text::styled(
+                    create_artist_string(&track_item.artists),
+                    Style::default().fg(Color::White),
+                )]
+                .iter(),
+            )
+            .style(Style::default().fg(Color::White))
+            .block(
+                Block::default()
+                    .title(&track_item.name)
+                    .title_style(Style::default().fg(Color::White).modifier(Modifier::BOLD)),
+            )
+            .render(f, chunks[0]);
 
             let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
 
@@ -566,7 +573,7 @@ where
                 .block(Block::default().title(""))
                 .style(
                     Style::default()
-                        .fg(Color::Magenta)
+                        .fg(Color::LightCyan)
                         .bg(Color::Black)
                         .modifier(Modifier::ITALIC | Modifier::BOLD),
                 )

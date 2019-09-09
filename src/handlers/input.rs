@@ -39,7 +39,7 @@ pub fn handler(key: Key, app: &mut App) {
                     // TODO handle the error properly
                     .expect("Failed to fetch spotify tracks");
 
-                app.songs_for_table = result.tracks.items.clone();
+                app.track_table.tracks = result.tracks.items.clone();
                 app.search_results.tracks = Some(result);
 
                 // Can I run these functions in parellel?
