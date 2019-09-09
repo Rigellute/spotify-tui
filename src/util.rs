@@ -94,7 +94,7 @@ pub fn get_config() -> Result<ClientConfig, failure::Error> {
                 let config_string = fs::read_to_string(config_path.join(file_name))?;
                 let config_yml: ClientConfig = serde_yaml::from_str(&config_string)?;
 
-                return Ok(config_yml);
+                Ok(config_yml)
             } else {
                 println!("Config does not exist, creating it");
                 fs::create_dir(&config_path)?;
@@ -106,10 +106,10 @@ pub fn get_config() -> Result<ClientConfig, failure::Error> {
 
                 let content_yml = serde_yaml::to_string(&content)?;
                 write!(new_config, "{}", content_yml)?;
-                return Err(err_msg(format!(
+                Err(err_msg(format!(
                     "Add your spotify client_id and client_secret to {}",
                     config_path.display()
-                )));
+                )))
             }
         }
         None => Err(err_msg("No $HOME directory found for client config")),

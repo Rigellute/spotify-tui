@@ -33,12 +33,11 @@ pub fn handler(key: Key, app: &mut App) {
             }
             _ => {}
         },
-        k if common_key_events::up_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::MyPlaylists => {
+        k if common_key_events::up_event(k) => {
+            if let ActiveBlock::MyPlaylists = app.get_current_route().hovered_block {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
-            _ => {}
-        },
+        }
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
             ActiveBlock::Album | ActiveBlock::Home | ActiveBlock::SongTable => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
