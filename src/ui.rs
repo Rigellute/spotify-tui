@@ -496,9 +496,7 @@ where
             if i == _track_playing_index {
                 return Row::StyledData(
                     item.into_iter(),
-                    Style::default()
-                        .fg(Color::LightYellow)
-                        .modifier(Modifier::BOLD),
+                    Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
                 );
             }
         }
@@ -506,6 +504,12 @@ where
         // Otherwise return default styling
         Row::StyledData(item.into_iter(), Style::default().fg(Color::White))
     });
+
+    // TODO: This should be reusable?
+    // Make columns responsive: ensure there is enough space by subracting some arbitrary padding
+    let padding = 3;
+    let width = layout_chunk.width - padding;
+    let percentage_width = |perc: f32| (f32::from(width) * perc) as u16;
 
     Table::new(header.iter(), rows)
         .block(
@@ -517,7 +521,12 @@ where
                 .border_style(get_color(highlight_state)),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[35, 35, 35, 10])
+        .widths(&[
+            percentage_width(0.3),
+            percentage_width(0.3),
+            percentage_width(0.3),
+            percentage_width(0.1),
+        ])
         .render(f, layout_chunk);
 }
 
