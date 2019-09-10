@@ -440,6 +440,8 @@ where
                 }
             });
 
+            let width = layout_chunk.width;
+
             Table::new(header.iter(), rows)
                 .block(
                     Block::default()
@@ -454,7 +456,11 @@ where
                         .border_style(get_color(highlight_state)),
                 )
                 .style(Style::default().fg(Color::White))
-                .widths(&[3, 50, 10])
+                .widths(&[
+                    3,
+                    get_percentage_width(width, 0.85),
+                    get_percentage_width(width, 0.1),
+                ])
                 .render(f, layout_chunk);
         }
     };
@@ -505,11 +511,7 @@ where
         Row::StyledData(item.into_iter(), Style::default().fg(Color::White))
     });
 
-    // TODO: This should be reusable?
-    // Make columns responsive: ensure there is enough space by subracting some arbitrary padding
-    let padding = 3;
-    let width = layout_chunk.width - padding;
-    let percentage_width = |perc: f32| (f32::from(width) * perc) as u16;
+    let width = layout_chunk.width;
 
     Table::new(header.iter(), rows)
         .block(
@@ -522,10 +524,10 @@ where
         )
         .style(Style::default().fg(Color::White))
         .widths(&[
-            percentage_width(0.3),
-            percentage_width(0.3),
-            percentage_width(0.3),
-            percentage_width(0.1),
+            get_percentage_width(width, 0.3),
+            get_percentage_width(width, 0.3),
+            get_percentage_width(width, 0.3),
+            get_percentage_width(width, 0.1),
         ])
         .render(f, layout_chunk);
 }
@@ -769,4 +771,11 @@ fn display_track_progress(progress: u128, track_duration: u32) -> String {
     let remaining = millis_to_minutes(u128::from(track_duration) - progress);
 
     format!("{}/{} (-{})", progress_display, duration, remaining,)
+}
+
+// `percentage` param needs to be between 0 and 1
+fn get_percentage_width(width: u16, percentage: f32) -> u16 {
+    let padding = 3;
+    let width = width - padding;
+    (f32::from(width) * percentage) as u16
 }
