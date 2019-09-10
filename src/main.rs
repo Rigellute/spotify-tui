@@ -46,6 +46,7 @@ fn main() -> Result<(), failure::Error> {
         .redirect_uri("http://localhost:8888/callback")
         .scope(&SCOPES.join(" "))
         .build();
+
     match get_token(&mut oauth) {
         Some(token_info) => {
             // Terminal initialization
@@ -133,20 +134,30 @@ fn main() -> Result<(), failure::Error> {
 
                 match events.next()? {
                     Event::Input(key) => {
-                        match key {
-                            // Global key presses
-                            Key::Ctrl('c') => break,
-                            Key::Char('q') | Key::Char('-') => {
-                                if app.get_current_route().active_block != ActiveBlock::Input {
-                                    // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                    let pop_result = app.pop_navigation_stack();
+                        if key == Key::Ctrl('c') {
+                            break;
+                        }
+                        let current_route = app.get_current_route().active_block;
 
-                                    if pop_result.is_none() {
-                                        break;
+                        // To avoid swallowing the global key presses `q` and `-` make a special
+                        // case for the input handler
+                        if current_route == ActiveBlock::Input {
+                            handlers::handle_app(&mut app, key);
+                        } else {
+                            match key {
+                                // Global key presses
+                                Key::Char('q') | Key::Char('-') => {
+                                    if app.get_current_route().active_block != ActiveBlock::Input {
+                                        // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
+                                        let pop_result = app.pop_navigation_stack();
+
+                                        if pop_result.is_none() {
+                                            break;
+                                        }
                                     }
                                 }
+                                _ => handlers::handle_app(&mut app, key),
                             }
-                            _ => handlers::handle_app(&mut app, key),
                         }
                     }
                     Event::Tick => {
