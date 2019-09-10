@@ -126,10 +126,12 @@ fn main() -> Result<(), failure::Error> {
                             // Global key presses
                             Key::Ctrl('c') => break,
                             Key::Char('q') | Key::Char('-') => {
-                                // Navigate back one step
-                                if let None = app.pop_navigation_stack() {
-                                    break;
-                                };
+                                if app.get_current_route().active_block != ActiveBlock::Input {
+                                    // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
+                                    if let None = app.pop_navigation_stack() {
+                                        break;
+                                    }
+                                }
                             }
                             _ => handlers::handle_app(&mut app, key),
                         }
