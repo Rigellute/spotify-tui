@@ -74,11 +74,13 @@ where
             "Move hovered-block/selection right",
         ],
         vec!["General", "/", "Enter input for search"],
-        vec!["General", "q", "Quit"],
-        vec!["General", "<Ctrl+c>", "Quit"],
         vec!["General", "<Space>", "Pause/Resume playback"],
         vec!["General", "<Enter>", "Enter active mode"],
-        vec!["General", "-", "Go back"],
+        vec![
+            "General",
+            "q | -",
+            "Go back or exit when nowhere left to back to",
+        ],
         vec!["General", "d", "Select device to play music on"],
         vec!["Selected block", "<Esc>", "Enter hover mode"],
         vec![
@@ -545,9 +547,11 @@ where
             )
             .style(Style::default().fg(Color::White))
             .block(
-                Block::default()
-                    .title(&track_item.name)
-                    .title_style(Style::default().fg(Color::White).modifier(Modifier::BOLD)),
+                Block::default().title(&track_item.name).title_style(
+                    Style::default()
+                        .fg(Color::LightCyan)
+                        .modifier(Modifier::BOLD),
+                ),
             )
             .render(f, chunks[0]);
 
