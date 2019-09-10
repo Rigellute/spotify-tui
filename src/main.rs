@@ -7,13 +7,14 @@ use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
 use serde::{Deserialize, Serialize};
+use std::cmp::min;
 use std::io::{self, Write};
 use termion::cursor::Goto;
 use termion::event::Key;
 use termion::input::MouseTerminal;
 use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
-use tui::backend::TermionBackend;
+use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
 use app::{ActiveBlock, App};
@@ -81,7 +82,17 @@ fn main() -> Result<(), failure::Error> {
                 }
             }
             let mut is_first_render = true;
+
             loop {
+                // Get the size of the screen on each loop to account for resize events
+                if let Ok(size) = terminal.backend().size() {
+                    app.size = size;
+
+                    // Based on the size of the terminal, adjust the search limit.
+                    let max_limit = 50;
+                    app.large_search_limit = min((f32::from(size.height) / 1.5) as u32, max_limit);
+                };
+
                 let current_route = app.get_current_route();
                 terminal.draw(|mut f| match current_route.active_block {
                     ActiveBlock::HelpMenu => {
@@ -128,7 +139,9 @@ fn main() -> Result<(), failure::Error> {
                             Key::Char('q') | Key::Char('-') => {
                                 if app.get_current_route().active_block != ActiveBlock::Input {
                                     // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                    if let None = app.pop_navigation_stack() {
+                                    let pop_result = app.pop_navigation_stack();
+
+                                    if pop_result.is_none() {
                                         break;
                                     }
                                 }

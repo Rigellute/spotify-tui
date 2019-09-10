@@ -15,6 +15,7 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
+use tui::layout::Rect;
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Made For You",
@@ -155,6 +156,7 @@ pub struct SelectedAlbum {
 }
 
 pub struct App {
+    pub size: Rect,
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     path_to_cached_device_id: PathBuf,
@@ -182,6 +184,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
+            size: Rect::default(),
             selected_album: None,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
