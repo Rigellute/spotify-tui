@@ -17,7 +17,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.input_cursor_position = 0;
         }
         Key::Left => {
-            if app.input.is_empty() {
+            if !app.input.is_empty() {
                 app.input_cursor_position -= 1;
             }
         }
@@ -84,7 +84,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.input_cursor_position += 1;
         }
         Key::Backspace => {
-            if app.input.is_empty() {
+            if !app.input.is_empty() {
                 app.input.pop();
                 app.input_cursor_position -= 1;
             }
