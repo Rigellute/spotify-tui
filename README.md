@@ -37,6 +37,8 @@ You need to have the spotify app open in order to play songs, but you can contro
 
 Some core functionality does not yet exist, this table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
+The goal is to eventually implement every spotify feature.
+
 | API method                                        | Implemented yet? | Explanation                                                                                                                                                  | Essential? |
 | ------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
 | track                                             | No               | returns a single track given the track's ID, URI or URL                                                                                                      | No         |
