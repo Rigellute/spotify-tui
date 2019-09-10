@@ -47,7 +47,7 @@ impl<T> ScrollableResultPages<T> {
         }
     }
 
-    pub fn add_ages(&mut self, new_pages: T) {
+    pub fn add_pages(&mut self, new_pages: T) {
         self.pages.push(new_pages);
         // Whenever a new page is added, set the active index to the end of the vector
         self.index = self.pages.len() - 1;
@@ -479,7 +479,7 @@ impl App {
                         .map(|item| item.track)
                         .collect::<Vec<FullTrack>>();
 
-                    self.library.saved_tracks.add_ages(saved_tracks);
+                    self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(SongTableContext::SavedTracks);
                     self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
                 }
