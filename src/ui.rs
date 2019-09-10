@@ -464,7 +464,6 @@ pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let normal_style = Style::default().fg(Color::White);
     let header = ["Title", "Artist", "Album", "Length"];
 
     let formatted_songs = display_songs(&app.track_table.tracks);
@@ -477,13 +476,35 @@ where
 
     let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
+    let track_playing_index = match &app.current_playback_context {
+        Some(ctx) => app.track_table.tracks.iter().position(|t| match &ctx.item {
+            Some(item) => t.id == item.id,
+            None => false,
+        }),
+        None => None,
+    };
+
     let selected_song_index = app.track_table.selected_index;
     let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
+        // First check if the song is under selection
         if i == selected_song_index {
-            Row::StyledData(item.into_iter(), selected_style)
-        } else {
-            Row::StyledData(item.into_iter(), normal_style)
+            return Row::StyledData(item.into_iter(), selected_style);
         }
+
+        // Next check if the song should be highlighted because it is currently playing
+        if let Some(_track_playing_index) = track_playing_index {
+            if i == _track_playing_index {
+                return Row::StyledData(
+                    item.into_iter(),
+                    Style::default()
+                        .fg(Color::LightYellow)
+                        .modifier(Modifier::BOLD),
+                );
+            }
+        }
+
+        // Otherwise return default styling
+        Row::StyledData(item.into_iter(), Style::default().fg(Color::White))
     });
 
     Table::new(header.iter(), rows)
