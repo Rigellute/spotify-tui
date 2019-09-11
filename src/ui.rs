@@ -1,11 +1,20 @@
 use super::app::{ActiveBlock, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS};
 use rspotify::spotify::model::artist::SimplifiedArtist;
-use rspotify::spotify::model::track::FullTrack;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
+
+pub struct TableItem {
+    id: String,
+    format: Vec<String>,
+}
+
+pub struct TableHeader<'a> {
+    text: &'a str,
+    width: u16,
+}
 
 fn get_search_results_highlight_state(
     app: &App,
@@ -33,20 +42,6 @@ fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
         .map(|artist| artist.name.to_string())
         .collect::<Vec<String>>()
         .join(", ")
-}
-
-fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
-    track_search_results
-        .iter()
-        .map(|item| {
-            vec![
-                item.name.to_owned(),
-                create_artist_string(&item.artists),
-                item.album.name.to_owned(),
-                millis_to_minutes(u128::from(item.duration_ms)),
-            ]
-        })
-        .collect()
 }
 
 fn millis_to_minutes(millis: u128) -> String {
@@ -439,22 +434,35 @@ pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let normal_style = Style::default().fg(Color::White);
-    let header = ["#", "Title", "Length"];
+    let header = [
+        TableHeader {
+            text: "#",
+            width: 3,
+        },
+        TableHeader {
+            text: "Title",
+            width: get_percentage_width(layout_chunk.width, 0.80),
+        },
+        TableHeader {
+            text: "Length",
+            width: get_percentage_width(layout_chunk.width, 0.15),
+        },
+    ];
 
     if let Some(selected_album) = &app.selected_album {
-        let formatted_songs = selected_album
+        let items = selected_album
             .tracks
             .items
             .iter()
-            .map(|item| {
-                vec![
+            .map(|item| TableItem {
+                id: item.id.clone().unwrap_or("".to_string()),
+                format: vec![
                     item.track_number.to_string(),
                     item.name.to_owned(),
                     millis_to_minutes(u128::from(item.duration_ms)),
-                ]
+                ],
             })
-            .collect::<Vec<Vec<String>>>();
+            .collect::<Vec<TableItem>>();
 
         let current_route = app.get_current_route();
         let highlight_state = (
@@ -462,40 +470,20 @@ where
             current_route.hovered_block == ActiveBlock::Album,
         );
 
-        let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
-
-        if let Some(selected_index) = selected_album.selected_index {
-            let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
-                if i == selected_index {
-                    Row::StyledData(item.into_iter(), selected_style)
-                } else {
-                    Row::StyledData(item.into_iter(), normal_style)
-                }
-            });
-
-            let width = layout_chunk.width;
-
-            Table::new(header.iter(), rows)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(Style::default().fg(Color::White))
-                        .title(&format!(
-                            "{} by {}",
-                            selected_album.album.name,
-                            create_artist_string(&selected_album.album.artists)
-                        ))
-                        .title_style(get_color(highlight_state))
-                        .border_style(get_color(highlight_state)),
-                )
-                .style(Style::default().fg(Color::White))
-                .widths(&[
-                    3,
-                    get_percentage_width(width, 0.85),
-                    get_percentage_width(width, 0.1),
-                ])
-                .render(f, layout_chunk);
-        }
+        draw_table(
+            f,
+            app,
+            layout_chunk,
+            &format!(
+                "{} by {}",
+                selected_album.album.name,
+                create_artist_string(&selected_album.album.artists)
+            ),
+            &header,
+            &items,
+            selected_album.selected_index.unwrap_or(0),
+            highlight_state,
+        )
     };
 }
 
@@ -503,9 +491,24 @@ pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let header = ["Title", "Artist", "Album", "Length"];
-
-    let formatted_songs = display_songs(&app.track_table.tracks);
+    let header = [
+        TableHeader {
+            text: "Title",
+            width: get_percentage_width(layout_chunk.width, 0.3),
+        },
+        TableHeader {
+            text: "Artist",
+            width: get_percentage_width(layout_chunk.width, 0.3),
+        },
+        TableHeader {
+            text: "Album",
+            width: get_percentage_width(layout_chunk.width, 0.3),
+        },
+        TableHeader {
+            text: "Length",
+            width: get_percentage_width(layout_chunk.width, 0.1),
+        },
+    ];
 
     let current_route = app.get_current_route();
     let highlight_state = (
@@ -513,56 +516,31 @@ where
         current_route.hovered_block == ActiveBlock::SongTable,
     );
 
-    let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
+    let items = app
+        .track_table
+        .tracks
+        .iter()
+        .map(|item| TableItem {
+            id: item.id.clone().unwrap_or("".to_string()),
+            format: vec![
+                item.name.to_owned(),
+                create_artist_string(&item.artists),
+                item.album.name.to_owned(),
+                millis_to_minutes(u128::from(item.duration_ms)),
+            ],
+        })
+        .collect::<Vec<TableItem>>();
 
-    let track_playing_index = match &app.current_playback_context {
-        Some(ctx) => app.track_table.tracks.iter().position(|t| match &ctx.item {
-            Some(item) => t.id == item.id,
-            None => false,
-        }),
-        None => None,
-    };
-
-    let selected_song_index = app.track_table.selected_index;
-    let rows = formatted_songs.into_iter().enumerate().map(|(i, item)| {
-        // First check if the song is under selection
-        if i == selected_song_index {
-            return Row::StyledData(item.into_iter(), selected_style);
-        }
-
-        // Next check if the song should be highlighted because it is currently playing
-        if let Some(_track_playing_index) = track_playing_index {
-            if i == _track_playing_index {
-                return Row::StyledData(
-                    item.into_iter(),
-                    Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
-                );
-            }
-        }
-
-        // Otherwise return default styling
-        Row::StyledData(item.into_iter(), Style::default().fg(Color::White))
-    });
-
-    let width = layout_chunk.width;
-
-    Table::new(header.iter(), rows)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("Songs")
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
-        )
-        .style(Style::default().fg(Color::White))
-        .widths(&[
-            get_percentage_width(width, 0.3),
-            get_percentage_width(width, 0.3),
-            get_percentage_width(width, 0.3),
-            get_percentage_width(width, 0.1),
-        ])
-        .render(f, layout_chunk);
+    draw_table(
+        f,
+        app,
+        layout_chunk,
+        "Songs",
+        &header,
+        &items,
+        app.track_table.selected_index,
+        highlight_state,
+    )
 }
 
 pub fn draw_playing_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -756,7 +734,62 @@ where
         .render(f, chunks[1]);
 }
 
-pub fn draw_selectable_list<B, S>(
+pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = [
+        TableHeader {
+            text: "Title",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        },
+        TableHeader {
+            text: "Artist",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        },
+        TableHeader {
+            text: "Length",
+            width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
+        },
+    ];
+
+    if let Some(recently_played) = &app.recently_played.result {
+        let current_route = app.get_current_route();
+
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::RecentlyPlayed,
+            current_route.hovered_block == ActiveBlock::RecentlyPlayed,
+        );
+
+        let selected_song_index = app.recently_played.index;
+
+        let items = recently_played
+            .items
+            .iter()
+            .map(|item| TableItem {
+                id: item.track.id.clone().unwrap_or("".to_string()),
+                format: vec![
+                    item.track.name.to_owned(),
+                    create_artist_string(&item.track.artists),
+                    millis_to_minutes(u128::from(item.track.duration_ms)),
+                ],
+            })
+            .collect::<Vec<TableItem>>();
+
+        draw_table(
+            f,
+            app,
+            layout_chunk,
+            "Songs",
+            &header,
+            &items,
+            selected_song_index,
+            highlight_state,
+        )
+    };
+}
+
+fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
     layout_chunk: Rect,
     title: &str,
@@ -782,73 +815,61 @@ pub fn draw_selectable_list<B, S>(
         .render(f, layout_chunk);
 }
 
-pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
+fn draw_table<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    title: &str,
+    header_columns: &[TableHeader],
+    items: &[TableItem], // The nested vector must have the same length as the `header_columns`
+    selected_index: usize,
+    highlight_state: (bool, bool),
+) where
     B: Backend,
 {
-    let header = ["Title", "Artist", "Length"];
+    let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
 
-    if let Some(recently_played) = &app.recently_played.result {
-        let current_route = app.get_current_route();
-        let highlight_state = (
-            current_route.active_block == ActiveBlock::RecentlyPlayed,
-            current_route.hovered_block == ActiveBlock::RecentlyPlayed,
-        );
-
-        let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
-
-        let track_playing_index = match &app.current_playback_context {
-            Some(ctx) => recently_played.items.iter().position(|t| match &ctx.item {
-                Some(item) => t.track.id == item.id,
-                None => false,
-            }),
-            None => None,
-        };
-
-        let selected_song_index = app.recently_played.index;
-        let rows = recently_played.items.iter().enumerate().map(|(i, item)| {
-            let formatted_row = vec![
-                item.track.name.to_owned(),
-                create_artist_string(&item.track.artists),
-                millis_to_minutes(u128::from(item.track.duration_ms)),
-            ];
-            // First check if the song is under selection
-            if i == selected_song_index {
-                return Row::StyledData(formatted_row.into_iter(), selected_style);
-            }
-
-            // Next check if the song should be highlighted because it is currently playing
-            if let Some(_track_playing_index) = track_playing_index {
-                if i == _track_playing_index {
-                    return Row::StyledData(
-                        formatted_row.into_iter(),
-                        Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
-                    );
-                }
-            }
-
-            // Otherwise return default styling
-            Row::StyledData(formatted_row.into_iter(), Style::default().fg(Color::White))
-        });
-
-        let width = layout_chunk.width;
-
-        Table::new(header.iter(), rows)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .style(Style::default().fg(Color::White))
-                    .title("Songs")
-                    .title_style(get_color(highlight_state))
-                    .border_style(get_color(highlight_state)),
-            )
-            .style(Style::default().fg(Color::White))
-            .widths(&[
-                get_percentage_width(width, 0.3),
-                get_percentage_width(width, 0.3),
-                get_percentage_width(width, 0.3),
-                get_percentage_width(width, 0.1),
-            ])
-            .render(f, layout_chunk);
+    let track_playing_index = match &app.current_playback_context {
+        Some(ctx) => items.iter().position(|t| match &ctx.item {
+            Some(item) => Some(t.id.to_owned()) == item.id,
+            None => false,
+        }),
+        None => None,
     };
+
+    let rows = items.iter().enumerate().map(|(i, item)| {
+        let formatted_row = &item.format;
+        // First check if the item is under selection
+        if i == selected_index {
+            return Row::StyledData(formatted_row.into_iter(), selected_style);
+        }
+
+        // Next check if the song should be highlighted because it is currently playing
+        if let Some(_track_playing_index) = track_playing_index {
+            if i == _track_playing_index {
+                return Row::StyledData(
+                    formatted_row.into_iter(),
+                    Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
+                );
+            }
+        }
+
+        // Otherwise return default styling
+        Row::StyledData(formatted_row.into_iter(), Style::default().fg(Color::White))
+    });
+
+    let widths = header_columns.iter().map(|h| h.width).collect::<Vec<u16>>();
+
+    Table::new(header_columns.iter().map(|h| h.text), rows)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title(title)
+                .title_style(get_color(highlight_state))
+                .border_style(get_color(highlight_state)),
+        )
+        .style(Style::default().fg(Color::White))
+        .widths(&widths)
+        .render(f, layout_chunk);
 }
