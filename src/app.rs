@@ -345,11 +345,8 @@ impl App {
             if current_playback_context.is_playing {
                 self.pause_playback();
             } else {
-                // Ideally I should be able to pass in the `progress_ms` to start_playback, but
-                // this does not yet work https://github.com/ramsayleung/rspotify/issues/51
-                if let Some(_progress_ms) = current_playback_context.progress_ms {
-                    self.start_playback(None, None, None);
-                }
+                // When no offset or uris are passed, spotify will resume current playback
+                self.start_playback(None, None, None);
             }
         }
     }
