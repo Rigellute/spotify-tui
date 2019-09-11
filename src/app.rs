@@ -4,7 +4,9 @@ use rspotify::spotify::model::album::{SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
-use rspotify::spotify::model::page::Page;
+use rspotify::spotify::model::offset::Offset;
+use rspotify::spotify::model::page::{CursorBasedPage, Page};
+use rspotify::spotify::model::playing::PlayHistory;
 use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
 use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
@@ -54,6 +56,12 @@ impl<T> ScrollableResultPages<T> {
     }
 }
 
+#[derive(Default)]
+pub struct SpotifyResultAndSelectedIndex<T> {
+    pub index: usize,
+    pub result: T,
+}
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
     pub client_id: String,
@@ -71,7 +79,7 @@ pub struct Library {
 pub struct PlaybackParams {
     context_uri: Option<String>,
     uris: Option<Vec<String>>,
-    offset: Option<usize>,
+    offset: Option<Offset>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -86,6 +94,7 @@ pub enum SearchResultBlock {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
     Album,
+    Artist,
     Empty,
     Error,
     HelpMenu,
@@ -93,21 +102,22 @@ pub enum ActiveBlock {
     Input,
     Library,
     MyPlaylists,
+    RecentlyPlayed,
     SearchResultBlock,
     SelectDevice,
     SongTable,
-    Artist,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum RouteId {
-    Home,
-    SelectedDevice,
-    Error,
-    HelpMenu,
-    Search,
     Album,
     Artist,
+    Error,
+    HelpMenu,
+    Home,
+    RecentlyPlayed,
+    Search,
+    SelectedDevice,
     SongTable,
 }
 
@@ -156,7 +166,6 @@ pub struct SelectedAlbum {
 }
 
 pub struct App {
-    pub size: Rect,
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     path_to_cached_device_id: PathBuf,
@@ -171,10 +180,12 @@ pub struct App {
     pub playback_params: PlaybackParams,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
+    pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub search_results: SearchResult,
     pub selected_album: Option<SelectedAlbum>,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
+    pub size: Rect,
     pub small_search_limit: u32,
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
@@ -184,6 +195,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
+            recently_played: Default::default(),
             size: Rect::default(),
             selected_album: None,
             library: Library {
@@ -336,13 +348,7 @@ impl App {
                 // Ideally I should be able to pass in the `progress_ms` to start_playback, but
                 // this does not yet work https://github.com/ramsayleung/rspotify/issues/51
                 if let Some(_progress_ms) = current_playback_context.progress_ms {
-                    let PlaybackParams {
-                        context_uri,
-                        uris,
-                        offset,
-                    } = &self.playback_params.clone();
-
-                    self.start_playback(context_uri.to_owned(), uris.to_owned(), offset.to_owned());
+                    self.start_playback(None, None, None);
                 }
             }
         }
@@ -356,13 +362,15 @@ impl App {
     ) {
         let (uris, context_uri) = if context_uri.is_some() {
             (None, context_uri)
-        } else {
+        } else if uris.is_some() {
             (uris, None)
+        } else {
+            (None, None)
         };
 
         let offset = match offset {
-            Some(o) => o,
-            None => 0,
+            Some(o) => for_position(o as u32),
+            None => None,
         };
 
         let result = match &self.device_id {
@@ -371,7 +379,7 @@ impl App {
                     Some(device_id.to_string()),
                     context_uri.clone(),
                     uris.clone(),
-                    for_position(offset as u32),
+                    offset.clone(),
                 ),
                 None => Err(err_msg("Spotify is not ready to be used".to_string())),
             },
@@ -384,7 +392,7 @@ impl App {
                 self.playback_params = PlaybackParams {
                     context_uri,
                     uris,
-                    offset: Some(offset),
+                    offset,
                 }
             }
             Err(e) => {

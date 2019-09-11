@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, LIBRARY_OPTIONS};
+use super::super::app::{ActiveBlock, App, RouteId, LIBRARY_OPTIONS};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -39,7 +39,27 @@ pub fn handler(key: Key, app: &mut App) {
             // Made For You,
             0 => {}
             // Recently Played,
-            1 => {}
+            1 => {
+                if let Some(spotify) = &app.spotify {
+                    match spotify
+                        // Seems I need to clone here becuase `current_user_recently_played`
+                        // consumes `self`?
+                        .clone()
+                        .current_user_recently_played(app.large_search_limit)
+                    {
+                        Ok(result) => {
+                            app.recently_played.result = Some(result);
+                            app.push_navigation_stack(
+                                RouteId::RecentlyPlayed,
+                                ActiveBlock::RecentlyPlayed,
+                            );
+                        }
+                        Err(e) => {
+                            app.handle_error(e);
+                        }
+                    }
+                };
+            }
             // Liked Songs,
             2 => {
                 app.get_current_user_saved_tracks(None);

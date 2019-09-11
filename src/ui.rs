@@ -7,6 +7,18 @@ use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
 
+fn get_search_results_highlight_state(
+    app: &App,
+    block_to_match: SearchResultBlock,
+) -> (bool, bool) {
+    let current_route = app.get_current_route();
+    (
+        app.search_results.selected_block == block_to_match,
+        current_route.hovered_block == ActiveBlock::SearchResultBlock
+            && app.search_results.hovered_block == block_to_match,
+    )
+}
+
 fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
     match (is_active, is_hovered) {
         (true, _) => Style::default().fg(Color::LightCyan),
@@ -37,6 +49,36 @@ fn display_songs(track_search_results: &[FullTrack]) -> Vec<Vec<String>> {
         .collect()
 }
 
+fn millis_to_minutes(millis: u128) -> String {
+    let minutes = millis / 60000;
+    let seconds = (millis % 60000) / 1000;
+    let seconds_display = if seconds < 10 {
+        format!("0{}", seconds)
+    } else {
+        format!("{}", seconds)
+    };
+
+    if seconds == 60 {
+        format!("{}:00", minutes + 1)
+    } else {
+        format!("{}:{}", minutes, seconds_display)
+    }
+}
+
+fn display_track_progress(progress: u128, track_duration: u32) -> String {
+    let duration = millis_to_minutes(u128::from(track_duration));
+    let progress_display = millis_to_minutes(progress);
+    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
+
+    format!("{}/{} (-{})", progress_display, duration, remaining,)
+}
+
+// `percentage` param needs to be between 0 and 1
+fn get_percentage_width(width: u16, percentage: f32) -> u16 {
+    let padding = 3;
+    let width = width - padding;
+    (f32::from(width) * percentage) as u16
+}
 pub fn draw_help_menu<B>(f: &mut Frame<B>)
 where
     B: Backend,
@@ -216,6 +258,9 @@ where
         RouteId::Album => {
             draw_album_table(f, app, chunks[1]);
         }
+        RouteId::RecentlyPlayed => {
+            draw_recently_played_table(f, app, chunks[1]);
+        }
         RouteId::Artist => {
             // TODO
         }
@@ -282,18 +327,6 @@ where
 
     draw_library_block(f, app, chunks[0]);
     draw_playlist_block(f, app, chunks[1]);
-}
-
-fn get_search_results_highlight_state(
-    app: &App,
-    block_to_match: SearchResultBlock,
-) -> (bool, bool) {
-    let current_route = app.get_current_route();
-    (
-        app.search_results.selected_block == block_to_match,
-        current_route.hovered_block == ActiveBlock::SearchResultBlock
-            && app.search_results.hovered_block == block_to_match,
-    )
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -749,33 +782,73 @@ pub fn draw_selectable_list<B, S>(
         .render(f, layout_chunk);
 }
 
-fn millis_to_minutes(millis: u128) -> String {
-    let minutes = millis / 60000;
-    let seconds = (millis % 60000) / 1000;
-    let seconds_display = if seconds < 10 {
-        format!("0{}", seconds)
-    } else {
-        format!("{}", seconds)
+pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = ["Title", "Artist", "Length"];
+
+    if let Some(recently_played) = &app.recently_played.result {
+        let current_route = app.get_current_route();
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::RecentlyPlayed,
+            current_route.hovered_block == ActiveBlock::RecentlyPlayed,
+        );
+
+        let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
+
+        let track_playing_index = match &app.current_playback_context {
+            Some(ctx) => recently_played.items.iter().position(|t| match &ctx.item {
+                Some(item) => t.track.id == item.id,
+                None => false,
+            }),
+            None => None,
+        };
+
+        let selected_song_index = app.recently_played.index;
+        let rows = recently_played.items.iter().enumerate().map(|(i, item)| {
+            let formatted_row = vec![
+                item.track.name.to_owned(),
+                create_artist_string(&item.track.artists),
+                millis_to_minutes(u128::from(item.track.duration_ms)),
+            ];
+            // First check if the song is under selection
+            if i == selected_song_index {
+                return Row::StyledData(formatted_row.into_iter(), selected_style);
+            }
+
+            // Next check if the song should be highlighted because it is currently playing
+            if let Some(_track_playing_index) = track_playing_index {
+                if i == _track_playing_index {
+                    return Row::StyledData(
+                        formatted_row.into_iter(),
+                        Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
+                    );
+                }
+            }
+
+            // Otherwise return default styling
+            Row::StyledData(formatted_row.into_iter(), Style::default().fg(Color::White))
+        });
+
+        let width = layout_chunk.width;
+
+        Table::new(header.iter(), rows)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(Style::default().fg(Color::White))
+                    .title("Songs")
+                    .title_style(get_color(highlight_state))
+                    .border_style(get_color(highlight_state)),
+            )
+            .style(Style::default().fg(Color::White))
+            .widths(&[
+                get_percentage_width(width, 0.3),
+                get_percentage_width(width, 0.3),
+                get_percentage_width(width, 0.3),
+                get_percentage_width(width, 0.1),
+            ])
+            .render(f, layout_chunk);
     };
-
-    if seconds == 60 {
-        format!("{}:00", minutes + 1)
-    } else {
-        format!("{}:{}", minutes, seconds_display)
-    }
-}
-
-fn display_track_progress(progress: u128, track_duration: u32) -> String {
-    let duration = millis_to_minutes(u128::from(track_duration));
-    let progress_display = millis_to_minutes(progress);
-    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
-
-    format!("{}/{} (-{})", progress_display, duration, remaining,)
-}
-
-// `percentage` param needs to be between 0 and 1
-fn get_percentage_width(width: u16, percentage: f32) -> u16 {
-    let padding = 3;
-    let width = width - padding;
-    (f32::from(width) * percentage) as u16
 }

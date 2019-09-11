@@ -20,13 +20,14 @@ use tui::Terminal;
 use app::{ActiveBlock, App};
 use util::{Event, Events};
 
-const SCOPES: [&str; 6] = [
+const SCOPES: [&str; 7] = [
     "user-modify-playback-state",
     "user-read-playback-state",
     "user-read-private",
     "user-read-currently-playing",
     "playlist-read-private",
     "user-library-read",
+    "user-read-recently-played",
 ];
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

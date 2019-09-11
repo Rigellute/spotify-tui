@@ -7,6 +7,7 @@ mod home;
 mod input;
 mod library;
 mod playlist;
+mod recently_played;
 mod search_results;
 mod select_device;
 mod song_table;
@@ -53,6 +54,9 @@ pub fn handle_app(app: &mut App, key: Key) {
         }
         ActiveBlock::Empty => {
             empty::handler(key, app);
+        }
+        ActiveBlock::RecentlyPlayed => {
+            recently_played::handler(key, app);
         }
     }
 }
