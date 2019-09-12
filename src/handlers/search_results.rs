@@ -146,7 +146,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                                         selected_index: Some(0),
                                     });
 
-                                    app.push_navigation_stack(RouteId::Album, ActiveBlock::Album);
+                                    app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
                                 }
                                 Err(e) => {
                                     app.handle_error(e);

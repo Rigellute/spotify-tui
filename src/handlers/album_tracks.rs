@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn help_menu() {
         let mut app = App::new();
-        app.push_navigation_stack(RouteId::Album, ActiveBlock::Album);
+        app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
         handler(Key::Char('?'), &mut app);
         let current_route = app.get_current_route();
 
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.set_current_route_state(Some(ActiveBlock::Album), Some(ActiveBlock::Album));
+        app.set_current_route_state(Some(ActiveBlock::AlbumTracks), Some(ActiveBlock::AlbumTracks));
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();

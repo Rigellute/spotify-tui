@@ -65,7 +65,19 @@ pub fn handler(key: Key, app: &mut App) {
                 app.get_current_user_saved_tracks(None);
             }
             // Albums,
-            3 => {}
+            3 => {
+                if let Some(spotify) = &app.spotify {
+                    match spotify.current_user_saved_albums(app.large_search_limit, 0) {
+                        Ok(result) => {
+                            app.library.saved_albums.add_pages(result);
+                            app.push_navigation_stack(RouteId::AlbumList, ActiveBlock::AlbumList);
+                        }
+                        Err(e) => {
+                            app.handle_error(e);
+                        }
+                    }
+                };
+            }
             //  Artists,
             4 => {}
             // Podcasts,

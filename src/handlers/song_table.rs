@@ -68,8 +68,7 @@ pub fn handler(key: Key, app: &mut App) {
                         };
                     }
                     SongTableContext::SavedTracks => {
-                        if let Some(saved_tracks) = &app.library.saved_tracks.get_saved_tracks(None)
-                        {
+                        if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
                             // TODO get context for saved tracks
                             if let Some(item) =
                                 saved_tracks.items.get(app.track_table.selected_index)

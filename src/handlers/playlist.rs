@@ -25,8 +25,8 @@ pub fn handler(key: Key, app: &mut App) {
                 RouteId::SongTable => {
                     app.set_current_route_state(Some(ActiveBlock::SongTable), None);
                 }
-                RouteId::Album => {
-                    app.set_current_route_state(Some(ActiveBlock::Album), None);
+                RouteId::AlbumTracks => {
+                    app.set_current_route_state(Some(ActiveBlock::AlbumTracks), None);
                 }
                 RouteId::Artist => {
                     // TODO

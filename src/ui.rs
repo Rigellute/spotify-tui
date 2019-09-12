@@ -250,7 +250,7 @@ where
         RouteId::SongTable => {
             draw_song_table(f, app, chunks[1]);
         }
-        RouteId::Album => {
+        RouteId::AlbumTracks => {
             draw_album_table(f, app, chunks[1]);
         }
         RouteId::RecentlyPlayed => {
@@ -261,6 +261,9 @@ where
         }
         RouteId::Home => {
             draw_home(f, app, chunks[1]);
+        }
+        RouteId::AlbumList => {
+            draw_album_list(f, app, chunks[1]);
         }
         _ => {}
     };
@@ -466,8 +469,8 @@ where
 
         let current_route = app.get_current_route();
         let highlight_state = (
-            current_route.active_block == ActiveBlock::Album,
-            current_route.hovered_block == ActiveBlock::Album,
+            current_route.active_block == ActiveBlock::AlbumTracks,
+            current_route.hovered_block == ActiveBlock::AlbumTracks,
         );
 
         draw_table(
@@ -501,7 +504,7 @@ where
             width: get_percentage_width(layout_chunk.width, 0.3),
         },
         TableHeader {
-            text: "Album",
+            text: "AlbumTracks",
             width: get_percentage_width(layout_chunk.width, 0.3),
         },
         TableHeader {
@@ -734,6 +737,61 @@ where
         .render(f, chunks[1]);
 }
 
+pub fn draw_album_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = [
+        TableHeader {
+            text: "Name",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        },
+        TableHeader {
+            text: "Artists",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        },
+        TableHeader {
+            text: "Release Date",
+            width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
+        },
+    ];
+
+    let current_route = app.get_current_route();
+
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::AlbumList,
+        current_route.hovered_block == ActiveBlock::AlbumList,
+    );
+
+    let selected_song_index = app.album_list_index;
+
+    if let Some(saved_albums) = app.library.saved_albums.get_results(None) {
+        let items = saved_albums
+            .items
+            .iter()
+            .map(|album_page| TableItem {
+                id: album_page.album.id.to_owned(),
+                format: vec![
+                    album_page.album.name.to_owned(),
+                    create_artist_string(&album_page.album.artists),
+                    album_page.album.release_date.to_owned(),
+                ],
+            })
+            .collect::<Vec<TableItem>>();
+
+        draw_table(
+            f,
+            app,
+            layout_chunk,
+            "Saved Albums",
+            &header,
+            &items,
+            selected_song_index,
+            highlight_state,
+        )
+    };
+}
+
 pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
@@ -780,7 +838,7 @@ where
             f,
             app,
             layout_chunk,
-            "Songs",
+            "Recently Played Tracks",
             &header,
             &items,
             selected_song_index,
@@ -788,7 +846,6 @@ where
         )
     };
 }
-
 fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
     layout_chunk: Rect,

@@ -42,7 +42,7 @@ impl<T> ScrollableResultPages<T> {
         }
     }
 
-    pub fn get_saved_tracks(&self, at_index: Option<usize>) -> Option<&T> {
+    pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
         match at_index {
             Some(index) => self.pages.get(index),
             None => self.pages.get(self.index),
@@ -72,7 +72,7 @@ pub struct ClientConfig {
 pub struct Library {
     pub selected_index: usize,
     pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
-    pub saved_albums: Option<Page<SavedAlbum>>,
+    pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
 }
 
 #[derive(Clone)]
@@ -93,7 +93,8 @@ pub enum SearchResultBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
-    Album,
+    AlbumTracks,
+    AlbumList,
     Artist,
     Empty,
     Error,
@@ -110,7 +111,8 @@ pub enum ActiveBlock {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum RouteId {
-    Album,
+    AlbumTracks,
+    AlbumList,
     Artist,
     Error,
     HelpMenu,
@@ -190,17 +192,19 @@ pub struct App {
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
+    pub album_list_index: usize,
 }
 
 impl App {
     pub fn new() -> App {
         App {
+            album_list_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
             selected_album: None,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
-                saved_albums: None,
+                saved_albums: ScrollableResultPages::new(),
                 selected_index: 0,
             },
             navigation_stack: vec![Route {
@@ -500,7 +504,7 @@ impl App {
         match self
             .library
             .saved_tracks
-            .get_saved_tracks(Some(self.library.saved_tracks.index + 1))
+            .get_results(Some(self.library.saved_tracks.index + 1))
         {
             Some(saved_tracks) => {
                 self.track_table.tracks = saved_tracks
@@ -512,7 +516,7 @@ impl App {
                 self.library.saved_tracks.index += 1
             }
             None => {
-                if let Some(saved_tracks) = &self.library.saved_tracks.get_saved_tracks(None) {
+                if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
                     let offset = Some(saved_tracks.offset + saved_tracks.limit);
                     self.get_current_user_saved_tracks(offset);
                 }
@@ -525,7 +529,7 @@ impl App {
             self.library.saved_tracks.index -= 1;
         }
 
-        if let Some(saved_tracks) = &self.library.saved_tracks.get_saved_tracks(None) {
+        if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
             self.track_table.tracks = saved_tracks
                 .items
                 .clone()

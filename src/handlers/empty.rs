@@ -28,7 +28,7 @@ pub fn handler(key: Key, app: &mut App) {
             ActiveBlock::MyPlaylists => {
                 // Go to player
             }
-            ActiveBlock::Album | ActiveBlock::Home | ActiveBlock::SongTable => {
+            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::SongTable => {
                 // Go to player
             }
             _ => {}
@@ -39,7 +39,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::Album | ActiveBlock::Home | ActiveBlock::SongTable => {
+            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::SongTable => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
             _ => {}
@@ -47,10 +47,10 @@ pub fn handler(key: Key, app: &mut App) {
         k if common_key_events::right_event(k) => match app.get_current_route().hovered_block {
             ActiveBlock::MyPlaylists | ActiveBlock::Library => {
                 match app.get_current_route().id {
-                    RouteId::Album => {
+                    RouteId::AlbumTracks => {
                         app.set_current_route_state(
-                            Some(ActiveBlock::Album),
-                            Some(ActiveBlock::Album),
+                            Some(ActiveBlock::AlbumTracks),
+                            Some(ActiveBlock::AlbumTracks),
                         );
                     }
                     RouteId::SongTable => {
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Album));
+        app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::AlbumTracks));
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();
@@ -177,12 +177,12 @@ mod tests {
         let mut app = App::new();
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
-        app.push_navigation_stack(RouteId::Album, ActiveBlock::Album);
+        app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
         handler(Key::Right, &mut app);
         let current_route = app.get_current_route();
 
-        assert_eq!(current_route.active_block, ActiveBlock::Album);
-        assert_eq!(current_route.hovered_block, ActiveBlock::Album);
+        assert_eq!(current_route.active_block, ActiveBlock::AlbumTracks);
+        assert_eq!(current_route.hovered_block, ActiveBlock::AlbumTracks);
 
         app.push_navigation_stack(RouteId::Search, ActiveBlock::Empty);
         app.set_current_route_state(None, Some(ActiveBlock::MyPlaylists));

@@ -17,39 +17,37 @@ pub fn handler(key: Key, app: &mut App) {
         k if common_key_events::left_event(k) => {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
+        k if common_key_events::down_event(k) => {
+            if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
+                let next_index = common_key_events::on_down_press_handler(
+                    &albums.items,
+                    Some(app.album_list_index),
+                );
+                app.album_list_index = next_index;
+            }
+        }
         Key::Char('?') => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
-        k if common_key_events::down_event(k) => {
-            if let Some(recently_played_result) = &app.recently_played.result {
-                let next_index = common_key_events::on_down_press_handler(
-                    &recently_played_result.items,
-                    Some(app.recently_played.index),
-                );
-                app.recently_played.index = next_index;
-            }
-        }
         k if common_key_events::up_event(k) => {
-            if let Some(recently_played_result) = &app.recently_played.result {
+            if let Some(selected_album) = &mut app.selected_album {
                 let next_index = common_key_events::on_up_press_handler(
-                    &recently_played_result.items,
-                    Some(app.recently_played.index),
+                    &selected_album.tracks.items,
+                    selected_album.selected_index,
                 );
-                app.recently_played.index = next_index;
+                selected_album.selected_index = Some(next_index);
             }
         }
         Key::Char('/') => {
             app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
-            if let Some(recently_played_result) = &app.recently_played.result.clone() {
-                let track_uris: Vec<String> = recently_played_result
-                    .items
-                    .iter()
-                    .map(|item| item.track.uri.to_owned())
-                    .collect();
-
-                app.start_playback(None, Some(track_uris), Some(app.recently_played.index));
+            if let Some(selected_album) = &app.selected_album.clone() {
+                app.start_playback(
+                    selected_album.album.uri.clone(),
+                    None,
+                    selected_album.selected_index,
+                );
             };
         }
         _ => {}
@@ -74,7 +72,10 @@ mod tests {
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.set_current_route_state(Some(ActiveBlock::AlbumTracks), Some(ActiveBlock::AlbumTracks));
+        app.set_current_route_state(
+            Some(ActiveBlock::AlbumTracks),
+            Some(ActiveBlock::AlbumTracks),
+        );
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();

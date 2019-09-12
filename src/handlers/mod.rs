@@ -1,4 +1,5 @@
-mod album;
+mod album_list;
+mod album_tracks;
 mod common_key_events;
 mod empty;
 mod error_screen;
@@ -46,8 +47,11 @@ pub fn handle_app(app: &mut App, key: Key) {
         ActiveBlock::Home => {
             home::handler(key, app);
         }
-        ActiveBlock::Album => {
-            album::handler(key, app);
+        ActiveBlock::AlbumList => {
+            album_list::handler(key, app);
+        }
+        ActiveBlock::AlbumTracks => {
+            album_tracks::handler(key, app);
         }
         ActiveBlock::Library => {
             library::handler(key, app);
