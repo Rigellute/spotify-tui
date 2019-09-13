@@ -1,4 +1,6 @@
-use super::app::{ActiveBlock, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS};
+use super::app::{
+    ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS,
+};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -433,6 +435,12 @@ where
     }
 }
 
+struct AlbumUI {
+    selected_index: usize,
+    items: Vec<TableItem>,
+    title: String,
+}
+
 pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
@@ -452,41 +460,78 @@ where
         },
     ];
 
-    if let Some(selected_album) = &app.selected_album {
-        let items = selected_album
-            .tracks
-            .items
-            .iter()
-            .map(|item| TableItem {
-                id: item.id.clone().unwrap_or("".to_string()),
-                format: vec![
-                    item.track_number.to_string(),
-                    item.name.to_owned(),
-                    millis_to_minutes(u128::from(item.duration_ms)),
-                ],
-            })
-            .collect::<Vec<TableItem>>();
+    let current_route = app.get_current_route();
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::AlbumTracks,
+        current_route.hovered_block == ActiveBlock::AlbumTracks,
+    );
 
-        let current_route = app.get_current_route();
-        let highlight_state = (
-            current_route.active_block == ActiveBlock::AlbumTracks,
-            current_route.hovered_block == ActiveBlock::AlbumTracks,
-        );
+    let album_ui = match app.album_table_context.clone() {
+        AlbumTableContext::Simplified => match &app.selected_album {
+            Some(selected_album) => Some(AlbumUI {
+                items: selected_album
+                    .tracks
+                    .items
+                    .iter()
+                    .map(|item| TableItem {
+                        id: item.id.clone().unwrap_or("".to_string()),
+                        format: vec![
+                            item.track_number.to_string(),
+                            item.name.to_owned(),
+                            millis_to_minutes(u128::from(item.duration_ms)),
+                        ],
+                    })
+                    .collect::<Vec<TableItem>>(),
+                title: format!(
+                    "{} by {}",
+                    selected_album.album.name,
+                    create_artist_string(&selected_album.album.artists)
+                ),
+                selected_index: selected_album.selected_index.unwrap_or(0),
+            }),
+            None => None,
+        },
+        AlbumTableContext::Full => match &app.library.saved_albums.get_results(None) {
+            Some(albums) => match albums.items.get(app.album_list_index) {
+                Some(selected_album) => Some(AlbumUI {
+                    items: selected_album
+                        .album
+                        .tracks
+                        .items
+                        .iter()
+                        .map(|item| TableItem {
+                            id: item.id.clone().unwrap_or("".to_string()),
+                            format: vec![
+                                item.track_number.to_string(),
+                                item.name.to_owned(),
+                                millis_to_minutes(u128::from(item.duration_ms)),
+                            ],
+                        })
+                        .collect::<Vec<TableItem>>(),
+                    title: format!(
+                        "{} by {}",
+                        selected_album.album.name,
+                        create_artist_string(&selected_album.album.artists)
+                    ),
+                    selected_index: app.saved_album_tracks_index,
+                }),
+                None => None,
+            },
+            None => None,
+        },
+    };
 
+    if let Some(album_ui) = album_ui {
         draw_table(
             f,
             app,
             layout_chunk,
-            &format!(
-                "{} by {}",
-                selected_album.album.name,
-                create_artist_string(&selected_album.album.artists)
-            ),
+            &album_ui.title,
             &header,
-            &items,
-            selected_album.selected_index.unwrap_or(0),
+            &album_ui.items,
+            album_ui.selected_index,
             highlight_state,
-        )
+        );
     };
 }
 
@@ -752,7 +797,7 @@ where
         },
         TableHeader {
             text: "Release Date",
-            width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
+            width: get_percentage_width(layout_chunk.width, 1.0 / 3.0),
         },
     ];
 
@@ -846,6 +891,7 @@ where
         )
     };
 }
+
 fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
     layout_chunk: Rect,

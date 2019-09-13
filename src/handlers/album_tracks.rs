@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App};
+use super::super::app::{ActiveBlock, AlbumTableContext, App};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -17,39 +17,81 @@ pub fn handler(key: Key, app: &mut App) {
         k if common_key_events::left_event(k) => {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
-        k if common_key_events::down_event(k) => {
-            if let Some(selected_album) = &mut app.selected_album {
-                let next_index = common_key_events::on_down_press_handler(
-                    &selected_album.tracks.items,
-                    selected_album.selected_index,
-                );
-                selected_album.selected_index = Some(next_index);
+        k if common_key_events::down_event(k) => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        let next_index = common_key_events::on_down_press_handler(
+                            &selected_album.album.tracks.items,
+                            Some(app.saved_album_tracks_index),
+                        );
+
+                        app.saved_album_tracks_index = next_index;
+                    }
+                };
             }
-        }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &mut app.selected_album {
+                    let next_index = common_key_events::on_down_press_handler(
+                        &selected_album.tracks.items,
+                        selected_album.selected_index,
+                    );
+                    selected_album.selected_index = Some(next_index);
+                }
+            }
+        },
         Key::Char('?') => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
-        k if common_key_events::up_event(k) => {
-            if let Some(selected_album) = &mut app.selected_album {
-                let next_index = common_key_events::on_up_press_handler(
-                    &selected_album.tracks.items,
-                    selected_album.selected_index,
-                );
-                selected_album.selected_index = Some(next_index);
+        k if common_key_events::up_event(k) => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        let next_index = common_key_events::on_up_press_handler(
+                            &selected_album.album.tracks.items,
+                            Some(app.album_list_index),
+                        );
+
+                        app.album_list_index = next_index;
+                    }
+                };
             }
-        }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &mut app.selected_album {
+                    let next_index = common_key_events::on_up_press_handler(
+                        &selected_album.tracks.items,
+                        selected_album.selected_index,
+                    );
+                    selected_album.selected_index = Some(next_index);
+                }
+            }
+        },
+
         Key::Char('/') => {
             app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
-        Key::Char('\n') => {
-            if let Some(selected_album) = &app.selected_album.clone() {
-                app.start_playback(
-                    selected_album.album.uri.clone(),
-                    None,
-                    selected_album.selected_index,
-                );
-            };
-        }
+        Key::Char('\n') => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        app.start_playback(
+                            Some(selected_album.album.uri.to_owned()),
+                            None,
+                            Some(app.saved_album_tracks_index),
+                        );
+                    }
+                };
+            }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &app.selected_album.clone() {
+                    app.start_playback(
+                        selected_album.album.uri.clone(),
+                        None,
+                        selected_album.selected_index,
+                    );
+                };
+            }
+        },
         _ => {}
     };
 }
@@ -72,7 +114,10 @@ mod tests {
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.set_current_route_state(Some(ActiveBlock::AlbumTracks), Some(ActiveBlock::AlbumTracks));
+        app.set_current_route_state(
+            Some(ActiveBlock::AlbumTracks),
+            Some(ActiveBlock::AlbumTracks),
+        );
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();

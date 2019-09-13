@@ -1,6 +1,6 @@
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
-use rspotify::spotify::model::album::{SavedAlbum, SimplifiedAlbum};
+use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
@@ -140,6 +140,12 @@ pub enum SongTableContext {
     SavedTracks,
 }
 
+#[derive(Clone, PartialEq, Debug)]
+pub enum AlbumTableContext {
+    Simplified,
+    Full,
+}
+
 pub struct SearchResult {
     pub albums: Option<SearchAlbums>,
     pub artists: Option<SearchArtists>,
@@ -167,10 +173,18 @@ pub struct SelectedAlbum {
     pub selected_index: Option<usize>,
 }
 
+#[derive(Clone)]
+pub struct SelectedFullAlbum {
+    pub album: FullAlbum,
+    pub selected_index: usize,
+}
+
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     path_to_cached_device_id: PathBuf,
+    pub album_table_context: AlbumTableContext,
+    pub saved_album_tracks_index: usize,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
     pub device_id: Option<String>,
@@ -185,6 +199,7 @@ pub struct App {
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub search_results: SearchResult,
     pub selected_album: Option<SelectedAlbum>,
+    pub selected_album_full: Option<SelectedFullAlbum>,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
     pub size: Rect,
@@ -198,10 +213,13 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
+            album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
             selected_album: None,
+            selected_album_full: None,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),

@@ -1,5 +1,6 @@
 use super::super::app::{
-    ActiveBlock, App, RouteId, SearchResultBlock, SelectedAlbum, SongTableContext,
+    ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, SelectedAlbum,
+    SongTableContext,
 };
 use super::common_key_events;
 use termion::event::Key;
@@ -146,7 +147,11 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                                         selected_index: Some(0),
                                     });
 
-                                    app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+                                    app.album_table_context = AlbumTableContext::Simplified;
+                                    app.push_navigation_stack(
+                                        RouteId::AlbumTracks,
+                                        ActiveBlock::AlbumTracks,
+                                    );
                                 }
                                 Err(e) => {
                                     app.handle_error(e);
