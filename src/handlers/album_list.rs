@@ -43,18 +43,7 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::app::RouteId;
     use super::*;
-
-    #[test]
-    fn help_menu() {
-        let mut app = App::new();
-        app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
-        handler(Key::Char('?'), &mut app);
-        let current_route = app.get_current_route();
-
-        assert_eq!(current_route.active_block, ActiveBlock::HelpMenu);
-    }
 
     #[test]
     fn on_left_press() {
@@ -68,17 +57,6 @@ mod tests {
         let current_route = app.get_current_route();
         assert_eq!(current_route.active_block, ActiveBlock::Empty);
         assert_eq!(current_route.hovered_block, ActiveBlock::Library);
-    }
-
-    #[test]
-    fn go_to_search_input() {
-        let mut app = App::new();
-
-        handler(Key::Char('/'), &mut app);
-
-        let current_route = app.get_current_route();
-        assert_eq!(current_route.active_block, ActiveBlock::Input);
-        assert_eq!(current_route.hovered_block, ActiveBlock::Input);
     }
 
     #[test]

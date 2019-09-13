@@ -1,12 +1,16 @@
+mod util;
 use super::app::{
     ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS,
 };
-use rspotify::spotify::model::artist::SimplifiedArtist;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
 use tui::Frame;
+use util::{
+    create_artist_string, display_track_progress, get_color, get_percentage_width,
+    get_search_results_highlight_state, millis_to_minutes,
+};
 
 pub struct TableItem {
     id: String,
@@ -18,64 +22,6 @@ pub struct TableHeader<'a> {
     width: u16,
 }
 
-fn get_search_results_highlight_state(
-    app: &App,
-    block_to_match: SearchResultBlock,
-) -> (bool, bool) {
-    let current_route = app.get_current_route();
-    (
-        app.search_results.selected_block == block_to_match,
-        current_route.hovered_block == ActiveBlock::SearchResultBlock
-            && app.search_results.hovered_block == block_to_match,
-    )
-}
-
-fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
-    match (is_active, is_hovered) {
-        (true, _) => Style::default().fg(Color::LightCyan),
-        (false, true) => Style::default().fg(Color::Magenta),
-        _ => Style::default().fg(Color::Gray),
-    }
-}
-
-fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
-    artists
-        .iter()
-        .map(|artist| artist.name.to_string())
-        .collect::<Vec<String>>()
-        .join(", ")
-}
-
-fn millis_to_minutes(millis: u128) -> String {
-    let minutes = millis / 60000;
-    let seconds = (millis % 60000) / 1000;
-    let seconds_display = if seconds < 10 {
-        format!("0{}", seconds)
-    } else {
-        format!("{}", seconds)
-    };
-
-    if seconds == 60 {
-        format!("{}:00", minutes + 1)
-    } else {
-        format!("{}:{}", minutes, seconds_display)
-    }
-}
-
-fn display_track_progress(progress: u128, track_duration: u32) -> String {
-    let duration = millis_to_minutes(u128::from(track_duration));
-    let progress_display = millis_to_minutes(progress);
-    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
-
-    format!("{}/{} (-{})", progress_display, duration, remaining,)
-}
-
-// `percentage` param needs to be between 0 and 1
-fn get_percentage_width(width: u16, percentage: f32) -> u16 {
-    let padding = 3;
-    let width = width - padding;
-    (f32::from(width) * percentage) as u16
-}
 pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,

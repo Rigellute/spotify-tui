@@ -76,29 +76,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn help_menu() {
-        let mut app = App::new();
-
-        app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
-        handler(Key::Char('?'), &mut app);
-        let current_route = app.get_current_route();
-
-        assert_eq!(current_route.active_block, ActiveBlock::HelpMenu);
-    }
-
-    #[test]
-    fn go_to_search_input() {
-        let mut app = App::new();
-
-        app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
-        handler(Key::Char('/'), &mut app);
-        let current_route = app.get_current_route();
-
-        assert_eq!(current_route.active_block, ActiveBlock::Input);
-        assert_eq!(current_route.hovered_block, ActiveBlock::Input);
-    }
-
-    #[test]
     fn on_enter() {
         let mut app = App::new();
 
