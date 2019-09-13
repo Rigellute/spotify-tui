@@ -53,13 +53,17 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     SongTableContext::SavedTracks => {
                         if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
-                            // TODO get context for saved tracks
-                            if let Some(item) =
-                                saved_tracks.items.get(app.track_table.selected_index)
-                            {
-                                let track_uri = item.track.uri.to_owned();
-                                app.start_playback(None, Some(vec![track_uri]), Some(0));
-                            };
+                            let track_uris: Vec<String> = saved_tracks
+                                .items
+                                .iter()
+                                .map(|item| item.track.uri.to_owned())
+                                .collect();
+
+                            app.start_playback(
+                                None,
+                                Some(track_uris),
+                                Some(app.track_table.selected_index),
+                            );
                         };
                     }
                     SongTableContext::AlbumSearch => {}
