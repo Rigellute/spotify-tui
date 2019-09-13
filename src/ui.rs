@@ -76,7 +76,7 @@ fn get_percentage_width(width: u16, percentage: f32) -> u16 {
     let width = width - padding;
     (f32::from(width) * percentage) as u16
 }
-pub fn draw_help_menu<B>(f: &mut Frame<B>)
+pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
@@ -90,66 +90,9 @@ where
     let gray = Style::default().fg(Color::White);
     let header = ["Context", "Event", "Description"];
 
-    // Would be nice to share the same source of truth as the event matches in `src/handlers`
-    let help_rows = vec![
-        vec![
-            "General",
-            "h | <Left Arrow Key>",
-            "Move hovered-block/active-block selection left",
-        ],
-        vec![
-            "General",
-            "j | <Down Arrow Key> | <Ctrl+n>",
-            "Move hovered-block/active-block selection down",
-        ],
-        vec![
-            "General",
-            "k | <Up Arrow Key> | <Ctrl+p>",
-            "Move hovered-block/selection up",
-        ],
-        vec![
-            "General",
-            "k | <Right Arrow Key>",
-            "Move hovered-block/selection right",
-        ],
-        vec!["General", "/", "Enter input for search"],
-        vec!["General", "<Space>", "Pause/Resume playback"],
-        vec!["General", "<Enter>", "Enter active mode"],
-        vec![
-            "General",
-            "q | -",
-            "Go back or exit when nowhere left to back to",
-        ],
-        vec!["General", "d", "Select device to play music on"],
-        vec!["Selected block", "<Esc>", "Enter hover mode"],
-        vec![
-            "Selected block",
-            "<Enter>",
-            "Start playback or enter album/artist/playlist",
-        ],
-        vec!["Search input", "<Ctrl+u>", "Delete input"],
-        vec!["Search input", "<Enter>", "Search with input text"],
-        vec![
-            "Search input",
-            "<Left Arrow Key>",
-            "Move cursor one space left",
-        ],
-        vec![
-            "Search input",
-            "<Right Arrow Key>",
-            "Move cursor one space right",
-        ],
-        vec!["Search input", "<Ctrl+a>", "Jump to start of input"],
-        vec!["Search input", "<Ctrl+e>", "Jump to end of input"],
-        vec![
-            "Search input",
-            "<Esc>",
-            "Escape from the input back to hovered block",
-        ],
-    ];
-
-    let rows = help_rows
-        .into_iter()
+    let rows = app
+        .help_rows
+        .iter()
         .map(|item| Row::StyledData(item.into_iter(), gray));
 
     Table::new(header.iter(), rows)

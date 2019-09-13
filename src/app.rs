@@ -1,3 +1,4 @@
+use super::util::get_help;
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
@@ -27,6 +28,20 @@ pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Artists",
     "Podcasts",
 ];
+
+#[derive(Serialize, Deserialize)]
+pub struct HelpItem {
+    pub key: String,
+    pub desc: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Help {
+    general: Vec<HelpItem>,
+    selected_block: Vec<HelpItem>,
+    search_input: Vec<HelpItem>,
+    pagination: Vec<HelpItem>,
+}
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
@@ -203,6 +218,7 @@ pub struct App {
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
     pub size: Rect,
+    pub help_rows: Vec<Vec<String>>,
     pub small_search_limit: u32,
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
@@ -232,7 +248,7 @@ impl App {
             }],
             large_search_limit: 20,
             small_search_limit: 4,
-
+            help_rows: vec![], // This needs to get loading in form the `help.yml` file
             api_error: String::new(),
             current_playback_context: None,
             device_id: None,
@@ -265,6 +281,74 @@ impl App {
             },
             path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
             instant_since_last_current_playback_poll: Instant::now(),
+        }
+    }
+
+    pub fn load_help_items(&mut self) {
+        if self.help_rows.is_empty() {
+            match get_help() {
+                Ok(help) => {
+                    let mut general = help
+                        .general
+                        .iter()
+                        .map(|row| {
+                            vec![
+                                "General".to_string(),
+                                row.key.to_owned(),
+                                row.desc.to_owned(),
+                            ]
+                        })
+                        .collect::<Vec<Vec<String>>>();
+
+                    let mut selected_block = help
+                        .selected_block
+                        .iter()
+                        .map(|row| {
+                            vec![
+                                "Selected Block".to_string(),
+                                row.key.to_owned(),
+                                row.desc.to_owned(),
+                            ]
+                        })
+                        .collect::<Vec<Vec<String>>>();
+
+                    let mut search_input = help
+                        .search_input
+                        .iter()
+                        .map(|row| {
+                            vec![
+                                "Search Input".to_string(),
+                                row.key.to_owned(),
+                                row.desc.to_owned(),
+                            ]
+                        })
+                        .collect::<Vec<Vec<String>>>();
+
+                    let mut pagination = help
+                        .pagination
+                        .iter()
+                        .map(|row| {
+                            vec![
+                                "Pagination".to_string(),
+                                row.key.to_owned(),
+                                row.desc.to_owned(),
+                            ]
+                        })
+                        .collect::<Vec<Vec<String>>>();
+
+                    let mut help_rows = vec![];
+
+                    help_rows.append(&mut general);
+                    help_rows.append(&mut selected_block);
+                    help_rows.append(&mut search_input);
+                    help_rows.append(&mut pagination);
+
+                    self.help_rows = help_rows;
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
         }
     }
 
