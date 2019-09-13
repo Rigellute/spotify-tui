@@ -9,8 +9,8 @@ pub fn handler(key: Key, app: &mut App) {
                 RouteId::Search => {
                     app.set_current_route_state(Some(ActiveBlock::SearchResultBlock), None);
                 }
-                RouteId::SongTable => {
-                    app.set_current_route_state(Some(ActiveBlock::SongTable), None);
+                RouteId::TrackTable => {
+                    app.set_current_route_state(Some(ActiveBlock::TrackTable), None);
                 }
                 RouteId::AlbumTracks => {
                     app.set_current_route_state(Some(ActiveBlock::AlbumTracks), None);

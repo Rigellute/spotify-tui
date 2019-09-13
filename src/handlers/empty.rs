@@ -16,7 +16,7 @@ pub fn handler(key: Key, app: &mut App) {
             ActiveBlock::MyPlaylists => {
                 // Go to player
             }
-            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::SongTable => {
+            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::TrackTable => {
                 // Go to player
             }
             _ => {}
@@ -27,7 +27,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::SongTable => {
+            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::TrackTable => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
             _ => {}
@@ -41,10 +41,10 @@ pub fn handler(key: Key, app: &mut App) {
                             Some(ActiveBlock::AlbumTracks),
                         );
                     }
-                    RouteId::SongTable => {
+                    RouteId::TrackTable => {
                         app.set_current_route_state(
-                            Some(ActiveBlock::SongTable),
-                            Some(ActiveBlock::SongTable),
+                            Some(ActiveBlock::TrackTable),
+                            Some(ActiveBlock::TrackTable),
                         );
                     }
                     RouteId::Search => {
@@ -154,7 +154,7 @@ mod tests {
         let current_route = app.get_current_route();
         assert_eq!(current_route.hovered_block, ActiveBlock::Library);
 
-        app.set_current_route_state(None, Some(ActiveBlock::SongTable));
+        app.set_current_route_state(None, Some(ActiveBlock::TrackTable));
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();
         assert_eq!(current_route.hovered_block, ActiveBlock::Library);
@@ -181,19 +181,19 @@ mod tests {
         assert_eq!(current_route.hovered_block, ActiveBlock::SearchResultBlock);
 
         app.set_current_route_state(None, Some(ActiveBlock::Library));
-        app.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
+        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
         handler(Key::Right, &mut app);
         let current_route = app.get_current_route();
 
-        assert_eq!(current_route.active_block, ActiveBlock::SongTable);
-        assert_eq!(current_route.hovered_block, ActiveBlock::SongTable);
+        assert_eq!(current_route.active_block, ActiveBlock::TrackTable);
+        assert_eq!(current_route.hovered_block, ActiveBlock::TrackTable);
 
         app.set_current_route_state(None, Some(ActiveBlock::Library));
-        app.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
+        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
         handler(Key::Right, &mut app);
         let current_route = app.get_current_route();
-        assert_eq!(current_route.active_block, ActiveBlock::SongTable);
-        assert_eq!(current_route.hovered_block, ActiveBlock::SongTable);
+        assert_eq!(current_route.active_block, ActiveBlock::TrackTable);
+        assert_eq!(current_route.hovered_block, ActiveBlock::TrackTable);
 
         app.push_navigation_stack(RouteId::Home, ActiveBlock::Home);
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));

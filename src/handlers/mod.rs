@@ -11,7 +11,7 @@ mod playlist;
 mod recently_played;
 mod search_results;
 mod select_device;
-mod song_table;
+mod track_table;
 
 use super::app::{ActiveBlock, App};
 use termion::event::Key;
@@ -29,8 +29,8 @@ pub fn handle_app(app: &mut App, key: Key) {
         ActiveBlock::MyPlaylists => {
             playlist::handler(key, app);
         }
-        ActiveBlock::SongTable => {
-            song_table::handler(key, app);
+        ActiveBlock::TrackTable => {
+            track_table::handler(key, app);
         }
         ActiveBlock::HelpMenu => {
             help_menu::handler(key, app);

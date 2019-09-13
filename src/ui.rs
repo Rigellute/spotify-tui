@@ -192,7 +192,7 @@ where
         RouteId::Search => {
             draw_search_results(f, app, chunks[1]);
         }
-        RouteId::SongTable => {
+        RouteId::TrackTable => {
             draw_song_table(f, app, chunks[1]);
         }
         RouteId::AlbumTracks => {
@@ -503,8 +503,8 @@ where
 
     let current_route = app.get_current_route();
     let highlight_state = (
-        current_route.active_block == ActiveBlock::SongTable,
-        current_route.hovered_block == ActiveBlock::SongTable,
+        current_route.active_block == ActiveBlock::TrackTable,
+        current_route.hovered_block == ActiveBlock::TrackTable,
     );
 
     let items = app

@@ -121,7 +121,7 @@ pub enum ActiveBlock {
     RecentlyPlayed,
     SearchResultBlock,
     SelectDevice,
-    SongTable,
+    TrackTable,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -135,7 +135,7 @@ pub enum RouteId {
     RecentlyPlayed,
     Search,
     SelectedDevice,
-    SongTable,
+    TrackTable,
 }
 
 pub struct Route {
@@ -523,7 +523,7 @@ impl App {
                         .collect::<Vec<FullTrack>>();
 
                     self.playlist_tracks = playlist_tracks.items;
-                    self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 };
             }
             None => {}
@@ -592,7 +592,7 @@ impl App {
 
                     self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(SongTableContext::SavedTracks);
-                    self.push_navigation_stack(RouteId::SongTable, ActiveBlock::SongTable);
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
                 Err(e) => {
                     self.handle_error(e);
