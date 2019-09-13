@@ -17,7 +17,7 @@ use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
-use app::{ActiveBlock, App};
+use app::{ActiveBlock, App, SearchResultBlock};
 use util::{Event, Events};
 
 const SCOPES: [&str; 7] = [
@@ -138,11 +138,11 @@ fn main() -> Result<(), failure::Error> {
                         if key == Key::Ctrl('c') {
                             break;
                         }
-                        let current_route = app.get_current_route().active_block;
+                        let current_active_block = app.get_current_route().active_block;
 
                         // To avoid swallowing the global key presses `q` and `-` make a special
                         // case for the input handler
-                        if current_route == ActiveBlock::Input {
+                        if current_active_block == ActiveBlock::Input {
                             handlers::handle_app(&mut app, key);
                         } else {
                             match key {
@@ -158,7 +158,23 @@ fn main() -> Result<(), failure::Error> {
                                     }
                                 }
                                 Key::Esc => {
-                                    app.set_current_route_state(Some(ActiveBlock::Empty), None);
+                                    if current_active_block == ActiveBlock::SearchResultBlock {
+                                        app.search_results.selected_block =
+                                            SearchResultBlock::Empty;
+                                    } else {
+                                        app.set_current_route_state(Some(ActiveBlock::Empty), None);
+                                    }
+                                }
+                                Key::Char('a') => {
+                                    if let Some(current_playback_context) =
+                                        &app.current_playback_context
+                                    {
+                                        if let Some(full_track) =
+                                            &current_playback_context.item.clone()
+                                        {
+                                            app.get_album_tracks(full_track.album.clone());
+                                        }
+                                    };
                                 }
                                 Key::Char('d') => {
                                     app.handle_get_devices();

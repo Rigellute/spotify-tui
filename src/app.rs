@@ -556,4 +556,26 @@ impl App {
                 .collect::<Vec<FullTrack>>();
         }
     }
+
+    pub fn get_album_tracks(&mut self, album: SimplifiedAlbum) {
+        if let Some(album_id) = &album.id {
+            if let Some(spotify) = &self.spotify {
+                match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
+                    Ok(tracks) => {
+                        self.selected_album = Some(SelectedAlbum {
+                            album,
+                            tracks,
+                            selected_index: Some(0),
+                        });
+
+                        self.album_table_context = AlbumTableContext::Simplified;
+                        self.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+                    }
+                    Err(e) => {
+                        self.handle_error(e);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,7 +1,4 @@
-use super::super::app::{
-    ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, SelectedAlbum,
-    SongTableContext,
-};
+use super::super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -135,30 +132,8 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                 &app.search_results.albums,
             ) {
                 if let Some(album) = albums_result.albums.items.get(index.to_owned()).cloned() {
-                    if let Some(album_id) = &album.id {
-                        app.track_table.context = Some(SongTableContext::AlbumSearch);
-                        if let Some(spotify) = &app.spotify {
-                            match spotify.album_track(&album_id.clone(), app.large_search_limit, 0)
-                            {
-                                Ok(tracks) => {
-                                    app.selected_album = Some(SelectedAlbum {
-                                        album,
-                                        tracks,
-                                        selected_index: Some(0),
-                                    });
-
-                                    app.album_table_context = AlbumTableContext::Simplified;
-                                    app.push_navigation_stack(
-                                        RouteId::AlbumTracks,
-                                        ActiveBlock::AlbumTracks,
-                                    );
-                                }
-                                Err(e) => {
-                                    app.handle_error(e);
-                                }
-                            }
-                        }
-                    }
+                    app.track_table.context = Some(SongTableContext::AlbumSearch);
+                    app.get_album_tracks(album);
                 };
             }
         }
