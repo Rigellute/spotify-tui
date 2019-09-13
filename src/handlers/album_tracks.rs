@@ -4,16 +4,6 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Esc => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-        }
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        // Press space to toggle playback
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
         k if common_key_events::left_event(k) => {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
@@ -40,9 +30,6 @@ pub fn handler(key: Key, app: &mut App) {
                 }
             }
         },
-        Key::Char('?') => {
-            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-        }
         k if common_key_events::up_event(k) => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
@@ -66,10 +53,6 @@ pub fn handler(key: Key, app: &mut App) {
                 }
             }
         },
-
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
-        }
         Key::Char('\n') => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {

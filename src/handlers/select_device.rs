@@ -5,7 +5,7 @@ use termion::event::Key;
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
-            app.set_current_route_state(Some(ActiveBlock::MyPlaylists), None);
+            app.set_current_route_state(Some(ActiveBlock::Library), None);
         }
         k if common_key_events::down_event(k) => {
             match &app.devices {

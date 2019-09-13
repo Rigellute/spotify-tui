@@ -4,15 +4,6 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Esc => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-        }
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
         k if common_key_events::down_event(k) => {
             let next_index = common_key_events::on_down_press_handler(
                 &LIBRARY_OPTIONS,
@@ -29,9 +20,6 @@ pub fn handler(key: Key, app: &mut App) {
                 Some(app.library.selected_index),
             );
             app.library.selected_index = next_index;
-        }
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         // This should probably be an array of structs with enums rather than just using indexes
         // like this

@@ -235,19 +235,6 @@ fn handle_enter_event_on_hovered_block(app: &mut App) {
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        // Press space to toggle playback
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
-        Key::Char('?') => {
-            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-        }
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
-        }
         Key::Esc => {
             app.search_results.selected_block = SearchResultBlock::Empty;
         }

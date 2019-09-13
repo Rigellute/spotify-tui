@@ -5,18 +5,6 @@ use termion::event::Key;
 // When no block is actively selected, just handle regular events
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
-        Key::Char('?') => {
-            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-        }
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
-        }
         Key::Char('\n') => {
             let current_hovered = app.get_current_route().hovered_block;
             app.set_current_route_state(Some(current_hovered), None);

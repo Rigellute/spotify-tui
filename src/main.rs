@@ -157,6 +157,26 @@ fn main() -> Result<(), failure::Error> {
                                         }
                                     }
                                 }
+                                Key::Esc => {
+                                    app.set_current_route_state(Some(ActiveBlock::Empty), None);
+                                }
+                                Key::Char('d') => {
+                                    app.handle_get_devices();
+                                }
+                                // Press space to toggle playback
+                                Key::Char(' ') => {
+                                    app.toggle_playback();
+                                }
+                                Key::Char('?') => {
+                                    app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
+                                }
+
+                                Key::Char('/') => {
+                                    app.set_current_route_state(
+                                        Some(ActiveBlock::Input),
+                                        Some(ActiveBlock::Input),
+                                    );
+                                }
                                 _ => handlers::handle_app(&mut app, key),
                             }
                         }

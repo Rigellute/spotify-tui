@@ -4,19 +4,6 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Esc => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-        }
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        // Press space to toggle playback
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
-        Key::Char('?') => {
-            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-        }
         k if common_key_events::right_event(k) => {
             match app.get_current_route().id {
                 RouteId::Search => {
@@ -62,9 +49,6 @@ pub fn handler(key: Key, app: &mut App) {
                 }
                 None => {}
             };
-        }
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
             if let (Some(playlists), Some(selected_playlist_index)) =

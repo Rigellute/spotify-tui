@@ -4,21 +4,8 @@ use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Esc => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-        }
-        Key::Char('d') => {
-            app.handle_get_devices();
-        }
-        // Press space to toggle playback
-        Key::Char(' ') => {
-            app.toggle_playback();
-        }
         k if common_key_events::left_event(k) => {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
-        }
-        Key::Char('?') => {
-            app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
         k if common_key_events::down_event(k) => {
             if let Some(recently_played_result) = &app.recently_played.result {
@@ -37,9 +24,6 @@ pub fn handler(key: Key, app: &mut App) {
                 );
                 app.recently_played.index = next_index;
             }
-        }
-        Key::Char('/') => {
-            app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         Key::Char('\n') => {
             if let Some(recently_played_result) = &app.recently_played.result.clone() {
@@ -74,7 +58,10 @@ mod tests {
     #[test]
     fn on_left_press() {
         let mut app = App::new();
-        app.set_current_route_state(Some(ActiveBlock::AlbumTracks), Some(ActiveBlock::AlbumTracks));
+        app.set_current_route_state(
+            Some(ActiveBlock::AlbumTracks),
+            Some(ActiveBlock::AlbumTracks),
+        );
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();
