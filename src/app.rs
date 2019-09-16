@@ -579,16 +579,20 @@ impl App {
         }
     }
 
+    fn set_saved_tracks_to_table(&mut self, saved_tracks: &Page<SavedTrack>) {
+        self.track_table.tracks = saved_tracks
+            .items
+            .clone()
+            .into_iter()
+            .map(|item| item.track)
+            .collect::<Vec<FullTrack>>();
+    }
+
     pub fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks(self.large_search_limit, offset) {
                 Ok(saved_tracks) => {
-                    self.track_table.tracks = saved_tracks
-                        .items
-                        .clone()
-                        .into_iter()
-                        .map(|item| item.track)
-                        .collect::<Vec<FullTrack>>();
+                    self.set_saved_tracks_to_table(&saved_tracks);
 
                     self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(SongTableContext::SavedTracks);
@@ -607,14 +611,10 @@ impl App {
             .library
             .saved_tracks
             .get_results(Some(self.library.saved_tracks.index + 1))
+            .cloned()
         {
             Some(saved_tracks) => {
-                self.track_table.tracks = saved_tracks
-                    .items
-                    .clone()
-                    .into_iter()
-                    .map(|item| item.track)
-                    .collect::<Vec<FullTrack>>();
+                self.set_saved_tracks_to_table(&saved_tracks);
                 self.library.saved_tracks.index += 1
             }
             None => {
@@ -631,13 +631,8 @@ impl App {
             self.library.saved_tracks.index -= 1;
         }
 
-        if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
-            self.track_table.tracks = saved_tracks
-                .items
-                .clone()
-                .into_iter()
-                .map(|item| item.track)
-                .collect::<Vec<FullTrack>>();
+        if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None).cloned() {
+            self.set_saved_tracks_to_table(&saved_tracks);
         }
     }
 
