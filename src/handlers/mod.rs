@@ -1,5 +1,6 @@
 mod album_list;
 mod album_tracks;
+mod artist_albums;
 mod common_key_events;
 mod empty;
 mod error_screen;
@@ -21,7 +22,7 @@ pub fn handle_app(app: &mut App, key: Key) {
     let current_route = app.get_current_route();
     match current_route.active_block {
         ActiveBlock::Artist => {
-            // TODO
+            artist_albums::handler(key, app);
         }
         ActiveBlock::Input => {
             input::handler(key, app);

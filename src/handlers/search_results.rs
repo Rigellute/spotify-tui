@@ -147,7 +147,13 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
             };
         }
         SearchResultBlock::ArtistSearch => {
-            // TODO: Go to artist view (not yet implemented)
+            if let Some(index) = &app.search_results.selected_artists_index {
+                if let Some(result) = app.search_results.artists.clone() {
+                    if let Some(artist) = result.artists.items.get(index.to_owned()) {
+                        app.get_artist_albums(&artist.id, &artist.name);
+                    };
+                };
+            };
         }
         SearchResultBlock::PlaylistSearch => {
             if let (Some(index), Some(playlists_result)) = (

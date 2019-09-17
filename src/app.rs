@@ -194,10 +194,18 @@ pub struct SelectedFullAlbum {
     pub selected_index: usize,
 }
 
+#[derive(Clone)]
+pub struct ArtistAlbums {
+    pub artist_name: String,
+    pub albums: Page<SimplifiedAlbum>,
+    pub selected_index: usize,
+}
+
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     path_to_cached_device_id: PathBuf,
+    pub artist_albums: Option<ArtistAlbums>,
     pub album_table_context: AlbumTableContext,
     pub saved_album_tracks_index: usize,
     pub api_error: String,
@@ -231,6 +239,7 @@ impl App {
         App {
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            artist_albums: None,
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
@@ -677,6 +686,30 @@ impl App {
                     self.handle_error(e);
                 }
             }
+        };
+    }
+
+    pub fn get_artist_albums(&mut self, artist_id: &str, artist_name: &str) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.artist_albums(
+                artist_id,
+                None,
+                None,
+                Some(self.large_search_limit),
+                Some(0),
+            ) {
+                Ok(result) => {
+                    self.artist_albums = Some(ArtistAlbums {
+                        artist_name: artist_name.to_owned(),
+                        selected_index: 0,
+                        albums: result,
+                    });
+                    self.push_navigation_stack(RouteId::Artist, ActiveBlock::Artist);
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
         };
     }
 }
