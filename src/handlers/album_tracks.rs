@@ -53,6 +53,25 @@ pub fn handler(key: Key, app: &mut App) {
                 }
             }
         },
+        Key::Char('s') => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        if let Some(selected_track) = selected_album
+                            .album
+                            .tracks
+                            .items
+                            .get(app.saved_album_tracks_index)
+                        {
+                            if let Some(track_id) = &selected_track.id {
+                                app.save_tracks(vec![track_id.clone()]);
+                            };
+                        };
+                    }
+                };
+            }
+            AlbumTableContext::Simplified => {}
+        },
         Key::Char('\n') => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
