@@ -1,3 +1,4 @@
+use super::super::app::{ActiveBlock, App, RouteId};
 use termion::event::Key;
 
 pub fn down_event(key: Key) -> bool {
@@ -59,6 +60,46 @@ pub fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usiz
         }
         None => 0,
     }
+}
+
+pub fn handle_right_event(app: &mut App) {
+    match app.get_current_route().hovered_block {
+        ActiveBlock::MyPlaylists | ActiveBlock::Library => {
+            match app.get_current_route().id {
+                RouteId::AlbumTracks => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::AlbumTracks),
+                        Some(ActiveBlock::AlbumTracks),
+                    );
+                }
+                RouteId::TrackTable => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::TrackTable),
+                        Some(ActiveBlock::TrackTable),
+                    );
+                }
+                RouteId::Search => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::SearchResultBlock),
+                        Some(ActiveBlock::SearchResultBlock),
+                    );
+                }
+                RouteId::Artist => {
+                    // TODO
+                }
+                RouteId::Home => {
+                    app.set_current_route_state(Some(ActiveBlock::Home), Some(ActiveBlock::Home));
+                }
+                _ => {}
+            }
+        }
+        _ => {}
+    };
+}
+
+pub fn handle_left_event(app: &mut App) {
+    // TODO: This should send you back to either library or playlist based on last selection
+    app.set_current_route_state(Some(ActiveBlock::Library), Some(ActiveBlock::Library));
 }
 
 #[cfg(test)]

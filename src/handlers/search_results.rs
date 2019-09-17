@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, SearchResultBlock, SongTableContext};
+use super::super::app::{App, SearchResultBlock, SongTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -231,16 +231,10 @@ pub fn handler(key: Key, app: &mut App) {
             app.search_results.selected_block = SearchResultBlock::Empty;
             match app.search_results.hovered_block {
                 SearchResultBlock::AlbumSearch => {
-                    app.set_current_route_state(
-                        Some(ActiveBlock::Empty),
-                        Some(ActiveBlock::Library),
-                    );
+                    common_key_events::handle_left_event(app);
                 }
                 SearchResultBlock::SongSearch => {
-                    app.set_current_route_state(
-                        Some(ActiveBlock::Empty),
-                        Some(ActiveBlock::Library),
-                    );
+                    common_key_events::handle_left_event(app);
                 }
                 SearchResultBlock::ArtistSearch => {
                     app.search_results.hovered_block = SearchResultBlock::SongSearch;

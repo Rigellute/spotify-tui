@@ -32,41 +32,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
             _ => {}
         },
-        k if common_key_events::right_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::MyPlaylists | ActiveBlock::Library => {
-                match app.get_current_route().id {
-                    RouteId::AlbumTracks => {
-                        app.set_current_route_state(
-                            Some(ActiveBlock::AlbumTracks),
-                            Some(ActiveBlock::AlbumTracks),
-                        );
-                    }
-                    RouteId::TrackTable => {
-                        app.set_current_route_state(
-                            Some(ActiveBlock::TrackTable),
-                            Some(ActiveBlock::TrackTable),
-                        );
-                    }
-                    RouteId::Search => {
-                        app.set_current_route_state(
-                            Some(ActiveBlock::SearchResultBlock),
-                            Some(ActiveBlock::SearchResultBlock),
-                        );
-                    }
-                    RouteId::Artist => {
-                        // TODO
-                    }
-                    RouteId::Home => {
-                        app.set_current_route_state(
-                            Some(ActiveBlock::Home),
-                            Some(ActiveBlock::Home),
-                        );
-                    }
-                    _ => {}
-                }
-            }
-            _ => {}
-        },
+        k if common_key_events::right_event(k) => common_key_events::handle_right_event(app),
         _ => (),
     };
 }

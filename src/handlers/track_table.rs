@@ -1,12 +1,10 @@
-use super::super::app::{ActiveBlock, App, SongTableContext, TrackTable};
+use super::super::app::{App, SongTableContext, TrackTable};
 use super::common_key_events;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        k if common_key_events::left_event(k) => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
-        }
+        k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
         k if common_key_events::down_event(k) => {
             let next_index = common_key_events::on_down_press_handler(
                 &app.track_table.tracks,

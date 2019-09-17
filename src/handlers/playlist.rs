@@ -1,29 +1,10 @@
-use super::super::app::{ActiveBlock, App, RouteId, SongTableContext};
+use super::super::app::{App, SongTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        k if common_key_events::right_event(k) => {
-            match app.get_current_route().id {
-                RouteId::Search => {
-                    app.set_current_route_state(Some(ActiveBlock::SearchResultBlock), None);
-                }
-                RouteId::TrackTable => {
-                    app.set_current_route_state(Some(ActiveBlock::TrackTable), None);
-                }
-                RouteId::AlbumTracks => {
-                    app.set_current_route_state(Some(ActiveBlock::AlbumTracks), None);
-                }
-                RouteId::Artist => {
-                    // TODO
-                }
-                RouteId::Home => {
-                    app.set_current_route_state(Some(ActiveBlock::Home), None);
-                }
-                _ => {}
-            };
-        }
+        k if common_key_events::right_event(k) => common_key_events::handle_right_event(app),
         k if common_key_events::down_event(k) => {
             match &app.playlists {
                 Some(p) => {
