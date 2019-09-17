@@ -668,4 +668,15 @@ impl App {
             }
         };
     }
+
+    pub fn shuffle(&mut self) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &self.current_playback_context) {
+            match spotify.shuffle(!context.shuffle_state, self.device_id.clone()) {
+                Ok(()) => {}
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        };
+    }
 }

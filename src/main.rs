@@ -189,6 +189,9 @@ fn main() -> Result<(), failure::Error> {
                                     app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
                                 }
 
+                                Key::Ctrl('s') => {
+                                    app.shuffle();
+                                }
                                 Key::Char('/') => {
                                     app.set_current_route_state(
                                         Some(ActiveBlock::Input),
