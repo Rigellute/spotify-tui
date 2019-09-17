@@ -39,6 +39,7 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::app::RouteId;
     use super::*;
 
     #[test]
