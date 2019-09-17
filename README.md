@@ -10,7 +10,11 @@ A Spotify client for the terminal written in Rust.
 
 ## Installation
 
-TODO: publish to `cargo` and `brew`.
+Not yet added package managers like `brew`, so for now:
+
+1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) (currently only for macOS).
+1. `cd` to the file you just downloaded and unzip
+1. `cd` to `spotify-ui` and run with `./spotify-tui`
 
 ## Connecting to Spotify’s API
 
