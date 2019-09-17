@@ -65,8 +65,6 @@ pub fn handler(key: Key, app: &mut App) {
                         };
                     }
                     SongTableContext::AlbumSearch => {}
-                    SongTableContext::SongSearch => {}
-                    SongTableContext::ArtistSearch => {}
                     SongTableContext::PlaylistSearch => {
                         let TrackTable {
                             selected_index,
@@ -112,8 +110,6 @@ pub fn handler(key: Key, app: &mut App) {
                         app.get_current_user_saved_tracks_next();
                     }
                     SongTableContext::AlbumSearch => {}
-                    SongTableContext::SongSearch => {}
-                    SongTableContext::ArtistSearch => {}
                     SongTableContext::PlaylistSearch => {}
                 },
                 None => {}
@@ -128,8 +124,6 @@ pub fn handler(key: Key, app: &mut App) {
                         app.get_current_user_saved_tracks_previous();
                     }
                     SongTableContext::AlbumSearch => {}
-                    SongTableContext::SongSearch => {}
-                    SongTableContext::ArtistSearch => {}
                     SongTableContext::PlaylistSearch => {}
                 },
                 None => {}

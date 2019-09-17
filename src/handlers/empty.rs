@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, RouteId};
+use super::super::app::{ActiveBlock, App};
 use super::common_key_events;
 use termion::event::Key;
 

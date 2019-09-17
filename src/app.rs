@@ -130,7 +130,6 @@ pub enum RouteId {
     AlbumList,
     Artist,
     Error,
-    HelpMenu,
     Home,
     RecentlyPlayed,
     Search,
@@ -149,8 +148,6 @@ pub struct Route {
 pub enum SongTableContext {
     MyPlaylists,
     AlbumSearch,
-    SongSearch,
-    ArtistSearch,
     PlaylistSearch,
     SavedTracks,
 }
