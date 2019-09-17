@@ -1,4 +1,6 @@
-use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
+use super::super::app::{
+    ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum, TrackTableContext,
+};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -24,6 +26,17 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Char('\n') => {
+            if let Some(artist_albums) = &mut app.artist_albums {
+                if let Some(selected_album) = artist_albums
+                    .albums
+                    .items
+                    .get(artist_albums.selected_index)
+                    .cloned()
+                {
+                    app.track_table.context = Some(TrackTableContext::AlbumSearch);
+                    app.get_album_tracks(selected_album);
+                }
+            };
             if let Some(albums) = app.library.saved_albums.get_results(None) {
                 if let Some(selected_album) = albums.items.get(app.album_list_index) {
                     app.selected_album_full = Some(SelectedFullAlbum {

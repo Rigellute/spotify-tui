@@ -1,4 +1,4 @@
-use super::super::app::{App, SongTableContext, TrackTable};
+use super::super::app::{App, TrackTableContext, TrackTable};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -27,7 +27,7 @@ pub fn handler(key: Key, app: &mut App) {
             } = &app.track_table;
             match &context {
                 Some(context) => match context {
-                    SongTableContext::MyPlaylists => {
+                    TrackTableContext::MyPlaylists => {
                         if let Some(_track) = tracks.get(*selected_index) {
                             let context_uri = match (&app.selected_playlist_index, &app.playlists) {
                                 (Some(selected_playlist_index), Some(playlists)) => {
@@ -49,7 +49,7 @@ pub fn handler(key: Key, app: &mut App) {
                             );
                         };
                     }
-                    SongTableContext::SavedTracks => {
+                    TrackTableContext::SavedTracks => {
                         if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
                             let track_uris: Vec<String> = saved_tracks
                                 .items
@@ -64,8 +64,8 @@ pub fn handler(key: Key, app: &mut App) {
                             );
                         };
                     }
-                    SongTableContext::AlbumSearch => {}
-                    SongTableContext::PlaylistSearch => {
+                    TrackTableContext::AlbumSearch => {}
+                    TrackTableContext::PlaylistSearch => {
                         let TrackTable {
                             selected_index,
                             tracks,
@@ -105,12 +105,12 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('d') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    SongTableContext::MyPlaylists => {}
-                    SongTableContext::SavedTracks => {
+                    TrackTableContext::MyPlaylists => {}
+                    TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_next();
                     }
-                    SongTableContext::AlbumSearch => {}
-                    SongTableContext::PlaylistSearch => {}
+                    TrackTableContext::AlbumSearch => {}
+                    TrackTableContext::PlaylistSearch => {}
                 },
                 None => {}
             };
@@ -119,12 +119,12 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('u') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    SongTableContext::MyPlaylists => {}
-                    SongTableContext::SavedTracks => {
+                    TrackTableContext::MyPlaylists => {}
+                    TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_previous();
                     }
-                    SongTableContext::AlbumSearch => {}
-                    SongTableContext::PlaylistSearch => {}
+                    TrackTableContext::AlbumSearch => {}
+                    TrackTableContext::PlaylistSearch => {}
                 },
                 None => {}
             };

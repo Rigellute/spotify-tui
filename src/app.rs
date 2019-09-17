@@ -145,7 +145,7 @@ pub struct Route {
 
 // Is it possible to compose enums?
 #[derive(PartialEq, Debug)]
-pub enum SongTableContext {
+pub enum TrackTableContext {
     MyPlaylists,
     AlbumSearch,
     PlaylistSearch,
@@ -175,7 +175,7 @@ pub struct SearchResult {
 pub struct TrackTable {
     pub tracks: Vec<FullTrack>,
     pub selected_index: usize,
-    pub context: Option<SongTableContext>,
+    pub context: Option<TrackTableContext>,
 }
 
 #[derive(Clone)]
@@ -601,7 +601,7 @@ impl App {
                     self.set_saved_tracks_to_table(&saved_tracks);
 
                     self.library.saved_tracks.add_pages(saved_tracks);
-                    self.track_table.context = Some(SongTableContext::SavedTracks);
+                    self.track_table.context = Some(TrackTableContext::SavedTracks);
                     self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
                 Err(e) => {

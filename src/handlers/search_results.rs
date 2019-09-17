@@ -1,4 +1,4 @@
-use super::super::app::{App, SearchResultBlock, SongTableContext};
+use super::super::app::{App, SearchResultBlock, TrackTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -132,7 +132,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                 &app.search_results.albums,
             ) {
                 if let Some(album) = albums_result.albums.items.get(index.to_owned()).cloned() {
-                    app.track_table.context = Some(SongTableContext::AlbumSearch);
+                    app.track_table.context = Some(TrackTableContext::AlbumSearch);
                     app.get_album_tracks(album);
                 };
             }
@@ -162,7 +162,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
             ) {
                 if let Some(playlist) = playlists_result.playlists.items.get(index) {
                     // Go to playlist tracks table
-                    app.track_table.context = Some(SongTableContext::PlaylistSearch);
+                    app.track_table.context = Some(TrackTableContext::PlaylistSearch);
                     let playlist_id = playlist.id.to_owned();
                     app.get_playlist_tracks(playlist_id);
                 };
