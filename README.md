@@ -1,4 +1,6 @@
 # Spotify TUI
+![](https://github.com/Rigellute/spotify-tui/workflows/Check/badge.svg)
+
 
 A Spotify client for the terminal written in Rust.
 
