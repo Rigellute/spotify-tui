@@ -15,12 +15,12 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         k if common_key_events::up_event(k) => {
-            if let Some(selected_album) = &mut app.selected_album {
+            if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
                 let next_index = common_key_events::on_up_press_handler(
-                    &selected_album.tracks.items,
-                    selected_album.selected_index,
+                    &albums.items,
+                    Some(app.album_list_index),
                 );
-                selected_album.selected_index = Some(next_index);
+                app.album_list_index = next_index;
             }
         }
         Key::Char('\n') => {
