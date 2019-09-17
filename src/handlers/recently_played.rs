@@ -25,6 +25,17 @@ pub fn handler(key: Key, app: &mut App) {
                 app.recently_played.index = next_index;
             }
         }
+        Key::Char('s') => {
+            if let Some(recently_played_result) = &app.recently_played.result.clone() {
+                if let Some(selected_track) =
+                    recently_played_result.items.get(app.recently_played.index)
+                {
+                    if let Some(track_id) = &selected_track.track.id {
+                        app.save_tracks(vec![track_id.clone()]);
+                    };
+                };
+            };
+        }
         Key::Char('\n') => {
             if let Some(recently_played_result) = &app.recently_played.result.clone() {
                 let track_uris: Vec<String> = recently_played_result

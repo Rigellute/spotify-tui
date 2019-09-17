@@ -20,13 +20,14 @@ use tui::Terminal;
 use app::{ActiveBlock, App, SearchResultBlock};
 use util::{Event, Events};
 
-const SCOPES: [&str; 7] = [
+const SCOPES: [&str; 8] = [
+    "playlist-read-private",
+    "user-library-modify",
+    "user-library-read",
     "user-modify-playback-state",
+    "user-read-currently-playing",
     "user-read-playback-state",
     "user-read-private",
-    "user-read-currently-playing",
-    "playlist-read-private",
-    "user-library-read",
     "user-read-recently-played",
 ];
 

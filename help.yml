@@ -1,6 +1,8 @@
 general:
   - key: a
     desc: "Jump to currently playing album"
+  - key: s
+    desc: "Save track"
   - key: "h | <Left Arrow Key>"
     desc: "Move selection left"
   - key: "j | <Down Arrow Key> | <Ctrl+n>"

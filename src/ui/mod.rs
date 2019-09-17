@@ -830,6 +830,7 @@ fn draw_table<B>(
     };
 
     let rows = items.iter().enumerate().map(|(i, item)| {
+        // Show this ♥ if the song is liked
         let mut formatted_row = item.format.clone();
         // First check if the item is under selection
         if i == selected_index {

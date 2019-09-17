@@ -657,4 +657,15 @@ impl App {
             }
         }
     }
+
+    pub fn save_tracks(&mut self, track_ids: Vec<String>) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_tracks_add(&track_ids) {
+                Ok(()) => {}
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        };
+    }
 }
