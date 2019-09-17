@@ -4,9 +4,11 @@ A Spotify client for the terminal written in Rust.
 
 ![Demo](https://user-images.githubusercontent.com/12150276/64545371-84af3580-d320-11e9-867d-c368fd888b3b.gif)
 
+## This is currently very early stage, expect bugs!
+
 ## Installation
 
-TODO
+TODO: publish to `cargo` and `brew`.
 
 ## Connecting to Spotify’s API
 
@@ -34,6 +36,10 @@ Once accepted you will be redirected to `localhost`. Copy the URL and paste into
 ## Limitations
 
 You need to have the official Spotify app open in order to play songs, but you can control all your devices with this app.
+
+## Usage
+
+When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
 
 ## Roadmap
 
