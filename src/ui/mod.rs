@@ -566,7 +566,14 @@ where
     let mut playing_text = vec![
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
-        Text::styled("\nPress <Esc> to return", Style::default().fg(Color::White)),
+        Text::styled(
+            "\nIf you are trying to play a track, make sure the official spotify app is open",
+            Style::default().fg(Color::White),
+        ),
+        Text::styled(
+            "\nPress <Esc> to return",
+            Style::default().fg(Color::Yellow),
+        ),
     ];
 
     if app.device_id.is_none() {

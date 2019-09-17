@@ -158,14 +158,18 @@ fn main() -> Result<(), failure::Error> {
                                         }
                                     }
                                 }
-                                Key::Esc => {
-                                    if current_active_block == ActiveBlock::SearchResultBlock {
+                                Key::Esc => match current_active_block {
+                                    ActiveBlock::SearchResultBlock => {
                                         app.search_results.selected_block =
                                             SearchResultBlock::Empty;
-                                    } else {
+                                    }
+                                    ActiveBlock::Error => {
+                                        app.pop_navigation_stack();
+                                    }
+                                    _ => {
                                         app.set_current_route_state(Some(ActiveBlock::Empty), None);
                                     }
-                                }
+                                },
                                 Key::Char('a') => {
                                     if let Some(current_playback_context) =
                                         &app.current_playback_context
