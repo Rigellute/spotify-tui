@@ -20,9 +20,11 @@ client_id: abc01de2fghijk345lmnop
 client_secret: qr6stu789vwxyz
 ```
 
-When you start `spotify-tui` with this set, you will be redirected to an official spotify webpage to ask you for permissions.
+Back in the Spotify dashboard for your newly created app, click "Edit settings" and add `http://localhost:8888/callback` to the `Redirect URIs`.
 
-Once accepted you will be redirected to `localhost` (this is temporary: eventually this will be a webpage with these instructions). Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
+When you start `spotify-tui` with this set, you will be redirected to an official Spotify webpage to ask you for permissions.
+
+Once accepted you will be redirected to `localhost`. Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
 
 ## Libraries used
 
@@ -31,13 +33,13 @@ Once accepted you will be redirected to `localhost` (this is temporary: eventual
 
 ## Limitations
 
-You need to have the spotify app open in order to play songs, but you can control all your devices with this app.
+You need to have the official Spotify app open in order to play songs, but you can control all your devices with this app.
 
 ## Roadmap
 
 Some core functionality does not yet exist, this table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
-The goal is to eventually implement every spotify feature.
+The goal is to eventually implement every Spotify feature.
 
 | API method                                        | Implemented yet? | Explanation                                                                                                                                                  | Essential? |
 | ------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
