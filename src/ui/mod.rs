@@ -39,7 +39,7 @@ where
     let rows = app
         .help_rows
         .iter()
-        .map(|item| Row::StyledData(item.into_iter(), gray));
+        .map(|item| Row::StyledData(item.iter(), gray));
 
     Table::new(header.iter(), rows)
         .block(
@@ -363,7 +363,7 @@ where
                     .items
                     .iter()
                     .map(|item| TableItem {
-                        id: item.id.clone().unwrap_or("".to_string()),
+                        id: item.id.clone().unwrap_or_else(|| "".to_string()),
                         format: vec![
                             item.track_number.to_string(),
                             item.name.to_owned(),
@@ -389,7 +389,7 @@ where
                         .items
                         .iter()
                         .map(|item| TableItem {
-                            id: item.id.clone().unwrap_or("".to_string()),
+                            id: item.id.clone().unwrap_or_else(|| "".to_string()),
                             format: vec![
                                 item.track_number.to_string(),
                                 item.name.to_owned(),
@@ -415,8 +415,7 @@ where
             f,
             app,
             layout_chunk,
-            &album_ui.title,
-            &header,
+            (&album_ui.title, &header),
             &album_ui.items,
             album_ui.selected_index,
             highlight_state,
@@ -458,7 +457,7 @@ where
         .tracks
         .iter()
         .map(|item| TableItem {
-            id: item.id.clone().unwrap_or("".to_string()),
+            id: item.id.clone().unwrap_or_else(|| "".to_string()),
             format: vec![
                 item.name.to_owned(),
                 create_artist_string(&item.artists),
@@ -472,8 +471,7 @@ where
         f,
         app,
         layout_chunk,
-        "Songs",
-        &header,
+        ("Songs", &header),
         &items,
         app.track_table.selected_index,
         highlight_state,
@@ -717,8 +715,7 @@ where
             f,
             app,
             layout_chunk,
-            "Saved Albums",
-            &header,
+            ("Saved Albums", &header),
             &items,
             selected_song_index,
             highlight_state,
@@ -759,7 +756,7 @@ where
             .items
             .iter()
             .map(|item| TableItem {
-                id: item.track.id.clone().unwrap_or("".to_string()),
+                id: item.track.id.clone().unwrap_or_else(|| "".to_string()),
                 format: vec![
                     item.track.name.to_owned(),
                     create_artist_string(&item.track.artists),
@@ -772,8 +769,7 @@ where
             f,
             app,
             layout_chunk,
-            "Recently Played Tracks",
-            &header,
+            ("Recently Played Tracks", &header),
             &items,
             selected_song_index,
             highlight_state,
@@ -811,8 +807,7 @@ fn draw_table<B>(
     f: &mut Frame<B>,
     app: &App,
     layout_chunk: Rect,
-    title: &str,
-    header_columns: &[TableHeader],
+    table_layout: (&str, &[TableHeader]), // (title, header colums)
     items: &[TableItem], // The nested vector must have the same length as the `header_columns`
     selected_index: usize,
     highlight_state: (bool, bool),
@@ -851,6 +846,8 @@ fn draw_table<B>(
         // Otherwise return default styling
         Row::StyledData(formatted_row.into_iter(), Style::default().fg(Color::White))
     });
+
+    let (title, header_columns) = table_layout;
 
     let widths = header_columns.iter().map(|h| h.width).collect::<Vec<u16>>();
 
