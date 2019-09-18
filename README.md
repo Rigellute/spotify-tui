@@ -1,6 +1,10 @@
 # Spotify TUI
 
-![](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg)
+![Continuous Integration](ci) ![License](license) ![Lines of Code](loc)
+
+[ci]: https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg
+[license]: https://img.shields.io/badge/license-MIT-blue.svg
+[loc]: https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code
 
 A Spotify client for the terminal written in Rust.
 
@@ -59,7 +63,7 @@ The goal is to eventually implement every Spotify feature.
 | tracks                                            | No               | returns a list of tracks given a list of track IDs, URIs, or URLs                                                                                            | No         |
 | artist                                            | No               | returns a single artist given the artist's ID, URI or URL                                                                                                    | Yes        |
 | artists                                           | No               | returns a list of artists given the artist IDs, URIs, or URLs                                                                                                | No         | Get Spotify catalog information about an artist's albums | Yes |
-| artist_albums                                     | No               | Get Spotify catalog information about an artist's top 10 tracks by country.                                                                                  | Yes        |
+| artist_albums                                     | Yes              | Get Spotify catalog information about an artist's top 10 tracks by country.                                                                                  | Yes        |
 | artist_top_tracks                                 | No               | Get Spotify catalog information about artists similar to an                                                                                                  | Yes        |
 | artist_related_artists                            | No               | Get Spotify catalog information about artists similar to an identified artist. Similarity is based on analysis of the Spotify community's listening history. | Yes        |
 | album                                             | Yes              | returns a single album given the album's ID, URIs or URL                                                                                                     | Yes        |
