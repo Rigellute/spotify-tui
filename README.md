@@ -1,10 +1,8 @@
 # Spotify TUI
 
-![Continuous Integration](ci) ![License](license) ![Lines of Code](loc)
-
-[ci]: https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg
-[license]: https://img.shields.io/badge/license-MIT-blue.svg
-[loc]: https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code
+![](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg)
+![](https://img.shields.io/badge/license-MIT-blueviolet.svg)
+![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
 
 A Spotify client for the terminal written in Rust.
 
