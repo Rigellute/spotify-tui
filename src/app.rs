@@ -676,9 +676,14 @@ impl App {
     }
 
     pub fn shuffle(&mut self) {
-        if let (Some(spotify), Some(context)) = (&self.spotify, &self.current_playback_context) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
+        {
             match spotify.shuffle(!context.shuffle_state, self.device_id.clone()) {
-                Ok(()) => {}
+                Ok(()) => {
+                    // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
+                    // due to polling playback context)
+                    context.shuffle_state = !context.shuffle_state;
+                }
                 Err(e) => {
                     self.handle_error(e);
                 }
