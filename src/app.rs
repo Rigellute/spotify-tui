@@ -13,10 +13,6 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io::Write;
-use std::path::PathBuf;
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -75,12 +71,6 @@ impl<T> ScrollableResultPages<T> {
 pub struct SpotifyResultAndSelectedIndex<T> {
     pub index: usize,
     pub result: T,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct ClientConfig {
-    pub client_id: String,
-    pub client_secret: String,
 }
 
 #[derive(Clone)]
@@ -201,7 +191,6 @@ pub struct ArtistAlbums {
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
-    path_to_cached_device_id: PathBuf,
     pub artist_albums: Option<ArtistAlbums>,
     pub album_table_context: AlbumTableContext,
     pub saved_album_tracks_index: usize,
@@ -285,7 +274,6 @@ impl App {
                 uris: None,
                 offset: None,
             },
-            path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
             instant_since_last_current_playback_poll: Instant::now(),
         }
     }
@@ -356,19 +344,6 @@ impl App {
                 }
             }
         }
-    }
-
-    // Perhaps this should be a yaml/json file for more cached options (e.g. locale data?)
-    pub fn get_cached_device_token(&self) -> Result<String, failure::Error> {
-        let input = fs::read_to_string(&self.path_to_cached_device_id)?;
-        Ok(input)
-    }
-
-    pub fn set_cached_device_token(&self, device_token: String) -> Result<(), failure::Error> {
-        let mut output = fs::File::create(&self.path_to_cached_device_id)?;
-        write!(output, "{}", device_token)?;
-
-        Ok(())
     }
 
     pub fn handle_get_devices(&mut self) {

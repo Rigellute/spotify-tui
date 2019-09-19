@@ -1,8 +1,10 @@
 mod app;
+mod config;
 mod handlers;
 mod ui;
 mod util;
 
+use config::Config;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
@@ -44,7 +46,6 @@ fn main() -> Result<(), failure::Error> {
     let mut oauth = SpotifyOAuth::default()
         .client_id(&client_config.client_id)
         .client_secret(&client_config.client_secret)
-        // TODO: use a webpage
         .redirect_uri("http://localhost:8888/callback")
         .scope(&SCOPES.join(" "))
         .build();
