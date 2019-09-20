@@ -36,18 +36,18 @@ When you start `spotify-tui` with this set, you will be redirected to an officia
 
 Once accepted you will be redirected to `localhost`. Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
 
-## Libraries used
+## Usage
 
-- [tui-rs](https://github.com/fdehau/tui-rs)
-- [rspotify](https://github.com/ramsayleung/rspotify)
+When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
 
 ## Limitations
 
 You need to have the official Spotify app open in order to play songs, but you can control all your devices with this app.
 
-## Usage
+## Libraries used
 
-When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
+- [tui-rs](https://github.com/fdehau/tui-rs)
+- [rspotify](https://github.com/ramsayleung/rspotify)
 
 ## Roadmap
 
