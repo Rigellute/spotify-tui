@@ -83,7 +83,7 @@ impl ClientConfig {
             println!("\nHow to get setup:\n");
 
             let instructions = [
-               "Go to the spotify dashboard - https://developer.spotify.com/dashboard/applications",
+               "Go to the Spotify dashboard - https://developer.spotify.com/dashboard/applications",
                "Click `Create a Client ID` and create an app",
                "Now click `Edit Settings`",
                &format!("Add `{}` to the Redirect URIs - you don't need anything running on localhost", LOCALHOST),
@@ -98,11 +98,11 @@ impl ClientConfig {
 
             // TODO: Handle empty input?
             let mut client_id = String::new();
-            println!("\nEnter your CLIENT_ID: ");
+            println!("\nEnter your Client ID: ");
             stdin().read_line(&mut client_id)?;
 
             let mut client_secret = String::new();
-            println!("\nEnter your CLIENT_SECRET: ");
+            println!("\nEnter your Client Secret: ");
             stdin().read_line(&mut client_secret)?;
 
             let config_yml = ClientConfig {

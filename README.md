@@ -23,16 +23,22 @@ Not yet added package managers like `brew`, so for now:
 `spotify-tui` needs to connect to Spotify’s API in order to find music by
 name, play tracks etc.
 
-To get this to work, you first need to sign up (or into) Spotify’s developer site, [create an _Application_][spotify-dev] and call it `spotify-tui` (or anything else). Once you’ve done so, you can find its `Client ID` and `Client Secret` values and enter them into your `spotify-tui` file at `${HOME}/.config/spotify-tui/client.yml`.
+Instructions on how to set this up will be shown when you first run the app.
 
-```yml
-client_id: abc01de2fghijk345lmnop
-client_secret: qr6stu789vwxyz
-```
+But here are they are again:
 
-Back in the Spotify dashboard for your newly created app, click "Edit settings" and add `http://localhost:8888/callback` to the `Redirect URIs`.
+1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
+1. Click `Create a Client ID` and create an app
+1. Now click `Edit Settings`
+1. Add `http://localhost:8888/callback` to the Redirect URIs - you don't need anything running on localhost, it will still work
+1. You are now ready to authenticate with Spotify!
+1. Go back to the terminal
+1. Enter you `Client ID`
+1. Enter you `Client Secret`
 
-When you start `spotify-tui` with this set, you will be redirected to an official Spotify webpage to ask you for permissions.
+You can edit the config at anytime at `${HOME}/.config/spotify-tui/client.yml`.
+
+After the `Client ID` and `Client Secret` are set you will be redirected to an official Spotify webpage to ask you for permissions.
 
 Once accepted you will be redirected to `localhost`. Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
 
