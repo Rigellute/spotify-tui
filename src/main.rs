@@ -1,9 +1,11 @@
 mod app;
+mod banner;
 mod config;
 mod handlers;
 mod ui;
 mod util;
 
+use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
@@ -18,6 +20,7 @@ use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
 use app::{ActiveBlock, App, SearchResultBlock};
+use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
 use util::{Event, Events};
 
@@ -33,6 +36,15 @@ const SCOPES: [&str; 8] = [
 ];
 
 fn main() -> Result<(), failure::Error> {
+    ClapApp::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .usage("Press `?` while running the app to see keybindings")
+        .before_help(BANNER)
+        .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
+        .get_matches();
+
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
 

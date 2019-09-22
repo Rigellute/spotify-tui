@@ -1,3 +1,4 @@
+use super::banner::BANNER;
 use dirs;
 use failure::err_msg;
 use serde::{Deserialize, Serialize};
@@ -75,8 +76,7 @@ impl ClientConfig {
 
             Ok(())
         } else {
-            let banner = fs::read_to_string("banner.txt")?;
-            println!("{}", banner);
+            println!("{}", BANNER);
 
             println!("Config will be saved to {}", config_file_path.display());
 
