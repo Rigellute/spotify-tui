@@ -25,7 +25,7 @@ name, play tracks etc.
 
 Instructions on how to set this up will be shown when you first run the app.
 
-But here are they are again:
+But here they are again:
 
 1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
 1. Click `Create a Client ID` and create an app
