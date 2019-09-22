@@ -34,10 +34,10 @@ pub fn handler(key: Key, app: &mut App) {
                     if let Some(selected_album) = albums.items.get(app.album_list_index) {
                         let next_index = common_key_events::on_up_press_handler(
                             &selected_album.album.tracks.items,
-                            Some(app.album_list_index),
+                            Some(app.saved_album_tracks_index),
                         );
 
-                        app.album_list_index = next_index;
+                        app.saved_album_tracks_index = next_index;
                     }
                 };
             }
