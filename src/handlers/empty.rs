@@ -27,7 +27,12 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::TrackTable => {
+            ActiveBlock::RecentlyPlayed
+            | ActiveBlock::AlbumTracks
+            | ActiveBlock::AlbumList
+            | ActiveBlock::Artist
+            | ActiveBlock::Home
+            | ActiveBlock::TrackTable => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
             _ => {}

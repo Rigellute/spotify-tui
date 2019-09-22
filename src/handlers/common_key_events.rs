@@ -78,6 +78,18 @@ pub fn handle_right_event(app: &mut App) {
                         Some(ActiveBlock::TrackTable),
                     );
                 }
+                RouteId::AlbumList => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::AlbumList),
+                        Some(ActiveBlock::AlbumList),
+                    );
+                }
+                RouteId::RecentlyPlayed => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::RecentlyPlayed),
+                        Some(ActiveBlock::RecentlyPlayed),
+                    );
+                }
                 RouteId::Search => {
                     app.set_current_route_state(
                         Some(ActiveBlock::SearchResultBlock),
@@ -90,7 +102,8 @@ pub fn handle_right_event(app: &mut App) {
                 RouteId::Home => {
                     app.set_current_route_state(Some(ActiveBlock::Home), Some(ActiveBlock::Home));
                 }
-                _ => {}
+                RouteId::SelectedDevice => {}
+                RouteId::Error => {}
             }
         }
         _ => {}
