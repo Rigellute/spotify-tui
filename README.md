@@ -125,4 +125,4 @@ The goal is to eventually implement every Spotify feature.
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |
 | shuffle                                           | No               | Toggle Shuffle For User’s Playback                                                                                                                           | Yes        |
 
-[spotify-dev]: https://developer.spotify.com/my-applications/#!/applications/create
+[spotify-dev]: https://developer.spotify.com/dashboard/applications
