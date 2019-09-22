@@ -30,48 +30,62 @@ pub fn handler(key: Key, app: &mut App) {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         Key::Char('\n') => {
-            if let Some(spotify) = &app.spotify {
+            if let Some(spotify) = app.spotify.clone() {
                 // TODO: This should be definable by the user
                 let country = Some(Country::UnitedKingdom);
 
-                let result = spotify
-                    .search_track(&app.input, app.small_search_limit, 0, country)
-                    // TODO handle the error properly
-                    .expect("Failed to fetch spotify tracks");
-
-                app.track_table.tracks = result.tracks.items.clone();
-                app.search_results.tracks = Some(result);
-
                 // Can I run these functions in parellel?
-                let result = spotify
-                    .search_artist(
-                        &app.input,
-                        app.small_search_limit,
-                        0,
-                        Some(Country::UnitedKingdom),
-                    )
-                    .expect("Failed to fetch artists");
-                app.search_results.artists = Some(result);
+                match spotify.search_track(&app.input, app.small_search_limit, 0, country) {
+                    Ok(result) => {
+                        app.track_table.tracks = result.tracks.items.clone();
+                        app.search_results.tracks = Some(result);
+                    }
+                    Err(e) => {
+                        app.handle_error(e);
+                    }
+                }
 
-                let result = spotify
-                    .search_album(
-                        &app.input,
-                        app.small_search_limit,
-                        0,
-                        Some(Country::UnitedKingdom),
-                    )
-                    .expect("Failed to fetch albums");
-                app.search_results.albums = Some(result);
+                match spotify.search_artist(
+                    &app.input,
+                    app.small_search_limit,
+                    0,
+                    Some(Country::UnitedKingdom),
+                ) {
+                    Ok(result) => {
+                        app.search_results.artists = Some(result);
+                    }
+                    Err(e) => {
+                        app.handle_error(e);
+                    }
+                }
 
-                let result = spotify
-                    .search_playlist(
-                        &app.input,
-                        app.small_search_limit,
-                        0,
-                        Some(Country::UnitedKingdom),
-                    )
-                    .expect("Failed to fetch playlists");
-                app.search_results.playlists = Some(result);
+                match spotify.search_album(
+                    &app.input,
+                    app.small_search_limit,
+                    0,
+                    Some(Country::UnitedKingdom),
+                ) {
+                    Ok(result) => {
+                        app.search_results.albums = Some(result);
+                    }
+                    Err(e) => {
+                        app.handle_error(e);
+                    }
+                }
+
+                match spotify.search_playlist(
+                    &app.input,
+                    app.small_search_limit,
+                    0,
+                    Some(Country::UnitedKingdom),
+                ) {
+                    Ok(result) => {
+                        app.search_results.playlists = Some(result);
+                    }
+                    Err(e) => {
+                        app.handle_error(e);
+                    }
+                }
 
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
