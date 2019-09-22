@@ -1,3 +1,4 @@
+use super::config::ClientConfig;
 use super::util::get_help;
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
@@ -14,9 +15,6 @@ use rspotify::spotify::model::search::{
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io::Write;
-use std::path::PathBuf;
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -75,12 +73,6 @@ impl<T> ScrollableResultPages<T> {
 pub struct SpotifyResultAndSelectedIndex<T> {
     pub index: usize,
     pub result: T,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct ClientConfig {
-    pub client_id: String,
-    pub client_secret: String,
 }
 
 #[derive(Clone)]
@@ -201,13 +193,12 @@ pub struct ArtistAlbums {
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
-    path_to_cached_device_id: PathBuf,
+    pub client_config: ClientConfig,
     pub artist_albums: Option<ArtistAlbums>,
     pub album_table_context: AlbumTableContext,
     pub saved_album_tracks_index: usize,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
-    pub device_id: Option<String>,
     pub devices: Option<DevicePayload>,
     pub input: String,
     pub input_cursor_position: u16,
@@ -237,6 +228,7 @@ impl App {
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
             artist_albums: None,
+            client_config: Default::default(),
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
@@ -257,7 +249,6 @@ impl App {
             help_rows: vec![], // This needs to get loading in form the `help.yml` file
             api_error: String::new(),
             current_playback_context: None,
-            device_id: None,
             devices: None,
             input: String::new(),
             input_cursor_position: 0,
@@ -285,7 +276,6 @@ impl App {
                 uris: None,
                 offset: None,
             },
-            path_to_cached_device_id: PathBuf::from(".cached_device_id.txt"),
             instant_since_last_current_playback_poll: Instant::now(),
         }
     }
@@ -358,19 +348,6 @@ impl App {
         }
     }
 
-    // Perhaps this should be a yaml/json file for more cached options (e.g. locale data?)
-    pub fn get_cached_device_token(&self) -> Result<String, failure::Error> {
-        let input = fs::read_to_string(&self.path_to_cached_device_id)?;
-        Ok(input)
-    }
-
-    pub fn set_cached_device_token(&self, device_token: String) -> Result<(), failure::Error> {
-        let mut output = fs::File::create(&self.path_to_cached_device_id)?;
-        write!(output, "{}", device_token)?;
-
-        Ok(())
-    }
-
     pub fn handle_get_devices(&mut self) {
         if let Some(spotify) = &self.spotify {
             if let Ok(result) = spotify.device() {
@@ -435,7 +412,7 @@ impl App {
     }
 
     pub fn pause_playback(&mut self) {
-        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.device_id) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
             match spotify.pause_playback(Some(device_id.to_string())) {
                 Ok(()) => {
                     self.get_current_playback();
@@ -482,7 +459,7 @@ impl App {
             None => None,
         };
 
-        let result = match &self.device_id {
+        let result = match &self.client_config.device_id {
             Some(device_id) => match &self.spotify {
                 Some(spotify) => spotify.start_playback(
                     Some(device_id.to_string()),
@@ -678,7 +655,7 @@ impl App {
     pub fn shuffle(&mut self) {
         if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
         {
-            match spotify.shuffle(!context.shuffle_state, self.device_id.clone()) {
+            match spotify.shuffle(!context.shuffle_state, self.client_config.device_id.clone()) {
                 Ok(()) => {
                     // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
                     // due to polling playback context)

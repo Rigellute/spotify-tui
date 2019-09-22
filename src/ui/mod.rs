@@ -576,7 +576,7 @@ where
         ),
     ];
 
-    if app.device_id.is_none() {
+    if app.client_config.device_id.is_none() {
         playing_text.push(Text::styled(
             "\nHint: Press `d` to go to device selection menu",
             Style::default().fg(Color::LightMagenta),
@@ -654,6 +654,7 @@ where
 
     let device_instructions = vec![
         "To play tracks, please select a device.",
+        "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select",
         "The official spotify app needs to remain open on your selected device in order for playback to work.",
         "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`.",
         "You can change playback device at any time by pressing `d`.",

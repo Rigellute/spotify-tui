@@ -38,8 +38,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Char('\n') => {
             if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {
-                    app.device_id = Some(device.id.clone());
-                    match app.set_cached_device_token(device.id.clone()) {
+                    match app.client_config.set_device_id(device.id.clone()) {
                         Ok(()) => {
                             app.pop_navigation_stack();
                         }

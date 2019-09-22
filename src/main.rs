@@ -1,4 +1,5 @@
 mod app;
+mod config;
 mod handlers;
 mod ui;
 mod util;
@@ -6,7 +7,6 @@ mod util;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
 use rspotify::spotify::util::get_token;
-use serde::{Deserialize, Serialize};
 use std::cmp::min;
 use std::io::{self, Write};
 use termion::cursor::Goto;
@@ -18,6 +18,7 @@ use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
 use app::{ActiveBlock, App, SearchResultBlock};
+use config::{ClientConfig, LOCALHOST};
 use util::{Event, Events};
 
 const SCOPES: [&str; 8] = [
@@ -31,21 +32,15 @@ const SCOPES: [&str; 8] = [
     "user-read-recently-played",
 ];
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct ClientConfig {
-    client_id: String,
-    client_secret: String,
-}
-
 fn main() -> Result<(), failure::Error> {
-    let client_config = util::get_config()?;
+    let mut client_config = ClientConfig::new();
+    client_config.load_config()?;
 
     // Start authorization with spotify
     let mut oauth = SpotifyOAuth::default()
         .client_id(&client_config.client_id)
         .client_secret(&client_config.client_secret)
-        // TODO: use a webpage
-        .redirect_uri("http://localhost:8888/callback")
+        .redirect_uri(LOCALHOST)
         .scope(&SCOPES.join(" "))
         .build();
 
@@ -64,6 +59,8 @@ fn main() -> Result<(), failure::Error> {
             // Initialise app state
             let mut app = App::new();
 
+            app.client_config = client_config;
+
             let client_credential = SpotifyClientCredentials::default()
                 .token_info(token_info)
                 .build();
@@ -76,14 +73,10 @@ fn main() -> Result<(), failure::Error> {
 
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
-            match app.get_cached_device_token() {
-                Ok(device_id) => {
-                    app.device_id = Some(device_id);
-                }
-                Err(_e) => {
-                    app.handle_get_devices();
-                }
+            if app.client_config.device_id.is_none() {
+                app.handle_get_devices();
             }
+
             let mut is_first_render = true;
 
             loop {
