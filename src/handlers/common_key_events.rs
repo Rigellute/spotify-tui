@@ -112,7 +112,7 @@ pub fn handle_right_event(app: &mut App) {
 
 pub fn handle_left_event(app: &mut App) {
     // TODO: This should send you back to either library or playlist based on last selection
-    app.set_current_route_state(Some(ActiveBlock::Library), Some(ActiveBlock::Library));
+    app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
 }
 
 #[cfg(test)]
