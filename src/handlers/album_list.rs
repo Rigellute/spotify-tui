@@ -53,7 +53,7 @@ mod tests {
 
         handler(Key::Left, &mut app);
         let current_route = app.get_current_route();
-        assert_eq!(current_route.active_block, ActiveBlock::Library);
+        assert_eq!(current_route.active_block, ActiveBlock::Empty);
         assert_eq!(current_route.hovered_block, ActiveBlock::Library);
     }
 
