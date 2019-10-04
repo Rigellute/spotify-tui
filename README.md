@@ -50,6 +50,8 @@ When running `spotify-tui` press `?` to bring up a help menu that shows currentl
 
 You need to have the official Spotify app open in order to play songs, but you can control all your devices with this app.
 
+If you want to play tracks, Spotify requires that you have a Premium account.
+
 ## Libraries used
 
 - [tui-rs](https://github.com/fdehau/tui-rs)
