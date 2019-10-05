@@ -1,5 +1,3 @@
-use super::app::Help;
-use std::fs;
 use std::io::stdin;
 use std::sync::mpsc;
 use std::thread;
@@ -74,11 +72,4 @@ impl Events {
     pub fn next(&self) -> Result<Event<Key>, mpsc::RecvError> {
         self.rx.recv()
     }
-}
-
-pub fn get_help() -> Result<Help, failure::Error> {
-    let help_str = fs::read_to_string("./help.yml")?;
-    let help: Help = serde_yaml::from_str(&help_str)?;
-
-    Ok(help)
 }

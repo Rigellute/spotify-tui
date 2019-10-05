@@ -1,7 +1,9 @@
+mod help;
 mod util;
 use super::app::{
     ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS,
 };
+use help::get_help_docs;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -22,7 +24,7 @@ pub struct TableHeader<'a> {
     width: u16,
 }
 
-pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
+pub fn draw_help_menu<B>(f: &mut Frame<B>)
 where
     B: Backend,
 {
@@ -36,8 +38,9 @@ where
     let gray = Style::default().fg(Color::White);
     let header = ["Context", "Event", "Description"];
 
-    let rows = app
-        .help_rows
+    let help_docs = get_help_docs();
+
+    let rows = help_docs
         .iter()
         .map(|item| Row::StyledData(item.iter(), gray));
 

@@ -48,11 +48,14 @@ fn main() -> Result<(), failure::Error> {
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
 
+    let config_paths = client_config.get_or_build_paths()?;
+
     // Start authorization with spotify
     let mut oauth = SpotifyOAuth::default()
         .client_id(&client_config.client_id)
         .client_secret(&client_config.client_secret)
         .redirect_uri(LOCALHOST)
+        .cache_path(config_paths.token_cache_path)
         .scope(&SCOPES.join(" "))
         .build();
 
@@ -104,7 +107,7 @@ fn main() -> Result<(), failure::Error> {
                 let current_route = app.get_current_route();
                 terminal.draw(|mut f| match current_route.active_block {
                     ActiveBlock::HelpMenu => {
-                        ui::draw_help_menu(&mut f, &app);
+                        ui::draw_help_menu(&mut f);
                     }
                     ActiveBlock::Error => {
                         ui::draw_error_screen(&mut f, &app);
@@ -194,7 +197,6 @@ fn main() -> Result<(), failure::Error> {
                                     app.toggle_playback();
                                 }
                                 Key::Char('?') => {
-                                    app.load_help_items();
                                     app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
                                 }
 

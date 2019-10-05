@@ -10,12 +10,18 @@ pub const LOCALHOST: &str = "http://localhost:8888/callback";
 const FILE_NAME: &str = "client.yml";
 const CONFIG_DIR: &str = ".config";
 const APP_CONFIG_DIR: &str = "spotify-tui";
+const TOKEN_CACHE_FILE: &str = ".spotify_token_cache.json";
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
     pub client_id: String,
     pub client_secret: String,
     pub device_id: Option<String>,
+}
+
+pub struct ConfigPaths {
+    pub config_file_path: PathBuf,
+    pub token_cache_path: PathBuf,
 }
 
 impl ClientConfig {
@@ -27,7 +33,7 @@ impl ClientConfig {
         }
     }
 
-    fn get_or_build_path(&self) -> Result<(PathBuf), failure::Error> {
+    pub fn get_or_build_paths(&self) -> Result<(ConfigPaths), failure::Error> {
         match dirs::home_dir() {
             Some(home) => {
                 let path = Path::new(&home);
@@ -43,31 +49,37 @@ impl ClientConfig {
                 }
 
                 let config_file_path = &app_config_dir.join(FILE_NAME);
+                let token_cache_path = &app_config_dir.join(TOKEN_CACHE_FILE);
 
-                Ok(config_file_path.to_path_buf())
+                let paths = ConfigPaths {
+                    config_file_path: config_file_path.to_path_buf(),
+                    token_cache_path: token_cache_path.to_path_buf(),
+                };
+
+                Ok(paths)
             }
             None => Err(err_msg("No $HOME directory found for client config")),
         }
     }
 
     pub fn set_device_id(&mut self, device_id: String) -> Result<(), failure::Error> {
-        let config_file_path = self.get_or_build_path()?;
-        let config_string = fs::read_to_string(&config_file_path)?;
+        let paths = self.get_or_build_paths()?;
+        let config_string = fs::read_to_string(&paths.config_file_path)?;
         let mut config_yml: ClientConfig = serde_yaml::from_str(&config_string)?;
 
         self.device_id = Some(device_id.clone());
         config_yml.device_id = Some(device_id);
 
         let new_config = serde_yaml::to_string(&config_yml)?;
-        let mut config_file = fs::File::create(&config_file_path)?;
+        let mut config_file = fs::File::create(&paths.config_file_path)?;
         write!(config_file, "{}", new_config)?;
         Ok(())
     }
 
     pub fn load_config(&mut self) -> Result<(), failure::Error> {
-        let config_file_path = self.get_or_build_path()?;
-        if config_file_path.exists() {
-            let config_string = fs::read_to_string(&config_file_path)?;
+        let paths = self.get_or_build_paths()?;
+        if paths.config_file_path.exists() {
+            let config_string = fs::read_to_string(&paths.config_file_path)?;
             let config_yml: ClientConfig = serde_yaml::from_str(&config_string)?;
 
             self.client_id = config_yml.client_id;
@@ -78,7 +90,10 @@ impl ClientConfig {
         } else {
             println!("{}", BANNER);
 
-            println!("Config will be saved to {}", config_file_path.display());
+            println!(
+                "Config will be saved to {}",
+                paths.config_file_path.display()
+            );
 
             println!("\nHow to get setup:\n");
 
@@ -113,7 +128,7 @@ impl ClientConfig {
 
             let content_yml = serde_yaml::to_string(&config_yml)?;
 
-            let mut new_config = fs::File::create(&config_file_path)?;
+            let mut new_config = fs::File::create(&paths.config_file_path)?;
             write!(new_config, "{}", content_yml)?;
 
             self.client_id = config_yml.client_id;
