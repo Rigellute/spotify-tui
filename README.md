@@ -63,6 +63,15 @@ Some core functionality does not yet exist, this table shows all that is possibl
 
 The goal is to eventually implement every Spotify feature.
 
+### High level requirements
+
+- The auth token does not currently automatically refresh - when you leave `spotify-tui` running for a while, you won't be able to control playback. And you'll need to quit and restart to get it working again.
+- Add songs to a playlist
+- Be able to like songs in every view, and see that a given track is already liked.
+- Be able to scroll through result pages in every view
+- View Library "Made for you"
+- View Library "Artists"
+
 | API method                                        | Implemented yet? | Explanation                                                                                                                                                  | Essential? |
 | ------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
 | track                                             | No               | returns a single track given the track's ID, URI or URL                                                                                                      | No         |
