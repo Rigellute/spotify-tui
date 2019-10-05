@@ -3,6 +3,7 @@ mod util;
 use super::app::{
     ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS,
 };
+use super::banner::BANNER;
 use help::get_help_docs;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -157,7 +158,7 @@ where
             draw_album_list(f, app, chunks[1]);
         }
         RouteId::Home => {
-            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Home, "Home");
+            draw_home(f, app, chunks[1]);
         }
         RouteId::MadeForYou => {
             draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::MadeForYou, "Made For You");
@@ -606,6 +607,32 @@ where
                 .border_style(Style::default().fg(Color::Red)),
         )
         .render(f, chunks[0]);
+}
+
+fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let current_route = app.get_current_route();
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::Home,
+        current_route.hovered_block == ActiveBlock::Home,
+    );
+    let display_block = Block::default()
+        .title("Welcome!")
+        .borders(Borders::ALL)
+        .title_style(get_color(highlight_state))
+        .border_style(get_color(highlight_state));
+
+    let text = vec![
+        Text::styled(BANNER, Style::default().fg(Color::LightCyan)), 
+        Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui"),
+    ];
+
+    Paragraph::new(text.iter())
+        .style(Style::default().fg(Color::White))
+        .block(display_block)
+        .render(f, layout_chunk);
 }
 
 fn draw_not_implemented_yet<B>(
