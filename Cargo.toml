@@ -2,6 +2,7 @@
 name = "spotify-tui"
 description = "A terminal user interface for Spotify"
 homepage = "https://github.com/Rigellute/spotify-tui"
+documentation = "https://github.com/Rigellute/spotify-tui"
 repository = "https://github.com/Rigellute/spotify-tui"
 keywords = ["spotify", "tui", "cli", "terminal"]
 categories = ["command-line-utilities"]
