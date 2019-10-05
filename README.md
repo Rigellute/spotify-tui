@@ -12,11 +12,17 @@ A Spotify client for the terminal written in Rust.
 
 ## Installation
 
-Not yet added package managers like `brew`, so for now:
+### Homebrew
+
+```bash
+brew install Rigellute/tap/spotify-tui
+```
+
+### Manual
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) (currently only for macOS).
 1. `cd` to the file you just downloaded and unzip
-1. `cd` to `spotify-ui` and run with `./spotify-tui`
+1. `cd` to `spotify-ui` and run with `./spt`
 
 ## Connecting to Spotify’s API
 
@@ -43,6 +49,8 @@ After the `Client ID` and `Client Secret` are set you will be redirected to an o
 Once accepted you will be redirected to `localhost`. Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
 
 ## Usage
+
+The binary is named `spt`.
 
 When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
 
