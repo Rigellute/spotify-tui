@@ -581,7 +581,7 @@ where
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
         Text::styled(
-            "\nIf you are trying to play a track, make sure the official spotify app is open",
+            "\nIf you are trying to play a track, make sure the official spotify app is open.\nIn addition, you must have a Spotify Premium account to control playback.",
             Style::default().fg(Color::White),
         ),
         Text::styled(
