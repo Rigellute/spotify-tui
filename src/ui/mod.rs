@@ -150,13 +150,23 @@ where
         RouteId::Artist => {
             draw_artist_albums(f, app, chunks[1]);
         }
-        RouteId::Home => {
-            draw_home(f, app, chunks[1]);
-        }
         RouteId::AlbumList => {
             draw_album_list(f, app, chunks[1]);
         }
-        _ => {}
+        RouteId::Home => {
+            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Home, "Home");
+        }
+        RouteId::MadeForYou => {
+            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::MadeForYou, "Made For You");
+        }
+        RouteId::Artists => {
+            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Artists, "Artists");
+        }
+        RouteId::Podcasts => {
+            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Podcasts, "Podcasts");
+        }
+        RouteId::Error => {} // This is handled as a "full screen" route in main.rs
+        RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
     };
 }
 
@@ -595,21 +605,31 @@ where
         .render(f, chunks[0]);
 }
 
-// TODO: fill out home page
-fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
+fn draw_not_implemented_yet<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    block: ActiveBlock,
+    title: &str,
+) where
     B: Backend,
 {
     let current_route = app.get_current_route();
     let highlight_state = (
-        current_route.active_block == ActiveBlock::Home,
-        current_route.hovered_block == ActiveBlock::Home,
+        current_route.active_block == block,
+        current_route.hovered_block == block,
     );
-    Block::default()
-        .title("Home")
+    let display_block = Block::default()
+        .title(title)
         .borders(Borders::ALL)
         .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state))
+        .border_style(get_color(highlight_state));
+
+    let text = vec![Text::raw("Not implemented yet!")];
+
+    Paragraph::new(text.iter())
+        .style(Style::default().fg(Color::White))
+        .block(display_block)
         .render(f, layout_chunk);
 }
 

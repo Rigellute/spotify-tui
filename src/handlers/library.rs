@@ -23,7 +23,9 @@ pub fn handler(key: Key, app: &mut App) {
         // like this
         Key::Char('\n') => match app.library.selected_index {
             // Made For You,
-            0 => {}
+            0 => {
+                app.push_navigation_stack(RouteId::MadeForYou, ActiveBlock::MadeForYou);
+            }
             // Recently Played,
             1 => {
                 if let Some(spotify) = &app.spotify {
@@ -65,9 +67,14 @@ pub fn handler(key: Key, app: &mut App) {
                 };
             }
             //  Artists,
-            4 => {}
+            4 => {
+                app.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
+            }
             // Podcasts,
-            5 => {}
+            5 => {
+                app.push_navigation_stack(RouteId::Podcasts, ActiveBlock::Podcasts);
+            }
+            // This is required because Rust can't tell if this pattern in exhaustive
             _ => {}
         },
         _ => (),

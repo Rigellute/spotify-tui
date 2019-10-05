@@ -1,6 +1,7 @@
 mod album_list;
 mod album_tracks;
 mod artist_albums;
+mod artists;
 mod common_key_events;
 mod empty;
 mod error_screen;
@@ -8,7 +9,9 @@ mod help_menu;
 mod home;
 mod input;
 mod library;
+mod made_for_you;
 mod playlist;
+mod podcasts;
 mod recently_played;
 mod search_results;
 mod select_device;
@@ -62,6 +65,15 @@ pub fn handle_app(app: &mut App, key: Key) {
         }
         ActiveBlock::RecentlyPlayed => {
             recently_played::handler(key, app);
+        }
+        ActiveBlock::Artists => {
+            artists::handler(key, app);
+        }
+        ActiveBlock::MadeForYou => {
+            made_for_you::handler(key, app);
+        }
+        ActiveBlock::Podcasts => {
+            podcasts::handler(key, app);
         }
     }
 }

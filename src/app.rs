@@ -110,10 +110,13 @@ pub enum ActiveBlock {
     Input,
     Library,
     MyPlaylists,
+    Podcasts,
     RecentlyPlayed,
     SearchResultBlock,
     SelectDevice,
     TrackTable,
+    MadeForYou,
+    Artists,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -127,6 +130,9 @@ pub enum RouteId {
     Search,
     SelectedDevice,
     TrackTable,
+    MadeForYou,
+    Artists,
+    Podcasts,
 }
 
 pub struct Route {

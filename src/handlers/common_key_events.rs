@@ -78,10 +78,28 @@ pub fn handle_right_event(app: &mut App) {
                         Some(ActiveBlock::TrackTable),
                     );
                 }
+                RouteId::Podcasts => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::Podcasts),
+                        Some(ActiveBlock::Podcasts),
+                    );
+                }
                 RouteId::AlbumList => {
                     app.set_current_route_state(
                         Some(ActiveBlock::AlbumList),
                         Some(ActiveBlock::AlbumList),
+                    );
+                }
+                RouteId::MadeForYou => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::MadeForYou),
+                        Some(ActiveBlock::MadeForYou),
+                    );
+                }
+                RouteId::Artists => {
+                    app.set_current_route_state(
+                        Some(ActiveBlock::Artists),
+                        Some(ActiveBlock::Artists),
                     );
                 }
                 RouteId::RecentlyPlayed => {
