@@ -625,7 +625,7 @@ where
         .border_style(get_color(highlight_state));
 
     let text = vec![
-        Text::styled(BANNER, Style::default().fg(Color::LightCyan)), 
+        Text::styled(BANNER, Style::default().fg(Color::LightCyan)),
         Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui"),
     ];
 
