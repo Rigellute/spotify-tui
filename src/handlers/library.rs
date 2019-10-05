@@ -19,7 +19,7 @@ pub fn handler(key: Key, app: &mut App) {
             );
             app.library.selected_index = next_index;
         }
-        // This should probably be an array of structs with enums rather than just using indexes
+        // `library` should probably be an array of structs with enums rather than just using indexes
         // like this
         Key::Char('\n') => match app.library.selected_index {
             // Made For You,
