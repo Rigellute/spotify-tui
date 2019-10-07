@@ -707,7 +707,7 @@ where
         "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select",
         "The official spotify app needs to remain open on your selected device in order for playback to work.",
         "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`.",
-        "You can change playback device at any time by pressing `d`.",
+        "You can change the playback device at any time by pressing `d`.",
     ];
 
     Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
@@ -720,7 +720,7 @@ where
         )
         .render(f, chunks[0]);
 
-    let no_device_message = vec!["No devices found: Make sure a device has is active".to_string()];
+    let no_device_message = vec!["No devices found: Make sure a device is active".to_string()];
 
     let items = match &app.devices {
         Some(items) => {
