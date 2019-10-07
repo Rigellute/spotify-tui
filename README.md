@@ -20,13 +20,15 @@ brew install Rigellute/tap/spotify-tui
 
 ### Cargo (Linux)
 
-If you already have the Rust toolchain installed, you can build from source and install using
+Eventually, there should be prebuilt binaries available in the Github release, but until then you can install via Rust's package mananger `cargo`.
+
+First, install [Rust](https://www.rust-lang.org/tools/install) (using the recommended `rustup` installation method) and then
 
 ```bash
 cargo install spotify-tui
 ```
 
-This method has the benefit of supporting more architectures.
+This method will build the binary from source, so has the benefit of supporting more architectures.
 
 I've only tested on Ubuntu and Debian, but I expect this to work on other Linux distros.
 
