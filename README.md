@@ -12,15 +12,13 @@ A Spotify client for the terminal written in Rust.
 
 The binary executable is `spt`.
 
-### Homebrew
+### Homebrew (macOS)
 
 ```bash
 brew install Rigellute/tap/spotify-tui
 ```
 
-Currently, this will only work for macOS.
-
-### Cargo
+### Cargo (Linux)
 
 If you already have the Rust toolchain installed, you can build from source and install using
 
@@ -29,6 +27,8 @@ cargo install spotify-tui
 ```
 
 This method has the benefit of supporting more architectures.
+
+I've only tested on Ubuntu and Debian, but I expect this to work on other Linux distros.
 
 ### Manual
 
