@@ -13,6 +13,7 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
+use rspotify::spotify::senum::RepeatState;
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -589,6 +590,26 @@ impl App {
                 }
             }
         };
+    }
+
+    pub fn repeat(&mut self) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context) {
+            let next_repeat_state = match context.repeat_state {
+                RepeatState::Off => RepeatState::Context,
+                RepeatState::Context => RepeatState::Track,
+                RepeatState::Track => RepeatState::Off,
+            };
+            match spotify.repeat(next_repeat_state, self.client_config.device_id.clone()) {
+                Ok(()) => {
+                    // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
+                    // due to polling playback context)
+                    context.repeat_state = next_repeat_state;
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
     }
 
     pub fn get_artist_albums(&mut self, artist_id: &str, artist_name: &str) {

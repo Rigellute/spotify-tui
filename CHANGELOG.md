@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `Ctrl-r` to cycle repeat mode
+
 ## [0.0.2] - 2019-09-17
 
 ### Added
