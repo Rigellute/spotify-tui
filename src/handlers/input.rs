@@ -163,6 +163,7 @@ mod tests {
 
         app.input = "My tex".to_string();
         app.input_cursor_position = app.input.len().try_into().unwrap();
+        app.input_idx = app.input.len();
 
         handler(Key::Char('t'), &mut app);
 
@@ -175,6 +176,7 @@ mod tests {
 
         app.input = "My text".to_string();
         app.input_cursor_position = app.input.len().try_into().unwrap();
+        app.input_idx = app.input.len();
 
         handler(Key::Backspace, &mut app);
         assert_eq!(app.input, "My tex".to_string());
