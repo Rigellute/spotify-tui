@@ -53,14 +53,15 @@ But here they are again:
 1. Add `http://localhost:8888/callback` to the Redirect URIs - you don't need anything running on localhost, it will still work
 1. You are now ready to authenticate with Spotify!
 1. Go back to the terminal
-1. Enter you `Client ID`
-1. Enter you `Client Secret`
+1. Run `spt`
+1. Enter your `Client ID`
+1. Enter your `Client Secret`
+1. You will be redirected to an official Spotify webpage to ask you for permissions.
+1. After accepting the permissions, you'll be redirected to localhost (blank webpage), copy the URL and paste into the prompt in the terminal.
+
+And now you are ready to use the `spotify-tui` 🎉
 
 You can edit the config at anytime at `${HOME}/.config/spotify-tui/client.yml`.
-
-After the `Client ID` and `Client Secret` are set you will be redirected to an official Spotify webpage to ask you for permissions.
-
-Once accepted you will be redirected to `localhost`. Copy the URL and paste into the prompt back in the terminal. And now you are ready to use the `spotify-tui`!
 
 ## Usage
 
