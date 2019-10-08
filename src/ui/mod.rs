@@ -5,6 +5,7 @@ use super::app::{
 };
 use super::banner::BANNER;
 use help::get_help_docs;
+use rspotify::spotify::senum::RepeatState;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -518,9 +519,15 @@ where
                 "Off"
             };
 
+            let repeat_text = match current_playback_context.repeat_state {
+                RepeatState::Off => "Off",
+                RepeatState::Track => "Track",
+                RepeatState::Context => "All",
+            };
+
             let title = format!(
-                "{} ({} | Shuffle: {})",
-                play_title, current_playback_context.device.name, shuffle_text
+                "{} ({} | Shuffle: {} | Repeat: {})",
+                play_title, current_playback_context.device.name, shuffle_text, repeat_text
             );
 
             Block::default()

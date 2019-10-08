@@ -160,8 +160,8 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | next_track                                        | No               | Skip User’s Playback To Next Track                                                                                                                           | Yes        |
 | previous_track                                    | No               | Skip User’s Playback To Previous Track                                                                                                                       | Yes        |
 | seek_track                                        | No               | Seek To Position In Currently Playing Track                                                                                                                  | Yes        |
-| repeat                                            | No               | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
+| repeat                                            | Yes              | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |
-| shuffle                                           | No               | Toggle Shuffle For User’s Playback                                                                                                                           | Yes        |
+| shuffle                                           | Yes              | Toggle Shuffle For User’s Playback                                                                                                                           | Yes        |
 
 [spotify-dev]: https://developer.spotify.com/dashboard/applications

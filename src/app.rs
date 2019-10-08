@@ -13,6 +13,7 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
+use rspotify::spotify::senum::{Country, RepeatState};
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -215,6 +216,7 @@ pub struct App {
     pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
     pub album_list_index: usize,
+    pub country: Country,
 }
 
 impl App {
@@ -267,6 +269,7 @@ impl App {
                 offset: None,
             },
             instant_since_last_current_playback_poll: Instant::now(),
+            country: Country::UnitedKingdom, // TODO: This should be definable by the user
         }
     }
 
@@ -591,12 +594,33 @@ impl App {
         };
     }
 
+    pub fn repeat(&mut self) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
+        {
+            let next_repeat_state = match context.repeat_state {
+                RepeatState::Off => RepeatState::Context,
+                RepeatState::Context => RepeatState::Track,
+                RepeatState::Track => RepeatState::Off,
+            };
+            match spotify.repeat(next_repeat_state, self.client_config.device_id.clone()) {
+                Ok(()) => {
+                    // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
+                    // due to polling playback context)
+                    context.repeat_state = next_repeat_state;
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
+    }
+
     pub fn get_artist_albums(&mut self, artist_id: &str, artist_name: &str) {
         if let Some(spotify) = &self.spotify {
             match spotify.artist_albums(
                 artist_id,
                 None,
-                None,
+                Some(self.country.clone()),
                 Some(self.large_search_limit),
                 Some(0),
             ) {

@@ -203,6 +203,9 @@ fn main() -> Result<(), failure::Error> {
                                 Key::Ctrl('s') => {
                                     app.shuffle();
                                 }
+                                Key::Ctrl('r') => {
+                                    app.repeat();
+                                }
                                 Key::Char('/') => {
                                     app.set_current_route_state(
                                         Some(ActiveBlock::Input),
