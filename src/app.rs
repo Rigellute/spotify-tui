@@ -595,7 +595,8 @@ impl App {
     }
 
     pub fn repeat(&mut self) {
-        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
+        {
             let next_repeat_state = match context.repeat_state {
                 RepeatState::Off => RepeatState::Context,
                 RepeatState::Context => RepeatState::Track,

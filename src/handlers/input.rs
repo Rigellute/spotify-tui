@@ -31,7 +31,12 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Char('\n') => {
             if let Some(spotify) = app.spotify.clone() {
                 // Can I run these functions in parellel?
-                match spotify.search_track(&app.input, app.small_search_limit, 0, Some(app.country.clone())) {
+                match spotify.search_track(
+                    &app.input,
+                    app.small_search_limit,
+                    0,
+                    Some(app.country.clone()),
+                ) {
                     Ok(result) => {
                         app.track_table.tracks = result.tracks.items.clone();
                         app.search_results.tracks = Some(result);
