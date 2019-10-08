@@ -13,7 +13,7 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
-use rspotify::spotify::senum::RepeatState;
+use rspotify::spotify::senum::{Country, RepeatState};
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -216,6 +216,7 @@ pub struct App {
     pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
     pub album_list_index: usize,
+    pub country: Country,
 }
 
 impl App {
@@ -268,6 +269,7 @@ impl App {
                 offset: None,
             },
             instant_since_last_current_playback_poll: Instant::now(),
+            country: Country::UnitedKingdom, // TODO: This should be definable by the user
         }
     }
 
@@ -617,7 +619,7 @@ impl App {
             match spotify.artist_albums(
                 artist_id,
                 None,
-                None,
+                Some(self.country.clone()),
                 Some(self.large_search_limit),
                 Some(0),
             ) {
