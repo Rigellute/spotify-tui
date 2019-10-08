@@ -20,7 +20,7 @@ brew install Rigellute/tap/spotify-tui
 
 ### Cargo (Linux)
 
-Eventually, there should be prebuilt binaries available in the Github release, but until then you can install via Rust's package mananger `cargo`.
+Eventually, there should be prebuilt binaries available in the Github release, but until then you can install via Rust's package manager `cargo`.
 
 First, install [Rust](https://www.rust-lang.org/tools/install) (using the recommended `rustup` installation method) and then
 
@@ -57,7 +57,7 @@ But here they are again:
 1. Enter your `Client ID`
 1. Enter your `Client Secret`
 1. You will be redirected to an official Spotify webpage to ask you for permissions.
-1. After accepting the permissions, you'll be redirected to localhost (blank webpage), copy the URL and paste into the prompt in the terminal.
+1. After accepting the permissions, you'll be redirected to localhost (blank webpage, might say something like "Connection Refused" since no server is running), copy the URL and paste into the prompt in the terminal.
 
 And now you are ready to use the `spotify-tui` 🎉
 
@@ -89,9 +89,16 @@ The goal is to eventually implement almost every Spotify feature.
 - The auth token does not currently automatically refresh - when you leave `spotify-tui` running for a while, you won't be able to control playback. And you'll need to quit and restart to get it working again.
 - Add songs to a playlist
 - Be able to like songs in every view, and see that a given track is already liked.
+- Unlike songs
+- See if a song is liked
 - Be able to scroll through result pages in every view
 - View Library "Made for you"
 - View Library "Artists"
+- Make the play bar hoverable with its own event handlers that would
+  - Like the playing song
+  - Navigate to song info
+- Implement seek (could use `<` and `>` to skip 5 seconds forwards and backwards)
+- Skip to next track (use `n` for next and `p` for previous)
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
