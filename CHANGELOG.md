@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `Ctrl-r` to cycle repeat mode
 - Fix duplicate albums showing in artist discographies
 
+## [0.0.4] - 2019-10-05
+
+### Added
+
+- Can now install `spotify-tui` using `brew reinstall Rigellute/tap/spotify-tui` and `cargo install spotify-tui` 🎉
+- Credentials (auth token, chosen device, and CLIENT_ID & CLIENT_SECRET) are now all stored in the same place (`${HOME}/.config/spotify-tui/client.yml`), which closes [this issue](https://github.com/Rigellute/spotify-tui/issues/4)
+
+## [0.0.3] - 2019-10-04
+
+### Added
+
+- Improved onboarding experience
+- On first startup instructions will (hopefully) guide the user on how to get setup
+
 ## [0.0.2] - 2019-09-17
 
 ### Added
