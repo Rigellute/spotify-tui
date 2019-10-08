@@ -7,10 +7,11 @@ mod util;
 
 use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
-use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
+use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
 use rspotify::spotify::util::get_token;
 use std::cmp::min;
 use std::io::{self, Write};
+use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
 use termion::input::MouseTerminal;
@@ -34,6 +35,23 @@ const SCOPES: [&str; 8] = [
     "user-read-private",
     "user-read-recently-played",
 ];
+
+fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
+    let token_expiry = Instant::now()
+        + Duration::from_secs(token_info.expires_in.into())
+        // Set 10 seconds early
+        - Duration::from_secs(10);
+
+    let client_credential = SpotifyClientCredentials::default()
+        .token_info(token_info)
+        .build();
+
+    let spotify = Spotify::default()
+        .client_credentials_manager(client_credential)
+        .build();
+
+    (spotify, token_expiry)
+}
 
 fn main() -> Result<(), failure::Error> {
     ClapApp::new(env!("CARGO_PKG_NAME"))
@@ -73,16 +91,9 @@ fn main() -> Result<(), failure::Error> {
 
             // Initialise app state
             let mut app = App::new();
+            let (mut spotify, mut token_expiry) = get_spotify(token_info);
 
             app.client_config = client_config;
-
-            let client_credential = SpotifyClientCredentials::default()
-                .token_info(token_info)
-                .build();
-
-            let spotify = Spotify::default()
-                .client_credentials_manager(client_credential)
-                .build();
 
             app.spotify = Some(spotify);
 
@@ -141,6 +152,19 @@ fn main() -> Result<(), failure::Error> {
 
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace
                 io::stdout().flush().ok();
+
+                if Instant::now() > token_expiry {
+                    // refresh token
+                    if let Some(new_token_info) = get_token(&mut oauth) {
+                        let (new_spotify, new_token_expiry) = get_spotify(new_token_info);
+                        spotify = new_spotify;
+                        token_expiry = new_token_expiry;
+                        app.spotify = Some(spotify);
+                    } else {
+                        println!("\nFailed to refresh authentication token");
+                        break;
+                    }
+                }
 
                 match events.next()? {
                     Event::Input(key) => {
