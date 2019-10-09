@@ -94,7 +94,6 @@ The goal is to eventually implement almost every Spotify feature.
 
 ### High level requirements yet to be implemented
 
-- The auth token does not currently automatically refresh - when you leave `spotify-tui` running for a while, you won't be able to control playback. And you'll need to quit and restart to get it working again.
 - Add songs to a playlist
 - Be able to like songs in every view, and see that a given track is already liked.
 - Unlike songs
