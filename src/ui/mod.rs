@@ -581,25 +581,35 @@ where
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(10)
+        .margin(5)
         .split(f.size());
 
     let mut playing_text = vec![
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
         Text::styled(
-            "\nIf you are trying to play a track, make sure the official spotify app is open.\nIn addition, you must have a Spotify Premium account to control playback.",
+            "
+
+If you are trying to play a track, please check that
+    1. You have a Spotify Premium Account
+    2. Your playback device is active and selected - press `d` to go to device selection menu
+    3. If you're using spotifyd as a playback device, your device name must not contain spaces
+            ",
             Style::default().fg(Color::White),
         ),
+        Text::styled("
+Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
+        ", 
+        Style::default().fg(Color::Yellow)),
         Text::styled(
             "\nPress <Esc> to return",
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(Color::Gray),
         ),
     ];
 
     if app.client_config.device_id.is_none() {
         playing_text.push(Text::styled(
-            "\nHint: Press `d` to go to device selection menu",
+            "\nNo playback device is selected - follow point 2 above",
             Style::default().fg(Color::LightMagenta),
         ))
     }
