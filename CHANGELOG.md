@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `Ctrl-r` to cycle repeat mode
 - Fix duplicate albums showing in artist discographies
+- Slightly better error message with some debug tips when tracks fail to play
 
 ## [0.0.4] - 2019-10-05
 
