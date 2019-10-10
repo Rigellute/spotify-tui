@@ -26,12 +26,6 @@ pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Podcasts",
 ];
 
-const DEFAULT_ROUTE: Route = Route {
-    id: RouteId::Home,
-    active_block: ActiveBlock::Empty,
-    hovered_block: ActiveBlock::Library,
-};
-
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
     index: usize,
@@ -236,7 +230,11 @@ impl App {
                 saved_albums: ScrollableResultPages::new(),
                 selected_index: 0,
             },
-            navigation_stack: vec![DEFAULT_ROUTE],
+            navigation_stack: vec![Route {
+                id: RouteId::Home,
+                active_block: ActiveBlock::Empty,
+                hovered_block: ActiveBlock::Library,
+            }],
             large_search_limit: 20,
             small_search_limit: 4,
             api_error: String::new(),
@@ -457,10 +455,9 @@ impl App {
     }
 
     pub fn get_current_route(&self) -> &Route {
-        match self.navigation_stack.last() {
-            Some(route) => route,
-            None => &DEFAULT_ROUTE, // if for some reason there is no route return the default
-        }
+        // There should always be at least one route. But there must be better way of handling
+        // this? `unwrap` seems too dangerous
+        self.navigation_stack.last().unwrap()
     }
 
     fn get_current_route_mut(&mut self) -> &mut Route {
