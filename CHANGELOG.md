@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2019-10-11
+
 - Add `Ctrl-r` to cycle repeat mode ([@baxtea](https://github.com/baxtea))
 - Fix duplicate albums showing in artist discographies ([@baxtea](https://github.com/baxtea))
 - Slightly better error message with some debug tips when tracks fail to play
