@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add `Ctrl-r` to cycle repeat mode
-- Fix duplicate albums showing in artist discographies
+- Add `Ctrl-r` to cycle repeat mode ([@baxtea](https://github.com/baxtea))
+- Fix duplicate albums showing in artist discographies ([@baxtea](https://github.com/baxtea))
 - Slightly better error message with some debug tips when tracks fail to play
-- Refresh token when token expires
+- Refresh token when token expires ([@fangyi-zhou](https://github.com/fangyi-zhou))
+- Upgrade `rspotify` to fix [#39](https://github.com/Rigellute/spotify-tui/issues/39) ([@epwalsh](https://github.com/epwalsh))
 
 ## [0.0.4] - 2019-10-05
 
