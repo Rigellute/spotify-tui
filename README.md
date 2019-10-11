@@ -14,6 +14,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
 - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
 - [Usage](#usage)
 - [Limitations](#limitations)
+- [Development](#development)
 - [Roadmap](#roadmap)
 
 ## Installation
@@ -87,6 +88,12 @@ If you want to play tracks, Spotify requires that you have a Premium account.
 
 - [tui-rs](https://github.com/fdehau/tui-rs)
 - [rspotify](https://github.com/ramsayleung/rspotify)
+
+## Development
+
+1. [Install Rust](https://www.rust-lang.org/tools/install)
+1. Clone or fork this repo and `cd` to it
+1. And then `cargo run`
 
 ## Roadmap
 
