@@ -947,7 +947,7 @@ fn draw_table<B>(
         }
 
         // Return row styled data
-        return Row::StyledData(formatted_row.into_iter(), style);
+        Row::StyledData(formatted_row.into_iter(), style)
     });
 
     let (title, header_columns) = table_layout;
