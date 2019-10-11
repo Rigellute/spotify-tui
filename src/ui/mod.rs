@@ -931,24 +931,23 @@ fn draw_table<B>(
     let rows = items.iter().enumerate().map(|(i, item)| {
         // Show this ♥ if the song is liked
         let mut formatted_row = item.format.clone();
-        // First check if the item is under selection
-        if i == selected_index {
-            return Row::StyledData(formatted_row.into_iter(), selected_style);
-        }
+        let mut style = Style::default().fg(Color::White); // default styling
 
-        // Next check if the song should be highlighted because it is currently playing
+        // First check if the song should be highlighted because it is currently playing
         if let Some(_track_playing_index) = track_playing_index {
             if i == _track_playing_index {
                 formatted_row[0] = format!("|> {}", &formatted_row[0]);
-                return Row::StyledData(
-                    formatted_row.into_iter(),
-                    Style::default().fg(Color::Cyan).modifier(Modifier::BOLD),
-                );
+                style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
             }
         }
 
-        // Otherwise return default styling
-        Row::StyledData(formatted_row.into_iter(), Style::default().fg(Color::White))
+        // Next check if the item is under selection
+        if i == selected_index {
+            style = selected_style;
+        }
+
+        // Return row styled data
+        Row::StyledData(formatted_row.into_iter(), style)
     });
 
     let (title, header_columns) = table_layout;
