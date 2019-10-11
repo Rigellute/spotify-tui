@@ -391,6 +391,7 @@ impl App {
                     context_uri.clone(),
                     uris.clone(),
                     offset.clone(),
+                    None,
                 ),
                 None => Err(err_msg("Spotify is not ready to be used".to_string())),
             },
