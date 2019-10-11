@@ -14,7 +14,7 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rspotify = "0.6.0"
+rspotify = "0.7.0"
 tui = "0.6.2"
 termion = "1.5.3"
 failure = "0.1.5"
