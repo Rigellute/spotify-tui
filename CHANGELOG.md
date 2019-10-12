@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Keep format of highlighted track when it is playing - [#44](https://github.com/Rigellute/spotify-tui/pull/44) thanks to [@jfaltis](https://github.com/jfaltis)
+- Start a web server on localhost to display a simple webpage for the Redirect URI. Should hopefully improve the onboarding experience.
 
 ## [0.0.5] - 2019-10-11
 

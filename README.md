@@ -59,7 +59,7 @@ But here they are again:
 1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
 1. Click `Create a Client ID` and create an app
 1. Now click `Edit Settings`
-1. Add `http://localhost:8888/callback` to the Redirect URIs - you don't need anything running on localhost, it will still work
+1. Add `http://localhost:8888/callback` to the Redirect URIs
 1. You are now ready to authenticate with Spotify!
 1. Go back to the terminal
 1. Run `spt`
