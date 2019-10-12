@@ -2,6 +2,7 @@ mod app;
 mod banner;
 mod config;
 mod handlers;
+mod redirect_uri;
 mod ui;
 mod util;
 
@@ -11,6 +12,8 @@ use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInf
 use rspotify::spotify::util::get_token;
 use std::cmp::min;
 use std::io::{self, Write};
+use std::sync::mpsc;
+use std::thread;
 use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -23,6 +26,7 @@ use tui::Terminal;
 use app::{ActiveBlock, App, SearchResultBlock};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
+use redirect_uri::redirect_uri_web_server;
 use util::{Event, Events};
 
 const SCOPES: [&str; 8] = [
@@ -63,6 +67,14 @@ fn main() -> Result<(), failure::Error> {
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
         .get_matches();
 
+    let (tx, rx) = mpsc::channel();
+
+    // Start the web server in case we need to use the redirect uri, this will get closed below
+    // after auth is successful
+    thread::spawn(|| {
+        redirect_uri_web_server(rx);
+    });
+
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
 
@@ -79,6 +91,9 @@ fn main() -> Result<(), failure::Error> {
 
     match get_token(&mut oauth) {
         Some(token_info) => {
+            // Terminate the web server running for the Redirect URI (fire and forget)
+            if tx.send(()).is_ok() {};
+
             // Terminal initialization
             let stdout = io::stdout().into_raw_mode()?;
             let stdout = MouseTerminal::from(stdout);
@@ -91,6 +106,7 @@ fn main() -> Result<(), failure::Error> {
 
             // Initialise app state
             let mut app = App::new();
+
             let (mut spotify, mut token_expiry) = get_spotify(token_info);
 
             app.client_config = client_config;
