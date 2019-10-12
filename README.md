@@ -14,6 +14,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
 - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
 - [Usage](#usage)
 - [Limitations](#limitations)
+- [Using with spotifyd](#using-with-spotifyd)
 - [Development](#development)
 - [Roadmap](#roadmap)
 
@@ -83,6 +84,16 @@ When running `spotify-tui` press `?` to bring up a help menu that shows currentl
 This app uses the Web API from Spotify, which doesn't handle streaming itself. So you'll need either an official Spotify client open or a lighter weight alternative such as [spotifyd](https://github.com/Spotifyd/spotifyd).
 
 If you want to play tracks, Spotify requires that you have a Premium account.
+
+## Using with [spotifyd](https://github.com/Spotifyd/spotifyd)
+
+Follow the spotifyd documentation to get set up.
+
+After that there is not much to it.
+
+1. Start running the spotifyd daemon.
+1. Start up `spt`
+1. Press `d` to go to the device selection menu and the spotifyd "device" should be there - if not check [these docs](https://github.com/Spotifyd/spotifyd#logging)
 
 ## Libraries used
 
