@@ -113,7 +113,6 @@ The goal is to eventually implement almost every Spotify feature.
   - Like the playing song
   - Navigate to song info
 - Implement seek (could use `<` and `>` to skip 5 seconds forwards and backwards)
-- Skip to next track (use `n` for next and `p` for previous)
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
@@ -180,8 +179,8 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | transfer_playback                                 | No               | Transfer a User’s Playback                                                                                                                                   | No         |
 | start_playback                                    | Yes              | Start/Resume a User’s Playback                                                                                                                               | Yes        |
 | pause_playback                                    | Yes              | Pause a User’s Playback                                                                                                                                      | Yes        |
-| next_track                                        | No               | Skip User’s Playback To Next Track                                                                                                                           | Yes        |
-| previous_track                                    | No               | Skip User’s Playback To Previous Track                                                                                                                       | Yes        |
+| next_track                                        | Yes              | Skip User’s Playback To Next Track                                                                                                                           | Yes        |
+| previous_track                                    | Yes              | Skip User’s Playback To Previous Track                                                                                                                       | Yes        |
 | seek_track                                        | No               | Seek To Position In Currently Playing Track                                                                                                                  | Yes        |
 | repeat                                            | Yes              | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |
