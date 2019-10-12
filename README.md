@@ -91,6 +91,7 @@ If you want to play tracks, Spotify requires that you have a Premium account.
 
 ## Development
 
+1. [Install OpenSSL](https://docs.rs/openssl/0.10.25/openssl/#automatic)
 1. [Install Rust](https://www.rust-lang.org/tools/install)
 1. Clone or fork this repo and `cd` to it
 1. And then `cargo run`
