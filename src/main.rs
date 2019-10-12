@@ -220,6 +220,12 @@ fn main() -> Result<(), failure::Error> {
                                 Key::Char(' ') => {
                                     app.toggle_playback();
                                 }
+                                Key::Char('n') => {
+                                    app.next_track();
+                                }
+                                Key::Char('p') => {
+                                    app.previous_track();
+                                }
                                 Key::Char('?') => {
                                     app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
                                 }

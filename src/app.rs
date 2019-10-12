@@ -365,6 +365,32 @@ impl App {
         }
     }
 
+    pub fn next_track(&mut self) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.next_track(Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn previous_track(&mut self) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.previous_track(Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
     pub fn start_playback(
         &mut self,
         context_uri: Option<String>,
