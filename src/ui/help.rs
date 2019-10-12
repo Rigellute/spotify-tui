@@ -2,6 +2,8 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
     vec![
         vec!["General", "a", "Jump to currently playing album"],
         vec!["General", "s", "Save track"],
+        vec!["General", "n", "Skip to next track"],
+        vec!["General", "p", "Skip to previous track"],
         vec!["General", "<Ctrl+s>", "Toggle shuffle"],
         vec!["General", "<Ctrl+r>", "Cycle repeat mode"],
         vec!["General", "h | <Left Arrow Key>", "Move selection left"],
