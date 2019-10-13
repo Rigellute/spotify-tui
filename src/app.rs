@@ -463,10 +463,7 @@ impl App {
             (None, None)
         };
 
-        let offset = match offset {
-            Some(o) => for_position(o as u32),
-            None => None,
-        };
+	let offset = offset.and_then(|o| for_position(o as u32));
 
         let result = match &self.client_config.device_id {
             Some(device_id) => match &self.spotify {
@@ -558,18 +555,11 @@ impl App {
         hovered_block: Option<ActiveBlock>,
     ) {
         let mut current_route = self.get_current_route_mut();
-        match (active_block, hovered_block) {
-            (Some(active), Some(hovered)) => {
-                current_route.active_block = active;
-                current_route.hovered_block = hovered;
-            }
-            (Some(active), None) => {
-                current_route.active_block = active;
-            }
-            (None, Some(hovered)) => {
-                current_route.hovered_block = hovered;
-            }
-            (None, None) => {}
+        if let Some(active_block) = active_block {
+            current_route.active_block = active_block;
+        }
+        if let Some(hovered_block) = hovered_block {
+            current_route.hovered_block = hovered_block;
         }
     }
 
