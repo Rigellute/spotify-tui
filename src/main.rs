@@ -218,6 +218,7 @@ fn main() -> Result<(), failure::Error> {
                                         app.set_current_route_state(Some(ActiveBlock::Empty), None);
                                     }
                                 },
+                                // Jump to currently playing album
                                 Key::Char('a') => {
                                     if let Some(current_playback_context) =
                                         &app.current_playback_context
@@ -226,6 +227,23 @@ fn main() -> Result<(), failure::Error> {
                                             &current_playback_context.item.clone()
                                         {
                                             app.get_album_tracks(full_track.album.clone());
+                                        }
+                                    };
+                                }
+                                // Jump to currently playing artist's album list.
+                                // NOTE: this only finds the first artist of the song and jumps to their albums
+                                Key::Char('A') => {
+                                    if let Some(current_playback_context) =
+                                        &app.current_playback_context
+                                    {
+                                        if let Some(playing_item) =
+                                            &current_playback_context.item.clone()
+                                        {
+                                            if let Some(artist) = playing_item.artists.first() {
+                                                if let Some(artist_id) = &artist.id {
+                                                    app.get_artist_albums(artist_id, &artist.name);
+                                                }
+                                            }
                                         }
                                     };
                                 }
