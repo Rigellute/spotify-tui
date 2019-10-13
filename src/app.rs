@@ -463,7 +463,7 @@ impl App {
             (None, None)
         };
 
-	let offset = offset.and_then(|o| for_position(o as u32));
+        let offset = offset.and_then(|o| for_position(o as u32));
 
         let result = match &self.client_config.device_id {
             Some(device_id) => match &self.spotify {
