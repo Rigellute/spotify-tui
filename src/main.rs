@@ -236,6 +236,12 @@ fn main() -> Result<(), failure::Error> {
                                 Key::Char(' ') => {
                                     app.toggle_playback();
                                 }
+                                Key::Char('<') => {
+                                    app.seek_backwards();
+                                }
+                                Key::Char('>') => {
+                                    app.seek_forwards();
+                                }
                                 Key::Char('n') => {
                                     app.next_track();
                                 }
