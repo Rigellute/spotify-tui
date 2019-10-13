@@ -123,7 +123,6 @@ The goal is to eventually implement almost every Spotify feature.
 - Make the play bar hoverable with its own event handlers that would
   - Like the playing song
   - Navigate to song info
-- Implement seek (could use `<` and `>` to skip 5 seconds forwards and backwards)
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
