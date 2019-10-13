@@ -23,7 +23,7 @@ use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
-use app::{ActiveBlock, App, SearchResultBlock};
+use app::{ActiveBlock, App};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
 use redirect_uri::redirect_uri_web_server;
@@ -192,10 +192,10 @@ fn main() -> Result<(), failure::Error> {
                         // To avoid swallowing the global key presses `q` and `-` make a special
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
-                            handlers::handle_app(&mut app, key);
+                            handlers::input_handler(key, &mut app);
                         } else {
                             match key {
-                                // Global key presses
+                                // Handle global navigation" back" event
                                 Key::Char('q') | Key::Char('-') => {
                                     if app.get_current_route().active_block != ActiveBlock::Input {
                                         // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
@@ -206,66 +206,10 @@ fn main() -> Result<(), failure::Error> {
                                         }
                                     }
                                 }
-                                Key::Esc => match current_active_block {
-                                    ActiveBlock::SearchResultBlock => {
-                                        app.search_results.selected_block =
-                                            SearchResultBlock::Empty;
-                                    }
-                                    ActiveBlock::Error => {
-                                        app.pop_navigation_stack();
-                                    }
-                                    _ => {
-                                        app.set_current_route_state(Some(ActiveBlock::Empty), None);
-                                    }
-                                },
-                                Key::Char('a') => {
-                                    if let Some(current_playback_context) =
-                                        &app.current_playback_context
-                                    {
-                                        if let Some(full_track) =
-                                            &current_playback_context.item.clone()
-                                        {
-                                            app.get_album_tracks(full_track.album.clone());
-                                        }
-                                    };
+                                _ => {
+                                    handlers::handle_app(key, &mut app);
                                 }
-                                Key::Char('d') => {
-                                    app.handle_get_devices();
-                                }
-                                // Press space to toggle playback
-                                Key::Char(' ') => {
-                                    app.toggle_playback();
-                                }
-                                Key::Char('<') => {
-                                    app.seek_backwards();
-                                }
-                                Key::Char('>') => {
-                                    app.seek_forwards();
-                                }
-                                Key::Char('n') => {
-                                    app.next_track();
-                                }
-                                Key::Char('p') => {
-                                    app.previous_track();
-                                }
-                                Key::Char('?') => {
-                                    app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-                                }
-
-                                Key::Ctrl('s') => {
-                                    app.shuffle();
-                                }
-                                Key::Ctrl('r') => {
-                                    app.repeat();
-                                }
-                                Key::Char('/') => {
-                                    app.set_current_route_state(
-                                        Some(ActiveBlock::Input),
-                                        Some(ActiveBlock::Input),
-                                    );
-                                }
-                                _ => handlers::handle_app(&mut app, key),
-                            }
+                            };
                         }
                     }
                     Event::Tick => {
