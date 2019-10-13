@@ -1,6 +1,11 @@
 pub fn get_help_docs() -> Vec<Vec<&'static str>> {
     vec![
         vec!["General", "a", "Jump to currently playing album"],
+        vec![
+            "General",
+            "A",
+            "Jump to currently playing artist's album list",
+        ],
         vec!["General", "s", "Save track"],
         vec!["General", "n", "Skip to next track"],
         vec!["General", "p", "Skip to previous track"],
