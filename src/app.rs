@@ -336,6 +336,27 @@ impl App {
         }
     }
 
+    fn seek(&mut self, position_ms: u32) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.seek_track(position_ms, Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn seek_forwards(&mut self) {
+        self.seek(self.song_progress_ms as u32 + 5000);
+    }
+
+    pub fn seek_backwards(&mut self) {
+        self.seek(self.song_progress_ms as u32 - 5000);
+    }
+
     pub fn pause_playback(&mut self) {
         if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
             match spotify.pause_playback(Some(device_id.to_string())) {
