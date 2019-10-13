@@ -7,6 +7,8 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
             "Jump to currently playing artist's album list",
         ],
         vec!["General", "s", "Save track"],
+        vec!["General", "+", "Increase volume by 10%"],
+        vec!["General", "-", "Decrease volume by 10%"],
         vec!["General", "n", "Skip to next track"],
         vec!["General", "p", "Skip to previous track"],
         vec!["General", "<", "Seek backwards 5 seconds"],
@@ -30,7 +32,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
         vec!["General", "<Enter>", "Enter active mode"],
         vec![
             "General",
-            "q | -",
+            "q",
             "Go back or exit when nowhere left to back to",
         ],
         vec!["General", "d", "Select device to play music on"],

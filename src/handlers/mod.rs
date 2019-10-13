@@ -60,6 +60,12 @@ pub fn handle_app(key: Key, app: &mut App) {
         Key::Char('d') => {
             app.handle_get_devices();
         }
+        Key::Char('-') => {
+            app.decrease_volume();
+        }
+        Key::Char('+') => {
+            app.increase_volume();
+        }
         // Press space to toggle playback
         Key::Char(' ') => {
             app.toggle_playback();

@@ -526,8 +526,12 @@ where
             };
 
             let title = format!(
-                "{} ({} | Shuffle: {} | Repeat: {})",
-                play_title, current_playback_context.device.name, shuffle_text, repeat_text
+                "{} ({} | Shuffle: {} | Repeat: {} | Volume: {}%)",
+                play_title,
+                current_playback_context.device.name,
+                shuffle_text,
+                repeat_text,
+                current_playback_context.device.volume_percent
             );
 
             Block::default()

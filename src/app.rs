@@ -370,6 +370,43 @@ impl App {
         }
     }
 
+    fn change_volume(&mut self, volume_percent: u8) {
+        if let (Some(spotify), Some(device_id), Some(context)) = (
+            &self.spotify,
+            &self.client_config.device_id,
+            &mut self.current_playback_context,
+        ) {
+            match spotify.volume(volume_percent, Some(device_id.to_string())) {
+                Ok(()) => {
+                    context.device.volume_percent = volume_percent.into();
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn increase_volume(&mut self) {
+        if let Some(context) = self.current_playback_context.clone() {
+            let next_volume = context.device.volume_percent as u8 + 10;
+            if next_volume <= 100 {
+                self.change_volume(next_volume);
+            }
+        }
+    }
+
+    pub fn decrease_volume(&mut self) {
+        if let Some(context) = self.current_playback_context.clone() {
+            let volume = context.device.volume_percent;
+            if volume >= 10 {
+                let next_volume = context.device.volume_percent as u8 - 10;
+                self.change_volume(next_volume);
+            }
+        }
+    }
+
     pub fn handle_error(&mut self, e: failure::Error) {
         self.push_navigation_stack(RouteId::Error, ActiveBlock::Error);
         self.api_error = e.to_string();
