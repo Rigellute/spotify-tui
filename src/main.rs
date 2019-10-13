@@ -196,7 +196,7 @@ fn main() -> Result<(), failure::Error> {
                         } else {
                             match key {
                                 // Handle global navigation" back" event
-                                Key::Char('q') | Key::Char('-') => {
+                                Key::Char('q') => {
                                     if app.get_current_route().active_block != ActiveBlock::Input {
                                         // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
                                         let pop_result = app.pop_navigation_stack();
