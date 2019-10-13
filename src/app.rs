@@ -391,19 +391,14 @@ impl App {
     pub fn increase_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
             let next_volume = context.device.volume_percent as u8 + 10;
-            if next_volume <= 100 {
-                self.change_volume(next_volume);
-            }
+            self.change_volume(std::cmp::min(100u8, next_volume));
         }
     }
 
     pub fn decrease_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
-            let volume = context.device.volume_percent;
-            if volume >= 10 {
-                let next_volume = context.device.volume_percent as u8 - 10;
-                self.change_volume(next_volume);
-            }
+            let volume = context.device.volume_percent as u8;
+            self.change_volume(std::cmp::max(10u8, volume) - 10)
         }
     }
 
