@@ -28,6 +28,12 @@ The binary executable is `spt`.
 brew install Rigellute/tap/spotify-tui
 ```
 
+To update, run
+
+```bash
+brew upgrade spotify-tui
+```
+
 ### Cargo (Linux)
 
 Eventually, there should be prebuilt binaries available in the Github release, but until then you can install via Rust's package manager `cargo`.
@@ -41,6 +47,12 @@ cargo install spotify-tui
 This method will build the binary from source, so has the benefit of supporting more architectures.
 
 I've only tested on Ubuntu and Debian, but I expect this to work on other Linux distros.
+
+To update, run
+
+```bash
+cargo update spotify-tui
+```
 
 ### Manual
 
