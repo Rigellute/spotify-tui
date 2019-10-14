@@ -9,7 +9,7 @@ use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::offset::Offset;
 use rspotify::spotify::model::page::{CursorBasedPage, Page};
 use rspotify::spotify::model::playing::PlayHistory;
-use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
+use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist, FullPlaylist};
 use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
@@ -143,6 +143,7 @@ pub enum TrackTableContext {
     MyPlaylists,
     AlbumSearch,
     PlaylistSearch,
+    PlaylistOpen,
     SavedTracks,
 }
 
@@ -217,6 +218,7 @@ pub struct App {
     pub large_search_limit: u32,
     pub library: Library,
     pub playback_params: PlaybackParams,
+    pub open_playlist: Option<FullPlaylist>,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
@@ -266,6 +268,7 @@ impl App {
             input: vec![],
             input_idx: 0,
             input_cursor_position: 0,
+            open_playlist: None,
             playlist_tracks: vec![],
             playlists: None,
             search_results: SearchResult {

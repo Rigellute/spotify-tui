@@ -49,6 +49,38 @@ pub fn handler(key: Key, app: &mut App) {
                 let country = Country::from_str(&user.country.unwrap_or_else(|| "".to_string()));
                 let input_str: String = app.input.iter().collect();
                 // Can I run these functions in parellel?
+
+                if input_str.starts_with("https://open.spotify.com/playlist/") {
+                    let id = String::from(input_str
+                            .trim_start_matches("https://open.spotify.com/playlist/")
+                            .split("?")
+                            .next()
+                            .unwrap_or_else(||""));
+
+                    match spotify.playlist(&id, None, None) {
+                        Ok(playlist) => {
+                            let tracks = playlist.tracks.items.clone();
+                            // TODO: select all the tracks, not just first page
+
+                            app.open_playlist = Some(playlist.clone());
+
+                            app.track_table.tracks = tracks
+                                .iter()
+                                .map(|track| track.track.clone())
+                                .collect::<_>();
+                            app.playlist_tracks = tracks.clone();
+                            app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                        }
+                        Err(e) => {
+                            app.handle_error(e);
+                        }
+                    }
+                  
+
+                    return;
+                }
+
+                // Can I run these functions in parallel?
                 match spotify.search_track(
                     &input_str,
                     app.small_search_limit,
@@ -100,7 +132,6 @@ pub fn handler(key: Key, app: &mut App) {
                         app.handle_error(e);
                     }
                 }
-
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
                 app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
