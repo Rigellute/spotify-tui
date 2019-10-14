@@ -30,7 +30,20 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('\n') => {
             if let Some(spotify) = app.spotify.clone() {
-                // Can I run these functions in parellel?
+
+                if app.input.starts_with("https://open.spotify.com/playlist/") {
+                    app.get_playlist_tracks(
+                        app.input
+                            .trim_start_matches("https://open.spotify.com/playlist/")
+                            .split("?")
+                            .next()
+                            .unwrap_or_else(|| "")
+                            .into()
+                    );
+                    return;
+                }
+
+                // Can I run these functions in parallel?
                 match spotify.search_track(
                     &app.input,
                     app.small_search_limit,
