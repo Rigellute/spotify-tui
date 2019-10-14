@@ -16,7 +16,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.input_cursor_position = 0;
         }
         Key::Left => {
-            if !app.input.is_empty() {
+            if !app.input.is_empty() && app.input_cursor_position > 0 {
                 app.input_cursor_position -= 1;
             }
         }
@@ -99,8 +99,9 @@ pub fn handler(key: Key, app: &mut App) {
             app.input_cursor_position += 1;
         }
         Key::Backspace => {
-            if !app.input.is_empty() {
-                app.input.pop();
+            if !app.input.is_empty() && app.input_cursor_position > 0 {
+                app.input
+                    .remove((app.input_cursor_position - 1).try_into().unwrap());
                 app.input_cursor_position -= 1;
             }
         }
