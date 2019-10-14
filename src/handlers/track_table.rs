@@ -65,6 +65,23 @@ pub fn handler(key: Key, app: &mut App) {
                         };
                     }
                     TrackTableContext::AlbumSearch => {}
+                    TrackTableContext::PlaylistOpen => {
+                        let TrackTable {
+                            selected_index,
+                            tracks,
+                            ..
+                        } = &app.track_table;
+                        if let Some(_track) = tracks.get(*selected_index) {
+                           
+                            let context_uri = app.open_playlist.clone().map(|p| p.uri.to_owned());
+                            
+                            app.start_playback(
+                                context_uri,
+                                None,
+                                Some(app.track_table.selected_index),
+                            );
+                        };
+                    }
                     TrackTableContext::PlaylistSearch => {
                         let TrackTable {
                             selected_index,
@@ -111,6 +128,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
+                    TrackTableContext::PlaylistOpen => {}
                 },
                 None => {}
             };
@@ -125,6 +143,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
+                    TrackTableContext::PlaylistOpen => {}
                 },
                 None => {}
             };

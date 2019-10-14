@@ -1,6 +1,9 @@
 use super::super::app::{ActiveBlock, App, RouteId};
 use std::convert::TryInto;
 use termion::event::Key;
+use rspotify::spotify::model::playlist::{FullPlaylist, SimplifiedPlaylist};
+
+use rspotify::spotify::model::track::FullTrack;
 
 // Handle events when the search input block is active
 pub fn handler(key: Key, app: &mut App) {
@@ -30,16 +33,33 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('\n') => {
             if let Some(spotify) = app.spotify.clone() {
-
                 if app.input.starts_with("https://open.spotify.com/playlist/") {
-                    app.get_playlist_tracks(
-                        app.input
+                    let id = String::from(app.input
                             .trim_start_matches("https://open.spotify.com/playlist/")
                             .split("?")
                             .next()
-                            .unwrap_or_else(|| "")
-                            .into()
-                    );
+                            .unwrap_or_else(||""));
+
+                    match spotify.playlist(&id, None, None) {
+                        Ok(playlist) => {
+                            let tracks = playlist.tracks.items.clone();
+                            // TODO: select all the tracks, not just first page
+
+                            app.open_playlist = Some(playlist.clone());
+
+                            app.track_table.tracks = tracks
+                                .iter()
+                                .map(|track| track.track.clone())
+                                .collect::<_>();
+                            app.playlist_tracks = tracks.clone();
+                            app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                        }
+                        Err(e) => {
+                            app.handle_error(e);
+                        }
+                    }
+                  
+
                     return;
                 }
 
@@ -100,7 +120,6 @@ pub fn handler(key: Key, app: &mut App) {
                         app.handle_error(e);
                     }
                 }
-
                 // On searching for a track, clear the playlist selection
                 app.selected_playlist_index = None;
                 app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
