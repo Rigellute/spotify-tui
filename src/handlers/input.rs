@@ -155,7 +155,35 @@ mod tests {
         app.input_cursor_position = app.input.len().try_into().unwrap();
 
         handler(Key::Backspace, &mut app);
-
         assert_eq!(app.input, "My tex".to_string());
+
+        // Test that backspace deletes from the cursor position
+        app.input_cursor_position = 2;
+
+        handler(Key::Backspace, &mut app);
+        assert_eq!(app.input, "M tex".to_string());
+    }
+
+    #[test]
+    fn test_input_handler_left_event() {
+        let mut app = App::new();
+
+        app.input = "My text".to_string();
+        let input_len = app.input.len().try_into().unwrap();
+        app.input_cursor_position = input_len;
+
+        handler(Key::Left, &mut app);
+        assert_eq!(app.input_cursor_position, input_len - 1);
+        handler(Key::Left, &mut app);
+        assert_eq!(app.input_cursor_position, input_len - 2);
+        handler(Key::Left, &mut app);
+        assert_eq!(app.input_cursor_position, input_len - 3);
+
+        // Pretend to smash the left event to test the we have no out-of-bounds crash
+        for _ in 0..20 {
+            handler(Key::Left, &mut app);
+        }
+
+        assert_eq!(app.input_cursor_position, 0);
     }
 }
