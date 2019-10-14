@@ -14,6 +14,8 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
 - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
 - [Usage](#usage)
 - [Limitations](#limitations)
+- [Using with spotifyd](#using-with-spotifyd)
+- [Development](#development)
 - [Roadmap](#roadmap)
 
 ## Installation
@@ -58,7 +60,7 @@ But here they are again:
 1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
 1. Click `Create a Client ID` and create an app
 1. Now click `Edit Settings`
-1. Add `http://localhost:8888/callback` to the Redirect URIs - you don't need anything running on localhost, it will still work
+1. Add `http://localhost:8888/callback` to the Redirect URIs
 1. You are now ready to authenticate with Spotify!
 1. Go back to the terminal
 1. Run `spt`
@@ -83,10 +85,27 @@ This app uses the Web API from Spotify, which doesn't handle streaming itself. S
 
 If you want to play tracks, Spotify requires that you have a Premium account.
 
+## Using with [spotifyd](https://github.com/Spotifyd/spotifyd)
+
+Follow the spotifyd documentation to get set up.
+
+After that there is not much to it.
+
+1. Start running the spotifyd daemon.
+1. Start up `spt`
+1. Press `d` to go to the device selection menu and the spotifyd "device" should be there - if not check [these docs](https://github.com/Spotifyd/spotifyd#logging)
+
 ## Libraries used
 
 - [tui-rs](https://github.com/fdehau/tui-rs)
 - [rspotify](https://github.com/ramsayleung/rspotify)
+
+## Development
+
+1. [Install OpenSSL](https://docs.rs/openssl/0.10.25/openssl/#automatic)
+1. [Install Rust](https://www.rust-lang.org/tools/install)
+1. Clone or fork this repo and `cd` to it
+1. And then `cargo run`
 
 ## Roadmap
 
@@ -104,8 +123,6 @@ The goal is to eventually implement almost every Spotify feature.
 - Make the play bar hoverable with its own event handlers that would
   - Like the playing song
   - Navigate to song info
-- Implement seek (could use `<` and `>` to skip 5 seconds forwards and backwards)
-- Skip to next track (use `n` for next and `p` for previous)
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
@@ -172,8 +189,8 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | transfer_playback                                 | No               | Transfer a User’s Playback                                                                                                                                   | No         |
 | start_playback                                    | Yes              | Start/Resume a User’s Playback                                                                                                                               | Yes        |
 | pause_playback                                    | Yes              | Pause a User’s Playback                                                                                                                                      | Yes        |
-| next_track                                        | No               | Skip User’s Playback To Next Track                                                                                                                           | Yes        |
-| previous_track                                    | No               | Skip User’s Playback To Previous Track                                                                                                                       | Yes        |
+| next_track                                        | Yes              | Skip User’s Playback To Next Track                                                                                                                           | Yes        |
+| previous_track                                    | Yes              | Skip User’s Playback To Previous Track                                                                                                                       | Yes        |
 | seek_track                                        | No               | Seek To Position In Currently Playing Track                                                                                                                  | Yes        |
 | repeat                                            | Yes              | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |

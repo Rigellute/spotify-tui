@@ -6,7 +6,7 @@ documentation = "https://github.com/Rigellute/spotify-tui"
 repository = "https://github.com/Rigellute/spotify-tui"
 keywords = ["spotify", "tui", "cli", "terminal"]
 categories = ["command-line-utilities"]
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Alexander Keliris <rigellute@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -14,7 +14,7 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rspotify = "0.6.0"
+rspotify = "0.7.0"
 tui = "0.6.2"
 termion = "1.5.3"
 failure = "0.1.5"

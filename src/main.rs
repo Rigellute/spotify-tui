@@ -2,6 +2,7 @@ mod app;
 mod banner;
 mod config;
 mod handlers;
+mod redirect_uri;
 mod ui;
 mod util;
 
@@ -11,6 +12,8 @@ use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInf
 use rspotify::spotify::util::get_token;
 use std::cmp::min;
 use std::io::{self, Write};
+use std::sync::mpsc;
+use std::thread;
 use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -20,9 +23,10 @@ use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
-use app::{ActiveBlock, App, SearchResultBlock};
+use app::{ActiveBlock, App};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
+use redirect_uri::redirect_uri_web_server;
 use util::{Event, Events};
 
 const SCOPES: [&str; 8] = [
@@ -63,6 +67,14 @@ fn main() -> Result<(), failure::Error> {
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
         .get_matches();
 
+    let (tx, rx) = mpsc::channel();
+
+    // Start the web server in case we need to use the redirect uri, this will get closed below
+    // after auth is successful
+    thread::spawn(|| {
+        redirect_uri_web_server(rx);
+    });
+
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
 
@@ -79,6 +91,9 @@ fn main() -> Result<(), failure::Error> {
 
     match get_token(&mut oauth) {
         Some(token_info) => {
+            // Terminate the web server running for the Redirect URI (fire and forget)
+            if tx.send(()).is_ok() {};
+
             // Terminal initialization
             let stdout = io::stdout().into_raw_mode()?;
             let stdout = MouseTerminal::from(stdout);
@@ -91,6 +106,7 @@ fn main() -> Result<(), failure::Error> {
 
             // Initialise app state
             let mut app = App::new();
+
             let (mut spotify, mut token_expiry) = get_spotify(token_info);
 
             app.client_config = client_config;
@@ -176,11 +192,11 @@ fn main() -> Result<(), failure::Error> {
                         // To avoid swallowing the global key presses `q` and `-` make a special
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
-                            handlers::handle_app(&mut app, key);
+                            handlers::input_handler(key, &mut app);
                         } else {
                             match key {
-                                // Global key presses
-                                Key::Char('q') | Key::Char('-') => {
+                                // Handle global navigation" back" event
+                                Key::Char('q') => {
                                     if app.get_current_route().active_block != ActiveBlock::Input {
                                         // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
                                         let pop_result = app.pop_navigation_stack();
@@ -190,54 +206,10 @@ fn main() -> Result<(), failure::Error> {
                                         }
                                     }
                                 }
-                                Key::Esc => match current_active_block {
-                                    ActiveBlock::SearchResultBlock => {
-                                        app.search_results.selected_block =
-                                            SearchResultBlock::Empty;
-                                    }
-                                    ActiveBlock::Error => {
-                                        app.pop_navigation_stack();
-                                    }
-                                    _ => {
-                                        app.set_current_route_state(Some(ActiveBlock::Empty), None);
-                                    }
-                                },
-                                Key::Char('a') => {
-                                    if let Some(current_playback_context) =
-                                        &app.current_playback_context
-                                    {
-                                        if let Some(full_track) =
-                                            &current_playback_context.item.clone()
-                                        {
-                                            app.get_album_tracks(full_track.album.clone());
-                                        }
-                                    };
+                                _ => {
+                                    handlers::handle_app(key, &mut app);
                                 }
-                                Key::Char('d') => {
-                                    app.handle_get_devices();
-                                }
-                                // Press space to toggle playback
-                                Key::Char(' ') => {
-                                    app.toggle_playback();
-                                }
-                                Key::Char('?') => {
-                                    app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
-                                }
-
-                                Key::Ctrl('s') => {
-                                    app.shuffle();
-                                }
-                                Key::Ctrl('r') => {
-                                    app.repeat();
-                                }
-                                Key::Char('/') => {
-                                    app.set_current_route_state(
-                                        Some(ActiveBlock::Input),
-                                        Some(ActiveBlock::Input),
-                                    );
-                                }
-                                _ => handlers::handle_app(&mut app, key),
-                            }
+                            };
                         }
                     }
                     Event::Tick => {

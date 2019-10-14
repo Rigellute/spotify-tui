@@ -7,10 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add `Ctrl-r` to cycle repeat mode
-- Fix duplicate albums showing in artist discographies
+- Keep format of highlighted track when it is playing - [#44](https://github.com/Rigellute/spotify-tui/pull/44) thanks to [@jfaltis](https://github.com/jfaltis)
+- Start a web server on localhost to display a simple webpage for the Redirect URI. Should hopefully improve the onboarding experience.
+- Add ability to skip to tracks using `n` for next and `p` for previous - thanks to [@samcal](https://github.com/samcal)
+- Implement seek functionality - you can now use `<` to seek backwards 5 seconds and `>` to go forwards 5 seconds
+- The event `A` will jump to the album list of the first artist in the track's artists list - closing [#45](https://github.com/Rigellute/spotify-tui/issues/45)
+- Add volume controls - use `-` to decrease and `+` to increase volume in 10% increments. Closes [#57](https://github.com/Rigellute/spotify-tui/issues/57)
+
+## [0.0.5] - 2019-10-11
+
+### Added
+
+- Add `Ctrl-r` to cycle repeat mode ([@baxtea](https://github.com/baxtea))
+- Refresh token when token expires ([@fangyi-zhou](https://github.com/fangyi-zhou))
+- Upgrade `rspotify` to fix [#39](https://github.com/Rigellute/spotify-tui/issues/39) ([@epwalsh](https://github.com/epwalsh))
+
+### Changed
+
+- Fix duplicate albums showing in artist discographies ([@baxtea](https://github.com/baxtea))
 - Slightly better error message with some debug tips when tracks fail to play
-- Refresh token when token expires
 
 ## [0.0.4] - 2019-10-05
 

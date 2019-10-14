@@ -334,6 +334,27 @@ impl App {
         }
     }
 
+    fn seek(&mut self, position_ms: u32) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.seek_track(position_ms, Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn seek_forwards(&mut self) {
+        self.seek(self.song_progress_ms as u32 + 5000);
+    }
+
+    pub fn seek_backwards(&mut self) {
+        self.seek(self.song_progress_ms as u32 - 5000);
+    }
+
     pub fn pause_playback(&mut self) {
         if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
             match spotify.pause_playback(Some(device_id.to_string())) {
@@ -344,6 +365,43 @@ impl App {
                     self.handle_error(e);
                 }
             };
+        }
+    }
+
+    fn change_volume(&mut self, volume_percent: u8) {
+        if let (Some(spotify), Some(device_id), Some(context)) = (
+            &self.spotify,
+            &self.client_config.device_id,
+            &mut self.current_playback_context,
+        ) {
+            match spotify.volume(volume_percent, Some(device_id.to_string())) {
+                Ok(()) => {
+                    context.device.volume_percent = volume_percent.into();
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn increase_volume(&mut self) {
+        if let Some(context) = self.current_playback_context.clone() {
+            let next_volume = context.device.volume_percent as u8 + 10;
+            if next_volume <= 100 {
+                self.change_volume(next_volume);
+            }
+        }
+    }
+
+    pub fn decrease_volume(&mut self) {
+        if let Some(context) = self.current_playback_context.clone() {
+            let volume = context.device.volume_percent;
+            if volume >= 10 {
+                let next_volume = context.device.volume_percent as u8 - 10;
+                self.change_volume(next_volume);
+            }
         }
     }
 
@@ -363,6 +421,32 @@ impl App {
         }
     }
 
+    pub fn next_track(&mut self) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.next_track(Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
+    pub fn previous_track(&mut self) {
+        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
+            match spotify.previous_track(Some(device_id.to_string())) {
+                Ok(()) => {
+                    self.get_current_playback();
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        }
+    }
+
     pub fn start_playback(
         &mut self,
         context_uri: Option<String>,
@@ -377,10 +461,7 @@ impl App {
             (None, None)
         };
 
-        let offset = match offset {
-            Some(o) => for_position(o as u32),
-            None => None,
-        };
+        let offset = offset.and_then(|o| for_position(o as u32));
 
         let result = match &self.client_config.device_id {
             Some(device_id) => match &self.spotify {
@@ -389,6 +470,7 @@ impl App {
                     context_uri.clone(),
                     uris.clone(),
                     offset.clone(),
+                    None,
                 ),
                 None => Err(err_msg("Spotify is not ready to be used".to_string())),
             },
@@ -470,18 +552,11 @@ impl App {
         hovered_block: Option<ActiveBlock>,
     ) {
         let mut current_route = self.get_current_route_mut();
-        match (active_block, hovered_block) {
-            (Some(active), Some(hovered)) => {
-                current_route.active_block = active;
-                current_route.hovered_block = hovered;
-            }
-            (Some(active), None) => {
-                current_route.active_block = active;
-            }
-            (None, Some(hovered)) => {
-                current_route.hovered_block = hovered;
-            }
-            (None, None) => {}
+        if let Some(active_block) = active_block {
+            current_route.active_block = active_block;
+        }
+        if let Some(hovered_block) = hovered_block {
+            current_route.hovered_block = hovered_block;
         }
     }
 

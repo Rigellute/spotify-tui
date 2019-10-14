@@ -101,7 +101,7 @@ impl ClientConfig {
                "Go to the Spotify dashboard - https://developer.spotify.com/dashboard/applications",
                "Click `Create a Client ID` and create an app",
                "Now click `Edit Settings`",
-               &format!("Add `{}` to the Redirect URIs - you don't need anything running on localhost", LOCALHOST),
+               &format!("Add `{}` to the Redirect URIs", LOCALHOST),
                "You are now ready to authenticate with Spotify!",
             ];
 
