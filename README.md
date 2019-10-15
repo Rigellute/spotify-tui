@@ -51,7 +51,7 @@ I've only tested on Ubuntu and Debian, but I expect this to work on other Linux 
 To update, run
 
 ```bash
-cargo update spotify-tui
+cargo install spotify-tui --force
 ```
 
 ### Manual
