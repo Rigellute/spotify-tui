@@ -2,6 +2,7 @@ use super::config::ClientConfig;
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
+use rspotify::spotify::model::artist::FullArtist;
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
 use rspotify::spotify::model::offset::for_position;
@@ -71,6 +72,7 @@ pub struct Library {
     pub selected_index: usize,
     pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
     pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
+    pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
 }
 
 #[derive(Clone)]
@@ -191,6 +193,7 @@ pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     pub client_config: ClientConfig,
+    pub artists: Vec<FullArtist>,
     pub artist_albums: Option<ArtistAlbums>,
     pub album_table_context: AlbumTableContext,
     pub saved_album_tracks_index: usize,
@@ -216,6 +219,7 @@ pub struct App {
     pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
     pub album_list_index: usize,
+    pub artists_list_index: usize,
     pub country: Country,
 }
 
@@ -224,6 +228,8 @@ impl App {
         App {
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            artists_list_index: 0,
+            artists: vec![],
             artist_albums: None,
             client_config: Default::default(),
             saved_album_tracks_index: 0,
@@ -234,6 +240,7 @@ impl App {
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),
+                saved_artists: ScrollableResultPages::new(),
                 selected_index: 0,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
@@ -706,6 +713,21 @@ impl App {
                         albums: result,
                     });
                     self.push_navigation_stack(RouteId::Artist, ActiveBlock::Artist);
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            };
+        };
+    }
+
+    pub fn get_artists(&mut self, offset: Option<String>) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_followed_artists(self.large_search_limit, offset) {
+                Ok(saved_artists) => {
+                    self.artists = saved_artists.artists.items.to_owned();
+                    self.library.saved_artists.add_pages(saved_artists.artists);
+                    self.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
                 }
                 Err(e) => {
                     self.handle_error(e);
