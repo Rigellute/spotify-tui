@@ -3,6 +3,7 @@
 ![](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg)
 ![](https://img.shields.io/badge/license-MIT-blueviolet.svg)
 ![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
+[![Crates.io](https://img.shields.io/crates/v/spotify-tui.svg)](https://crates.io/crates/spotify-tui)
 
 A Spotify client for the terminal written in Rust.
 
