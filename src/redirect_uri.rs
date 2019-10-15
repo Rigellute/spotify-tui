@@ -37,7 +37,7 @@ pub fn redirect_uri_web_server(thread_reciever: Receiver<()>) {
 fn handle_connection(mut stream: TcpStream) {
     // The request will be quite large (> 512) so just assign plenty just in case
     let mut buffer = [0; 1000];
-    stream.read_exact(&mut buffer).unwrap();
+    let _ = stream.read(&mut buffer).unwrap();
 
     let contents = fs::read_to_string("redirect_uri.html").unwrap();
 
