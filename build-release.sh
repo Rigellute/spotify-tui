@@ -9,9 +9,8 @@ echo "Building $version"
 
 cargo build --release
 
-cp redirect_uri.html $release_path
 cd $release_path
-tar czf $tar_name spt redirect_uri.html
+tar -czf $tar_name spt
 
 shasum -a 256 $tar_name
 

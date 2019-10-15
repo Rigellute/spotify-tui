@@ -1,4 +1,3 @@
-use std::fs;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -39,7 +38,7 @@ fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 1000];
     let _ = stream.read(&mut buffer).unwrap();
 
-    let contents = fs::read_to_string("redirect_uri.html").unwrap();
+    let contents = include_str!("redirect_uri.html");
 
     let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", contents);
 
