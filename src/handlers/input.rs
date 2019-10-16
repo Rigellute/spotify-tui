@@ -105,6 +105,12 @@ pub fn handler(key: Key, app: &mut App) {
                 app.input_cursor_position -= 1;
             }
         }
+        Key::Delete => {
+            if !app.input.is_empty() && app.input_cursor_position < app.input.len().try_into().unwrap() {
+                app.input
+                    .remove((app.input_cursor_position).try_into().unwrap());
+            }
+        }
         _ => {}
     }
 }
@@ -162,6 +168,17 @@ mod tests {
 
         handler(Key::Backspace, &mut app);
         assert_eq!(app.input, "M tex".to_string());
+    }
+
+    #[test]
+    fn test_input_handler_delete() {
+        let mut app = App::new();
+
+        app.input = "My text".to_string();
+        app.input_cursor_position = 3;
+
+        handler(Key::Delete, &mut app);
+        assert_eq!(app.input, "My ext".to_string());
     }
 
     #[test]
