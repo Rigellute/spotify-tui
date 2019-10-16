@@ -165,7 +165,7 @@ where
             draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::MadeForYou, "Made For You");
         }
         RouteId::Artists => {
-            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Artists, "Artists");
+            draw_artist_table(f, app, chunks[1]);
         }
         RouteId::Podcasts => {
             draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Podcasts, "Podcasts");
@@ -343,6 +343,40 @@ struct AlbumUI {
     selected_index: usize,
     items: Vec<TableItem>,
     title: String,
+}
+
+pub fn draw_artist_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = [TableHeader {
+        text: "Artist",
+        width: get_percentage_width(layout_chunk.width, 1.0),
+    }];
+
+    let current_route = app.get_current_route();
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::Artists,
+        current_route.hovered_block == ActiveBlock::Artists,
+    );
+    let items = app
+        .artists
+        .iter()
+        .map(|item| TableItem {
+            id: item.id.clone(),
+            format: vec![item.name.to_owned()],
+        })
+        .collect::<Vec<TableItem>>();
+
+    draw_table(
+        f,
+        app,
+        layout_chunk,
+        ("Artists", &header),
+        &items,
+        app.artists_list_index,
+        highlight_state,
+    )
 }
 
 pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -603,7 +637,7 @@ If you are trying to play a track, please check that
         ),
         Text::styled("
 Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
-        ", 
+        ",
         Style::default().fg(Color::Yellow)),
         Text::styled(
             "\nPress <Esc> to return",

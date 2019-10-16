@@ -68,7 +68,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
             //  Artists,
             4 => {
-                app.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
+                app.get_artists(None);
             }
             // Podcasts,
             5 => {

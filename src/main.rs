@@ -29,8 +29,9 @@ use config::{ClientConfig, LOCALHOST};
 use redirect_uri::redirect_uri_web_server;
 use util::{Event, Events};
 
-const SCOPES: [&str; 8] = [
+const SCOPES: [&str; 9] = [
     "playlist-read-private",
+    "user-follow-read",
     "user-library-modify",
     "user-library-read",
     "user-modify-playback-state",

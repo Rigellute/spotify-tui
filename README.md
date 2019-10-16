@@ -132,7 +132,6 @@ The goal is to eventually implement almost every Spotify feature.
 - See if a song is liked
 - Be able to scroll through result pages in every view
 - View Library "Made for you"
-- View Library "Artists"
 - Make the play bar hoverable with its own event handlers that would
   - Like the playing song
   - Navigate to song info
@@ -179,7 +178,7 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | current_user_followed_artists                     | No               | Gets a list of the artists followed by the current authorized user                                                                                           | Yes        |
 | current_user_saved_tracks_delete                  | No               | Remove one or more tracks from the current user's "Your Music" library.                                                                                      | Yes        |
 | current_user_saved_tracks_contain                 | No               | Check if one or more tracks is already saved in the current Spotify user’s “Your Music” library.                                                             | Yes        |
-| current_user_saved_tracks_add                     | No               | Save one or more tracks to the current user's "Your Music" library.                                                                                          | Yes        |
+| current_user_saved_tracks_add                     | Yes              | Save one or more tracks to the current user's "Your Music" library.                                                                                          | Yes        |
 | current_user_top_artists                          | No               | Get the current user's top artists                                                                                                                           | Yes        |
 | current_user_top_tracks                           | No               | Get the current user's top tracks                                                                                                                            | Yes        |
 | current_user_recently_played                      | No               | Get the current user's recently played tracks                                                                                                                | Yes        |
