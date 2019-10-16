@@ -93,7 +93,7 @@ When running `spotify-tui` press `?` to bring up a help menu that shows currentl
 
 ## Limitations
 
-This app uses the Web API from Spotify, which doesn't handle streaming itself. So you'll need either an official Spotify client open or a lighter weight alternative such as [spotifyd](https://github.com/Spotifyd/spotifyd).
+This app uses the [Web API](https://developer.spotify.com/documentation/web-api/) from Spotify, which doesn't handle streaming itself. So you'll need either an official Spotify client open or a lighter weight alternative such as [spotifyd](https://github.com/Spotifyd/spotifyd).
 
 If you want to play tracks, Spotify requires that you have a Premium account.
 
