@@ -200,6 +200,12 @@ pub struct App {
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
     pub devices: Option<DevicePayload>,
+    // Inputs:
+    // input is the string for input;
+    // input_idx is the index of the cursor in terms of character;
+    // input_cursor_position is the sum of the width of charaters preceding the cursor.
+    // Reason for this complication is due to non-ASCII characters, they may
+    // take more than 1 bytes to store and more than 1 character width to display.
     pub input: String,
     pub input_idx: usize,
     pub input_cursor_position: u16,
