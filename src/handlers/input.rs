@@ -182,6 +182,7 @@ mod tests {
         assert_eq!(app.input, "My tex".to_string());
 
         // Test that backspace deletes from the cursor position
+        app.input_idx = 2;
         app.input_cursor_position = 2;
 
         handler(Key::Backspace, &mut app);
@@ -194,6 +195,7 @@ mod tests {
 
         app.input = "My text".to_string();
         let input_len = app.input.len().try_into().unwrap();
+        app.input_idx = app.input.len();
         app.input_cursor_position = input_len;
 
         handler(Key::Left, &mut app);
