@@ -212,4 +212,32 @@ mod tests {
 
         assert_eq!(app.input_cursor_position, 0);
     }
+
+    #[test]
+    fn test_input_handler_on_enter_text_non_english_char() {
+        let mut app = App::new();
+
+        app.input = "ыа".to_string();
+        app.input_cursor_position = app.input.len().try_into().unwrap();
+        app.input_idx = app.input.len();
+
+        handler(Key::Char('ы'), &mut app);
+
+        assert_eq!(app.input, "ыаы".to_string());
+    }
+
+    #[test]
+    fn test_input_handler_on_enter_text_wide_char() {
+        let mut app = App::new();
+
+        app.input = "你".to_string();
+        app.input_cursor_position = 2; // 你 is 2 char wide
+        app.input_idx = 1; // 1 char
+
+        handler(Key::Char('好'), &mut app);
+
+        assert_eq!(app.input, "你好".to_string());
+        assert_eq!(app.input_idx, 2);
+        assert_eq!(app.input_cursor_position, 4);
+    }
 }
