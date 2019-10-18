@@ -125,16 +125,10 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Delete => {
-            if !app.input.is_empty()
-                && app.input_cursor_position < app.input.len().try_into().unwrap() {
-                app.input
-                    .remove((app.input_cursor_position).try_into().unwrap());
-            }
-        }
-        Key::Delete => {
-            if !app.input.is_empty() && app.input_cursor_position < app.input.len().try_into().unwrap() {
-                app.input
-                    .remove((app.input_cursor_position).try_into().unwrap());
+            if !app.input.is_empty() && app.input_idx < app.input.chars().count() {
+                let (remove_idx, _last_c) = app.input.char_indices()
+                    .nth(app.input_idx).unwrap();
+                app.input.remove(remove_idx);
             }
         }
         _ => {}
@@ -204,6 +198,7 @@ mod tests {
         let mut app = App::new();
 
         app.input = "My text".to_string();
+        app.input_idx = 3;
         app.input_cursor_position = 3;
 
         handler(Key::Delete, &mut app);
