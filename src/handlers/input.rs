@@ -203,6 +203,13 @@ mod tests {
 
         handler(Key::Delete, &mut app);
         assert_eq!(app.input, "My ext".to_string());
+
+        app.input = "ラスト".to_string();
+        app.input_idx = 1;
+        app.input_cursor_position = 1;
+
+        handler(Key::Delete, &mut app);
+        assert_eq!(app.input, "ラト".to_string());
     }
 
     #[test]
