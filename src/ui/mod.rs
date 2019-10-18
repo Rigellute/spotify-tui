@@ -653,6 +653,7 @@ Hint: a playback device must be either an official spotify client or a light wei
     }
 
     Paragraph::new(playing_text.iter())
+        .wrap(true)
         .style(Style::default().fg(Color::White))
         .block(
             Block::default()
@@ -668,26 +669,47 @@ fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
+        .margin(2)
+        .split(layout_chunk);
+
     let current_route = app.get_current_route();
     let highlight_state = (
         current_route.active_block == ActiveBlock::Home,
         current_route.hovered_block == ActiveBlock::Home,
     );
-    let display_block = Block::default()
+
+    Block::default()
         .title("Welcome!")
         .borders(Borders::ALL)
         .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state));
+        .border_style(get_color(highlight_state))
+        .render(f, layout_chunk);
 
-    let text = vec![
+    let change_log = include_str!("../../CHANGELOG.md");
+
+    let top_text = vec![
         Text::styled(BANNER, Style::default().fg(Color::LightCyan)),
         Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui"),
     ];
 
-    Paragraph::new(text.iter())
+    let bottom_text = vec![Text::raw(change_log)];
+
+    // Contains the banner
+    Paragraph::new(top_text.iter())
         .style(Style::default().fg(Color::White))
-        .block(display_block)
-        .render(f, layout_chunk);
+        .block(Block::default())
+        .render(f, chunks[0]);
+
+    // CHANGELOG
+    Paragraph::new(bottom_text.iter())
+        .style(Style::default().fg(Color::White))
+        .block(Block::default())
+        .wrap(true)
+        .scroll(app.home_scroll)
+        .render(f, chunks[1]);
 }
 
 fn draw_not_implemented_yet<B>(
@@ -715,6 +737,7 @@ fn draw_not_implemented_yet<B>(
     Paragraph::new(text.iter())
         .style(Style::default().fg(Color::White))
         .block(display_block)
+        .wrap(true)
         .render(f, layout_chunk);
 }
 
@@ -767,6 +790,7 @@ where
 
     Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
         .style(Style::default().fg(Color::White))
+        .wrap(true)
         .block(
             Block::default()
                 .borders(Borders::NONE)
