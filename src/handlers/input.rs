@@ -1,6 +1,7 @@
 extern crate unicode_width;
 
 use super::super::app::{ActiveBlock, App, RouteId};
+use rspotify::spotify::senum::Country;
 use std::convert::TryInto;
 use termion::event::Key;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
@@ -43,13 +44,14 @@ pub fn handler(key: Key, app: &mut App) {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         Key::Char('\n') => {
-            if let Some(spotify) = app.spotify.clone() {
+            if let (Some(spotify), Some(user)) = (app.spotify.clone(), app.user.clone()) {
+                let country = Country::from_str(&user.country.unwrap_or_else(|| "".to_string()));
                 // Can I run these functions in parellel?
                 match spotify.search_track(
                     &app.input,
                     app.small_search_limit,
                     0,
-                    Some(app.country.clone()),
+                    country.to_owned(),
                 ) {
                     Ok(result) => {
                         app.track_table.tracks = result.tracks.items.clone();
@@ -64,7 +66,7 @@ pub fn handler(key: Key, app: &mut App) {
                     &app.input,
                     app.small_search_limit,
                     0,
-                    Some(app.country.clone()),
+                    country.to_owned(),
                 ) {
                     Ok(result) => {
                         app.search_results.artists = Some(result);
@@ -78,7 +80,7 @@ pub fn handler(key: Key, app: &mut App) {
                     &app.input,
                     app.small_search_limit,
                     0,
-                    Some(app.country.clone()),
+                    country.to_owned(),
                 ) {
                     Ok(result) => {
                         app.search_results.albums = Some(result);
@@ -88,12 +90,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_playlist(
-                    &app.input,
-                    app.small_search_limit,
-                    0,
-                    Some(app.country.clone()),
-                ) {
+                match spotify.search_playlist(&app.input, app.small_search_limit, 0, country) {
                     Ok(result) => {
                         app.search_results.playlists = Some(result);
                     }

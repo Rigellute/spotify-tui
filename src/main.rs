@@ -235,6 +235,8 @@ fn main() -> Result<(), failure::Error> {
                                 app.handle_error(e);
                             }
                         };
+
+                        app.get_user();
                     }
 
                     app.get_current_playback();
