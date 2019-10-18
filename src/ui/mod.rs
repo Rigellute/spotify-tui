@@ -76,7 +76,7 @@ where
         current_route.hovered_block == ActiveBlock::Input,
     );
 
-    let input_string : String = app.input.iter().collect();
+    let input_string: String = app.input.iter().collect();
     Paragraph::new([Text::raw(&input_string)].iter())
         .style(Style::default().fg(Color::Yellow))
         .block(

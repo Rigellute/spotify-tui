@@ -16,7 +16,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Ctrl('e') => {
             app.input_idx = app.input.len();
-            let input_string : String = app.input.iter().collect();
+            let input_string: String = app.input.iter().collect();
             app.input_cursor_position = UnicodeWidthStr::width(input_string.as_str())
                 .try_into()
                 .unwrap();
@@ -47,7 +47,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Char('\n') => {
             if let (Some(spotify), Some(user)) = (app.spotify.clone(), app.user.clone()) {
                 let country = Country::from_str(&user.country.unwrap_or_else(|| "".to_string()));
-                let input_str : String = app.input.iter().collect();
+                let input_str: String = app.input.iter().collect();
                 // Can I run these functions in parellel?
                 match spotify.search_track(
                     &input_str,
