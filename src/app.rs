@@ -199,6 +199,7 @@ pub struct App {
     pub saved_album_tracks_index: usize,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
+    pub current_playback_is_liked: Option<bool>,
     pub devices: Option<DevicePayload>,
     pub input: String,
     pub input_cursor_position: u16,
@@ -248,6 +249,7 @@ impl App {
             small_search_limit: 4,
             api_error: String::new(),
             current_playback_context: None,
+            current_playback_is_liked: None,
             devices: None,
             input: String::new(),
             input_cursor_position: 0,
@@ -298,8 +300,14 @@ impl App {
             let context = spotify.current_playback(None);
             if let Ok(ctx) = context {
                 if let Some(c) = ctx {
-                    self.current_playback_context = Some(c);
+                    self.current_playback_context = Some(c.to_owned());
                     self.instant_since_last_current_playback_poll = Instant::now();
+
+                    if let Some(track) = c.item {
+                        if let Some(id) = track.id {
+                            self.get_song_is_liked(id);
+                        }
+                    }
                 }
             };
         }
@@ -734,5 +742,19 @@ impl App {
                 }
             };
         };
+    }
+
+    pub fn get_song_is_liked(&mut self, id: String) {
+        let ids: [String; 1] = [id];
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_tracks_contains(&ids) {
+                Ok(is_saved) => {
+                    self.current_playback_is_liked = Some(is_saved[0]);
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
     }
 }
