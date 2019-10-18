@@ -754,13 +754,12 @@ where
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
-        .margin(10)
+        .margin(5)
         .split(f.size());
 
     let device_instructions = vec![
         "To play tracks, please select a device.",
         "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select",
-        "The official spotify app needs to remain open on your selected device in order for playback to work.",
         "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`.",
         "You can change the playback device at any time by pressing `d`.",
     ];
