@@ -131,6 +131,12 @@ pub fn handler(key: Key, app: &mut App) {
                     .remove((app.input_cursor_position).try_into().unwrap());
             }
         }
+        Key::Delete => {
+            if !app.input.is_empty() && app.input_cursor_position < app.input.len().try_into().unwrap() {
+                app.input
+                    .remove((app.input_cursor_position).try_into().unwrap());
+            }
+        }
         _ => {}
     }
 }
