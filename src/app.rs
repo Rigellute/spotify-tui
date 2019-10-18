@@ -94,6 +94,7 @@ pub enum SearchResultBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
+    PlayBar,
     AlbumTracks,
     AlbumList,
     Artist,

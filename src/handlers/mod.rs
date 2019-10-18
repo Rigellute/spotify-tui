@@ -10,6 +10,7 @@ mod home;
 mod input;
 mod library;
 mod made_for_you;
+mod playbar;
 mod playlist;
 mod podcasts;
 mod recently_played;
@@ -153,6 +154,9 @@ fn handle_block_events(key: Key, app: &mut App) {
         }
         ActiveBlock::Podcasts => {
             podcasts::handler(key, app);
+        }
+        ActiveBlock::PlayBar => {
+            playbar::handler(key, app);
         }
     }
 }

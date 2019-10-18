@@ -123,7 +123,7 @@ where
     draw_routes(f, app, parent_layout[1]);
 
     // Currently playing
-    draw_playing_block(f, app, parent_layout[2]);
+    draw_playbar(f, app, parent_layout[2]);
 }
 
 pub fn draw_routes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -527,7 +527,7 @@ where
     )
 }
 
-pub fn draw_playing_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+pub fn draw_playbar<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
@@ -568,11 +568,17 @@ where
                 current_playback_context.device.volume_percent
             );
 
+            let current_route = app.get_current_route();
+            let highlight_state = (
+                current_route.active_block == ActiveBlock::PlayBar,
+                current_route.hovered_block == ActiveBlock::PlayBar,
+            );
+
             Block::default()
                 .borders(Borders::ALL)
                 .title(&title)
-                .title_style(Style::default().fg(Color::Gray))
-                .border_style(Style::default().fg(Color::Gray))
+                .title_style(get_color(highlight_state))
+                .border_style(get_color(highlight_state))
                 .render(f, layout_chunk);
 
             Paragraph::new(
