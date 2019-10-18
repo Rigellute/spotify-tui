@@ -14,6 +14,7 @@ use rspotify::spotify::model::search::{
     SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
 };
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
+use rspotify::spotify::model::user::PrivateUser;
 use rspotify::spotify::senum::{Country, RepeatState};
 use std::time::Instant;
 use tui::layout::Rect;
@@ -218,9 +219,9 @@ pub struct App {
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
+    pub user: Option<PrivateUser>,
     pub album_list_index: usize,
     pub artists_list_index: usize,
-    pub country: Country,
 }
 
 impl App {
@@ -275,8 +276,21 @@ impl App {
                 uris: None,
                 offset: None,
             },
+            user: None,
             instant_since_last_current_playback_poll: Instant::now(),
-            country: Country::UnitedKingdom, // TODO: This should be definable by the user
+        }
+    }
+
+    pub fn get_user(&mut self) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user() {
+                Ok(user) => {
+                    self.user = Some(user);
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
         }
     }
 
@@ -698,11 +712,11 @@ impl App {
     }
 
     pub fn get_artist_albums(&mut self, artist_id: &str, artist_name: &str) {
-        if let Some(spotify) = &self.spotify {
+        if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
             match spotify.artist_albums(
                 artist_id,
                 None,
-                Some(self.country.clone()),
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())),
                 Some(self.large_search_limit),
                 Some(0),
             ) {
