@@ -34,7 +34,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Right => {
-            if app.input_cursor_position < app.input.len().try_into().unwrap() {
+             if app.input_idx < app.input.len() {
                 let next_c = app.input[app.input_idx];
                 app.input_idx += 1;
                 let width: u16 = UnicodeWidthChar::width(next_c).unwrap().try_into().unwrap();
