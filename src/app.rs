@@ -16,6 +16,7 @@ use rspotify::spotify::model::search::{
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
 use rspotify::spotify::model::user::PrivateUser;
 use rspotify::spotify::senum::{Country, RepeatState};
+use std::collections::HashSet;
 use std::time::Instant;
 use tui::layout::Rect;
 
@@ -212,6 +213,7 @@ pub struct App {
     pub input: String,
     pub input_idx: usize,
     pub input_cursor_position: u16,
+    pub liked_song_ids_set: HashSet<String>,
     pub large_search_limit: u32,
     pub library: Library,
     pub playback_params: PlaybackParams,
@@ -254,6 +256,7 @@ impl App {
                 saved_artists: ScrollableResultPages::new(),
                 selected_index: 0,
             },
+            liked_song_ids_set: HashSet::new(),
             navigation_stack: vec![DEFAULT_ROUTE],
             large_search_limit: 20,
             small_search_limit: 4,
@@ -323,10 +326,40 @@ impl App {
             let context = spotify.current_playback(None);
             if let Ok(ctx) = context {
                 if let Some(c) = ctx {
-                    self.current_playback_context = Some(c);
+                    self.current_playback_context = Some(c.clone());
                     self.instant_since_last_current_playback_poll = Instant::now();
+
+                    if let Some(track) = c.item {
+                        if let Some(track_id) = track.id {
+                            self.current_user_saved_tracks_contains(vec![track_id]);
+                        }
+                    }
                 }
             };
+        }
+    }
+
+    pub fn current_user_saved_tracks_contains(&mut self, ids: Vec<String>) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_tracks_contains(&ids) {
+                Ok(is_saved_vec) => {
+                    for (i, id) in ids.iter().enumerate() {
+                        if let Some(is_liked) = is_saved_vec.get(i) {
+                            if *is_liked {
+                                self.liked_song_ids_set.insert(id.to_string());
+                            } else {
+                                // The song is not liked, so check if it should be removed
+                                if self.liked_song_ids_set.contains(id) {
+                                    self.liked_song_ids_set.remove(id);
+                                }
+                            }
+                        };
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
         }
     }
 
