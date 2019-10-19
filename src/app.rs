@@ -193,6 +193,7 @@ pub struct ArtistAlbums {
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
+    pub home_scroll: u16,
     pub client_config: ClientConfig,
     pub artists: Vec<FullArtist>,
     pub artist_albums: Option<ArtistAlbums>,
@@ -245,6 +246,7 @@ impl App {
             size: Rect::default(),
             selected_album: None,
             selected_album_full: None,
+            home_scroll: 0,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),
