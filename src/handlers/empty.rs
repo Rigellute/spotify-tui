@@ -13,25 +13,36 @@ pub fn handler(key: Key, app: &mut App) {
             ActiveBlock::Library => {
                 app.set_current_route_state(None, Some(ActiveBlock::MyPlaylists));
             }
-            ActiveBlock::MyPlaylists => {
-                // Go to player
-            }
-            ActiveBlock::AlbumTracks | ActiveBlock::Home | ActiveBlock::TrackTable => {
-                // Go to player
+            ActiveBlock::Artist
+            | ActiveBlock::AlbumList
+            | ActiveBlock::AlbumTracks
+            | ActiveBlock::Artists
+            | ActiveBlock::Home
+            | ActiveBlock::MadeForYou
+            | ActiveBlock::MyPlaylists
+            | ActiveBlock::RecentlyPlayed
+            | ActiveBlock::TrackTable => {
+                app.set_current_route_state(None, Some(ActiveBlock::PlayBar));
             }
             _ => {}
         },
-        k if common_key_events::up_event(k) => {
-            if let ActiveBlock::MyPlaylists = app.get_current_route().hovered_block {
+        k if common_key_events::up_event(k) => match app.get_current_route().hovered_block {
+            ActiveBlock::MyPlaylists => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
-        }
+            ActiveBlock::PlayBar => {
+                app.set_current_route_state(None, Some(ActiveBlock::MyPlaylists));
+            }
+            _ => {}
+        },
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::RecentlyPlayed
-            | ActiveBlock::AlbumTracks
+            ActiveBlock::Artist
             | ActiveBlock::AlbumList
-            | ActiveBlock::Artist
+            | ActiveBlock::AlbumTracks
+            | ActiveBlock::Artists
             | ActiveBlock::Home
+            | ActiveBlock::MadeForYou
+            | ActiveBlock::RecentlyPlayed
             | ActiveBlock::TrackTable => {
                 app.set_current_route_state(None, Some(ActiveBlock::Library));
             }
