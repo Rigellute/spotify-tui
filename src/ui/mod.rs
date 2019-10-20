@@ -704,14 +704,22 @@ where
         .border_style(get_color(highlight_state))
         .render(f, layout_chunk);
 
-    let change_log = include_str!("../../CHANGELOG.md");
+    let changelog = include_str!("../../CHANGELOG.md").to_string();
+
+    // If debug mode show the "Unreleased" header. Otherwise it is a release so there should be no
+    // unreleased features
+    let clean_changelog = if cfg!(debug_assertions) {
+        changelog
+    } else {
+        changelog.replace("\n## [Unreleased]\n", "")
+    };
 
     let top_text = vec![
         Text::styled(BANNER, Style::default().fg(Color::LightCyan)),
         Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui"),
     ];
 
-    let bottom_text = vec![Text::raw(change_log)];
+    let bottom_text = vec![Text::raw(clean_changelog)];
 
     // Contains the banner
     Paragraph::new(top_text.iter())
