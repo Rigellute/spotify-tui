@@ -209,7 +209,7 @@ pub struct App {
     // input_cursor_position is the sum of the width of charaters preceding the cursor.
     // Reason for this complication is due to non-ASCII characters, they may
     // take more than 1 bytes to store and more than 1 character width to display.
-    pub input: String,
+    pub input: Vec<char>,
     pub input_idx: usize,
     pub input_cursor_position: u16,
     pub large_search_limit: u32,
@@ -260,7 +260,7 @@ impl App {
             api_error: String::new(),
             current_playback_context: None,
             devices: None,
-            input: String::new(),
+            input: vec![],
             input_idx: 0,
             input_cursor_position: 0,
             playlist_tracks: vec![],
