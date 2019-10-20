@@ -582,6 +582,15 @@ where
                 .border_style(get_color(highlight_state))
                 .render(f, layout_chunk);
 
+            let track_name = if app
+                .liked_song_ids_set
+                .contains(&track_item.id.clone().unwrap_or_else(|| "".to_string()))
+            {
+                format!("♥ {}", &track_item.name)
+            } else {
+                track_item.name.clone()
+            };
+
             Paragraph::new(
                 [Text::styled(
                     create_artist_string(&track_item.artists),
@@ -591,7 +600,7 @@ where
             )
             .style(Style::default().fg(Color::White))
             .block(
-                Block::default().title(&track_item.name).title_style(
+                Block::default().title(&track_name).title_style(
                     Style::default()
                         .fg(Color::LightCyan)
                         .modifier(Modifier::BOLD),
