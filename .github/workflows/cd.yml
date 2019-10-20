@@ -60,9 +60,13 @@ jobs:
             target/${{ matrix.target }}/release/spotify-tui-${{ matrix.artifact_prefix }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publishing to Cargo
-        uses: actions-rs/cargo@v1
+
+  publish-cargo:
+    name: Publishing to Cargo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/cargo@v1
         with:
           command: publish
-          toolchain: ${{ matrix.rust }}
           args: --token ${{ secrets.CARGO_API_KEY }}
