@@ -50,13 +50,13 @@ jobs:
           cd target/${{ matrix.target }}/release
 
           strip spt
-          tar czvf spt-${{ matrix.artifact_prefix }}.tar.gz spt
-          shasum -a 512 spt-${{ matrix.artifact_prefix }}.tar.gz > spt-${{ matrix.artifact_prefix }}.sha512
+          tar czvf spotify-tui-${{ matrix.artifact_prefix }}.tar.gz spt
+          shasum -a 256 spt-${{ matrix.artifact_prefix }}.tar.gz > spt-${{ matrix.artifact_prefix }}.sha256
       - name: Releasing assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
             target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}.tar.gz
-            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}.sha512
+            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
