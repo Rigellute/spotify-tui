@@ -23,7 +23,9 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
 
 The binary executable is `spt`.
 
-### Homebrew (macOS)
+### Homebrew
+
+For both macOS and Linux
 
 ```bash
 brew install Rigellute/tap/spotify-tui
@@ -35,9 +37,9 @@ To update, run
 brew upgrade spotify-tui
 ```
 
-### Cargo (Linux)
+### Cargo
 
-Eventually, there should be prebuilt binaries available in the Github release, but until then you can install via Rust's package manager `cargo`.
+Use this option if your architecture is not supported by the pre-built binaries found on the [releases page](https://github.com/Rigellute/spotify-tui/releases).
 
 First, install [Rust](https://www.rust-lang.org/tools/install) (using the recommended `rustup` installation method) and then
 
@@ -45,9 +47,7 @@ First, install [Rust](https://www.rust-lang.org/tools/install) (using the recomm
 cargo install spotify-tui
 ```
 
-This method will build the binary from source, so has the benefit of supporting more architectures.
-
-I've only tested on Ubuntu and Debian, but I expect this to work on other Linux distros.
+This method will build the binary from source.
 
 To update, run
 
@@ -57,7 +57,7 @@ cargo install spotify-tui --force
 
 ### Manual
 
-1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) (currently only for macOS).
+1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
 1. `cd` to the file you just downloaded and unzip
 1. `cd` to `spotify-ui` and run with `./spt`
 
