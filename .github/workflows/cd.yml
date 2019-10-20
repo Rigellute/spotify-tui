@@ -1,0 +1,62 @@
+name: Continuous Deployment
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    name: Publishing for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        rust: [stable]
+        include:
+          - os: macos-latest
+            artifact_prefix: macos
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            artifact_prefix: linux
+            target: x86_64-unknown-linux-gnu
+
+    steps:
+      - name: Installing Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Installing needed macOS dependencies
+        if: matrix.os == 'macos-latest'
+        run: brew install openssl@1.1
+      - name: Installing needed Ubuntu dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y -qq pkg-config libssl-dev
+      - name: Checking out sources
+        uses: actions/checkout@v1
+      - name: Running cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          toolchain: ${{ matrix.rust }}
+          args: --release --target ${{ matrix.target }}
+
+      - name: Packaging final binary
+        shell: bash
+        run: |
+          cd target/${{ matrix.target }}/release
+
+          strip spt
+          tar czvf spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz spt
+          shasum -a 512 spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz > spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.sha512
+      - name: Releasing assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz
+            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.sha512
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
