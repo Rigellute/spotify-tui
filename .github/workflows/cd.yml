@@ -50,13 +50,13 @@ jobs:
           cd target/${{ matrix.target }}/release
 
           strip spt
-          tar czvf spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz spt
-          shasum -a 512 spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz > spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.sha512
+          tar czvf spt-${{ matrix.artifact_prefix }}.tar.gz spt
+          shasum -a 512 spt-${{ matrix.artifact_prefix }}.tar.gz > spt-${{ matrix.artifact_prefix }}.sha512
       - name: Releasing assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.tar.gz
-            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}-${{ matrix.artifact_type }}.sha512
+            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}.tar.gz
+            target/${{ matrix.target }}/release/spt-${{ matrix.artifact_prefix }}.sha512
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
