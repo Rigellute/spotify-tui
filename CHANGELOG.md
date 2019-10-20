@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.0.7] - 2019-10-20
+## [0.7.0] - 2019-10-20
 
 - Implement library "Artists" view - [#67](https://github.com/Rigellute/spotify-tui/pull/67) thanks [@svenvNL](https://github.com/svenvNL). NOTE that this adds an additional scope (`user-follow-read`), so you'll be prompted to grant this new permissions when you upgrade.
 - Fix searching with non-english characters - [#30](https://github.com/Rigellute/spotify-tui/pull/30). Thanks to [@fangyi-zhou](https://github.com/fangyi-zhou)
@@ -10,7 +10,7 @@
 - Save currently playing track - the playbar is now selectable/hoverable [#80](https://github.com/Rigellute/spotify-tui/pull/80)
 - Lay foundation for showing if a track is saved. You can now see if the currently playing track is saved (indicated by ♥)
 
-## [0.0.6] - 2019-10-14
+## [0.6.0] - 2019-10-14
 
 ### Added
 
@@ -26,7 +26,7 @@
 - Search input bug: Fix "out-of-bounds" crash when pressing left too many times [#63](https://github.com/Rigellute/spotify-tui/issues/63)
 - Search input bug: Fix issue that backspace always deleted the end of input, not where the cursor was [#33](https://github.com/Rigellute/spotify-tui/issues/33)
 
-## [0.0.5] - 2019-10-11
+## [0.5.0] - 2019-10-11
 
 ### Added
 
@@ -39,21 +39,21 @@
 - Fix duplicate albums showing in artist discographies ([@baxtea](https://github.com/baxtea))
 - Slightly better error message with some debug tips when tracks fail to play
 
-## [0.0.4] - 2019-10-05
+## [0.4.0] - 2019-10-05
 
 ### Added
 
 - Can now install `spotify-tui` using `brew reinstall Rigellute/tap/spotify-tui` and `cargo install spotify-tui` 🎉
 - Credentials (auth token, chosen device, and CLIENT_ID & CLIENT_SECRET) are now all stored in the same place (`${HOME}/.config/spotify-tui/client.yml`), which closes [this issue](https://github.com/Rigellute/spotify-tui/issues/4)
 
-## [0.0.3] - 2019-10-04
+## [0.3.0] - 2019-10-04
 
 ### Added
 
 - Improved onboarding experience
 - On first startup instructions will (hopefully) guide the user on how to get setup
 
-## [0.0.2] - 2019-09-17
+## [0.2.0] - 2019-09-17
 
 ### Added
 
