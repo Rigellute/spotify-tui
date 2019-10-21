@@ -38,7 +38,7 @@ where
 
     let white = Style::default().fg(Color::White);
     let gray = Style::default().fg(Color::White);
-    let header = ["Context", "Event", "Description"];
+    let header = ["Description", "Event", "Context"];
 
     let help_docs = get_help_docs();
 
@@ -56,7 +56,7 @@ where
                 .border_style(gray),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[20, 40, 50])
+        .widths(&[50, 40, 20])
         .render(f, chunks[0]);
 }
 
