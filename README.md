@@ -56,6 +56,12 @@ To update, run
 cargo install spotify-tui --force
 ```
 
+#### Note on Linux
+
+For compilation on Linux the development packages for `libssl` are required.
+For basic installation instructions, see [install OpenSSL](https://docs.rs/openssl/0.10.25/openssl/#automatic).
+In order to locate dependencies, the compilation also requires `pkg-config` to be installed.
+
 ### Manual
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
