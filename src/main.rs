@@ -10,8 +10,8 @@ use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
 use rspotify::spotify::util::get_token;
-use rspotify::spotify::util::request_token;
 use rspotify::spotify::util::process_token;
+use rspotify::spotify::util::request_token;
 use std::cmp::min;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
@@ -61,23 +61,19 @@ fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
 pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
     match spotify_oauth.get_cached_token() {
         Some(token_info) => Some(token_info),
-        None => {
-            match redirect_uri_web_server(spotify_oauth) {
-                Ok(url) => {
-                    process_token(spotify_oauth, &mut url.to_string())
-                },
-                Err(()) => {
-                    println!("Starting webserver failed. Continuing with manual authentication");
-                    request_token(spotify_oauth);
-                    println!("Enter the URL you were redirected to: ");
-                    let mut input = String::new();
-                    match io::stdin().read_line(&mut input) {
-                        Ok(_) => process_token(spotify_oauth, &mut input),
-                        Err(_) => None,
-                    }
+        None => match redirect_uri_web_server(spotify_oauth) {
+            Ok(url) => process_token(spotify_oauth, &mut url.to_string()),
+            Err(()) => {
+                println!("Starting webserver failed. Continuing with manual authentication");
+                request_token(spotify_oauth);
+                println!("Enter the URL you were redirected to: ");
+                let mut input = String::new();
+                match io::stdin().read_line(&mut input) {
+                    Ok(_) => process_token(spotify_oauth, &mut input),
+                    Err(_) => None,
                 }
             }
-        }
+        },
     }
 }
 fn main() -> Result<(), failure::Error> {
@@ -89,7 +85,6 @@ fn main() -> Result<(), failure::Error> {
         .before_help(BANNER)
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
         .get_matches();
-
 
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
