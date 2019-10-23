@@ -479,6 +479,10 @@ where
 {
     let header = [
         TableHeader {
+            text: "",
+            width: 2,
+        },
+        TableHeader {
             text: "Title",
             width: get_percentage_width(layout_chunk.width, 0.3),
         },
@@ -509,6 +513,7 @@ where
         .map(|item| TableItem {
             id: item.id.clone().unwrap_or_else(|| "".to_string()),
             format: vec![
+                "".to_string(), 
                 item.name.to_owned(),
                 create_artist_string(&item.artists),
                 item.album.name.to_owned(),
@@ -918,6 +923,10 @@ where
 {
     let header = [
         TableHeader {
+            text: "",
+            width: 2,
+        },
+        TableHeader {
             text: "Title",
             width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
         },
@@ -947,6 +956,7 @@ where
             .map(|item| TableItem {
                 id: item.track.id.clone().unwrap_or_else(|| "".to_string()),
                 format: vec![
+                    "".to_string(),
                     item.track.name.to_owned(),
                     create_artist_string(&item.track.artists),
                     millis_to_minutes(u128::from(item.track.duration_ms)),
@@ -1021,7 +1031,7 @@ fn draw_table<B>(
         // First check if the song should be highlighted because it is currently playing
         if let Some(_track_playing_index) = track_playing_index {
             if i == _track_playing_index {
-                formatted_row[0] = format!("|> {}", &formatted_row[0]);
+                formatted_row[1] = format!("|> {}", &formatted_row[1]);
                 style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
             }
         }
@@ -1030,6 +1040,10 @@ fn draw_table<B>(
         if i == selected_index {
             style = selected_style;
         }
+
+        if app.liked_song_ids_set.contains(item.id.as_str()) {
+            formatted_row[0] = format!("{}", &formatted_row[0]);
+        } 
 
         // Return row styled data
         Row::StyledData(formatted_row.into_iter(), style)

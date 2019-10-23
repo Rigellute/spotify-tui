@@ -36,7 +36,16 @@ pub fn handler(key: Key, app: &mut App) {
                         .current_user_recently_played(app.large_search_limit)
                     {
                         Ok(result) => {
-                            app.recently_played.result = Some(result);
+                            app.recently_played.result = Some(result.clone());
+
+                            app.current_user_saved_tracks_contains(
+                                result
+                                    .items
+                                    .iter()
+                                    .filter_map(|item| item.track.id.clone())
+                                    .collect::<Vec<String>>(),
+                            );
+
                             app.push_navigation_stack(
                                 RouteId::RecentlyPlayed,
                                 ActiveBlock::RecentlyPlayed,

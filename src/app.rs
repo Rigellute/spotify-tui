@@ -570,12 +570,7 @@ impl App {
                     None,
                     None,
                 ) {
-                    self.track_table.tracks = playlist_tracks
-                        .items
-                        .clone()
-                        .into_iter()
-                        .map(|item| item.track)
-                        .collect::<Vec<FullTrack>>();
+                    self.set_playlist_tracks_to_table(&playlist_tracks);
 
                     self.playlist_tracks = playlist_tracks.items;
                     self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
@@ -628,13 +623,36 @@ impl App {
         }
     }
 
-    fn set_saved_tracks_to_table(&mut self, saved_tracks: &Page<SavedTrack>) {
-        self.track_table.tracks = saved_tracks
+    fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
+        self.set_tracks_to_table(saved_track_page
             .items
             .clone()
             .into_iter()
             .map(|item| item.track)
-            .collect::<Vec<FullTrack>>();
+            .collect::<Vec<FullTrack>>());
+    }
+
+    fn set_playlist_tracks_to_table(&mut self, playlist_track_page: &Page<PlaylistTrack>) {
+        self.set_tracks_to_table(
+            playlist_track_page
+                .items
+                .clone()
+                .into_iter()
+                .map(|item| item.track)
+                .collect::<Vec<FullTrack>>(),
+        );
+    }
+
+    pub fn set_tracks_to_table(&mut self, tracks: Vec<FullTrack>) {
+        self.track_table.tracks = tracks.clone();
+
+        self.current_user_saved_tracks_contains(
+            tracks
+                .clone()
+                .into_iter()
+                .filter_map(|item| item.id)
+                .collect::<Vec<String>>(),
+        );
     }
 
     pub fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
