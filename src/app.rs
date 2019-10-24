@@ -711,7 +711,7 @@ impl App {
                 match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
                     Ok(tracks) => {
                         self.selected_album = Some(SelectedAlbum {
-                            album: album,
+                            album,
                             tracks: tracks.clone(),
                             selected_index: Some(0),
                         });

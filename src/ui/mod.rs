@@ -1098,7 +1098,6 @@ fn draw_table<B>(
     let (title, header) = table_layout;
 
     let rows = items.iter().enumerate().map(|(i, item)| {
-        // Show this ♥ if the song is liked
         let mut formatted_row = item.format.clone();
         let mut style = Style::default().fg(Color::White); // default styling
 
@@ -1115,7 +1114,7 @@ fn draw_table<B>(
                     }
                 }
 
-                // Place a heart into the "liked" column
+                // Show this ♥ if the song is liked
                 if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
                     if app.liked_song_ids_set.contains(item.id.as_str()) {
                         formatted_row[liked_idx] = " ♥".to_string();
