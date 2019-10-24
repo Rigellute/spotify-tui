@@ -10,10 +10,10 @@ use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
 use rspotify::spotify::util::get_token;
+use rspotify::spotify::util::process_token;
+use rspotify::spotify::util::request_token;
 use std::cmp::min;
 use std::io::{self, Write};
-use std::sync::mpsc;
-use std::thread;
 use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -57,7 +57,25 @@ fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
 
     (spotify, token_expiry)
 }
-
+/// get token automatically with local webserver
+pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
+    match spotify_oauth.get_cached_token() {
+        Some(token_info) => Some(token_info),
+        None => match redirect_uri_web_server(spotify_oauth) {
+            Ok(url) => process_token(spotify_oauth, &mut url.to_string()),
+            Err(()) => {
+                println!("Starting webserver failed. Continuing with manual authentication");
+                request_token(spotify_oauth);
+                println!("Enter the URL you were redirected to: ");
+                let mut input = String::new();
+                match io::stdin().read_line(&mut input) {
+                    Ok(_) => process_token(spotify_oauth, &mut input),
+                    Err(_) => None,
+                }
+            }
+        },
+    }
+}
 fn main() -> Result<(), failure::Error> {
     ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -67,14 +85,6 @@ fn main() -> Result<(), failure::Error> {
         .before_help(BANNER)
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
         .get_matches();
-
-    let (tx, rx) = mpsc::channel();
-
-    // Start the web server in case we need to use the redirect uri, this will get closed below
-    // after auth is successful
-    thread::spawn(|| {
-        redirect_uri_web_server(rx);
-    });
 
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
@@ -90,11 +100,8 @@ fn main() -> Result<(), failure::Error> {
         .scope(&SCOPES.join(" "))
         .build();
 
-    match get_token(&mut oauth) {
+    match get_token_auto(&mut oauth) {
         Some(token_info) => {
-            // Terminate the web server running for the Redirect URI (fire and forget)
-            if tx.send(()).is_ok() {};
-
             // Terminal initialization
             let stdout = io::stdout().into_raw_mode()?;
             let stdout = MouseTerminal::from(stdout);
