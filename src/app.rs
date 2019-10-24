@@ -734,6 +734,8 @@ impl App {
         };
     }
 
+    // Currently unused but keep for future changes
+    #[allow(dead_code)]
     pub fn save_tracks(&mut self, track_ids: Vec<String>) {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks_add(&track_ids) {
