@@ -707,6 +707,33 @@ impl App {
         }
     }
 
+    pub fn toggle_save_track(&mut self, track_id: String) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_tracks_contains(&[track_id.clone()]) {
+                Ok(saved) => {
+                    if saved[0] {
+                        match spotify.current_user_saved_tracks_delete(&[track_id]) {
+                            Ok(()) => {}
+                            Err(e) => {
+                                self.handle_error(e);
+                            }
+                        }
+                    } else {
+                        match spotify.current_user_saved_tracks_add(&[track_id]) {
+                            Ok(()) => {}
+                            Err(e) => {
+                                self.handle_error(e);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        };
+    }
+
     pub fn save_tracks(&mut self, track_ids: Vec<String>) {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks_add(&track_ids) {

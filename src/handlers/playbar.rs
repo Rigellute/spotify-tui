@@ -11,7 +11,7 @@ pub fn handler(key: Key, app: &mut App) {
             if let Some(playing_context) = &app.current_playback_context {
                 if let Some(track) = &playing_context.item {
                     if let Some(id) = track.id.to_owned() {
-                        app.save_tracks(vec![id]);
+                        app.toggle_save_track(id);
                     }
                 }
             }

@@ -62,7 +62,7 @@ pub fn handler(key: Key, app: &mut App) {
                             .get(app.saved_album_tracks_index)
                         {
                             if let Some(track_id) = &selected_track.id {
-                                app.save_tracks(vec![track_id.clone()]);
+                                app.toggle_save_track(track_id.clone());
                             };
                         };
                     }
