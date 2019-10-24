@@ -624,12 +624,14 @@ impl App {
     }
 
     fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
-        self.set_tracks_to_table(saved_track_page
-            .items
-            .clone()
-            .into_iter()
-            .map(|item| item.track)
-            .collect::<Vec<FullTrack>>());
+        self.set_tracks_to_table(
+            saved_track_page
+                .items
+                .clone()
+                .into_iter()
+                .map(|item| item.track)
+                .collect::<Vec<FullTrack>>(),
+        );
     }
 
     fn set_playlist_tracks_to_table(&mut self, playlist_track_page: &Page<PlaylistTrack>) {
@@ -709,10 +711,18 @@ impl App {
                 match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
                     Ok(tracks) => {
                         self.selected_album = Some(SelectedAlbum {
-                            album,
-                            tracks,
+                            album: album,
+                            tracks: tracks.clone(),
                             selected_index: Some(0),
                         });
+
+                        self.current_user_saved_tracks_contains(
+                            tracks
+                                .items
+                                .into_iter()
+                                .filter_map(|item| item.id)
+                                .collect::<Vec<String>>(),
+                        );
 
                         self.album_table_context = AlbumTableContext::Simplified;
                         self.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
