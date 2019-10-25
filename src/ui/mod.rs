@@ -16,14 +16,48 @@ use util::{
     get_search_results_highlight_state, millis_to_minutes,
 };
 
-pub struct TableItem {
-    id: String,
-    format: Vec<String>,
+pub enum TableId {
+    Album,
+    AlbumList,
+    Artist,
+    Song,
+    RecentlyPlayed,
+}
+
+#[derive(PartialEq)]
+pub enum ColumnId {
+    None,
+    SongTitle,
+    Liked,
+}
+
+impl Default for ColumnId {
+    fn default() -> Self {
+        ColumnId::None
+    }
 }
 
 pub struct TableHeader<'a> {
+    id: TableId,
+    items: Vec<TableHeaderItem<'a>>,
+}
+
+impl TableHeader<'_> {
+    pub fn get_index(&self, id: ColumnId) -> Option<usize> {
+        self.items.iter().position(|item| item.id == id)
+    }
+}
+
+#[derive(Default)]
+pub struct TableHeaderItem<'a> {
+    id: ColumnId,
     text: &'a str,
     width: u16,
+}
+
+pub struct TableItem {
+    id: String,
+    format: Vec<String>,
 }
 
 pub fn draw_help_menu<B>(f: &mut Frame<B>)
@@ -350,10 +384,14 @@ pub fn draw_artist_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let header = [TableHeader {
-        text: "Artist",
-        width: get_percentage_width(layout_chunk.width, 1.0),
-    }];
+    let header = TableHeader {
+        id: TableId::Artist,
+        items: vec![TableHeaderItem {
+            text: "Artist",
+            width: get_percentage_width(layout_chunk.width, 1.0),
+            ..Default::default()
+        }],
+    };
 
     let current_route = app.get_current_route();
     let highlight_state = (
@@ -384,20 +422,31 @@ pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let header = [
-        TableHeader {
-            text: "#",
-            width: 3,
-        },
-        TableHeader {
-            text: "Title",
-            width: get_percentage_width(layout_chunk.width, 0.80),
-        },
-        TableHeader {
-            text: "Length",
-            width: get_percentage_width(layout_chunk.width, 0.15),
-        },
-    ];
+    let header = TableHeader {
+        id: TableId::Album,
+        items: vec![
+            TableHeaderItem {
+                id: ColumnId::Liked,
+                text: "",
+                width: 2,
+            },
+            TableHeaderItem {
+                text: "#",
+                width: 3,
+                ..Default::default()
+            },
+            TableHeaderItem {
+                id: ColumnId::SongTitle,
+                text: "Title",
+                width: get_percentage_width(layout_chunk.width, 0.80),
+            },
+            TableHeaderItem {
+                text: "Length",
+                width: get_percentage_width(layout_chunk.width, 0.15),
+                ..Default::default()
+            },
+        ],
+    };
 
     let current_route = app.get_current_route();
     let highlight_state = (
@@ -415,6 +464,7 @@ where
                     .map(|item| TableItem {
                         id: item.id.clone().unwrap_or_else(|| "".to_string()),
                         format: vec![
+                            "".to_string(),
                             item.track_number.to_string(),
                             item.name.to_owned(),
                             millis_to_minutes(u128::from(item.duration_ms)),
@@ -441,6 +491,7 @@ where
                         .map(|item| TableItem {
                             id: item.id.clone().unwrap_or_else(|| "".to_string()),
                             format: vec![
+                                "".to_string(),
                                 item.track_number.to_string(),
                                 item.name.to_owned(),
                                 millis_to_minutes(u128::from(item.duration_ms)),
@@ -477,24 +528,36 @@ pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let header = [
-        TableHeader {
-            text: "Title",
-            width: get_percentage_width(layout_chunk.width, 0.3),
-        },
-        TableHeader {
-            text: "Artist",
-            width: get_percentage_width(layout_chunk.width, 0.3),
-        },
-        TableHeader {
-            text: "AlbumTracks",
-            width: get_percentage_width(layout_chunk.width, 0.3),
-        },
-        TableHeader {
-            text: "Length",
-            width: get_percentage_width(layout_chunk.width, 0.1),
-        },
-    ];
+    let header = TableHeader {
+        id: TableId::Song,
+        items: vec![
+            TableHeaderItem {
+                id: ColumnId::Liked,
+                text: "",
+                width: 2,
+            },
+            TableHeaderItem {
+                id: ColumnId::SongTitle,
+                text: "Title",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+            },
+            TableHeaderItem {
+                text: "Artist",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "AlbumTracks",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Length",
+                width: get_percentage_width(layout_chunk.width, 0.1),
+                ..Default::default()
+            },
+        ],
+    };
 
     let current_route = app.get_current_route();
     let highlight_state = (
@@ -509,6 +572,7 @@ where
         .map(|item| TableItem {
             id: item.id.clone().unwrap_or_else(|| "".to_string()),
             format: vec![
+                "".to_string(),
                 item.name.to_owned(),
                 create_artist_string(&item.artists),
                 item.album.name.to_owned(),
@@ -862,20 +926,26 @@ pub fn draw_album_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let header = [
-        TableHeader {
-            text: "Name",
-            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
-        },
-        TableHeader {
-            text: "Artists",
-            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
-        },
-        TableHeader {
-            text: "Release Date",
-            width: get_percentage_width(layout_chunk.width, 1.0 / 3.0),
-        },
-    ];
+    let header = TableHeader {
+        id: TableId::AlbumList,
+        items: vec![
+            TableHeaderItem {
+                text: "Name",
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Artists",
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Release Date",
+                width: get_percentage_width(layout_chunk.width, 1.0 / 3.0),
+                ..Default::default()
+            },
+        ],
+    };
 
     let current_route = app.get_current_route();
 
@@ -916,20 +986,31 @@ pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: 
 where
     B: Backend,
 {
-    let header = [
-        TableHeader {
-            text: "Title",
-            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
-        },
-        TableHeader {
-            text: "Artist",
-            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
-        },
-        TableHeader {
-            text: "Length",
-            width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
-        },
-    ];
+    let header = TableHeader {
+        id: TableId::RecentlyPlayed,
+        items: vec![
+            TableHeaderItem {
+                id: ColumnId::Liked,
+                text: "",
+                width: 2,
+            },
+            TableHeaderItem {
+                id: ColumnId::SongTitle,
+                text: "Title",
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+            },
+            TableHeaderItem {
+                text: "Artist",
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Length",
+                width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
+                ..Default::default()
+            },
+        ],
+    };
 
     if let Some(recently_played) = &app.recently_played.result {
         let current_route = app.get_current_route();
@@ -947,6 +1028,7 @@ where
             .map(|item| TableItem {
                 id: item.track.id.clone().unwrap_or_else(|| "".to_string()),
                 format: vec![
+                    "".to_string(),
                     item.track.name.to_owned(),
                     create_artist_string(&item.track.artists),
                     millis_to_minutes(u128::from(item.track.duration_ms)),
@@ -996,7 +1078,7 @@ fn draw_table<B>(
     f: &mut Frame<B>,
     app: &App,
     layout_chunk: Rect,
-    table_layout: (&str, &[TableHeader]), // (title, header colums)
+    table_layout: (&str, &TableHeader), // (title, header colums)
     items: &[TableItem], // The nested vector must have the same length as the `header_columns`
     selected_index: usize,
     highlight_state: (bool, bool),
@@ -1013,17 +1095,33 @@ fn draw_table<B>(
         None => None,
     };
 
+    let (title, header) = table_layout;
+
     let rows = items.iter().enumerate().map(|(i, item)| {
-        // Show this ♥ if the song is liked
         let mut formatted_row = item.format.clone();
         let mut style = Style::default().fg(Color::White); // default styling
 
-        // First check if the song should be highlighted because it is currently playing
-        if let Some(_track_playing_index) = track_playing_index {
-            if i == _track_playing_index {
-                formatted_row[0] = format!("|> {}", &formatted_row[0]);
-                style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
+        // if table displays songs
+        match header.id {
+            TableId::Song | TableId::RecentlyPlayed | TableId::Album => {
+                // First check if the song should be highlighted because it is currently playing
+                if let Some(title_idx) = header.get_index(ColumnId::SongTitle) {
+                    if let Some(_track_playing_index) = track_playing_index {
+                        if i == _track_playing_index {
+                            formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
+                            style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
+                        }
+                    }
+                }
+
+                // Show this ♥ if the song is liked
+                if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
+                    if app.liked_song_ids_set.contains(item.id.as_str()) {
+                        formatted_row[liked_idx] = " ♥".to_string();
+                    }
+                }
             }
+            _ => {}
         }
 
         // Next check if the item is under selection
@@ -1035,11 +1133,9 @@ fn draw_table<B>(
         Row::StyledData(formatted_row.into_iter(), style)
     });
 
-    let (title, header_columns) = table_layout;
+    let widths = header.items.iter().map(|h| h.width).collect::<Vec<u16>>();
 
-    let widths = header_columns.iter().map(|h| h.width).collect::<Vec<u16>>();
-
-    Table::new(header_columns.iter().map(|h| h.text), rows)
+    Table::new(header.items.iter().map(|h| h.text), rows)
         .block(
             Block::default()
                 .borders(Borders::ALL)

@@ -56,7 +56,7 @@ pub fn handler(key: Key, app: &mut App) {
                     country.to_owned(),
                 ) {
                     Ok(result) => {
-                        app.track_table.tracks = result.tracks.items.clone();
+                        app.set_tracks_to_table(result.tracks.items.clone());
                         app.search_results.tracks = Some(result);
                     }
                     Err(e) => {
