@@ -595,7 +595,11 @@ impl App {
     }
 
     pub fn pop_navigation_stack(&mut self) -> Option<Route> {
-        self.navigation_stack.pop()
+        if self.navigation_stack.len() == 1 {
+            None
+        } else {
+            self.navigation_stack.pop()
+        }
     }
 
     pub fn get_current_route(&self) -> &Route {
