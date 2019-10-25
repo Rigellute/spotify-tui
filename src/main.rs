@@ -4,8 +4,8 @@ mod config;
 mod handlers;
 mod redirect_uri;
 mod ui;
-mod util;
 mod user_config;
+mod util;
 
 use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
@@ -27,8 +27,8 @@ use tui::Terminal;
 use app::{ActiveBlock, App};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
-use user_config::UserConfig;
 use redirect_uri::redirect_uri_web_server;
+use user_config::UserConfig;
 use util::{Event, Events};
 
 const SCOPES: [&str; 9] = [
@@ -207,19 +207,17 @@ fn main() -> Result<(), failure::Error> {
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
                             handlers::input_handler(key, &mut app);
-                        } else {
-                            if key == app.user_config.back {
-                                if app.get_current_route().active_block != ActiveBlock::Input {
-                                    // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                    let pop_result = app.pop_navigation_stack();
+                        } else if key == app.user_config.back {
+                            if app.get_current_route().active_block != ActiveBlock::Input {
+                                // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
+                                let pop_result = app.pop_navigation_stack();
 
-                                    if pop_result.is_none() {
-                                        break; // Exit application
-                                    }
+                                if pop_result.is_none() {
+                                    break; // Exit application
                                 }
-                            } else {
-                                handlers::handle_app(key, &mut app);
                             }
+                        } else {
+                            handlers::handle_app(key, &mut app);
                         }
                     }
                     Event::Tick => {
