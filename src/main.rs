@@ -15,6 +15,7 @@ use rspotify::spotify::util::request_token;
 use std::cmp::min;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
+use std::panic::{self, PanicInfo};
 use termion::cursor::Goto;
 use termion::event::Key;
 use termion::input::MouseTerminal;
@@ -22,6 +23,7 @@ use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
+use backtrace::Backtrace;
 
 use app::{ActiveBlock, App};
 use banner::BANNER;
@@ -76,7 +78,36 @@ pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
         },
     }
 }
+
+fn panic_hook(info: &PanicInfo<'_>) {
+    if cfg!(debug_assertions) {
+        let location = info.location().unwrap();
+
+        let msg = match info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => match info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Box<Any>",
+            },
+        };
+
+        let stacktrace: String = format!("{:?}", Backtrace::new()).replace('\n', "\n\r");
+
+        println!(
+            "{}thread '<unnamed>' panicked at '{}', {}\n\r{}",
+            termion::screen::ToMainScreen,
+            msg,
+            location,
+            stacktrace
+        );
+    }
+}
+
 fn main() -> Result<(), failure::Error> {
+    panic::set_hook(Box::new(|info| {
+        panic_hook(info);
+    }));
+
     ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
