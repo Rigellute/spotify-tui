@@ -6,6 +6,7 @@ mod redirect_uri;
 mod ui;
 mod util;
 
+use backtrace::Backtrace;
 use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
@@ -14,8 +15,8 @@ use rspotify::spotify::util::process_token;
 use rspotify::spotify::util::request_token;
 use std::cmp::min;
 use std::io::{self, Write};
-use std::time::{Duration, Instant};
 use std::panic::{self, PanicInfo};
+use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
 use termion::input::MouseTerminal;
@@ -23,7 +24,6 @@ use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
-use backtrace::Backtrace;
 
 use app::{ActiveBlock, App};
 use banner::BANNER;
