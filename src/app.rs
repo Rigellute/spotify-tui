@@ -711,7 +711,7 @@ impl App {
         if let Some(spotify) = &self.spotify {
             match spotify.current_user_saved_tracks_contains(&[track_id.clone()]) {
                 Ok(saved) => {
-                    if saved[0] {
+                    if saved.first() == Some(&true) {
                         match spotify.current_user_saved_tracks_delete(&[track_id]) {
                             Ok(()) => {}
                             Err(e) => {
@@ -727,19 +727,6 @@ impl App {
                         }
                     }
                 }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        };
-    }
-
-    // Currently unused but keep for future changes
-    #[allow(dead_code)]
-    pub fn save_tracks(&mut self, track_ids: Vec<String>) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_saved_tracks_add(&track_ids) {
-                Ok(()) => {}
                 Err(e) => {
                     self.handle_error(e);
                 }
