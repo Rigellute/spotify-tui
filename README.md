@@ -105,6 +105,40 @@ The binary is named `spt`.
 
 When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
 
+# Configuration
+
+A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`
+(not to be confused with client.yml which handles spotify authentication)
+
+The following is a sample config.yml file:
+```yaml
+# Sample config file
+
+# Key stroke can be used if it only uses two keys:
+# ctrl-q works,
+# ctrl-alt-q doesn't.
+back: 'ctrl-q'
+
+jump_to_album: 'a'
+
+# Shift modifiers use a capital letter (also applies with other modifier keys
+# like ctrl-A)
+jump_to_artist_album: 'A'
+
+manage_devices: 'd'
+decrease_volume: '-'
+increase_volume: '+'
+toggle_playback: ' '
+seek_backwards: '<'
+seek_forwards: '>'
+next_track: 'n'
+previous_track: 'p'
+help: '?'
+shuffle: 's'
+repeat: 'r'
+search: '/'
+```
+
 ## Limitations
 
 This app uses the [Web API](https://developer.spotify.com/documentation/web-api/) from Spotify, which doesn't handle streaming itself. So you'll need either an official Spotify client open or a lighter weight alternative such as [spotifyd](https://github.com/Spotifyd/spotifyd).

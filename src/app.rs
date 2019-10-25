@@ -1,4 +1,5 @@
 use super::config::ClientConfig;
+use super::user_config::UserConfig;
 use failure::err_msg;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
@@ -197,6 +198,7 @@ pub struct App {
     navigation_stack: Vec<Route>,
     pub home_scroll: u16,
     pub client_config: ClientConfig,
+    pub user_config: UserConfig,
     pub artists: Vec<FullArtist>,
     pub artist_albums: Option<ArtistAlbums>,
     pub album_table_context: AlbumTableContext,
@@ -243,6 +245,7 @@ impl App {
             artists_list_index: 0,
             artists: vec![],
             artist_albums: None,
+            user_config: UserConfig::new(),
             client_config: Default::default(),
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
