@@ -6,6 +6,7 @@ mod redirect_uri;
 mod ui;
 mod util;
 
+use backtrace::Backtrace;
 use clap::App as ClapApp;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
@@ -14,6 +15,7 @@ use rspotify::spotify::util::process_token;
 use rspotify::spotify::util::request_token;
 use std::cmp::min;
 use std::io::{self, Write};
+use std::panic::{self, PanicInfo};
 use std::time::{Duration, Instant};
 use termion::cursor::Goto;
 use termion::event::Key;
@@ -77,7 +79,36 @@ pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
         },
     }
 }
+
+fn panic_hook(info: &PanicInfo<'_>) {
+    if cfg!(debug_assertions) {
+        let location = info.location().unwrap();
+
+        let msg = match info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => match info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Box<Any>",
+            },
+        };
+
+        let stacktrace: String = format!("{:?}", Backtrace::new()).replace('\n', "\n\r");
+
+        println!(
+            "{}thread '<unnamed>' panicked at '{}', {}\n\r{}",
+            termion::screen::ToMainScreen,
+            msg,
+            location,
+            stacktrace
+        );
+    }
+}
+
 fn main() -> Result<(), failure::Error> {
+    panic::set_hook(Box::new(|info| {
+        panic_hook(info);
+    }));
+
     ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))

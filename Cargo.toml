@@ -23,6 +23,7 @@ serde_yaml = "0.8"
 dirs = "2.0.2"
 clap = "2.33.0"
 unicode-width = "0.1.6"
+backtrace = "0.3.40"
 
 [[bin]]
 bench = false
