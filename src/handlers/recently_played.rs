@@ -29,7 +29,7 @@ pub fn handler(key: Key, app: &mut App) {
                     recently_played_result.items.get(app.recently_played.index)
                 {
                     if let Some(track_id) = &selected_track.track.id {
-                        app.save_tracks(vec![track_id.clone()]);
+                        app.toggle_save_track(track_id.clone());
                     };
                 };
             };
