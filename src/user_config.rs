@@ -229,7 +229,7 @@ mod tests {
         use termion::event::Key;
 
         assert!(
-            check_reserved_keys(&Key::Char('\n')).is_err(),
+            check_reserved_keys(Key::Char('\n')).is_err(),
             "Enter key should be reserved"
         );
     }
