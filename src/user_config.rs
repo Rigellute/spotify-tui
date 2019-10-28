@@ -52,6 +52,31 @@ fn parse_key(key: String) -> Result<Key, failure::Error> {
     }
 }
 
+fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
+    let reserved = [
+        Key::Char('h'),
+        Key::Char('j'),
+        Key::Char('k'),
+        Key::Char('l'),
+        Key::Up,
+        Key::Down,
+        Key::Left,
+        Key::Right,
+        Key::Backspace,
+        Key::Char('\n'),
+    ];
+    for item in reserved.iter() {
+        if key == *item {
+            // TODO: Add pretty print for key
+            return Err(failure::format_err!(
+                "The key {:?} is reserved and cannot be remapped",
+                key
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
     back: Option<String>,
@@ -145,12 +170,17 @@ impl UserConfig {
         let paths = self.get_or_build_paths()?;
         if paths.config_file_path.exists() {
             let config_string = fs::read_to_string(&paths.config_file_path)?;
+            // serde fails if file is empty
+            if config_string.trim().is_empty() {
+                return Ok(());
+            }
             let config_yml: UserConfigString = serde_yaml::from_str(&config_string)?;
 
             macro_rules! to_keys {
                 ($name: ident) => {
                     if let Some(key_string) = config_yml.$name {
                         self.$name = parse_key(key_string)?;
+                        check_reserved_keys(self.$name)?;
                     }
                 };
             };
@@ -191,5 +221,16 @@ mod tests {
         assert_eq!(parse_key(String::from("-")).unwrap(), Key::Char('-'));
         assert_eq!(parse_key(String::from("esc")).unwrap(), Key::Esc);
         assert_eq!(parse_key(String::from("del")).unwrap(), Key::Delete);
+    }
+
+    #[test]
+    fn test_reserved_key() {
+        use super::check_reserved_keys;
+        use termion::event::Key;
+
+        assert!(
+            check_reserved_keys(&Key::Char('\n')).is_err(),
+            "Enter key should be reserved"
+        );
     }
 }
