@@ -176,7 +176,7 @@ pub struct TrackTable {
 pub struct SelectedAlbum {
     pub album: SimplifiedAlbum,
     pub tracks: Page<SimplifiedTrack>,
-    pub selected_index: Option<usize>,
+    pub selected_index: usize,
 }
 
 #[derive(Clone)]
@@ -717,7 +717,7 @@ impl App {
                         self.selected_album = Some(SelectedAlbum {
                             album,
                             tracks: tracks.clone(),
-                            selected_index: Some(0),
+                            selected_index: 0,
                         });
 
                         self.current_user_saved_tracks_contains(
@@ -744,15 +744,20 @@ impl App {
             match spotify.current_user_saved_tracks_contains(&[track_id.clone()]) {
                 Ok(saved) => {
                     if saved.first() == Some(&true) {
-                        match spotify.current_user_saved_tracks_delete(&[track_id]) {
-                            Ok(()) => {}
+                        match spotify.current_user_saved_tracks_delete(&[track_id.clone()]) {
+                            Ok(()) => {
+                                self.liked_song_ids_set.remove(&track_id);
+                            }
                             Err(e) => {
                                 self.handle_error(e);
                             }
                         }
                     } else {
-                        match spotify.current_user_saved_tracks_add(&[track_id]) {
-                            Ok(()) => {}
+                        match spotify.current_user_saved_tracks_add(&[track_id.clone()]) {
+                            Ok(()) => {
+                                // TODO: This should ideally use the same logic as `self.current_user_saved_tracks_contains`
+                                self.liked_song_ids_set.insert(track_id);
+                            }
                             Err(e) => {
                                 self.handle_error(e);
                             }

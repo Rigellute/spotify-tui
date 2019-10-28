@@ -2,10 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
 - Improve onboarding: auto fill the redirect url [#98](https://github.com/Rigellute/spotify-tui/pull/98)
 - Indicate if a track is "liked" in Recently Played, Album tracks and song list views using "♥" - [#103](https://github.com/Rigellute/spotify-tui/pull/103)
-- Fix app crash when pressing `enter`, `q` and then `down`. [#109](https://github.com/Rigellute/spotify-tui/pull/109)
 - Add ability to toggle the saved state of a track: pressing `s` on an already saved track will unsave it. [#104](https://github.com/Rigellute/spotify-tui/pull/104)
+- Add collaborative playlists scope. You'll need to reauthenticate due to this change. [#115](https://github.com/Rigellute/spotify-tui/pull/115)
+
+### Fixed
+
+- Fix app crash when pressing `enter`, `q` and then `down`. [#109](https://github.com/Rigellute/spotify-tui/pull/109)
+- Fix trying to save a track in the album view [#119](https://github.com/Rigellute/spotify-tui/pull/119)
+- Fix UI toggling saved track [#119](https://github.com/Rigellute/spotify-tui/pull/119)
 
 ## [0.7.0] - 2019-10-20
 
