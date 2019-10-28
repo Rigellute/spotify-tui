@@ -22,9 +22,9 @@ pub fn handler(key: Key, app: &mut App) {
                 if let Some(selected_album) = &mut app.selected_album {
                     let next_index = common_key_events::on_down_press_handler(
                         &selected_album.tracks.items,
-                        selected_album.selected_index,
+                        Some(selected_album.selected_index),
                     );
-                    selected_album.selected_index = Some(next_index);
+                    selected_album.selected_index = next_index;
                 }
             }
         },
@@ -45,9 +45,9 @@ pub fn handler(key: Key, app: &mut App) {
                 if let Some(selected_album) = &mut app.selected_album {
                     let next_index = common_key_events::on_up_press_handler(
                         &selected_album.tracks.items,
-                        selected_album.selected_index,
+                        Some(selected_album.selected_index),
                     );
-                    selected_album.selected_index = Some(next_index);
+                    selected_album.selected_index = next_index;
                 }
             }
         },
@@ -68,7 +68,19 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 };
             }
-            AlbumTableContext::Simplified => {}
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = app.selected_album.clone() {
+                    if let Some(selected_track) = selected_album
+                        .tracks
+                        .items
+                        .get(selected_album.selected_index)
+                    {
+                        if let Some(track_id) = &selected_track.id {
+                            app.toggle_save_track(track_id.clone());
+                        };
+                    };
+                };
+            }
         },
         Key::Char('\n') => match app.album_table_context {
             AlbumTableContext::Full => {
@@ -87,7 +99,7 @@ pub fn handler(key: Key, app: &mut App) {
                     app.start_playback(
                         selected_album.album.uri.clone(),
                         None,
-                        selected_album.selected_index,
+                        Some(selected_album.selected_index),
                     );
                 };
             }

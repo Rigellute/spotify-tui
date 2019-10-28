@@ -476,7 +476,7 @@ where
                     selected_album.album.name,
                     create_artist_string(&selected_album.album.artists)
                 ),
-                selected_index: selected_album.selected_index.unwrap_or(0),
+                selected_index: selected_album.selected_index,
             }),
             None => None,
         },
