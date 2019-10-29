@@ -77,8 +77,12 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
     Ok(())
 }
 
+pub struct UserConfigPaths {
+    pub config_file_path: PathBuf,
+}
+
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct UserConfigString {
+pub struct KeyBindingsString {
     back: Option<String>,
     jump_to_album: Option<String>,
     jump_to_artist_album: Option<String>,
@@ -94,9 +98,10 @@ pub struct UserConfigString {
     shuffle: Option<String>,
     repeat: Option<String>,
     search: Option<String>,
+    submit: Option<String>,
 }
 
-pub struct UserConfig {
+pub struct KeyBindings {
     pub back: Key,
     pub jump_to_album: Key,
     pub jump_to_artist_album: Key,
@@ -112,30 +117,39 @@ pub struct UserConfig {
     pub shuffle: Key,
     pub repeat: Key,
     pub search: Key,
+    pub submit: Key,
 }
 
-pub struct UserConfigPaths {
-    pub config_file_path: PathBuf,
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct UserConfigString {
+    keybindings: Option<KeyBindingsString>,
+}
+
+pub struct UserConfig {
+    pub keys: KeyBindings,
 }
 
 impl UserConfig {
     pub fn new() -> UserConfig {
         UserConfig {
-            back: Key::Char('q'),
-            jump_to_album: Key::Char('a'),
-            jump_to_artist_album: Key::Char('A'),
-            manage_devices: Key::Char('d'),
-            decrease_volume: Key::Char('-'),
-            increase_volume: Key::Char('+'),
-            toggle_playback: Key::Char(' '),
-            seek_backwards: Key::Char('<'),
-            seek_forwards: Key::Char('>'),
-            next_track: Key::Char('n'),
-            previous_track: Key::Char('p'),
-            help: Key::Char('?'),
-            shuffle: Key::Char('s'),
-            repeat: Key::Char('r'),
-            search: Key::Char('/'),
+            keys: KeyBindings {
+                back: Key::Char('q'),
+                jump_to_album: Key::Char('a'),
+                jump_to_artist_album: Key::Char('A'),
+                manage_devices: Key::Char('d'),
+                decrease_volume: Key::Char('-'),
+                increase_volume: Key::Char('+'),
+                toggle_playback: Key::Char(' '),
+                seek_backwards: Key::Char('<'),
+                seek_forwards: Key::Char('>'),
+                next_track: Key::Char('n'),
+                previous_track: Key::Char('p'),
+                help: Key::Char('?'),
+                shuffle: Key::Ctrl('s'),
+                repeat: Key::Char('r'),
+                search: Key::Char('/'),
+                submit: Key::Char('\n'),
+            },
         }
     }
 
@@ -166,6 +180,39 @@ impl UserConfig {
         }
     }
 
+    pub fn load_keybindings(
+        &mut self,
+        keybindings: KeyBindingsString,
+    ) -> Result<(), failure::Error> {
+        macro_rules! to_keys {
+            ($name: ident) => {
+                if let Some(key_string) = keybindings.$name {
+                    self.keys.$name = parse_key(key_string)?;
+                    check_reserved_keys(self.keys.$name)?;
+                }
+            };
+        };
+
+        to_keys!(back);
+        to_keys!(jump_to_album);
+        to_keys!(jump_to_artist_album);
+        to_keys!(manage_devices);
+        to_keys!(decrease_volume);
+        to_keys!(increase_volume);
+        to_keys!(toggle_playback);
+        to_keys!(seek_backwards);
+        to_keys!(seek_forwards);
+        to_keys!(next_track);
+        to_keys!(previous_track);
+        to_keys!(help);
+        to_keys!(shuffle);
+        to_keys!(repeat);
+        to_keys!(search);
+        to_keys!(submit);
+
+        Ok(())
+    }
+
     pub fn load_config(&mut self) -> Result<(), failure::Error> {
         let paths = self.get_or_build_paths()?;
         if paths.config_file_path.exists() {
@@ -174,32 +221,12 @@ impl UserConfig {
             if config_string.trim().is_empty() {
                 return Ok(());
             }
+
             let config_yml: UserConfigString = serde_yaml::from_str(&config_string)?;
 
-            macro_rules! to_keys {
-                ($name: ident) => {
-                    if let Some(key_string) = config_yml.$name {
-                        self.$name = parse_key(key_string)?;
-                        check_reserved_keys(self.$name)?;
-                    }
-                };
-            };
-
-            to_keys!(back);
-            to_keys!(jump_to_album);
-            to_keys!(jump_to_artist_album);
-            to_keys!(manage_devices);
-            to_keys!(decrease_volume);
-            to_keys!(increase_volume);
-            to_keys!(toggle_playback);
-            to_keys!(seek_backwards);
-            to_keys!(seek_forwards);
-            to_keys!(next_track);
-            to_keys!(previous_track);
-            to_keys!(help);
-            to_keys!(shuffle);
-            to_keys!(repeat);
-            to_keys!(search);
+            if let Some(keybindings) = config_yml.keybindings.clone() {
+                self.load_keybindings(keybindings)?;
+            }
 
             Ok(())
         } else {

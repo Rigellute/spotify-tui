@@ -38,7 +38,7 @@ pub fn handle_app(key: Key, app: &mut App) {
             }
         },
         // Jump to currently playing album
-        _ if key == app.user_config.jump_to_album => {
+        _ if key == app.user_config.keys.jump_to_album => {
             if let Some(current_playback_context) = &app.current_playback_context {
                 if let Some(full_track) = &current_playback_context.item.clone() {
                     app.get_album_tracks(full_track.album.clone());
@@ -47,7 +47,7 @@ pub fn handle_app(key: Key, app: &mut App) {
         }
         // Jump to currently playing artist's album list.
         // NOTE: this only finds the first artist of the song and jumps to their albums
-        _ if key == app.user_config.jump_to_artist_album => {
+        _ if key == app.user_config.keys.jump_to_artist_album => {
             if let Some(current_playback_context) = &app.current_playback_context {
                 if let Some(playing_item) = &current_playback_context.item.clone() {
                     if let Some(artist) = playing_item.artists.first() {
@@ -58,42 +58,42 @@ pub fn handle_app(key: Key, app: &mut App) {
                 }
             };
         }
-        _ if key == app.user_config.manage_devices => {
+        _ if key == app.user_config.keys.manage_devices => {
             app.handle_get_devices();
         }
-        _ if key == app.user_config.decrease_volume => {
+        _ if key == app.user_config.keys.decrease_volume => {
             app.decrease_volume();
         }
-        _ if key == app.user_config.increase_volume => {
+        _ if key == app.user_config.keys.increase_volume => {
             app.increase_volume();
         }
         // Press space to toggle playback
-        _ if key == app.user_config.toggle_playback => {
+        _ if key == app.user_config.keys.toggle_playback => {
             app.toggle_playback();
         }
-        _ if key == app.user_config.seek_backwards => {
+        _ if key == app.user_config.keys.seek_backwards => {
             app.seek_backwards();
         }
-        _ if key == app.user_config.seek_forwards => {
+        _ if key == app.user_config.keys.seek_forwards => {
             app.seek_forwards();
         }
-        _ if key == app.user_config.next_track => {
+        _ if key == app.user_config.keys.next_track => {
             app.next_track();
         }
-        _ if key == app.user_config.previous_track => {
+        _ if key == app.user_config.keys.previous_track => {
             app.previous_track();
         }
-        _ if key == app.user_config.help => {
+        _ if key == app.user_config.keys.help => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
 
-        _ if key == app.user_config.shuffle => {
+        _ if key == app.user_config.keys.shuffle => {
             app.shuffle();
         }
-        _ if key == app.user_config.repeat => {
+        _ if key == app.user_config.keys.repeat => {
             app.repeat();
         }
-        _ if key == app.user_config.search => {
+        _ if key == app.user_config.keys.search => {
             app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
         }
         _ => handle_block_events(key, app),
