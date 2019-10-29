@@ -73,4 +73,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --token ${{ secrets.CARGO_API_KEY }}
+          args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
