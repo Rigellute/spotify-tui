@@ -17,14 +17,14 @@ pub fn up_event(key: Key) -> bool {
 
 pub fn left_event(key: Key) -> bool {
     match key {
-        Key::Left | Key::Char('h') => true,
+        Key::Left | Key::Char('h') | Key::Ctrl('b') => true,
         _ => false,
     }
 }
 
 pub fn right_event(key: Key) -> bool {
     match key {
-        Key::Right | Key::Char('l') => true,
+        Key::Right | Key::Char('l') | Key::Ctrl('f') => true,
         _ => false,
     }
 }
