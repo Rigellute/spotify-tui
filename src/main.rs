@@ -207,7 +207,7 @@ fn main() -> Result<(), failure::Error> {
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
                             handlers::input_handler(key, &mut app);
-                        } else if key == app.user_config.back {
+                        } else if key == app.user_config.keys.back {
                             if app.get_current_route().active_block != ActiveBlock::Input {
                                 // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
                                 let pop_result = app.pop_navigation_stack();
