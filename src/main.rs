@@ -4,6 +4,7 @@ mod config;
 mod handlers;
 mod redirect_uri;
 mod ui;
+mod user_config;
 mod util;
 
 use backtrace::Backtrace;
@@ -29,6 +30,7 @@ use app::{ActiveBlock, App};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
 use redirect_uri::redirect_uri_web_server;
+use user_config::UserConfig;
 use util::{Event, Events};
 
 const SCOPES: [&str; 10] = [
@@ -118,6 +120,9 @@ fn main() -> Result<(), failure::Error> {
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
         .get_matches();
 
+    let mut user_config = UserConfig::new();
+    user_config.load_config()?;
+
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
 
@@ -150,6 +155,7 @@ fn main() -> Result<(), failure::Error> {
             let (mut spotify, mut token_expiry) = get_spotify(token_info);
 
             app.client_config = client_config;
+            app.user_config = user_config;
 
             app.spotify = Some(spotify);
 
@@ -233,23 +239,17 @@ fn main() -> Result<(), failure::Error> {
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
                             handlers::input_handler(key, &mut app);
-                        } else {
-                            match key {
-                                // Handle global navigation" back" event
-                                Key::Char('q') => {
-                                    if app.get_current_route().active_block != ActiveBlock::Input {
-                                        // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                        let pop_result = app.pop_navigation_stack();
+                        } else if key == app.user_config.keys.back {
+                            if app.get_current_route().active_block != ActiveBlock::Input {
+                                // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
+                                let pop_result = app.pop_navigation_stack();
 
-                                        if pop_result.is_none() {
-                                            break;
-                                        }
-                                    }
+                                if pop_result.is_none() {
+                                    break; // Exit application
                                 }
-                                _ => {
-                                    handlers::handle_app(key, &mut app);
-                                }
-                            };
+                            }
+                        } else {
+                            handlers::handle_app(key, &mut app);
                         }
                     }
                     Event::Tick => {
