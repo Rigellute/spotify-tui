@@ -672,7 +672,10 @@ where
             )
             .render(f, chunks[0]);
 
-            let perc = (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
+            let min_perc = 0_f64;
+            let track_perc =
+                (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
+            let perc = min_perc.max(track_perc);
 
             Gauge::default()
                 .block(Block::default().title(""))
