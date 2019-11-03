@@ -868,7 +868,7 @@ impl App {
             match spotify.current_user_saved_albums(self.large_search_limit, offset) {
                 Ok(saved_albums) => {
                     // not to show a blank page
-                    if saved_albums.items.len() > 0 {
+                    if !saved_albums.items.is_empty() {
                         self.library.saved_albums.add_pages(saved_albums);
                     }
                 }
