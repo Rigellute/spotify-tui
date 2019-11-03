@@ -862,4 +862,43 @@ impl App {
             };
         };
     }
+
+    pub fn get_current_user_saved_albums(&mut self, offset: Option<u32>) {
+        if let Some(spotify) = &self.spotify {
+            match spotify.current_user_saved_albums(self.large_search_limit, offset) {
+                Ok(saved_albums) => {
+                    // not to show a blank page
+                    if saved_albums.items.len() > 0 {
+                        self.library.saved_albums.add_pages(saved_albums);
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
+    }
+
+    pub fn get_current_user_saved_albums_next(&mut self) {
+        match self
+            .library
+            .saved_albums
+            .get_results(Some(self.library.saved_albums.index + 1))
+            .cloned()
+        {
+            Some(_) => self.library.saved_albums.index += 1,
+            None => {
+                if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
+                    let offset = Some(saved_albums.offset + saved_albums.limit);
+                    self.get_current_user_saved_albums(offset);
+                }
+            }
+        }
+    }
+
+    pub fn get_current_user_saved_albums_previous(&mut self) {
+        if self.library.saved_albums.index > 0 {
+            self.library.saved_albums.index -= 1;
+        }
+    }
 }
