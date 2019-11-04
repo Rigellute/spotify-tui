@@ -672,9 +672,10 @@ where
             )
             .render(f, chunks[0]);
 
+            // Ensure track progress percentage is between 0 and 100 inclusive
             let min_perc = 0_f64;
-            let track_perc =
-                (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
+            let track_progress = std::cmp::min(app.song_progress_ms, track_item.duration_ms.into());
+            let track_perc = (track_progress as f64 / f64::from(track_item.duration_ms)) * 100_f64;
             let perc = min_perc.max(track_perc);
 
             Gauge::default()
