@@ -685,7 +685,6 @@ impl App {
 
                     self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(TrackTableContext::SavedTracks);
-                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
                 Err(e) => {
                     self.handle_error(e);
