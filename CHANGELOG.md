@@ -8,6 +8,7 @@
 - Fix panic when seeking beyond track boundaries [#124](https://github.com/Rigellute/spotify-tui/pull/124)
 - Add scrolling to library album list. Can now use `ctrl+d/u` to scroll between result pages [#128](https://github.com/Rigellute/spotify-tui/pull/128)
 - Fix showing wrong album in library album view - [#130](https://github.com/Rigellute/spotify-tui/pull/130)
+- Add support for page scrolling for playlist views - [#133](https://github.com/Rigellute/spotify-tui/pull/133)
 
 ### Added
 

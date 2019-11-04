@@ -38,7 +38,7 @@ const DEFAULT_ROUTE: Route = Route {
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
-    index: usize,
+    pub index: usize,
     pages: Vec<T>,
 }
 

@@ -20,34 +20,33 @@ pub fn handler(key: Key, app: &mut App) {
             app.track_table.selected_index = next_index;
         }
         Key::Char('\n') => {
-            let TrackTable {
-                context,
-                selected_index,
-                tracks,
-            } = &app.track_table;
-            match &context {
+            match &app.track_table.context {
                 Some(context) => match context {
                     TrackTableContext::MyPlaylists => {
-                        if let Some(_track) = tracks.get(*selected_index) {
-                            let context_uri = match (&app.selected_playlist_index, &app.playlists) {
-                                (Some(selected_playlist_index), Some(playlists)) => {
-                                    if let Some(selected_playlist) =
-                                        playlists.items.get(selected_playlist_index.to_owned())
-                                    {
-                                        Some(selected_playlist.uri.to_owned())
-                                    } else {
-                                        None
-                                    }
+                        let context_uri = match (&app.selected_playlist_index, &app.playlists) {
+                            (Some(selected_playlist_index), Some(playlists)) => {
+                                if let Some(selected_playlist) =
+                                    playlists.items.get(selected_playlist_index.to_owned())
+                                {
+                                    Some(selected_playlist.uri.to_owned())
+                                } else {
+                                    None
                                 }
-                                _ => None,
-                            };
-
-                            app.start_playback(
-                                context_uri,
-                                None,
-                                Some(app.track_table.selected_index),
-                            );
+                            }
+                            _ => None,
                         };
+
+                        let offset = app.track_table.selected_index
+                            + (app.playlist_tracks.index * app.large_search_limit as usize);
+
+                        println!(
+                            "Offset {}. Limit usize {}. limit {}. Index {}",
+                            offset,
+                            app.large_search_limit as usize,
+                            app.large_search_limit,
+                            app.track_table.selected_index
+                        );
+                        app.start_playback(context_uri, None, Some(offset));
                     }
                     TrackTableContext::SavedTracks => {
                         if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
