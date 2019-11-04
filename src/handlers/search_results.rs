@@ -1,4 +1,4 @@
-use super::super::app::{App, SearchResultBlock, TrackTableContext};
+use super::super::app::{ActiveBlock, App, RouteId, SearchResultBlock, TrackTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -164,7 +164,8 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                     // Go to playlist tracks table
                     app.track_table.context = Some(TrackTableContext::PlaylistSearch);
                     let playlist_id = playlist.id.to_owned();
-                    app.get_playlist_tracks(playlist_id);
+                    app.get_playlist_tracks(playlist_id, Some(0));
+                    app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 };
             }
         }

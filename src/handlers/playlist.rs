@@ -1,4 +1,4 @@
-use super::super::app::{App, TrackTableContext};
+use super::super::app::{ActiveBlock, App, RouteId, TrackTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
@@ -40,7 +40,8 @@ pub fn handler(key: Key, app: &mut App) {
                     playlists.items.get(selected_playlist_index.to_owned())
                 {
                     let playlist_id = selected_playlist.id.to_owned();
-                    app.get_playlist_tracks(playlist_id);
+                    app.get_playlist_tracks(playlist_id, Some(0));
+                    app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
             };
         }

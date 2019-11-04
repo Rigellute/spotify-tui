@@ -60,20 +60,12 @@ pub fn handler(key: Key, app: &mut App) {
             // Liked Songs,
             2 => {
                 app.get_current_user_saved_tracks(None);
+                app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
             }
             // Albums,
             3 => {
-                if let Some(spotify) = &app.spotify {
-                    match spotify.current_user_saved_albums(app.large_search_limit, 0) {
-                        Ok(result) => {
-                            app.library.saved_albums.add_pages(result);
-                            app.push_navigation_stack(RouteId::AlbumList, ActiveBlock::AlbumList);
-                        }
-                        Err(e) => {
-                            app.handle_error(e);
-                        }
-                    }
-                };
+                app.get_current_user_saved_albums(Some(0));
+                app.push_navigation_stack(RouteId::AlbumList, ActiveBlock::AlbumList);
             }
             //  Artists,
             4 => {
