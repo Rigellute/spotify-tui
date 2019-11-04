@@ -1,5 +1,6 @@
 use super::super::app::{App, TrackTable, TrackTableContext};
 use super::common_key_events;
+use std::convert::TryInto;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
@@ -36,17 +37,13 @@ pub fn handler(key: Key, app: &mut App) {
                             _ => None,
                         };
 
-                        let offset = app.track_table.selected_index
-                            + (app.playlist_tracks.index * app.large_search_limit as usize);
+                        let offset = app
+                            .playlist_tracks
+                            .index
+                            .checked_mul(app.large_search_limit.try_into().unwrap())
+                            .and_then(|n| n.checked_add(app.track_table.selected_index));
 
-                        println!(
-                            "Offset {}. Limit usize {}. limit {}. Index {}",
-                            offset,
-                            app.large_search_limit as usize,
-                            app.large_search_limit,
-                            app.track_table.selected_index
-                        );
-                        app.start_playback(context_uri, None, Some(offset));
+                        app.start_playback(context_uri, None, offset);
                     }
                     TrackTableContext::SavedTracks => {
                         if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
