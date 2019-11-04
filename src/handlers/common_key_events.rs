@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, RouteId};
+use crate::app::{ActiveBlock, App, RouteId};
 use termion::event::Key;
 
 pub fn down_event(key: Key) -> bool {

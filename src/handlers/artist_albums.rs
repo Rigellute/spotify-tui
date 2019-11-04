@@ -1,5 +1,5 @@
-use super::super::app::{App, TrackTableContext};
 use super::common_key_events;
+use crate::app::{App, TrackTableContext};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {

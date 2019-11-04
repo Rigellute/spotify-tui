@@ -1,5 +1,5 @@
-use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
 use super::common_key_events;
+use crate::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
