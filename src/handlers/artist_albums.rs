@@ -1,6 +1,4 @@
-use super::super::app::{
-    App, TrackTableContext,
-};
+use super::super::app::{App, TrackTableContext};
 use super::common_key_events;
 use termion::event::Key;
 
