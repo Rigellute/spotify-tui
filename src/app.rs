@@ -219,8 +219,7 @@ pub struct App {
     pub large_search_limit: u32,
     pub library: Library,
     pub playback_params: PlaybackParams,
-    pub playlist_tracks: ScrollableResultPages<Page<PlaylistTrack>>,
-    pub playlist_id: Option<String>,
+    pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub search_results: SearchResult,
@@ -270,8 +269,7 @@ impl App {
             input: vec![],
             input_idx: 0,
             input_cursor_position: 0,
-            playlist_tracks: ScrollableResultPages::new(),
-            playlist_id: None,
+            playlist_tracks: vec![],
             playlists: None,
             search_results: SearchResult {
                 hovered_block: SearchResultBlock::SongSearch,
@@ -577,62 +575,24 @@ impl App {
         }
     }
 
-    pub fn get_playlist_tracks(&mut self, playlist_id: String, offset: Option<u32>) {
+    pub fn get_playlist_tracks(&mut self, playlist_id: String) {
         match &self.spotify {
             Some(spotify) => {
-                match spotify.user_playlist_tracks(
+                if let Ok(playlist_tracks) = spotify.user_playlist_tracks(
                     "spotify",
                     &playlist_id,
                     None,
                     Some(self.large_search_limit),
-                    offset,
+                    None,
                     None,
                 ) {
-                    Ok(playlist_tracks) => {
-                        if !playlist_tracks.items.is_empty() {
-                            self.set_playlist_tracks_to_table(&playlist_tracks);
-                            self.playlist_tracks.add_pages(playlist_tracks.clone());
+                    self.set_playlist_tracks_to_table(&playlist_tracks);
 
-                            self.playlist_id = Some(playlist_id);
-                        }
-                    }
-                    Err(e) => {
-                        self.handle_error(e);
-                    }
-                }
+                    self.playlist_tracks = playlist_tracks.items;
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                };
             }
             None => {}
-        }
-    }
-
-    pub fn get_playlist_tracks_next(&mut self) {
-        match self
-            .playlist_tracks
-            .get_results(Some(self.playlist_tracks.index + 1))
-            .cloned()
-        {
-            Some(playlist_tracks) => {
-                self.set_playlist_tracks_to_table(&playlist_tracks);
-                self.playlist_tracks.index += 1;
-            }
-            None => {
-                if let Some(playlist_tracks) = &self.playlist_tracks.get_results(None).cloned() {
-                    let offset = Some(playlist_tracks.offset + playlist_tracks.limit);
-                    if let Some(playlist_id) = &self.playlist_id.clone() {
-                        self.get_playlist_tracks(playlist_id.to_owned(), offset);
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn get_playlist_tracks_previous(&mut self) {
-        if self.playlist_tracks.index > 0 {
-            self.playlist_tracks.index -= 1;
-        }
-
-        if let Some(playlist_tracks) = &self.playlist_tracks.get_results(None).cloned() {
-            self.set_playlist_tracks_to_table(&playlist_tracks);
         }
     }
 
@@ -725,6 +685,7 @@ impl App {
 
                     self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(TrackTableContext::SavedTracks);
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
                 Err(e) => {
                     self.handle_error(e);

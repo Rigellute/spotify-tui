@@ -105,9 +105,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('d') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    TrackTableContext::MyPlaylists => {
-                        app.get_playlist_tracks_next();
-                    }
+                    TrackTableContext::MyPlaylists => {}
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_next();
                     }
@@ -121,9 +119,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('u') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    TrackTableContext::MyPlaylists => {
-                        app.get_playlist_tracks_previous();
-                    }
+                    TrackTableContext::MyPlaylists => {}
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_previous();
                     }
