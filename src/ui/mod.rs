@@ -1100,7 +1100,16 @@ fn draw_table<B>(
 
     let (title, header) = table_layout;
 
-    let rows = items.iter().enumerate().map(|(i, item)| {
+    // Make sure that the selected item is visible on the page. Need to add some rows of padding
+    // to chunk height for header and header space to get a true table height
+    let padding = 5;
+    let offset = layout_chunk
+        .height
+        .checked_sub(padding)
+        .and_then(|height| selected_index.checked_sub(height as usize))
+        .unwrap_or(0);
+
+    let rows = items.iter().skip(offset).enumerate().map(|(i, item)| {
         let mut formatted_row = item.format.clone();
         let mut style = Style::default().fg(Color::White); // default styling
 
@@ -1109,8 +1118,10 @@ fn draw_table<B>(
             TableId::Song | TableId::RecentlyPlayed | TableId::Album => {
                 // First check if the song should be highlighted because it is currently playing
                 if let Some(title_idx) = header.get_index(ColumnId::SongTitle) {
-                    if let Some(_track_playing_index) = track_playing_index {
-                        if i == _track_playing_index {
+                    if let Some(track_playing_offset_index) =
+                        track_playing_index.and_then(|idx| idx.checked_sub(offset))
+                    {
+                        if i == track_playing_offset_index {
                             formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
                             style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
                         }
@@ -1127,8 +1138,8 @@ fn draw_table<B>(
             _ => {}
         }
 
-        // Next check if the item is under selection
-        if i == selected_index {
+        // Next check if the item is under selection.
+        if Some(i) == selected_index.checked_sub(offset) {
             style = selected_style;
         }
 
