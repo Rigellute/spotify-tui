@@ -61,6 +61,14 @@ pub fn get_percentage_width(width: u16, percentage: f32) -> u16 {
     (f32::from(width) * percentage) as u16
 }
 
+// Ensure track progress percentage is between 0 and 100 inclusive
+pub fn get_track_progress_percentage(song_progress_ms: u128, track_duration_ms: u32) -> u16 {
+    let min_perc = 0_f64;
+    let track_progress = std::cmp::min(song_progress_ms, track_duration_ms.into());
+    let track_perc = (track_progress as f64 / f64::from(track_duration_ms)) * 100_f64;
+    min_perc.max(track_perc) as u16
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,6 +93,22 @@ mod tests {
         assert_eq!(
             display_track_progress(60 * 1000, 2 * 60 * 1000),
             "1:00/2:00 (-1:00)"
+        );
+    }
+
+    #[test]
+    fn get_track_progress_percentage_test() {
+        let track_length = 60 * 1000;
+        assert_eq!(get_track_progress_percentage(0, track_length), 0);
+        assert_eq!(
+            get_track_progress_percentage((60 * 1000) / 2, track_length),
+            50
+        );
+
+        // If progress is somehow higher than total duration, 100 should be max
+        assert_eq!(
+            get_track_progress_percentage(60 * 1000 * 2, track_length),
+            100
         );
     }
 }

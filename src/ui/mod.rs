@@ -13,7 +13,7 @@ use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table,
 use tui::Frame;
 use util::{
     create_artist_string, display_track_progress, get_color, get_percentage_width,
-    get_search_results_highlight_state, millis_to_minutes,
+    get_search_results_highlight_state, get_track_progress_percentage, millis_to_minutes,
 };
 
 pub enum TableId {
@@ -671,11 +671,7 @@ where
                 ),
             )
             .render(f, chunks[0]);
-
-            let min_perc = 0_f64;
-            let track_perc =
-                (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
-            let perc = min_perc.max(track_perc);
+            let perc = get_track_progress_percentage(app.song_progress_ms, track_item.duration_ms);
 
             Gauge::default()
                 .block(Block::default().title(""))
@@ -685,7 +681,7 @@ where
                         .bg(Color::Black)
                         .modifier(Modifier::ITALIC | Modifier::BOLD),
                 )
-                .percent(perc as u16)
+                .percent(perc)
                 .label(&display_track_progress(
                     app.song_progress_ms,
                     track_item.duration_ms,
