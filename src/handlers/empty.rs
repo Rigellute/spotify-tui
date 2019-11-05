@@ -1,5 +1,5 @@
-use super::super::app::{ActiveBlock, App};
 use super::common_key_events;
+use crate::app::{ActiveBlock, App};
 use termion::event::Key;
 
 // When no block is actively selected, just handle regular events
@@ -55,8 +55,8 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::app::RouteId;
     use super::*;
+    use crate::app::RouteId;
 
     #[test]
     fn on_enter() {
