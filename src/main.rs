@@ -26,7 +26,7 @@ use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
-use app::{ActiveBlock, App};
+use app::{ActiveBlock, App, RouteId, ScrollableResultPages /* TrackTableContext */};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
 use redirect_uri::redirect_uri_web_server;
@@ -241,11 +241,25 @@ fn main() -> Result<(), failure::Error> {
                             handlers::input_handler(key, &mut app);
                         } else if key == app.user_config.keys.back {
                             if app.get_current_route().active_block != ActiveBlock::Input {
-                                // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                let pop_result = app.pop_navigation_stack();
-
-                                if pop_result.is_none() {
-                                    break; // Exit application
+                                match app.pop_navigation_stack() {
+                                    Some(route) => match route.id {
+                                        RouteId::TrackTable => {
+                                            app.playlist_tracks = ScrollableResultPages::new();
+                                        }
+                                        /*
+                                        RouteId::TrackTable => match app.track_table.context {
+                                            Some(TrackTableContext::PlaylistSearch) => {
+                                                app.playlist_tracks = ScrollableResultPages::new();
+                                            }
+                                            _ => {}
+                                        },
+                                        */
+                                        _ => {}
+                                    },
+                                    // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
+                                    None => {
+                                        break;
+                                    }
                                 }
                             }
                         } else {
