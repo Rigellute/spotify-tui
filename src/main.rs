@@ -242,20 +242,25 @@ fn main() -> Result<(), failure::Error> {
                         } else if key == app.user_config.keys.back {
                             if app.get_current_route().active_block != ActiveBlock::Input {
                                 match app.pop_navigation_stack() {
+                                    Some(route) => {
+                                        if let RouteId::TrackTable = route.id {
+                                            app.playlist_tracks = ScrollableResultPages::new();
+                                        }
+                                    }
+                                    /*
                                     Some(route) => match route.id {
                                         RouteId::TrackTable => {
                                             app.playlist_tracks = ScrollableResultPages::new();
                                         }
-                                        /*
                                         RouteId::TrackTable => match app.track_table.context {
                                             Some(TrackTableContext::PlaylistSearch) => {
                                                 app.playlist_tracks = ScrollableResultPages::new();
                                             }
                                             _ => {}
                                         },
-                                        */
                                         _ => {}
                                     },
+                                    */
                                     // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
                                     None => {
                                         break;
