@@ -13,7 +13,7 @@ use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table,
 use tui::Frame;
 use util::{
     create_artist_string, display_track_progress, get_color, get_percentage_width,
-    get_search_results_highlight_state, millis_to_minutes,
+    get_search_results_highlight_state, get_track_progress_percentage, millis_to_minutes,
 };
 
 pub enum TableId {
@@ -671,11 +671,7 @@ where
                 ),
             )
             .render(f, chunks[0]);
-
-            let min_perc = 0_f64;
-            let track_perc =
-                (app.song_progress_ms as f64 / f64::from(track_item.duration_ms)) * 100_f64;
-            let perc = min_perc.max(track_perc);
+            let perc = get_track_progress_percentage(app.song_progress_ms, track_item.duration_ms);
 
             Gauge::default()
                 .block(Block::default().title(""))
@@ -685,7 +681,7 @@ where
                         .bg(Color::Black)
                         .modifier(Modifier::ITALIC | Modifier::BOLD),
                 )
-                .percent(perc as u16)
+                .percent(perc)
                 .label(&display_track_progress(
                     app.song_progress_ms,
                     track_item.duration_ms,
@@ -1100,7 +1096,16 @@ fn draw_table<B>(
 
     let (title, header) = table_layout;
 
-    let rows = items.iter().enumerate().map(|(i, item)| {
+    // Make sure that the selected item is visible on the page. Need to add some rows of padding
+    // to chunk height for header and header space to get a true table height
+    let padding = 5;
+    let offset = layout_chunk
+        .height
+        .checked_sub(padding)
+        .and_then(|height| selected_index.checked_sub(height as usize))
+        .unwrap_or(0);
+
+    let rows = items.iter().skip(offset).enumerate().map(|(i, item)| {
         let mut formatted_row = item.format.clone();
         let mut style = Style::default().fg(Color::White); // default styling
 
@@ -1109,8 +1114,10 @@ fn draw_table<B>(
             TableId::Song | TableId::RecentlyPlayed | TableId::Album => {
                 // First check if the song should be highlighted because it is currently playing
                 if let Some(title_idx) = header.get_index(ColumnId::SongTitle) {
-                    if let Some(_track_playing_index) = track_playing_index {
-                        if i == _track_playing_index {
+                    if let Some(track_playing_offset_index) =
+                        track_playing_index.and_then(|idx| idx.checked_sub(offset))
+                    {
+                        if i == track_playing_offset_index {
                             formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
                             style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
                         }
@@ -1127,8 +1134,8 @@ fn draw_table<B>(
             _ => {}
         }
 
-        // Next check if the item is under selection
-        if i == selected_index {
+        // Next check if the item is under selection.
+        if Some(i) == selected_index.checked_sub(offset) {
             style = selected_style;
         }
 

@@ -146,7 +146,7 @@ impl UserConfig {
                 previous_track: Key::Char('p'),
                 help: Key::Char('?'),
                 shuffle: Key::Ctrl('s'),
-                repeat: Key::Char('r'),
+                repeat: Key::Ctrl('r'),
                 search: Key::Char('/'),
                 submit: Key::Char('\n'),
             },

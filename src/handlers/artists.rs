@@ -1,5 +1,5 @@
-use super::super::app::App;
 use super::common_key_events;
+use crate::app::App;
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {

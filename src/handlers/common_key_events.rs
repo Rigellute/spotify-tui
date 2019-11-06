@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock};
+use crate::app::{ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock};
 use termion::event::Key;
 
 pub fn down_event(key: Key) -> bool {

@@ -1,5 +1,5 @@
-use super::super::app::{AlbumTableContext, App};
 use super::common_key_events;
+use crate::app::{AlbumTableContext, App};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
@@ -116,8 +116,8 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::app::ActiveBlock;
     use super::*;
+    use crate::app::ActiveBlock;
 
     #[test]
     fn on_left_press() {
