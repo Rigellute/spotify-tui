@@ -158,9 +158,7 @@ impl UserConfig {
                 search: Key::Char('/'),
                 submit: Key::Char('\n'),
             },
-            visuals: Visuals {
-                margin: 1,
-            }
+            visuals: Visuals { margin: 1 },
         }
     }
 
