@@ -563,6 +563,7 @@ impl App {
         match result {
             Ok(()) => {
                 self.get_current_playback();
+                self.song_progress_ms = 0;
                 self.playback_params = PlaybackParams {
                     context_uri,
                     uris,
