@@ -121,12 +121,20 @@ pub struct KeyBindings {
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Visuals {
+    pub margin: u16,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
     keybindings: Option<KeyBindingsString>,
+    visuals: Option<Visuals>,
 }
 
 pub struct UserConfig {
     pub keys: KeyBindings,
+    pub visuals: Visuals,
 }
 
 impl UserConfig {
@@ -150,6 +158,9 @@ impl UserConfig {
                 search: Key::Char('/'),
                 submit: Key::Char('\n'),
             },
+            visuals: Visuals {
+                margin: 1,
+            }
         }
     }
 
@@ -226,6 +237,10 @@ impl UserConfig {
 
             if let Some(keybindings) = config_yml.keybindings.clone() {
                 self.load_keybindings(keybindings)?;
+            }
+
+            if let Some(visuals) = config_yml.visuals.clone() {
+                self.visuals = visuals;
             }
 
             Ok(())

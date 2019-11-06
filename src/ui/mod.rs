@@ -148,7 +148,7 @@ where
             ]
             .as_ref(),
         )
-        .margin(2)
+        .margin(app.user_config.visuals.margin)
         .split(f.size());
 
     // Search input and help

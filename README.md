@@ -138,6 +138,9 @@ keybindings:
     shuffle: 's'
     repeat: 'r'
     search: '/'
+
+visuals:
+    margin: 1
 ```
 
 ## Limitations
