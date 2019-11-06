@@ -45,6 +45,12 @@ pub fn handler(key: Key, app: &mut App) {
                 app.start_playback(None, Some(track_uris), Some(app.recently_played.index));
             };
         }
+        Key::Ctrl('g') => {
+            common_key_events::go_first_line(app);
+        }
+        Key::Char('G') => {
+            common_key_events::go_last_line(app);
+        }
         _ => {}
     };
 }

@@ -82,6 +82,12 @@ pub fn handler(key: Key, app: &mut App) {
                 };
             }
         },
+        Key::Ctrl('g') => {
+            common_key_events::go_first_line(app);
+        }
+        Key::Char('G') => {
+            common_key_events::go_last_line(app);
+        }
         Key::Char('\n') => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {

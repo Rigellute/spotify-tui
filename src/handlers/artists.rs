@@ -28,6 +28,12 @@ pub fn handler(key: Key, app: &mut App) {
             let artist = &artists[app.artists_list_index];
             app.get_artist_albums(&artist.id.to_owned(), &artist.name.to_owned());
         }
+        Key::Ctrl('g') => {
+            common_key_events::go_first_line(app);
+        }
+        Key::Char('G') => {
+            common_key_events::go_last_line(app);
+        }
         _ => {}
     }
 }

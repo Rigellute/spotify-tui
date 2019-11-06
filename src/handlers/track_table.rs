@@ -101,6 +101,12 @@ pub fn handler(key: Key, app: &mut App) {
                 None => {}
             };
         }
+        Key::Ctrl('g') => {
+            common_key_events::go_first_line(app);
+        }
+        Key::Char('G') => {
+            common_key_events::go_last_line(app);
+        }
         // Scroll down
         Key::Ctrl('d') => {
             match &app.track_table.context {

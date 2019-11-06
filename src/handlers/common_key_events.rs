@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, RouteId};
+use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock};
 use termion::event::Key;
 
 pub fn down_event(key: Key) -> bool {
@@ -131,6 +131,141 @@ pub fn handle_right_event(app: &mut App) {
 pub fn handle_left_event(app: &mut App) {
     // TODO: This should send you back to either library or playlist based on last selection
     app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
+}
+
+pub fn go_first_line(app: &mut App) {
+    match app.get_current_route().active_block {
+        ActiveBlock::AlbumList => {
+            app.album_list_index = 0;
+        }
+        ActiveBlock::TrackTable => {
+            app.track_table.selected_index = 0;
+        }
+        ActiveBlock::AlbumTracks => match app.album_table_context {
+            AlbumTableContext::Full => {
+                app.saved_album_tracks_index = 0;
+            }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &mut app.selected_album {
+                    selected_album.selected_index = 0;
+                }
+            }
+        },
+        ActiveBlock::Artists => {
+            app.artists_list_index = 0;
+        }
+        ActiveBlock::Artist => {
+            if let Some(artist_albums) = &mut app.artist_albums {
+                artist_albums.selected_index = 0;
+            }
+        }
+        ActiveBlock::RecentlyPlayed => {
+            app.recently_played.index = 0;
+        }
+        ActiveBlock::SearchResultBlock => match app.search_results.selected_block {
+            SearchResultBlock::AlbumSearch => {
+                app.search_results.selected_album_index = Some(0);
+            }
+            SearchResultBlock::SongSearch => {
+                app.search_results.selected_tracks_index = Some(0);
+            }
+            SearchResultBlock::ArtistSearch => {
+                app.search_results.selected_artists_index = Some(0);
+            }
+            SearchResultBlock::PlaylistSearch => {
+                app.search_results.selected_playlists_index = Some(0);
+            }
+            SearchResultBlock::Empty => {}
+        },
+        ActiveBlock::MyPlaylists => {
+            app.selected_playlist_index = Some(0);
+        }
+        _ => {}
+    }
+}
+
+pub fn go_last_line(app: &mut App) {
+    match app.get_current_route().active_block {
+        ActiveBlock::AlbumList => {
+            if let Some(albums) = app.library.saved_albums.get_results(None) {
+                if !albums.items.is_empty() {
+                    app.album_list_index = albums.items.len() - 1;
+                }
+            }
+        }
+        ActiveBlock::AlbumTracks => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        let last_index = selected_album.album.tracks.items.len() - 1;
+                        app.saved_album_tracks_index = last_index;
+                    }
+                }
+            }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &mut app.selected_album {
+                    let last_index = selected_album.tracks.items.len() - 1;
+                    selected_album.selected_index = last_index;
+                }
+            }
+        },
+        ActiveBlock::Artists => {
+            if let Some(artists) = &mut app.library.saved_artists.get_results(None) {
+                let last_index = artists.items.len() - 1;
+                app.artists_list_index = last_index;
+            }
+        }
+        ActiveBlock::Artist => {
+            if let Some(artist_albums) = &mut app.artist_albums {
+                let last_index = artist_albums.albums.items.len() - 1;
+                artist_albums.selected_index = last_index;
+            }
+        }
+        ActiveBlock::RecentlyPlayed => {
+            if let Some(recently_played_result) = app.recently_played.result.clone() {
+                let last_index = recently_played_result.items.len() - 1;
+                app.recently_played.index = last_index;
+            }
+        }
+        ActiveBlock::TrackTable => {
+            let last_index = app.track_table.tracks.len() - 1;
+            app.track_table.selected_index = last_index;
+        }
+        ActiveBlock::SearchResultBlock => match app.search_results.selected_block {
+            SearchResultBlock::AlbumSearch => {
+                if let Some(result) = &app.search_results.albums {
+                    let last_index = Some(result.albums.items.len() - 1);
+                    app.search_results.selected_album_index = last_index;
+                }
+            }
+            SearchResultBlock::SongSearch => {
+                if let Some(result) = &app.search_results.tracks {
+                    let last_index = Some(result.tracks.items.len() - 1);
+                    app.search_results.selected_tracks_index = last_index;
+                }
+            }
+            SearchResultBlock::ArtistSearch => {
+                if let Some(result) = &app.search_results.artists {
+                    let last_index = Some(result.artists.items.len() - 1);
+                    app.search_results.selected_artists_index = last_index;
+                }
+            }
+            SearchResultBlock::PlaylistSearch => {
+                if let Some(result) = &app.search_results.playlists {
+                    let last_index = Some(result.playlists.items.len() - 1);
+                    app.search_results.selected_playlists_index = last_index;
+                }
+            }
+            SearchResultBlock::Empty => {}
+        },
+        ActiveBlock::MyPlaylists => {
+            if let Some(playlists) = &app.playlists {
+                let last_index = playlists.items.len() - 1;
+                app.selected_playlist_index = Some(last_index);
+            }
+        }
+        _ => {}
+    }
 }
 
 #[cfg(test)]

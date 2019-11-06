@@ -277,6 +277,12 @@ pub fn handler(key: Key, app: &mut App) {
                 handle_enter_event_on_hovered_block(app)
             }
         }
+        Key::Ctrl('g') => {
+            common_key_events::go_first_line(app);
+        }
+        Key::Char('G') => {
+            common_key_events::go_last_line(app);
+        }
         // Add `s` to "see more" on each option
         _ => {}
     }
