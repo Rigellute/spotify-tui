@@ -138,6 +138,9 @@ pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
+    // Make better use of space on small terminals
+    let margin = if app.size.height > 45 { 1 } else { 0 };
+
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -148,7 +151,7 @@ where
             ]
             .as_ref(),
         )
-        .margin(2)
+        .margin(margin)
         .split(f.size());
 
     // Search input and help
