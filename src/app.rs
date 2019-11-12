@@ -1,11 +1,13 @@
 use super::config::ClientConfig;
 use super::user_config::UserConfig;
 use failure::err_msg;
+use gdk_pixbuf::Pixbuf;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::artist::FullArtist;
 use rspotify::spotify::model::context::FullPlayingContext;
 use rspotify::spotify::model::device::DevicePayload;
+use rspotify::spotify::model::image::Image;
 use rspotify::spotify::model::offset::for_position;
 use rspotify::spotify::model::offset::Offset;
 use rspotify::spotify::model::page::{CursorBasedPage, Page};
@@ -18,9 +20,13 @@ use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
 use rspotify::spotify::model::user::PrivateUser;
 use rspotify::spotify::senum::{Country, RepeatState};
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::copy;
 use std::time::Instant;
+use tempdir::TempDir;
 use tui::layout::Rect;
 
+// use std::collections::HashMap;
 pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Made For You",
     "Recently Played",
@@ -378,6 +384,53 @@ impl App {
         if elapsed >= poll_interval_ms {
             self.get_current_playback();
         }
+    }
+
+    pub fn send_notification(&self) -> Result<(), String> {
+        libnotify::init("Spotify")?;
+        let n = libnotify::Notification::new("Summary", None, None);
+        n.set_urgency(libnotify::Urgency::Low);
+        if let Some(current_playback_context) = &self.current_playback_context {
+            if let Some(track) = &current_playback_context.item {
+                let track_name = &track.name[..];
+                let album_name = &track.album.name;
+                let artist_name = &track.artists[0].name;
+                let mut body_string = artist_name.clone();
+                body_string.push_str(" - ");
+                body_string.push_str(album_name);
+                n.update(track_name, Some(&body_string[..]), None)?;
+                let mut images: Vec<Image> = track.album.images.clone();
+                if let Some(image) = images.pop() {
+                    // println!("URL: {}", image.url);
+                    let tmp_dir = TempDir::new("spotify_pic")
+                        .map_err(|_| "Unable to create temp dir".to_string())?;
+                    let mut response =
+                        reqwest::get(&image.url).map_err(|_| "Unable to get image".to_string())?;
+                    let file: String;
+                    let mut dest = {
+                        let fname = response
+                            .url()
+                            .path_segments()
+                            .and_then(|segments| segments.last())
+                            .and_then(|name| if name.is_empty() { None } else { Some(name) })
+                            .unwrap_or("tmp.png");
+
+                        // println!("file to download: '{}'", fname);
+                        let fname = tmp_dir.path().join(fname).with_extension("png");
+                        file = fname.display().to_string();
+                        // println!("will be located under: '{:?}'", fname);
+                        File::create(fname).map_err(|_| "Couldn't create file".to_string())?
+                    };
+                    // println!("File: {}", file);
+                    copy(&mut response, &mut dest)
+                        .map_err(|_| "Unable to copy data".to_string())?;
+                    let pixbuf = Pixbuf::new_from_file(&file)
+                        .map_err(|_| "Error creating pixbuf".to_string())?;
+                    n.set_image_from_pixbuf(&pixbuf);
+                }
+            }
+        }
+        n.show().map_err(|_| "Something went wrong".to_string())
     }
 
     pub fn update_on_tick(&mut self) {
