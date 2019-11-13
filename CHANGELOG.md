@@ -2,13 +2,21 @@
 
 ## [Unreleased]
 
-## [0.8.0] - 2019-10-29
+## [0.9.0] - 2019-11-13
+
+### Added
 
 - Add custom keybindings feature. Check the README for an example configuration [#112](https://github.com/Rigellute/spotify-tui/pull/112)
+
+### Fixed
+
 - Fix panic when seeking beyond track boundaries [#124](https://github.com/Rigellute/spotify-tui/pull/124)
 - Add scrolling to library album list. Can now use `ctrl+d/u` to scroll between result pages [#128](https://github.com/Rigellute/spotify-tui/pull/128)
 - Fix showing wrong album in library album view - [#130](https://github.com/Rigellute/spotify-tui/pull/130)
 - Fix scrolling in table views [#135](https://github.com/Rigellute/spotify-tui/pull/135)
+- Use space more efficiently in small terminals [#143](https://github.com/Rigellute/spotify-tui/pull/143)
+
+## [0.8.0] - 2019-10-29
 
 ### Added
 

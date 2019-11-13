@@ -138,6 +138,9 @@ pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
+    // Make better use of space on small terminals
+    let margin = if app.size.height > 45 { 1 } else { 0 };
+
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -148,7 +151,7 @@ where
             ]
             .as_ref(),
         )
-        .margin(2)
+        .margin(margin)
         .split(f.size());
 
     // Search input and help
@@ -750,7 +753,7 @@ where
 {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
+        .constraints([Constraint::Percentage(17), Constraint::Percentage(83)].as_ref())
         .margin(2)
         .split(layout_chunk);
 
@@ -777,12 +780,12 @@ where
         changelog.replace("\n## [Unreleased]\n", "")
     };
 
-    let top_text = vec![
-        Text::styled(BANNER, Style::default().fg(Color::LightCyan)),
-        Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui"),
-    ];
+    let top_text = vec![Text::styled(BANNER, Style::default().fg(Color::LightCyan))];
 
-    let bottom_text = vec![Text::raw(clean_changelog)];
+    let bottom_text = vec![
+        Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
+        Text::raw(clean_changelog)
+    ];
 
     // Contains the banner
     Paragraph::new(top_text.iter())
