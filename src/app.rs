@@ -211,6 +211,7 @@ pub struct App {
     pub saved_album_tracks_index: usize,
     pub api_error: String,
     pub current_playback_context: Option<FullPlayingContext>,
+    pub previous_track: Option<FullTrack>,
     pub devices: Option<DevicePayload>,
     // Inputs:
     // input is the string for input;
@@ -271,6 +272,7 @@ impl App {
             small_search_limit: 4,
             api_error: String::new(),
             current_playback_context: None,
+            previous_track: None,
             devices: None,
             input: vec![],
             input_idx: 0,
@@ -339,8 +341,16 @@ impl App {
                     self.instant_since_last_current_playback_poll = Instant::now();
 
                     if let Some(track) = c.item {
-                        if let Some(track_id) = track.id {
+                        if let Some(track_id) = track.clone().id {
+                            if let Some(previous_track) = &self.previous_track {
+                                if let Some(prev_id) = previous_track.id.clone() {
+                                    if prev_id != track_id {
+                                        if let Ok(()) = self.send_notification() {}
+                                    }
+                                }
+                            }
                             self.current_user_saved_tracks_contains(vec![track_id]);
+                            self.previous_track = Some(track.clone());
                         }
                     }
                 }
@@ -388,7 +398,8 @@ impl App {
 
     pub fn send_notification(&self) -> Result<(), String> {
         libnotify::init("Spotify")?;
-        let n = libnotify::Notification::new("Summary", None, None);
+        let n = libnotify::Notification::new("Playback Notification", None, None);
+
         n.set_urgency(libnotify::Urgency::Low);
         if let Some(current_playback_context) = &self.current_playback_context {
             if let Some(track) = &current_playback_context.item {
