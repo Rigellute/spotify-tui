@@ -105,7 +105,18 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('d') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    TrackTableContext::MyPlaylists => {}
+                    TrackTableContext::MyPlaylists => {
+                        if let (Some(playlists), Some(selected_playlist_index)) =
+                        (&app.playlists, &app.selected_playlist_index)
+                        {
+                            if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned())
+                            {
+                                app.playlist_offset += 20;
+                                let playlist_id = selected_playlist.id.to_owned();
+                                app.get_playlist_tracks(playlist_id);
+                            }
+                        };
+                    }
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_next();
                     }
@@ -119,7 +130,19 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('u') => {
             match &app.track_table.context {
                 Some(context) => match context {
-                    TrackTableContext::MyPlaylists => {}
+                    TrackTableContext::MyPlaylists => {
+                        if let (Some(playlists), Some(selected_playlist_index)) =
+                        (&app.playlists, &app.selected_playlist_index)
+                        {
+                            if app.playlist_offset >= 20 { app.playlist_offset -= 20; } ;
+                            if let Some(selected_playlist) =
+                                playlists.items.get(selected_playlist_index.to_owned())
+                            {
+                                let playlist_id = selected_playlist.id.to_owned();
+                                app.get_playlist_tracks(playlist_id);
+                            }
+                        };
+                    }
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_previous();
                     }

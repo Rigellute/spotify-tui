@@ -218,6 +218,7 @@ pub struct App {
     pub liked_song_ids_set: HashSet<String>,
     pub large_search_limit: u32,
     pub library: Library,
+    pub playlist_offset: u32,
     pub playback_params: PlaybackParams,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
@@ -269,6 +270,7 @@ impl App {
             input: vec![],
             input_idx: 0,
             input_cursor_position: 0,
+            playlist_offset: 0,
             playlist_tracks: vec![],
             playlists: None,
             search_results: SearchResult {
@@ -584,8 +586,8 @@ impl App {
                     &playlist_id,
                     None,
                     Some(self.large_search_limit),
-                    None,
-                    None,
+                    Some(self.playlist_offset),
+                    None
                 ) {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 

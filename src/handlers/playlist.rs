@@ -36,6 +36,7 @@ pub fn handler(key: Key, app: &mut App) {
                 (&app.playlists, &app.selected_playlist_index)
             {
                 app.track_table.context = Some(TrackTableContext::MyPlaylists);
+                app.playlist_offset = 0;
                 if let Some(selected_playlist) =
                     playlists.items.get(selected_playlist_index.to_owned())
                 {
