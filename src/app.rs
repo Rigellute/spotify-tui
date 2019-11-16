@@ -587,7 +587,7 @@ impl App {
                     None,
                     Some(self.large_search_limit),
                     Some(self.playlist_offset),
-                    None
+                    None,
                 ) {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 
