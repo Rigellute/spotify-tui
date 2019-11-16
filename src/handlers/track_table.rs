@@ -45,7 +45,7 @@ pub fn handler(key: Key, app: &mut App) {
                             app.start_playback(
                                 context_uri,
                                 None,
-                                Some(app.track_table.selected_index),
+                                Some(app.track_table.selected_index + app.playlist_offset as usize),
                             );
                         };
                     }
