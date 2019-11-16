@@ -134,8 +134,8 @@ pub fn handler(key: Key, app: &mut App) {
                         if let (Some(playlists), Some(selected_playlist_index)) =
                             (&app.playlists, &app.selected_playlist_index)
                         {
-                            if app.playlist_offset >= 20 { 
-                                app.playlist_offset -= 20; 
+                            if app.playlist_offset >= 20 {
+                                app.playlist_offset -= 20;
                             };
                             if let Some(selected_playlist) =
                                 playlists.items.get(selected_playlist_index.to_owned())
