@@ -75,5 +75,6 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
             "<Ctrl+u>",
             "Pagination",
         ],
+        vec!["Delete saved album", "D", "Library -> Albums"],
     ]
 }
