@@ -902,4 +902,18 @@ impl App {
             self.library.saved_albums.index -= 1;
         }
     }
+
+    pub fn delete_current_user_saved_album(&mut self) {
+        if let Some(albums) = self.library.saved_albums.get_results(None) {
+            if let Some(selected_album) = albums.items.get(self.album_list_index) {
+                if let Some(spotify) = &mut self.spotify {
+                    let album_id = &selected_album.album.id;
+                    match spotify.current_user_saved_albums_delete(&[album_id.to_owned()]) {
+                        Ok(_) => self.get_current_user_saved_albums(None),
+                        Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
 }
