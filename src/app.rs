@@ -592,7 +592,9 @@ impl App {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 
                     self.playlist_tracks = playlist_tracks.items;
-                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                    if self.get_current_route().id != RouteId::TrackTable {
+                        self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                    };
                 };
             }
             None => {}
