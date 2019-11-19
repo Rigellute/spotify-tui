@@ -134,6 +134,7 @@ keybindings:
     seek_forwards: '>'
     next_track: 'n'
     previous_track: 'p'
+    copy_song_url: 'c'
     help: '?'
     shuffle: 's'
     repeat: 'r'
