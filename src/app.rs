@@ -666,7 +666,7 @@ impl App {
         {
             if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/track/{}", id))
             {
-                self.handle_error(format_err!("failed to get clipboard context: {}", e));
+                self.handle_error(format_err!("failed to set clipboard content: {}", e));
             }
         }
     }
