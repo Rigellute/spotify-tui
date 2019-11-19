@@ -1,6 +1,6 @@
 use super::config::ClientConfig;
 use super::user_config::UserConfig;
-use failure::err_msg;
+use failure::{err_msg, format_err};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::artist::FullArtist;
@@ -20,6 +20,9 @@ use rspotify::spotify::senum::{Country, RepeatState};
 use std::collections::HashSet;
 use std::time::Instant;
 use tui::layout::Rect;
+
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Made For You",
@@ -236,6 +239,7 @@ pub struct App {
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
     pub artists_list_index: usize,
+    pub clipboard_context: Option<ClipboardContext>,
 }
 
 impl App {
@@ -297,6 +301,7 @@ impl App {
             },
             user: None,
             instant_since_last_current_playback_poll: Instant::now(),
+            clipboard_context: None,
         }
     }
 
@@ -645,6 +650,24 @@ impl App {
         }
         if let Some(hovered_block) = hovered_block {
             current_route.hovered_block = hovered_block;
+        }
+    }
+
+    pub fn copy_song_url(&mut self) {
+        let clipboard = match &mut self.clipboard_context {
+            Some(ctx) => ctx,
+            None => return,
+        };
+
+        if let Some(FullPlayingContext {
+            item: Some(FullTrack { id: Some(id), .. }),
+            ..
+        }) = &self.current_playback_context
+        {
+            if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/track/{}", id))
+            {
+                self.handle_error(format_err!("failed to get clipboard context: {}", e));
+            }
         }
     }
 
