@@ -99,6 +99,7 @@ pub struct KeyBindingsString {
     repeat: Option<String>,
     search: Option<String>,
     submit: Option<String>,
+    copy_song_url: Option<String>,
 }
 
 pub struct KeyBindings {
@@ -118,6 +119,7 @@ pub struct KeyBindings {
     pub repeat: Key,
     pub search: Key,
     pub submit: Key,
+    pub copy_song_url: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -149,6 +151,7 @@ impl UserConfig {
                 repeat: Key::Ctrl('r'),
                 search: Key::Char('/'),
                 submit: Key::Char('\n'),
+                copy_song_url: Key::Char('c'),
             },
         }
     }
@@ -209,6 +212,7 @@ impl UserConfig {
         to_keys!(repeat);
         to_keys!(search);
         to_keys!(submit);
+        to_keys!(copy_song_url);
 
         Ok(())
     }
