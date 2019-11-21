@@ -25,6 +25,8 @@ jobs:
         with:
           toolchain: stable
           override: true
+      # This dependency is required for `clipboard`
+      - run: sudo apt-get install -y -qq xorg-dev
       - uses: actions-rs/cargo@v1
         with:
           command: test

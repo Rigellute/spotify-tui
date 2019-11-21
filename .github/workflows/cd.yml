@@ -34,7 +34,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y -qq pkg-config libssl-dev
+          sudo apt-get install -y -qq pkg-config libssl-dev xorg-dev
       - name: Checking out sources
         uses: actions/checkout@v1
       - name: Running cargo build
