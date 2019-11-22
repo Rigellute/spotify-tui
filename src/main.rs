@@ -9,6 +9,7 @@ mod util;
 
 use backtrace::Backtrace;
 use clap::App as ClapApp;
+use failure::format_err;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
 use rspotify::spotify::util::get_token;
@@ -159,6 +160,11 @@ fn main() -> Result<(), failure::Error> {
             app.user_config = user_config;
 
             app.spotify = Some(spotify);
+
+            app.clipboard_context =
+                Some(clipboard::ClipboardProvider::new().map_err(|err| {
+                    format_err!("failed to intialize clipboard context: {}", err)
+                })?);
 
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
