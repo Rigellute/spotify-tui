@@ -15,7 +15,7 @@ use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInf
 use rspotify::spotify::util::get_token;
 use rspotify::spotify::util::process_token;
 use rspotify::spotify::util::request_token;
-use std::cmp::{max, min};
+use std::cmp::min;
 use std::io::{self, Write};
 use std::panic::{self, PanicInfo};
 use std::time::{Duration, Instant};
@@ -180,7 +180,7 @@ fn main() -> Result<(), failure::Error> {
                     app.size = size;
 
                     // Based on the size of the terminal, adjust the search limit.
-                    let max_limit = max((app.size.height as u32) - 13, 50);
+                    let max_limit = min((app.size.height as u32) - 13, 50);
                     app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
                     app.small_search_limit =
                         min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
