@@ -8,6 +8,7 @@
 - Fix navigation from "Liked Songs" [#151](https://github.com/Rigellute/spotify-tui/pull/151)
 - Add support for following/unfollowing artists [#155](https://github.com/Rigellute/spotify-tui/pull/155)
 - Fix app hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
+- Add hotkey to copy url of currently playing track (default binding is `c`)[#156](https://github.com/Rigellute/spotify-tui/pull/156)
 
 ## [0.9.0] - 2019-11-13
 
