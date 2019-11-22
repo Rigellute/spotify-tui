@@ -70,6 +70,7 @@ pub fn handler(key: Key, app: &mut App) {
             //  Artists,
             4 => {
                 app.get_artists(None);
+                app.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
             }
             // Podcasts,
             5 => {

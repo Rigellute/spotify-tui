@@ -28,6 +28,7 @@ pub fn handler(key: Key, app: &mut App) {
             let artist = &artists[app.artists_list_index];
             app.get_artist_albums(&artist.id.to_owned(), &artist.name.to_owned());
         }
+        Key::Char('D') => app.user_unfollow_artists(),
         _ => {}
     }
 }

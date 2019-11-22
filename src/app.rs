@@ -858,7 +858,6 @@ impl App {
                 Ok(saved_artists) => {
                     self.artists = saved_artists.artists.items.to_owned();
                     self.library.saved_artists.add_pages(saved_artists.artists);
-                    self.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
                 }
                 Err(e) => {
                     self.handle_error(e);
@@ -914,6 +913,34 @@ impl App {
                     match spotify.current_user_saved_albums_delete(&[album_id.to_owned()]) {
                         Ok(_) => self.get_current_user_saved_albums(None),
                         Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn user_unfollow_artists(&mut self) {
+        if let Some(artists) = self.library.saved_artists.get_results(None) {
+            if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
+                if let Some(spotify) = &mut self.spotify {
+                    let artist_id = &selected_artist.id;
+                    match spotify.user_unfollow_artists(&[artist_id.to_owned()]) {
+                        Ok(_) => self.get_artists(None),
+                        Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn user_follow_artists(&mut self) {
+        if let Some(artists) = &self.search_results.artists {
+            if let Some(selected_index) = self.search_results.selected_artists_index {
+                if let Some(spotify) = &mut self.spotify {
+                    let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+                    let artist_id = &selected_artist.id;
+                    if let Err(e) = spotify.user_follow_artists(&[artist_id.to_owned()]) {
+                        self.handle_error(e);
                     }
                 }
             }
