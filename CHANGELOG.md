@@ -7,6 +7,7 @@
 - Refine Spotify result limits, which should fit your current terminal size. Most notably this will increase the number of results from a search [#154](https://github.com/Rigellute/spotify-tui/pull/154)
 - Fix navigation from "Liked Songs" [#151](https://github.com/Rigellute/spotify-tui/pull/151)
 - Add support for following/unfollowing artists [#155](https://github.com/Rigellute/spotify-tui/pull/155)
+- Fix app hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
 
 ## [0.9.0] - 2019-11-13
 
