@@ -999,7 +999,8 @@ where
             TableHeaderItem {
                 id: ColumnId::SongTitle,
                 text: "Title",
-                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+                // We need to subtract the fixed value of the previous column
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 2,
             },
             TableHeaderItem {
                 text: "Artist",
