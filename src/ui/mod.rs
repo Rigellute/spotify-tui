@@ -550,7 +550,7 @@ where
                 ..Default::default()
             },
             TableHeaderItem {
-                text: "AlbumTracks",
+                text: "Album",
                 width: get_percentage_width(layout_chunk.width, 0.3),
                 ..Default::default()
             },
