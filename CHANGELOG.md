@@ -10,6 +10,7 @@
 - Fix app hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
 - Add hotkey to copy url of currently playing track (default binding is `c`)[#156](https://github.com/Rigellute/spotify-tui/pull/156)
 - Fix showing "Release Date" in saved albums table [#162](https://github.com/Rigellute/spotify-tui/pull/162)
+- Fix showing "Length" in library -> recently played table [#164](https://github.com/Rigellute/spotify-tui/pull/164)
 
 ## [0.9.0] - 2019-11-13
 
