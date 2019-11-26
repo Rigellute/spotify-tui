@@ -467,7 +467,6 @@ impl App {
             match spotify.volume(volume_percent, Some(device_id.to_string())) {
                 Ok(()) => {
                     context.device.volume_percent = volume_percent.into();
-                    self.get_current_playback();
                 }
                 Err(e) => {
                     self.handle_error(e);
