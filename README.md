@@ -158,6 +158,8 @@ keybindings:
   shuffle: "s"
   repeat: "r"
   search: "/"
+
+seek_seconds: 5
 ```
 
 ## Limitations
