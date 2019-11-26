@@ -427,8 +427,10 @@ impl App {
     pub fn seek_forwards(&mut self) {
         if let Some(current_playback_context) = &self.current_playback_context {
             if let Some(track) = &current_playback_context.item {
-                if track.duration_ms - self.song_progress_ms as u32 > 5000 {
-                    self.seek(self.song_progress_ms as u32 + 5000);
+                if track.duration_ms - self.song_progress_ms as u32
+                    > self.user_config.seek_milliseconds
+                {
+                    self.seek(self.song_progress_ms as u32 + self.user_config.seek_milliseconds);
                 } else {
                     self.next_track();
                 }
@@ -437,8 +439,8 @@ impl App {
     }
 
     pub fn seek_backwards(&mut self) {
-        let new_progress = if self.song_progress_ms > 5000 {
-            self.song_progress_ms as u32 - 5000
+        let new_progress = if self.song_progress_ms as u32 > self.user_config.seek_milliseconds {
+            self.song_progress_ms as u32 - self.user_config.seek_milliseconds
         } else {
             0u32
         };

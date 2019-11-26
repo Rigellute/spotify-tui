@@ -125,10 +125,12 @@ pub struct KeyBindings {
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
     keybindings: Option<KeyBindingsString>,
+    seek_seconds: Option<u32>,
 }
 
 pub struct UserConfig {
     pub keys: KeyBindings,
+    pub seek_milliseconds: u32,
 }
 
 impl UserConfig {
@@ -153,6 +155,7 @@ impl UserConfig {
                 submit: Key::Char('\n'),
                 copy_song_url: Key::Char('c'),
             },
+            seek_milliseconds: 5 * 1000,
         }
     }
 
@@ -230,6 +233,10 @@ impl UserConfig {
 
             if let Some(keybindings) = config_yml.keybindings.clone() {
                 self.load_keybindings(keybindings)?;
+            }
+
+            if let Some(seek_seconds) = config_yml.seek_seconds {
+                self.seek_milliseconds = seek_seconds * 1000;
             }
 
             Ok(())
