@@ -13,6 +13,7 @@
 - Fix showing "Length" in library -> recently played table [#164](https://github.com/Rigellute/spotify-tui/pull/164)
 - Fix typo: "AlbumTracks" -> "Albums" [#165](https://github.com/Rigellute/spotify-tui/pull/165)
 - Fix janky volume control [#166](https://github.com/Rigellute/spotify-tui/pull/166)
+- Fix volume bug that would prevent volumes of 0 and 100 [#170](https://github.com/Rigellute/spotify-tui/pull/170)
 
 ## [0.9.0] - 2019-11-13
 
