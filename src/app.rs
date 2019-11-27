@@ -928,7 +928,7 @@ impl App {
         }
     }
 
-    pub fn delete_current_user_saved_album(&mut self) {
+    pub fn current_user_saved_album_delete(&mut self) {
         if let Some(albums) = self.library.saved_albums.get_results(None) {
             if let Some(selected_album) = albums.items.get(self.album_list_index) {
                 if let Some(spotify) = &mut self.spotify {
