@@ -942,6 +942,23 @@ impl App {
         }
     }
 
+    pub fn current_user_saved_album_add(&mut self) {
+        if let Some(albums) = &self.search_results.albums {
+            if let Some(selected_index) = self.search_results.selected_album_index {
+                if let Some(spotify) = &self.spotify {
+                    let selected_album = &albums.albums.items[selected_index];
+                    if let Some(artist_id) = &selected_album.id {
+                        if let Err(e) =
+                            spotify.current_user_saved_albums_add(&[artist_id.to_owned()])
+                        {
+                            self.handle_error(e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn user_unfollow_artists(&mut self) {
         if let Some(artists) = self.library.saved_artists.get_results(None) {
             if let Some(selected_artist) = artists.items.get(self.artists_list_index) {

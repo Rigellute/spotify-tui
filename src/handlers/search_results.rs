@@ -278,7 +278,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         Key::Char('w') => match app.search_results.selected_block {
-            SearchResultBlock::AlbumSearch => {}
+            SearchResultBlock::AlbumSearch => app.current_user_saved_album_add(),
             SearchResultBlock::SongSearch => {}
             SearchResultBlock::ArtistSearch => app.user_follow_artists(),
             SearchResultBlock::PlaylistSearch => {}
