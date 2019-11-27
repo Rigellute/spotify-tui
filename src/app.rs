@@ -986,4 +986,39 @@ impl App {
             }
         }
     }
+
+    pub fn user_follow_playlists(&mut self) {
+        if let (Some(playlists), Some(selected_index), Some(spotify)) = (
+            &self.search_results.playlists,
+            self.search_results.selected_playlists_index,
+            &self.spotify,
+        ) {
+            let selected_playlist: &SimplifiedPlaylist = &playlists.playlists.items[selected_index];
+            let selected_id = &selected_playlist.id;
+            let selected_public = selected_playlist.public;
+            let selected_owner_id = &selected_playlist.owner.id;
+            if let Err(e) = spotify.user_playlist_follow_playlist(
+                &selected_owner_id,
+                &selected_id,
+                selected_public,
+            ) {
+                self.handle_error(e);
+            }
+        }
+    }
+
+    pub fn user_unfollow_playlists(&mut self) {
+        if let (Some(playlists), Some(selected_index), Some(user), Some(spotify)) = (
+            &self.playlists,
+            self.selected_playlist_index,
+            &self.user,
+            &self.spotify,
+        ) {
+            let selected_playlist = &playlists.items[selected_index];
+            let selected_id = &selected_playlist.id;
+            if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
+                self.handle_error(e);
+            }
+        }
+    }
 }

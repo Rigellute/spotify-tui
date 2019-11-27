@@ -34,9 +34,11 @@ use redirect_uri::redirect_uri_web_server;
 use user_config::UserConfig;
 use util::{Event, Events};
 
-const SCOPES: [&str; 11] = [
+const SCOPES: [&str; 13] = [
     "playlist-read-collaborative",
     "playlist-read-private",
+    "playlist-modify-private",
+    "playlist-modify-public",
     "user-follow-read",
     "user-follow-modify",
     "user-library-modify",
