@@ -123,14 +123,23 @@ pub struct KeyBindings {
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct BehaviorConfigString {
+    pub seek_milliseconds: Option<u32>,
+}
+
+pub struct BehaviorConfig {
+    pub seek_milliseconds: u32,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
     keybindings: Option<KeyBindingsString>,
-    seek_seconds: Option<u32>,
+    behavior: Option<BehaviorConfigString>,
 }
 
 pub struct UserConfig {
     pub keys: KeyBindings,
-    pub seek_milliseconds: u32,
+    pub behavior: BehaviorConfig,
 }
 
 impl UserConfig {
@@ -155,7 +164,9 @@ impl UserConfig {
                 submit: Key::Char('\n'),
                 copy_song_url: Key::Char('c'),
             },
-            seek_milliseconds: 5 * 1000,
+            behavior: BehaviorConfig {
+                seek_milliseconds: 5 * 1000,
+            },
         }
     }
 
@@ -220,6 +231,23 @@ impl UserConfig {
         Ok(())
     }
 
+    pub fn load_behaviorconfig(
+        &mut self,
+        behaviorconfig: BehaviorConfigString,
+    ) -> Result<(), failure::Error> {
+        macro_rules! to_behavior {
+            ($name: ident) => {
+                if let Some(behavior_string) = behaviorconfig.$name {
+                    self.behavior.$name = behavior_string;
+                }
+            };
+        }
+
+        to_behavior!(seek_milliseconds);
+
+        Ok(())
+    }
+
     pub fn load_config(&mut self) -> Result<(), failure::Error> {
         let paths = self.get_or_build_paths()?;
         if paths.config_file_path.exists() {
@@ -235,8 +263,8 @@ impl UserConfig {
                 self.load_keybindings(keybindings)?;
             }
 
-            if let Some(seek_seconds) = config_yml.seek_seconds {
-                self.seek_milliseconds = seek_seconds * 1000;
+            if let Some(behavior) = config_yml.behavior {
+                self.load_behaviorconfig(behavior)?;
             }
 
             Ok(())

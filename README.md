@@ -133,6 +133,9 @@ The following is a sample config.yml file:
 ```yaml
 # Sample config file
 
+behavior:
+  seek_milliseconds: 5000
+
 keybindings:
   # Key stroke can be used if it only uses two keys:
   # ctrl-q works,
@@ -158,8 +161,6 @@ keybindings:
   shuffle: "s"
   repeat: "r"
   search: "/"
-
-seek_seconds: 5
 ```
 
 ## Limitations
