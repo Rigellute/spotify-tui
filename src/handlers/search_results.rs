@@ -270,13 +270,14 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         // Handle pressing enter when block is selected to start playing track
-        Key::Char('\n') => {
-            if app.search_results.selected_block != SearchResultBlock::Empty {
+        Key::Char('\n') => match app.search_results.selected_block {
+            SearchResultBlock::Empty => handle_enter_event_on_hovered_block(app),
+            SearchResultBlock::PlaylistSearch => {
+                app.playlist_offset = 0;
                 handle_enter_event_on_selected_block(app);
-            } else {
-                handle_enter_event_on_hovered_block(app)
             }
-        }
+            _ => handle_enter_event_on_selected_block(app),
+        },
         Key::Char('w') => match app.search_results.selected_block {
             SearchResultBlock::AlbumSearch => {}
             SearchResultBlock::SongSearch => {}
