@@ -38,6 +38,24 @@ To update, run
 brew upgrade spotify-tui
 ```
 
+### Snap
+
+For a system with Snap installed, run
+
+```bash
+snap install spt --channel=edge
+```
+
+The latest version will be installed for you automatically.
+
+### AUR
+
+For those on Arch Linux you can find the package on AUR [here](https://aur.archlinux.org/packages/spotify-tui/). If however you're using an AUR helper you can install directly from that, for example (in the case of [yay](https://github.com/Jguer/yay)), run
+
+```bash
+yay -S spotify-tui
+```
+
 ### Cargo
 
 Use this option if your architecture is not supported by the pre-built binaries found on the [releases page](https://github.com/Rigellute/spotify-tui/releases).

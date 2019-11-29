@@ -19,6 +19,7 @@ use rspotify::spotify::model::search::{
 use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
 use rspotify::spotify::model::user::PrivateUser;
 use rspotify::spotify::senum::{Country, RepeatState};
+use std::cmp::{max, min};
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::copy;
@@ -530,7 +531,6 @@ impl App {
             match spotify.volume(volume_percent, Some(device_id.to_string())) {
                 Ok(()) => {
                     context.device.volume_percent = volume_percent.into();
-                    self.get_current_playback();
                 }
                 Err(e) => {
                     self.handle_error(e);
@@ -541,8 +541,10 @@ impl App {
 
     pub fn increase_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
-            let next_volume = context.device.volume_percent as u8 + 10;
-            if next_volume <= 100 {
+            let current_volume = context.device.volume_percent as u8;
+            let next_volume = min(current_volume + 10, 100);
+
+            if next_volume != current_volume {
                 self.change_volume(next_volume);
             }
         }
@@ -550,10 +552,11 @@ impl App {
 
     pub fn decrease_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
-            let volume = context.device.volume_percent;
-            if volume >= 10 {
-                let next_volume = context.device.volume_percent as u8 - 10;
-                self.change_volume(next_volume);
+            let current_volume = context.device.volume_percent as i8;
+            let next_volume = max(current_volume - 10, 0);
+
+            if next_volume != current_volume {
+                self.change_volume(next_volume as u8);
             }
         }
     }

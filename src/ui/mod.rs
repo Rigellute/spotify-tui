@@ -550,7 +550,7 @@ where
                 ..Default::default()
             },
             TableHeaderItem {
-                text: "AlbumTracks",
+                text: "Album",
                 width: get_percentage_width(layout_chunk.width, 0.3),
                 ..Default::default()
             },
@@ -943,7 +943,7 @@ where
             },
             TableHeaderItem {
                 text: "Release Date",
-                width: get_percentage_width(layout_chunk.width, 1.0 / 3.0),
+                width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
                 ..Default::default()
             },
         ],
@@ -999,7 +999,8 @@ where
             TableHeaderItem {
                 id: ColumnId::SongTitle,
                 text: "Title",
-                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+                // We need to subtract the fixed value of the previous column
+                width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 2,
             },
             TableHeaderItem {
                 text: "Artist",
