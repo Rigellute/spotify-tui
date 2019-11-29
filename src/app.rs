@@ -1,7 +1,7 @@
 use super::config::ClientConfig;
 use super::user_config::UserConfig;
-use gdk_pixbuf::Pixbuf;
 use failure::{err_msg, format_err};
+use gdk_pixbuf::Pixbuf;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::artist::FullArtist;
