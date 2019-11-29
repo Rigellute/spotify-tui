@@ -1,7 +1,7 @@
 use super::config::ClientConfig;
 use super::user_config::UserConfig;
-use failure::err_msg;
 use gdk_pixbuf::Pixbuf;
+use failure::{err_msg, format_err};
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
 use rspotify::spotify::model::artist::FullArtist;
@@ -26,7 +26,9 @@ use std::time::Instant;
 use tempdir::TempDir;
 use tui::layout::Rect;
 
-// use std::collections::HashMap;
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
+
 pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Made For You",
     "Recently Played",
@@ -225,6 +227,7 @@ pub struct App {
     pub liked_song_ids_set: HashSet<String>,
     pub large_search_limit: u32,
     pub library: Library,
+    pub playlist_offset: u32,
     pub playback_params: PlaybackParams,
     pub playlist_tracks: Vec<PlaylistTrack>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
@@ -242,6 +245,7 @@ pub struct App {
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
     pub artists_list_index: usize,
+    pub clipboard_context: Option<ClipboardContext>,
 }
 
 impl App {
@@ -277,6 +281,7 @@ impl App {
             input: vec![],
             input_idx: 0,
             input_cursor_position: 0,
+            playlist_offset: 0,
             playlist_tracks: vec![],
             playlists: None,
             search_results: SearchResult {
@@ -303,6 +308,7 @@ impl App {
             },
             user: None,
             instant_since_last_current_playback_poll: Instant::now(),
+            clipboard_context: None,
         }
     }
 
@@ -648,13 +654,15 @@ impl App {
                     &playlist_id,
                     None,
                     Some(self.large_search_limit),
-                    None,
+                    Some(self.playlist_offset),
                     None,
                 ) {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 
                     self.playlist_tracks = playlist_tracks.items;
-                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                    if self.get_current_route().id != RouteId::TrackTable {
+                        self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                    };
                 };
             }
             None => {}
@@ -708,6 +716,24 @@ impl App {
         }
     }
 
+    pub fn copy_song_url(&mut self) {
+        let clipboard = match &mut self.clipboard_context {
+            Some(ctx) => ctx,
+            None => return,
+        };
+
+        if let Some(FullPlayingContext {
+            item: Some(FullTrack { id: Some(id), .. }),
+            ..
+        }) = &self.current_playback_context
+        {
+            if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/track/{}", id))
+            {
+                self.handle_error(format_err!("failed to set clipboard content: {}", e));
+            }
+        }
+    }
+
     fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
         self.set_tracks_to_table(
             saved_track_page
@@ -750,7 +776,6 @@ impl App {
 
                     self.library.saved_tracks.add_pages(saved_tracks);
                     self.track_table.context = Some(TrackTableContext::SavedTracks);
-                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                 }
                 Err(e) => {
                     self.handle_error(e);
@@ -919,7 +944,6 @@ impl App {
                 Ok(saved_artists) => {
                     self.artists = saved_artists.artists.items.to_owned();
                     self.library.saved_artists.add_pages(saved_artists.artists);
-                    self.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
                 }
                 Err(e) => {
                     self.handle_error(e);
@@ -964,6 +988,48 @@ impl App {
     pub fn get_current_user_saved_albums_previous(&mut self) {
         if self.library.saved_albums.index > 0 {
             self.library.saved_albums.index -= 1;
+        }
+    }
+
+    pub fn delete_current_user_saved_album(&mut self) {
+        if let Some(albums) = self.library.saved_albums.get_results(None) {
+            if let Some(selected_album) = albums.items.get(self.album_list_index) {
+                if let Some(spotify) = &mut self.spotify {
+                    let album_id = &selected_album.album.id;
+                    match spotify.current_user_saved_albums_delete(&[album_id.to_owned()]) {
+                        Ok(_) => self.get_current_user_saved_albums(None),
+                        Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn user_unfollow_artists(&mut self) {
+        if let Some(artists) = self.library.saved_artists.get_results(None) {
+            if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
+                if let Some(spotify) = &mut self.spotify {
+                    let artist_id = &selected_artist.id;
+                    match spotify.user_unfollow_artists(&[artist_id.to_owned()]) {
+                        Ok(_) => self.get_artists(None),
+                        Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn user_follow_artists(&mut self) {
+        if let Some(artists) = &self.search_results.artists {
+            if let Some(selected_index) = self.search_results.selected_artists_index {
+                if let Some(spotify) = &mut self.spotify {
+                    let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+                    let artist_id = &selected_artist.id;
+                    if let Err(e) = spotify.user_follow_artists(&[artist_id.to_owned()]) {
+                        self.handle_error(e);
+                    }
+                }
+            }
         }
     }
 }

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- Added pagination to user playlists [#150](https://github.com/Rigellute/spotify-tui/pull/150)
+- Add ability to delete a saved album (hover over the album you wish to delete and press `D`) [#152](https://github.com/Rigellute/spotify-tui/pull/152)
+- Refine Spotify result limits, which should fit your current terminal size. Most notably this will increase the number of results from a search [#154](https://github.com/Rigellute/spotify-tui/pull/154)
+- Fix navigation from "Liked Songs" [#151](https://github.com/Rigellute/spotify-tui/pull/151)
+- Add support for following/unfollowing artists [#155](https://github.com/Rigellute/spotify-tui/pull/155)
+- Fix app hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
+- Add hotkey to copy url of currently playing track (default binding is `c`)[#156](https://github.com/Rigellute/spotify-tui/pull/156)
+
 ## [0.9.0] - 2019-11-13
 
 ### Added

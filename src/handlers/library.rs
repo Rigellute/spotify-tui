@@ -60,6 +60,7 @@ pub fn handler(key: Key, app: &mut App) {
             // Liked Songs,
             2 => {
                 app.get_current_user_saved_tracks(None);
+                app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
             }
             // Albums,
             3 => {
@@ -69,6 +70,7 @@ pub fn handler(key: Key, app: &mut App) {
             //  Artists,
             4 => {
                 app.get_artists(None);
+                app.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
             }
             // Podcasts,
             5 => {

@@ -277,6 +277,13 @@ pub fn handler(key: Key, app: &mut App) {
                 handle_enter_event_on_hovered_block(app)
             }
         }
+        Key::Char('w') => match app.search_results.selected_block {
+            SearchResultBlock::AlbumSearch => {}
+            SearchResultBlock::SongSearch => {}
+            SearchResultBlock::ArtistSearch => app.user_follow_artists(),
+            SearchResultBlock::PlaylistSearch => {}
+            SearchResultBlock::Empty => {}
+        },
         // Add `s` to "see more" on each option
         _ => {}
     }

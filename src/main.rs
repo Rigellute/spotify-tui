@@ -9,6 +9,7 @@ mod util;
 
 use backtrace::Backtrace;
 use clap::App as ClapApp;
+use failure::format_err;
 use rspotify::spotify::client::Spotify;
 use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
 use rspotify::spotify::util::get_token;
@@ -33,10 +34,11 @@ use redirect_uri::redirect_uri_web_server;
 use user_config::UserConfig;
 use util::{Event, Events};
 
-const SCOPES: [&str; 10] = [
+const SCOPES: [&str; 11] = [
     "playlist-read-collaborative",
     "playlist-read-private",
     "user-follow-read",
+    "user-follow-modify",
     "user-library-modify",
     "user-library-read",
     "user-modify-playback-state",
@@ -159,6 +161,11 @@ fn main() -> Result<(), failure::Error> {
 
             app.spotify = Some(spotify);
 
+            app.clipboard_context =
+                Some(clipboard::ClipboardProvider::new().map_err(|err| {
+                    format_err!("failed to intialize clipboard context: {}", err)
+                })?);
+
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
             if app.client_config.device_id.is_none() {
@@ -173,8 +180,10 @@ fn main() -> Result<(), failure::Error> {
                     app.size = size;
 
                     // Based on the size of the terminal, adjust the search limit.
-                    let max_limit = 50;
-                    app.large_search_limit = min((f32::from(size.height) / 1.5) as u32, max_limit);
+                    let max_limit = min((app.size.height as u32) - 13, 50);
+                    app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
+                    app.small_search_limit =
+                        min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
                 };
 
                 let current_route = app.get_current_route();
