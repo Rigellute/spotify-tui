@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2019-11-30
+
 - Added pagination to user playlists [#150](https://github.com/Rigellute/spotify-tui/pull/150)
 - Add ability to delete a saved album (hover over the album you wish to delete and press `D`) [#152](https://github.com/Rigellute/spotify-tui/pull/152)
 - Refine Spotify result limits, which should fit your current terminal size. Most notably this will increase the number of results from a search [#154](https://github.com/Rigellute/spotify-tui/pull/154)
