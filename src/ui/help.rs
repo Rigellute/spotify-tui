@@ -79,6 +79,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
         vec!["Jump to start of playlist", "<Ctrl+a>", "Pagination"],
         vec!["Jump to end of playlist", "<Ctrl+e>", "Pagination"],
         vec!["Delete saved album", "D", "Library -> Albums"],
-        vec!["Follow an artists", "w", "Search result"],
+        vec!["Delete saved playist", "D", "Playlist"],
+        vec!["Follow an artists/playlist", "w", "Search result"],
     ]
 }
