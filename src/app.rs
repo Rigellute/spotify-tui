@@ -931,7 +931,7 @@ impl App {
         }
     }
 
-    pub fn delete_current_user_saved_album(&mut self) {
+    pub fn current_user_saved_album_delete(&mut self) {
         if let Some(albums) = self.library.saved_albums.get_results(None) {
             if let Some(selected_album) = albums.items.get(self.album_list_index) {
                 if let Some(spotify) = &mut self.spotify {
@@ -939,6 +939,23 @@ impl App {
                     match spotify.current_user_saved_albums_delete(&[album_id.to_owned()]) {
                         Ok(_) => self.get_current_user_saved_albums(None),
                         Err(e) => self.handle_error(e),
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn current_user_saved_album_add(&mut self) {
+        if let Some(albums) = &self.search_results.albums {
+            if let Some(selected_index) = self.search_results.selected_album_index {
+                if let Some(spotify) = &self.spotify {
+                    let selected_album = &albums.albums.items[selected_index];
+                    if let Some(artist_id) = &selected_album.id {
+                        if let Err(e) =
+                            spotify.current_user_saved_albums_add(&[artist_id.to_owned()])
+                        {
+                            self.handle_error(e);
+                        }
                     }
                 }
             }
@@ -969,6 +986,41 @@ impl App {
                         self.handle_error(e);
                     }
                 }
+            }
+        }
+    }
+
+    pub fn user_follow_playlists(&mut self) {
+        if let (Some(playlists), Some(selected_index), Some(spotify)) = (
+            &self.search_results.playlists,
+            self.search_results.selected_playlists_index,
+            &self.spotify,
+        ) {
+            let selected_playlist: &SimplifiedPlaylist = &playlists.playlists.items[selected_index];
+            let selected_id = &selected_playlist.id;
+            let selected_public = selected_playlist.public;
+            let selected_owner_id = &selected_playlist.owner.id;
+            if let Err(e) = spotify.user_playlist_follow_playlist(
+                &selected_owner_id,
+                &selected_id,
+                selected_public,
+            ) {
+                self.handle_error(e);
+            }
+        }
+    }
+
+    pub fn user_unfollow_playlists(&mut self) {
+        if let (Some(playlists), Some(selected_index), Some(user), Some(spotify)) = (
+            &self.playlists,
+            self.selected_playlist_index,
+            &self.user,
+            &self.spotify,
+        ) {
+            let selected_playlist = &playlists.items[selected_index];
+            let selected_id = &selected_playlist.id;
+            if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
+                self.handle_error(e);
             }
         }
     }

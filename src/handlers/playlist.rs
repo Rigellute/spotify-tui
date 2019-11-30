@@ -45,6 +45,17 @@ pub fn handler(key: Key, app: &mut App) {
                 }
             };
         }
+        Key::Char('D') => {
+            app.user_unfollow_playlists();
+            if let Some(spotify) = &app.spotify {
+                let playlists = spotify.current_user_playlists(app.large_search_limit, None);
+
+                match playlists {
+                    Ok(p) => app.playlists = Some(p),
+                    Err(e) => app.handle_error(e),
+                };
+            }
+        }
         _ => {}
     }
 }

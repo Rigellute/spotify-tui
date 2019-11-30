@@ -37,7 +37,7 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Ctrl('d') => app.get_current_user_saved_albums_next(),
         Key::Ctrl('u') => app.get_current_user_saved_albums_previous(),
-        Key::Char('D') => app.delete_current_user_saved_album(),
+        Key::Char('D') => app.current_user_saved_album_delete(),
         _ => {}
     };
 }

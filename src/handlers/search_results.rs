@@ -279,10 +279,20 @@ pub fn handler(key: Key, app: &mut App) {
             _ => handle_enter_event_on_selected_block(app),
         },
         Key::Char('w') => match app.search_results.selected_block {
-            SearchResultBlock::AlbumSearch => {}
+            SearchResultBlock::AlbumSearch => app.current_user_saved_album_add(),
             SearchResultBlock::SongSearch => {}
             SearchResultBlock::ArtistSearch => app.user_follow_artists(),
-            SearchResultBlock::PlaylistSearch => {}
+            SearchResultBlock::PlaylistSearch => {
+                app.user_follow_playlists();
+                if let Some(spotify) = &app.spotify {
+                    let playlists = spotify.current_user_playlists(app.large_search_limit, None);
+
+                    match playlists {
+                        Ok(p) => app.playlists = Some(p),
+                        Err(e) => app.handle_error(e),
+                    }
+                }
+            }
             SearchResultBlock::Empty => {}
         },
         // Add `s` to "see more" on each option
