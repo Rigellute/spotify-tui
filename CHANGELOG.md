@@ -4,19 +4,24 @@
 
 ## [0.10.0] - 2019-11-30
 
+### Added
+
 - Added pagination to user playlists [#150](https://github.com/Rigellute/spotify-tui/pull/150)
 - Add ability to delete a saved album (hover over the album you wish to delete and press `D`) [#152](https://github.com/Rigellute/spotify-tui/pull/152)
-- Refine Spotify result limits, which should fit your current terminal size. Most notably this will increase the number of results from a search [#154](https://github.com/Rigellute/spotify-tui/pull/154)
-- Fix navigation from "Liked Songs" [#151](https://github.com/Rigellute/spotify-tui/pull/151)
 - Add support for following/unfollowing artists [#155](https://github.com/Rigellute/spotify-tui/pull/155)
-- Fix app hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
 - Add hotkey to copy url of currently playing track (default binding is `c`)[#156](https://github.com/Rigellute/spotify-tui/pull/156)
-- Fix showing "Release Date" in saved albums table [#162](https://github.com/Rigellute/spotify-tui/pull/162)
-- Fix showing "Length" in library -> recently played table [#164](https://github.com/Rigellute/spotify-tui/pull/164)
-- Fix typo: "AlbumTracks" -> "Albums" [#165](https://github.com/Rigellute/spotify-tui/pull/165)
-- Fix janky volume control [#166](https://github.com/Rigellute/spotify-tui/pull/166)
-- Fix volume bug that would prevent volumes of 0 and 100 [#170](https://github.com/Rigellute/spotify-tui/pull/170)
-- Fix playing a wrong track in playlist [#173](https://github.com/Rigellute/spotify-tui/pull/173)
+
+### Fixed
+
+- Refine Spotify result limits, which should fit your current terminal size. Most notably this will increase the number of results from a search [#154](https://github.com/Rigellute/spotify-tui/pull/154)
+- Navigation from "Liked Songs" [#151](https://github.com/Rigellute/spotify-tui/pull/151)
+- App hang upon trying to authenticate with Spotify on FreeBSD [#148](https://github.com/Rigellute/spotify-tui/pull/148)
+- Showing "Release Date" in saved albums table [#162](https://github.com/Rigellute/spotify-tui/pull/162)
+- Showing "Length" in library -> recently played table [#164](https://github.com/Rigellute/spotify-tui/pull/164)
+- Typo: "AlbumTracks" -> "Albums" [#165](https://github.com/Rigellute/spotify-tui/pull/165)
+- Janky volume control [#166](https://github.com/Rigellute/spotify-tui/pull/166)
+- Volume bug that would prevent volumes of 0 and 100 [#170](https://github.com/Rigellute/spotify-tui/pull/170)
+- Playing a wrong track in playlist [#173](https://github.com/Rigellute/spotify-tui/pull/173)
 
 ## [0.9.0] - 2019-11-13
 
