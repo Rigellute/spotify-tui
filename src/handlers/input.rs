@@ -102,7 +102,7 @@ pub fn handler(key: Key, app: &mut App) {
                 }
 
                 // On searching for a track, clear the playlist selection
-                app.selected_playlist_index = None;
+                app.selected_playlist_index = Some(0);
                 app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
             }
         }
