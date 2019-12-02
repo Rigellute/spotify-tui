@@ -216,11 +216,17 @@ fn main() -> Result<(), failure::Error> {
                     };
                 }
 
+                let cursor_offset = if app.size.height > ui::SMALL_TERMINAL_HEIGHT {
+                    3
+                } else {
+                    2
+                };
+
                 // Put the cursor back inside the input box
                 write!(
                     terminal.backend_mut(),
                     "{}",
-                    Goto(3 + app.input_cursor_position, 3)
+                    Goto(cursor_offset + app.input_cursor_position, cursor_offset)
                 )?;
 
                 // stdout is buffered, flush it to see the effect immediately when hitting backspace
