@@ -16,7 +16,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 rspotify = "0.7.0"
 tui = "0.6.2"
-termion = "1.5.3"
+termion = "1.5.4"
 failure = "0.1.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
