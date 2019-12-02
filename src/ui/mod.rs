@@ -16,6 +16,8 @@ use util::{
     get_search_results_highlight_state, get_track_progress_percentage, millis_to_minutes,
 };
 
+pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
+
 pub enum TableId {
     Album,
     AlbumList,
@@ -139,7 +141,11 @@ where
     B: Backend,
 {
     // Make better use of space on small terminals
-    let margin = if app.size.height > 45 { 1 } else { 0 };
+    let margin = if app.size.height > SMALL_TERMINAL_HEIGHT {
+        1
+    } else {
+        0
+    };
 
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
