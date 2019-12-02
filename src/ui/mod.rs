@@ -90,7 +90,11 @@ where
                 .border_style(gray),
         )
         .style(Style::default().fg(Color::White))
-        .widths(&[50, 40, 20])
+        .widths(&[
+            Constraint::Length(50),
+            Constraint::Length(40),
+            Constraint::Length(20),
+        ])
         .render(f, chunks[0]);
 }
 
@@ -1147,7 +1151,11 @@ fn draw_table<B>(
         Row::StyledData(formatted_row.into_iter(), style)
     });
 
-    let widths = header.items.iter().map(|h| h.width).collect::<Vec<u16>>();
+    let widths = header
+        .items
+        .iter()
+        .map(|h| Constraint::Length(h.width))
+        .collect::<Vec<tui::layout::Constraint>>();
 
     Table::new(header.items.iter().map(|h| h.text), rows)
         .block(
