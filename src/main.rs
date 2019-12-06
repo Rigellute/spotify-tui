@@ -27,7 +27,7 @@ use termion::screen::AlternateScreen;
 use tui::backend::{Backend, TermionBackend};
 use tui::Terminal;
 
-use app::{ActiveBlock, App};
+use app::{ActiveBlock, App, RouteId};
 use banner::BANNER;
 use config::{ClientConfig, LOCALHOST};
 use redirect_uri::redirect_uri_web_server;
@@ -259,8 +259,14 @@ fn main() -> Result<(), failure::Error> {
                         } else if key == app.user_config.keys.back {
                             if app.get_current_route().active_block != ActiveBlock::Input {
                                 // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
-                                let pop_result = app.pop_navigation_stack();
 
+                                let pop_result = match app.pop_navigation_stack() {
+                                    Some(ref x) if x.id == RouteId::Search => {
+                                        app.pop_navigation_stack()
+                                    }
+                                    Some(x) => Some(x),
+                                    None => None,
+                                };
                                 if pop_result.is_none() {
                                     break; // Exit application
                                 }
