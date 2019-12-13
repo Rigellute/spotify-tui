@@ -1,8 +1,8 @@
-use rspotify::spotify::oauth2::SpotifyOAuth;
-use rspotify::spotify::util::request_token;
-use std::io::prelude::*;
-use std::net::TcpListener;
-use std::net::TcpStream;
+use rspotify::spotify::{oauth2::SpotifyOAuth, util::request_token};
+use std::{
+    io::prelude::*,
+    net::{TcpListener, TcpStream},
+};
 
 pub fn redirect_uri_web_server(spotify_oauth: &mut SpotifyOAuth) -> Result<String, ()> {
     let listener = TcpListener::bind("127.0.0.1:8888");

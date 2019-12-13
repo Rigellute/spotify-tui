@@ -1,5 +1,7 @@
-use super::super::app::{App, SearchResultBlock, TrackTableContext};
-use super::common_key_events;
+use super::{
+    super::app::{App, SearchResultBlock, TrackTableContext},
+    common_key_events,
+};
 use termion::event::Key;
 
 fn handle_down_press_on_selected_block(app: &mut App) {

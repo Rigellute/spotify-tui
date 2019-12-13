@@ -2,9 +2,11 @@ use super::banner::BANNER;
 use dirs;
 use failure::err_msg;
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::io::{stdin, Write};
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    io::{stdin, Write},
+    path::{Path, PathBuf},
+};
 
 pub const LOCALHOST: &str = "http://localhost:8888/callback";
 const FILE_NAME: &str = "client.yml";

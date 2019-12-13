@@ -1,16 +1,18 @@
 mod help;
 mod util;
-use super::app::{
-    ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS,
+use super::{
+    app::{ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS},
+    banner::BANNER,
 };
-use super::banner::BANNER;
 use help::get_help_docs;
 use rspotify::spotify::senum::RepeatState;
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget};
-use tui::Frame;
+use tui::{
+    backend::Backend,
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
+    Frame,
+};
 use util::{
     create_artist_string, display_track_progress, get_color, get_percentage_width,
     get_search_results_highlight_state, get_track_progress_percentage, millis_to_minutes,

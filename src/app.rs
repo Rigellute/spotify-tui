@@ -1,29 +1,30 @@
-use super::config::ClientConfig;
-use super::user_config::UserConfig;
+use super::{config::ClientConfig, user_config::UserConfig};
 use failure::{err_msg, format_err};
-use rspotify::spotify::client::Spotify;
-use rspotify::spotify::model::album::{FullAlbum, SavedAlbum, SimplifiedAlbum};
-use rspotify::spotify::model::artist::FullArtist;
-use rspotify::spotify::model::context::FullPlayingContext;
-use rspotify::spotify::model::device::DevicePayload;
-use rspotify::spotify::model::offset::for_position;
-use rspotify::spotify::model::offset::Offset;
-use rspotify::spotify::model::page::{CursorBasedPage, Page};
-use rspotify::spotify::model::playing::PlayHistory;
-use rspotify::spotify::model::playlist::{PlaylistTrack, SimplifiedPlaylist};
-use rspotify::spotify::model::search::{
-    SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks,
+use rspotify::spotify::{
+    client::Spotify,
+    model::{
+        album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
+        artist::FullArtist,
+        context::FullPlayingContext,
+        device::DevicePayload,
+        offset::{for_position, Offset},
+        page::{CursorBasedPage, Page},
+        playing::PlayHistory,
+        playlist::{PlaylistTrack, SimplifiedPlaylist},
+        search::{SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks},
+        track::{FullTrack, SavedTrack, SimplifiedTrack},
+        user::PrivateUser,
+    },
+    senum::{Country, RepeatState},
 };
-use rspotify::spotify::model::track::{FullTrack, SavedTrack, SimplifiedTrack};
-use rspotify::spotify::model::user::PrivateUser;
-use rspotify::spotify::senum::{Country, RepeatState};
-use std::cmp::{max, min};
-use std::collections::HashSet;
-use std::time::Instant;
+use std::{
+    cmp::{max, min},
+    collections::HashSet,
+    time::Instant,
+};
 use tui::layout::Rect;
 
-use clipboard::ClipboardContext;
-use clipboard::ClipboardProvider;
+use clipboard::{ClipboardContext, ClipboardProvider};
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
     "Made For You",
