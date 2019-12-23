@@ -56,7 +56,7 @@ impl Events {
         };
 
         let _tick_handle = {
-            let tx = tx.clone();
+            let tx = tx;
             thread::spawn(move || {
                 let tx = tx.clone();
                 loop {

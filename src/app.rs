@@ -706,7 +706,6 @@ impl App {
 
         self.current_user_saved_tracks_contains(
             tracks
-                .clone()
                 .into_iter()
                 .filter_map(|item| item.id)
                 .collect::<Vec<String>>(),

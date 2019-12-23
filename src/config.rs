@@ -33,7 +33,7 @@ impl ClientConfig {
         }
     }
 
-    pub fn get_or_build_paths(&self) -> Result<(ConfigPaths), failure::Error> {
+    pub fn get_or_build_paths(&self) -> Result<ConfigPaths, failure::Error> {
         match dirs::home_dir() {
             Some(home) => {
                 let path = Path::new(&home);

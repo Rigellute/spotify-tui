@@ -170,7 +170,7 @@ impl UserConfig {
         }
     }
 
-    pub fn get_or_build_paths(&self) -> Result<(UserConfigPaths), failure::Error> {
+    pub fn get_or_build_paths(&self) -> Result<UserConfigPaths, failure::Error> {
         match dirs::home_dir() {
             Some(home) => {
                 let path = Path::new(&home);

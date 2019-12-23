@@ -71,7 +71,7 @@ pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
     match spotify_oauth.get_cached_token() {
         Some(token_info) => Some(token_info),
         None => match redirect_uri_web_server(spotify_oauth) {
-            Ok(url) => process_token(spotify_oauth, &mut url.to_string()),
+            Ok(mut url) => process_token(spotify_oauth, &mut url),
             Err(()) => {
                 println!("Starting webserver failed. Continuing with manual authentication");
                 request_token(spotify_oauth);
