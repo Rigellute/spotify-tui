@@ -56,6 +56,14 @@ For those on Arch Linux you can find the package on AUR [here](https://aur.archl
 yay -S spotify-tui
 ```
 
+### Void Linux
+
+Available on the official repositories. To install, run
+
+```bash
+sudo xbps-install -Su spotify-tui
+```
+
 ### Cargo
 
 Use this option if your architecture is not supported by the pre-built binaries found on the [releases page](https://github.com/Rigellute/spotify-tui/releases).
