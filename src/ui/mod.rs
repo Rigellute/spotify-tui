@@ -638,7 +638,7 @@ where
             };
 
             let title = format!(
-                "{} ({} | Shuffle: {} | Repeat: {} | Volume: {}%)",
+                "{:-7} ({} | Shuffle: {:-3} | Repeat: {:-5} | Volume: {:-2}%)",
                 play_title,
                 current_playback_context.device.name,
                 shuffle_text,
