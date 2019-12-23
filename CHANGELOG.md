@@ -5,6 +5,10 @@
 - Add support for adding an album and following a playlist. NOTE: that this will require the user to grant more permissions [#172](https://github.com/Rigellute/spotify-tui/pull/172)
 - Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
 - Add shortcuts to jump to the start or the end of a playlist [#167](https://github.com/Rigellute/spotify-tui/pull/167)
+- Fix playlist index after search [#177](https://github.com/Rigellute/spotify-tui/pull/177)
+- Fix cursor offset in search input [#183](https://github.com/Rigellute/spotify-tui/pull/183)
+- Remove focus on input when jumping back [#184](https://github.com/Rigellute/spotify-tui/pull/184)
+- Pad strings in status bar to prevent reformatting [#188](https://github.com/Rigellute/spotify-tui/pull/188)
 
 ## [0.10.0] - 2019-11-30
 
