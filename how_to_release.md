@@ -4,7 +4,7 @@ The releases are automated via GitHub actions, using [this configuration file](h
 
 The release is triggered by pushing a tag.
 
-1. Bump the version in `Cargo.toml`
+1. Bump the version in `Cargo.toml` and run the app to update the `lock` file
 1. Update the "Unreleased" header for the new version in the `CHANGELOG`
 1. Create a new tag e.g. `git tag -a v0.7.0`
 1. Push the tag `git push --tags`

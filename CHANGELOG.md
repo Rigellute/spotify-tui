@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2019-12-23
+
 - Add support for adding an album and following a playlist. NOTE: that this will require the user to grant more permissions [#172](https://github.com/Rigellute/spotify-tui/pull/172)
 - Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
 - Add shortcuts to jump to the start or the end of a playlist [#167](https://github.com/Rigellute/spotify-tui/pull/167)
