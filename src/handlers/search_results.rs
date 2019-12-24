@@ -2,7 +2,7 @@ use super::{
     super::app::{App, SearchResultBlock, TrackTableContext},
     common_key_events,
 };
-use crate::event::Key;
+use termion::event::Key;
 
 fn handle_down_press_on_selected_block(app: &mut App) {
     // Start selecting within the selected block
@@ -272,7 +272,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
         }
         // Handle pressing enter when block is selected to start playing track
-        Key::Enter => match app.search_results.selected_block {
+        Key::Char('\n') => match app.search_results.selected_block {
             SearchResultBlock::Empty => handle_enter_event_on_hovered_block(app),
             SearchResultBlock::PlaylistSearch => {
                 app.playlist_offset = 0;

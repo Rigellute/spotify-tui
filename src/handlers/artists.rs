@@ -1,5 +1,6 @@
 use super::common_key_events;
-use crate::{app::App, event::Key};
+use crate::app::App;
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -22,7 +23,7 @@ pub fn handler(key: Key, app: &mut App) {
                 app.artists_list_index = next_index;
             }
         }
-        Key::Enter => {
+        Key::Char('\n') => {
             let artists = app.artists.to_owned();
             let artist = &artists[app.artists_list_index];
             app.get_artist_albums(&artist.id.to_owned(), &artist.name.to_owned());

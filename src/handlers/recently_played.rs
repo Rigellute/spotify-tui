@@ -1,5 +1,5 @@
 use super::{super::app::App, common_key_events};
-use crate::event::Key;
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -33,7 +33,7 @@ pub fn handler(key: Key, app: &mut App) {
                 };
             };
         }
-        Key::Enter => {
+        Key::Char('\n') => {
             if let Some(recently_played_result) = &app.recently_played.result.clone() {
                 let track_uris: Vec<String> = recently_played_result
                     .items

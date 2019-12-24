@@ -1,8 +1,6 @@
 use super::common_key_events;
-use crate::{
-    app::{AlbumTableContext, App},
-    event::Key,
-};
+use crate::app::{AlbumTableContext, App};
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -84,7 +82,7 @@ pub fn handler(key: Key, app: &mut App) {
                 };
             }
         },
-        Key::Enter => match app.album_table_context {
+        Key::Char('\n') => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
                     if let Some(selected_album) = albums.items.get(app.album_list_index) {

@@ -1,5 +1,5 @@
 use super::{super::app::App, common_key_events};
-use crate::event::Key;
+use termion::event::Key;
 
 const LARGE_SCROLL: u16 = 10;
 const SMALL_SCROLL: u16 = 1;

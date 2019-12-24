@@ -1,4 +1,3 @@
-use crate::event::Key;
 use dirs;
 use failure::err_msg;
 use serde::{Deserialize, Serialize};
@@ -6,6 +5,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use termion::event::Key;
 
 const FILE_NAME: &str = "config.yml";
 const CONFIG_DIR: &str = ".config";
@@ -65,7 +65,7 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
         Key::Left,
         Key::Right,
         Key::Backspace,
-        Key::Enter,
+        Key::Char('\n'),
     ];
     for item in reserved.iter() {
         if key == *item {
@@ -163,7 +163,7 @@ impl UserConfig {
                 shuffle: Key::Ctrl('s'),
                 repeat: Key::Ctrl('r'),
                 search: Key::Char('/'),
-                submit: Key::Enter,
+                submit: Key::Char('\n'),
                 copy_song_url: Key::Char('c'),
             },
             behavior: BehaviorConfig {
@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn test_parse_key() {
         use super::parse_key;
-        use crate::event::Key;
+        use termion::event::Key;
         assert_eq!(parse_key(String::from("j")).unwrap(), Key::Char('j'));
         assert_eq!(parse_key(String::from("J")).unwrap(), Key::Char('J'));
         assert_eq!(parse_key(String::from("ctrl-j")).unwrap(), Key::Ctrl('j'));
@@ -294,10 +294,10 @@ mod tests {
     #[test]
     fn test_reserved_key() {
         use super::check_reserved_keys;
-        use crate::event::Key;
+        use termion::event::Key;
 
         assert!(
-            check_reserved_keys(Key::Enter).is_err(),
+            check_reserved_keys(Key::Char('\n')).is_err(),
             "Enter key should be reserved"
         );
     }

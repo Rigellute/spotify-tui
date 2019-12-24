@@ -2,7 +2,7 @@ use super::{
     super::app::{ActiveBlock, App},
     common_key_events,
 };
-use crate::event::Key;
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
