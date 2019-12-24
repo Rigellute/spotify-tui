@@ -1,29 +1,15 @@
 mod app;
 mod banner;
 mod config;
-mod event;
 mod handlers;
 mod redirect_uri;
 mod ui;
 mod user_config;
+mod util;
 
-use crate::app::RouteId;
-use crate::event::Key;
-use app::{ActiveBlock, App};
 use backtrace::Backtrace;
-use banner::BANNER;
 use clap::App as ClapApp;
-use config::{ClientConfig, LOCALHOST};
-use crossterm::{
-    cursor::MoveTo,
-    event::{DisableMouseCapture, EnableMouseCapture},
-    execute,
-    style::Print,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
 use failure::format_err;
-use redirect_uri::redirect_uri_web_server;
 use rspotify::spotify::{
     client::Spotify,
     oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
@@ -31,15 +17,24 @@ use rspotify::spotify::{
 };
 use std::{
     cmp::min,
-    io::{self, stdout, Write},
+    io::{self, Write},
     panic::{self, PanicInfo},
     time::{Duration, Instant},
 };
+use termion::{
+    cursor::Goto, event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen,
+};
 use tui::{
-    backend::{Backend, CrosstermBackend},
+    backend::{Backend, TermionBackend},
     Terminal,
 };
+
+use app::{ActiveBlock, App, RouteId};
+use banner::BANNER;
+use config::{ClientConfig, LOCALHOST};
+use redirect_uri::redirect_uri_web_server;
 use user_config::UserConfig;
+use util::{Event, Events};
 
 const SCOPES: [&str; 13] = [
     "playlist-read-collaborative",
@@ -107,15 +102,13 @@ fn panic_hook(info: &PanicInfo<'_>) {
 
         let stacktrace: String = format!("{:?}", Backtrace::new()).replace('\n', "\n\r");
 
-        execute!(
-            io::stdout(),
-            LeaveAlternateScreen,
-            Print(format!(
-                "thread '<unnamed>' panicked at '{}', {}\n\r{}",
-                msg, location, stacktrace
-            ))
-        )
-        .unwrap();
+        println!(
+            "{}thread '<unnamed>' panicked at '{}', {}\n\r{}",
+            termion::screen::ToMainScreen,
+            msg,
+            location,
+            stacktrace
+        );
     }
 }
 
@@ -153,15 +146,14 @@ fn main() -> Result<(), failure::Error> {
     match get_token_auto(&mut oauth) {
         Some(token_info) => {
             // Terminal initialization
-            let mut stdout = stdout();
-            execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-            enable_raw_mode()?;
-
-            let backend = CrosstermBackend::new(stdout);
+            let stdout = io::stdout().into_raw_mode()?;
+            let stdout = MouseTerminal::from(stdout);
+            let stdout = AlternateScreen::from(stdout);
+            let backend = TermionBackend::new(stdout);
             let mut terminal = Terminal::new(backend)?;
             terminal.hide_cursor()?;
 
-            let events = event::Events::new();
+            let events = Events::new();
 
             // Initialise app state
             let mut app = App::new();
@@ -187,7 +179,7 @@ fn main() -> Result<(), failure::Error> {
             let mut is_first_render = true;
 
             loop {
-                // Get the size of the screen on each loop to account for resize event
+                // Get the size of the screen on each loop to account for resize events
                 if let Ok(size) = terminal.backend().size() {
                     app.size = size;
 
@@ -233,10 +225,14 @@ fn main() -> Result<(), failure::Error> {
                 };
 
                 // Put the cursor back inside the input box
-                terminal.backend_mut().execute(MoveTo(
-                    cursor_offset + app.input_cursor_position,
-                    cursor_offset,
-                ))?;
+                write!(
+                    terminal.backend_mut(),
+                    "{}",
+                    Goto(cursor_offset + app.input_cursor_position, cursor_offset)
+                )?;
+
+                // stdout is buffered, flush it to see the effect immediately when hitting backspace
+                io::stdout().flush().ok();
 
                 if Instant::now() > token_expiry {
                     // refresh token
@@ -252,14 +248,10 @@ fn main() -> Result<(), failure::Error> {
                 }
 
                 match events.next()? {
-                    event::Event::Input(key) => {
+                    Event::Input(key) => {
                         if key == Key::Ctrl('c') {
-                            disable_raw_mode()?;
-                            let mut stdout = io::stdout();
-                            execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
                             break;
                         }
-
                         let current_active_block = app.get_current_route().active_block;
 
                         // To avoid swallowing the global key presses `q` and `-` make a special
@@ -285,7 +277,7 @@ fn main() -> Result<(), failure::Error> {
                             handlers::handle_app(key, &mut app);
                         }
                     }
-                    event::Event::Tick => {
+                    Event::Tick => {
                         app.update_on_tick();
                     }
                 }

@@ -1,13 +1,11 @@
 use super::common_key_events;
-use crate::{
-    app::{ActiveBlock, App},
-    event::Key,
-};
+use crate::app::{ActiveBlock, App};
+use termion::event::Key;
 
-// When no block is actively selected, just handle regular event
+// When no block is actively selected, just handle regular events
 pub fn handler(key: Key, app: &mut App) {
     match key {
-        Key::Enter => {
+        Key::Char('\n') => {
             let current_hovered = app.get_current_route().hovered_block;
             app.set_current_route_state(Some(current_hovered), None);
         }
@@ -66,7 +64,7 @@ mod tests {
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
 
-        handler(Key::Enter, &mut app);
+        handler(Key::Char('\n'), &mut app);
         let current_route = app.get_current_route();
 
         assert_eq!(current_route.active_block, ActiveBlock::Library);

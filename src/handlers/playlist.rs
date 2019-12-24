@@ -2,7 +2,7 @@ use super::{
     super::app::{App, TrackTableContext},
     common_key_events,
 };
-use crate::event::Key;
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -33,7 +33,7 @@ pub fn handler(key: Key, app: &mut App) {
                 None => {}
             };
         }
-        Key::Enter => {
+        Key::Char('\n') => {
             if let (Some(playlists), Some(selected_playlist_index)) =
                 (&app.playlists, &app.selected_playlist_index)
             {

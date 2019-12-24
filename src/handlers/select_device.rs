@@ -2,7 +2,7 @@ use super::{
     super::app::{ActiveBlock, App},
     common_key_events,
 };
-use crate::event::Key;
+use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -37,7 +37,7 @@ pub fn handler(key: Key, app: &mut App) {
                 None => {}
             };
         }
-        Key::Enter => {
+        Key::Char('\n') => {
             if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {
                     match app.client_config.set_device_id(device.id.clone()) {
