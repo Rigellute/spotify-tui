@@ -32,6 +32,8 @@ pub enum Event<I> {
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
     rx: mpsc::Receiver<Event<Key>>,
+    // Need to be kept around to prevent disposing the sender side.
+    _tx: mpsc::Sender<Event<Key>>,
 }
 
 impl Events {
@@ -44,6 +46,7 @@ impl Events {
     pub fn with_config(config: EventConfig) -> Events {
         let (tx, rx) = mpsc::channel();
 
+        let event_tx = tx.clone();
         thread::spawn(move || {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
@@ -54,15 +57,15 @@ impl Events {
                         if key == config.exit_key {
                             return;
                         }
-                        tx.send(Event::Input(key)).unwrap();
+                        event_tx.send(Event::Input(key)).unwrap();
                     }
                 }
 
-                tx.send(Event::Tick).unwrap();
+                event_tx.send(Event::Tick).unwrap();
             }
         });
 
-        Events { rx }
+        Events { rx, _tx: tx }
     }
 
     /// Attempts to read an event.
