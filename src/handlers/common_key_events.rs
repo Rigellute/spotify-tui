@@ -1,5 +1,5 @@
-use crate::app::{ActiveBlock, App, RouteId};
-use termion::event::Key;
+use super::super::app::{ActiveBlock, App, RouteId};
+use crate::event::Key;
 
 pub fn down_event(key: Key) -> bool {
     match key {

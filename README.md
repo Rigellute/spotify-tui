@@ -94,12 +94,6 @@ In order to locate dependencies, the compilation also requires `pkg-config` to b
 1. `cd` to the file you just downloaded and unzip
 1. `cd` to `spotify-ui` and run with `./spt`
 
-### Note on Windows
-
-The core dependancy `termion` [does not yet support Windows](https://gitlab.redox-os.org/redox-os/termion/issues/103), and so nor does `spotify-tui`. Apologies for this!
-
-You can, however, run `spotify-tui` within the Windows Subsystem for Linux (which I have tested).
-
 ## Connecting to Spotify’s API
 
 `spotify-tui` needs to connect to Spotify’s API in order to find music by

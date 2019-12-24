@@ -19,12 +19,12 @@ mod select_device;
 mod track_table;
 
 use super::app::{ActiveBlock, App, SearchResultBlock};
-use termion::event::Key;
+use crate::event::Key;
 
 pub use input::handler as input_handler;
 
 pub fn handle_app(key: Key, app: &mut App) {
-    // First handle any global events and then move to block events
+    // First handle any global event and then move to block event
     match key {
         Key::Esc => match app.get_current_route().active_block {
             ActiveBlock::SearchResultBlock => {
@@ -103,7 +103,7 @@ pub fn handle_app(key: Key, app: &mut App) {
     }
 }
 
-// Handle events for the current active block
+// Handle event for the current active block
 fn handle_block_events(key: Key, app: &mut App) {
     let current_route = app.get_current_route();
     match current_route.active_block {
