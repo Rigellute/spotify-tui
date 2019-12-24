@@ -1,5 +1,7 @@
-use super::super::app::{ActiveBlock, App};
-use super::common_key_events;
+use super::{
+    super::app::{ActiveBlock, App},
+    common_key_events,
+};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {

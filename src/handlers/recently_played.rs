@@ -1,5 +1,4 @@
-use super::super::app::App;
-use super::common_key_events;
+use super::{super::app::App, common_key_events};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
@@ -51,8 +50,7 @@ pub fn handler(key: Key, app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::app::ActiveBlock;
-    use super::*;
+    use super::{super::super::app::ActiveBlock, *};
 
     #[test]
     fn on_left_press() {

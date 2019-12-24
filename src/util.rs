@@ -1,9 +1,5 @@
-use std::io::stdin;
-use std::sync::mpsc;
-use std::thread;
-use std::time::Duration;
-use termion::event::Key;
-use termion::input::TermRead;
+use std::{io::stdin, sync::mpsc, thread, time::Duration};
+use termion::{event::Key, input::TermRead};
 
 pub enum Event<I> {
     Input(I),

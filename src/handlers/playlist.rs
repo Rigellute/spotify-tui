@@ -1,5 +1,7 @@
-use super::super::app::{App, TrackTableContext};
-use super::common_key_events;
+use super::{
+    super::app::{App, TrackTableContext},
+    common_key_events,
+};
 use termion::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {

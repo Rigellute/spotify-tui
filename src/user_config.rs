@@ -1,8 +1,10 @@
 use dirs;
 use failure::err_msg;
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use termion::event::Key;
 
 const FILE_NAME: &str = "config.yml";

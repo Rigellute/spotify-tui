@@ -10,22 +10,24 @@ mod util;
 use backtrace::Backtrace;
 use clap::App as ClapApp;
 use failure::format_err;
-use rspotify::spotify::client::Spotify;
-use rspotify::spotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo};
-use rspotify::spotify::util::get_token;
-use rspotify::spotify::util::process_token;
-use rspotify::spotify::util::request_token;
-use std::cmp::min;
-use std::io::{self, Write};
-use std::panic::{self, PanicInfo};
-use std::time::{Duration, Instant};
-use termion::cursor::Goto;
-use termion::event::Key;
-use termion::input::MouseTerminal;
-use termion::raw::IntoRawMode;
-use termion::screen::AlternateScreen;
-use tui::backend::{Backend, TermionBackend};
-use tui::Terminal;
+use rspotify::spotify::{
+    client::Spotify,
+    oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
+    util::{get_token, process_token, request_token},
+};
+use std::{
+    cmp::min,
+    io::{self, Write},
+    panic::{self, PanicInfo},
+    time::{Duration, Instant},
+};
+use termion::{
+    cursor::Goto, event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen,
+};
+use tui::{
+    backend::{Backend, TermionBackend},
+    Terminal,
+};
 
 use app::{ActiveBlock, App, RouteId};
 use banner::BANNER;
