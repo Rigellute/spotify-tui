@@ -1,6 +1,6 @@
 use crossterm::event;
 
-/// A non-character key on the keyboard
+/// Represents an key.
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub enum Key {
     /// Both Enter (or Return) and numpad Enter
