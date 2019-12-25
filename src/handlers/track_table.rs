@@ -2,7 +2,7 @@ use super::{
     super::app::{App, TrackTable, TrackTableContext},
     common_key_events,
 };
-use termion::event::Key;
+use crate::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -21,7 +21,7 @@ pub fn handler(key: Key, app: &mut App) {
             );
             app.track_table.selected_index = next_index;
         }
-        Key::Char('\n') => {
+        Key::Enter => {
             let TrackTable {
                 context,
                 selected_index,

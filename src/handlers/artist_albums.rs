@@ -1,6 +1,8 @@
 use super::common_key_events;
-use crate::app::{App, TrackTableContext};
-use termion::event::Key;
+use crate::{
+    app::{App, TrackTableContext},
+    event::Key,
+};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -23,7 +25,7 @@ pub fn handler(key: Key, app: &mut App) {
                 artist_albums.selected_index = next_index;
             }
         }
-        Key::Char('\n') => {
+        Key::Enter => {
             if let Some(artist_albums) = &mut app.artist_albums {
                 if let Some(selected_album) = artist_albums
                     .albums

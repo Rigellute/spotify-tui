@@ -1,6 +1,8 @@
 use super::common_key_events;
-use crate::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
-use termion::event::Key;
+use crate::{
+    app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum},
+    event::Key,
+};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -23,7 +25,7 @@ pub fn handler(key: Key, app: &mut App) {
                 app.album_list_index = next_index;
             }
         }
-        Key::Char('\n') => {
+        Key::Enter => {
             if let Some(albums) = app.library.saved_albums.get_results(None) {
                 if let Some(selected_album) = albums.items.get(app.album_list_index) {
                     app.selected_album_full = Some(SelectedFullAlbum {
