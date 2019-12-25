@@ -51,7 +51,6 @@ impl Events {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
                 if event::poll(config.tick_rate).unwrap() {
-
                     if let event::Event::Key(key) = event::read().unwrap() {
                         let key = Key::from(key);
 
