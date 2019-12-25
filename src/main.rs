@@ -256,7 +256,7 @@ fn main() -> Result<(), failure::Error> {
                         if key == Key::Ctrl('c') {
                             disable_raw_mode()?;
                             let mut stdout = io::stdout();
-                            execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+                            execute!(stdout, LeavefAlternateScreen, DisableMouseCapture)?;
                             break;
                         }
 
