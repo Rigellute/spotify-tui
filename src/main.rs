@@ -227,9 +227,9 @@ fn main() -> Result<(), failure::Error> {
                 }
 
                 let cursor_offset = if app.size.height > ui::SMALL_TERMINAL_HEIGHT {
-                    3
-                } else {
                     2
+                } else {
+                    1
                 };
 
                 // Put the cursor back inside the input box
