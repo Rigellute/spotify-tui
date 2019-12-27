@@ -1,6 +1,6 @@
 mod album_list;
 mod album_tracks;
-mod artist_albums;
+mod artist;
 mod artists;
 mod common_key_events;
 mod empty;
@@ -18,7 +18,7 @@ mod search_results;
 mod select_device;
 mod track_table;
 
-use super::app::{ActiveBlock, App, SearchResultBlock};
+use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
 
 pub use input::handler as input_handler;
@@ -29,6 +29,11 @@ pub fn handle_app(key: Key, app: &mut App) {
         Key::Esc => match app.get_current_route().active_block {
             ActiveBlock::SearchResultBlock => {
                 app.search_results.selected_block = SearchResultBlock::Empty;
+            }
+            ActiveBlock::ArtistBlock => {
+                if let Some(artist) = &mut app.artist {
+                    artist.artist_selected_block = ArtistBlock::Empty;
+                }
             }
             ActiveBlock::Error => {
                 app.pop_navigation_stack();
@@ -52,7 +57,8 @@ pub fn handle_app(key: Key, app: &mut App) {
                 if let Some(playing_item) = &current_playback_context.item.clone() {
                     if let Some(artist) = playing_item.artists.first() {
                         if let Some(artist_id) = &artist.id {
-                            app.get_artist_albums(artist_id, &artist.name);
+                            app.get_artist(artist_id, &artist.name);
+                            app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
                         }
                     }
                 }
@@ -107,8 +113,8 @@ pub fn handle_app(key: Key, app: &mut App) {
 fn handle_block_events(key: Key, app: &mut App) {
     let current_route = app.get_current_route();
     match current_route.active_block {
-        ActiveBlock::Artist => {
-            artist_albums::handler(key, app);
+        ActiveBlock::ArtistBlock => {
+            artist::handler(key, app);
         }
         ActiveBlock::Input => {
             input::handler(key, app);

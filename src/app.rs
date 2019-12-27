@@ -99,12 +99,20 @@ pub enum SearchResultBlock {
     Empty,
 }
 
+#[derive(PartialEq, Debug, Clone)]
+pub enum ArtistBlock {
+    TopTracks,
+    Albums,
+    RelatedArtists,
+    Empty,
+}
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
     PlayBar,
     AlbumTracks,
     AlbumList,
-    Artist,
+    ArtistBlock,
     Empty,
     Error,
     HelpMenu,
@@ -192,10 +200,16 @@ pub struct SelectedFullAlbum {
 }
 
 #[derive(Clone)]
-pub struct ArtistAlbums {
+pub struct Artist {
     pub artist_name: String,
     pub albums: Page<SimplifiedAlbum>,
-    pub selected_index: usize,
+    pub related_artists: Vec<FullArtist>,
+    pub top_tracks: Vec<FullTrack>,
+    pub selected_album_index: usize,
+    pub selected_related_artist_index: usize,
+    pub selected_top_track_index: usize,
+    pub artist_hovered_block: ArtistBlock,
+    pub artist_selected_block: ArtistBlock,
 }
 
 pub struct App {
@@ -205,7 +219,7 @@ pub struct App {
     pub client_config: ClientConfig,
     pub user_config: UserConfig,
     pub artists: Vec<FullArtist>,
-    pub artist_albums: Option<ArtistAlbums>,
+    pub artist: Option<Artist>,
     pub album_table_context: AlbumTableContext,
     pub saved_album_tracks_index: usize,
     pub api_error: String,
@@ -251,7 +265,7 @@ impl App {
             album_list_index: 0,
             artists_list_index: 0,
             artists: vec![],
-            artist_albums: None,
+            artist: None,
             user_config: UserConfig::new(),
             client_config: Default::default(),
             saved_album_tracks_index: 0,
@@ -859,28 +873,36 @@ impl App {
         }
     }
 
-    pub fn get_artist_albums(&mut self, artist_id: &str, artist_name: &str) {
+    pub fn get_artist(&mut self, artist_id: &str, artist_name: &str) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
-            match spotify.artist_albums(
+            let user_country =
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
+            let albums = spotify.artist_albums(
                 artist_id,
                 None,
                 Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())),
                 Some(self.large_search_limit),
                 Some(0),
-            ) {
-                Ok(result) => {
-                    self.artist_albums = Some(ArtistAlbums {
-                        artist_name: artist_name.to_owned(),
-                        selected_index: 0,
-                        albums: result,
-                    });
-                    self.push_navigation_stack(RouteId::Artist, ActiveBlock::Artist);
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
-        };
+            );
+            let top_tracks = spotify.artist_top_tracks(artist_id, user_country);
+            let related_artist = spotify.artist_related_artists(artist_id);
+
+            if let (Ok(albums), Ok(top_tracks), Ok(related_artist)) =
+                (albums, top_tracks, related_artist)
+            {
+                self.artist = Some(Artist {
+                    artist_name: artist_name.to_owned(),
+                    albums,
+                    related_artists: related_artist.artists,
+                    top_tracks: top_tracks.tracks,
+                    selected_album_index: 0,
+                    selected_related_artist_index: 0,
+                    selected_top_track_index: 0,
+                    artist_hovered_block: ArtistBlock::TopTracks,
+                    artist_selected_block: ArtistBlock::Empty,
+                });
+            }
+        }
     }
 
     pub fn get_artists(&mut self, offset: Option<String>) {

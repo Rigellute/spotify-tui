@@ -15,7 +15,7 @@ pub fn handler(key: Key, app: &mut App) {
             ActiveBlock::Library => {
                 app.set_current_route_state(None, Some(ActiveBlock::MyPlaylists));
             }
-            ActiveBlock::Artist
+            ActiveBlock::ArtistBlock
             | ActiveBlock::AlbumList
             | ActiveBlock::AlbumTracks
             | ActiveBlock::Artists
@@ -38,7 +38,7 @@ pub fn handler(key: Key, app: &mut App) {
             _ => {}
         },
         k if common_key_events::left_event(k) => match app.get_current_route().hovered_block {
-            ActiveBlock::Artist
+            ActiveBlock::ArtistBlock
             | ActiveBlock::AlbumList
             | ActiveBlock::AlbumTracks
             | ActiveBlock::Artists
