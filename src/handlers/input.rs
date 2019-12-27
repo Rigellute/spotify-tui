@@ -1,12 +1,12 @@
 extern crate unicode_width;
 
 use super::super::app::{ActiveBlock, App, RouteId};
+use crate::event::Key;
 use rspotify::spotify::senum::Country;
 use std::convert::TryInto;
-use termion::event::Key;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
-// Handle events when the search input block is active
+// Handle event when the search input block is active
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Ctrl('u') => {
@@ -44,7 +44,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Esc => {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
-        Key::Char('\n') => {
+        Key::Enter => {
             if let (Some(spotify), Some(user)) = (app.spotify.clone(), app.user.clone()) {
                 let country = Country::from_str(&user.country.unwrap_or_else(|| "".to_string()));
                 let input_str: String = app.input.iter().collect();
