@@ -1,7 +1,10 @@
 mod help;
 mod util;
 use super::{
-    app::{ActiveBlock, AlbumTableContext, App, RouteId, SearchResultBlock, LIBRARY_OPTIONS},
+    app::{
+        ActiveBlock, AlbumTableContext, App, ArtistBlock, RouteId, SearchResultBlock,
+        LIBRARY_OPTIONS,
+    },
     banner::BANNER,
 };
 use help::get_help_docs;
@@ -14,8 +17,9 @@ use tui::{
     Frame,
 };
 use util::{
-    create_artist_string, display_track_progress, get_color, get_percentage_width,
-    get_search_results_highlight_state, get_track_progress_percentage, millis_to_minutes,
+    create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
+    get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
+    millis_to_minutes,
 };
 
 pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
@@ -847,14 +851,35 @@ fn draw_artist_albums<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let current_route = app.get_current_route();
-    let highlight_state = (
-        current_route.active_block == ActiveBlock::Artist,
-        current_route.hovered_block == ActiveBlock::Artist,
-    );
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage(33),
+                Constraint::Percentage(33),
+                Constraint::Percentage(33),
+            ]
+            .as_ref(),
+        )
+        .split(layout_chunk);
 
-    if let Some(artist_albums) = &app.artist_albums {
-        let items = &artist_albums
+    if let Some(artist) = &app.artist {
+        let top_tracks = artist
+            .top_tracks
+            .iter()
+            .map(|artist| artist.name.to_owned())
+            .collect::<Vec<String>>();
+
+        draw_selectable_list(
+            f,
+            chunks[0],
+            &format!("{} - Top Tracks", &artist.artist_name),
+            &top_tracks,
+            get_artist_highlight_state(app, ArtistBlock::TopTracks),
+            Some(artist.selected_top_track_index),
+        );
+
+        let albums = &artist
             .albums
             .items
             .iter()
@@ -863,11 +888,26 @@ where
 
         draw_selectable_list(
             f,
-            layout_chunk,
-            &artist_albums.artist_name,
-            &items,
-            highlight_state,
-            Some(artist_albums.selected_index),
+            chunks[1],
+            "Albums",
+            albums,
+            get_artist_highlight_state(app, ArtistBlock::Albums),
+            Some(artist.selected_album_index),
+        );
+
+        let related_artists = artist
+            .related_artists
+            .iter()
+            .map(|artist| artist.name.to_owned())
+            .collect::<Vec<String>>();
+
+        draw_selectable_list(
+            f,
+            chunks[2],
+            "Related artists",
+            &related_artists,
+            get_artist_highlight_state(app, ArtistBlock::RelatedArtists),
+            Some(artist.selected_related_artist_index),
         );
     };
 }

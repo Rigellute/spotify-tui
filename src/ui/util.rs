@@ -1,4 +1,4 @@
-use super::super::app::{ActiveBlock, App, SearchResultBlock};
+use super::super::app::{ActiveBlock, App, ArtistBlock, SearchResultBlock};
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use tui::style::{Color, Style};
 
@@ -12,6 +12,18 @@ pub fn get_search_results_highlight_state(
         current_route.hovered_block == ActiveBlock::SearchResultBlock
             && app.search_results.hovered_block == block_to_match,
     )
+}
+
+pub fn get_artist_highlight_state(app: &App, block_to_match: ArtistBlock) -> (bool, bool) {
+    let current_route = app.get_current_route();
+    if let Some(artist) = &app.artist {
+        let is_hovered = artist.artist_selected_block == block_to_match;
+        let is_selected = current_route.hovered_block == ActiveBlock::ArtistBlock
+            && artist.artist_hovered_block == block_to_match;
+        (is_hovered, is_selected)
+    } else {
+        (false, false)
+    }
 }
 
 pub fn get_color((is_active, is_hovered): (bool, bool)) -> Style {

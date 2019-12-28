@@ -1,5 +1,8 @@
 use super::common_key_events;
-use crate::{app::App, event::Key};
+use crate::{
+    app::{ActiveBlock, App, RouteId},
+    event::Key,
+};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -25,7 +28,8 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Enter => {
             let artists = app.artists.to_owned();
             let artist = &artists[app.artists_list_index];
-            app.get_artist_albums(&artist.id.to_owned(), &artist.name.to_owned());
+            app.get_artist(&artist.id, &artist.name);
+            app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
         }
         Key::Char('D') => app.user_unfollow_artists(),
         _ => {}
