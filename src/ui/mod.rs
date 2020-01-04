@@ -2,8 +2,8 @@ mod help;
 mod util;
 use super::{
     app::{
-        ActiveBlock, AlbumTableContext, App, ArtistBlock, RouteId, SearchResultBlock, RecommendationsContext,
-        LIBRARY_OPTIONS,
+        ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
+        SearchResultBlock, LIBRARY_OPTIONS,
     },
     banner::BANNER,
 };
@@ -604,13 +604,15 @@ where
         .collect::<Vec<TableItem>>();
     // match RecommendedContext
     let recommendations_ui = match &app.recommendations_context {
-        Some(RecommendationsContext::Song) => { 
-            format!("Recommendations based on Song \'{}\'", &app.recommendations_seed)
-        },
-        Some(RecommendationsContext::Artist) => {
-            format!("Recommendations based on Artist \'{}\'", &app.recommendations_seed)
-        },
-        None => {format!("Recommendations")}
+        Some(RecommendationsContext::Song) => format!(
+            "Recommendations based on Song \'{}\'",
+            &app.recommendations_seed
+        ),
+        Some(RecommendationsContext::Artist) => format!(
+            "Recommendations based on Artist \'{}\'",
+            &app.recommendations_seed
+        ),
+        None => format!("Recommendations"),
     };
     draw_table(
         f,

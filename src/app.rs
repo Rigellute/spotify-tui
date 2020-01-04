@@ -11,17 +11,14 @@ use rspotify::spotify::{
         page::{CursorBasedPage, Page},
         playing::PlayHistory,
         playlist::{PlaylistTrack, SimplifiedPlaylist},
-        recommend::{Recommendations},
+        recommend::Recommendations,
         search::{SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks},
         track::{FullTrack, SavedTrack, SimplifiedTrack},
         user::PrivateUser,
     },
     senum::{Country, RepeatState},
 };
-use serde_json::{
-    Value,
-    map::Map,
-};
+use serde_json::{map::Map, Value};
 use std::{
     cmp::{max, min},
     collections::HashSet,
@@ -498,64 +495,59 @@ impl App {
         }
     }
 
-    pub fn get_recommendations_for_seed(&mut self, 
-                                        seed_artists: Option<Vec<String>>, 
-                                        seed_tracks: Option<Vec<String>>,
-                                        first_track: Option<&FullTrack>) {
-        if let (Some(spotify), Some(user)) = (
-            &self.spotify,
-            &self.user.to_owned()
-        ) {
-            let user_country = Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
+    pub fn get_recommendations_for_seed(
+        &mut self,
+        seed_artists: Option<Vec<String>>,
+        seed_tracks: Option<Vec<String>>,
+        first_track: Option<&FullTrack>,
+    ) {
+        if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
+            let user_country =
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
             let empty_payload: Map<String, Value> = Map::new();
 
-                match spotify.recommendations(
-                    seed_artists,  // artists
-                    None,          // genres
-                    seed_tracks,   // tracks
-                    30,            // limit : 20-100 according to reference, but much higher than 30
-                                   // seems to give errors w/ playback
-                                   // I recommend leaving this at 30 for now
-                    user_country,  // country
-                    &empty_payload // payload
-                ) {
-                    Ok(result) => {
-
-                        if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result){
-
-                            //custom first track
-                            match first_track {
-                                Some(track) => {
-                                    recommended_tracks.insert(0, track.clone());
-                                }
-                                None => {}
+            match spotify.recommendations(
+                seed_artists, // artists
+                None,         // genres
+                seed_tracks,  // tracks
+                30,           // limit : 20-100 according to reference, but much higher than 30
+                // seems to give errors w/ playback
+                // I recommend leaving this at 30 for now
+                user_country,   // country
+                &empty_payload, // payload
+            ) {
+                Ok(result) => {
+                    if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result) {
+                        //custom first track
+                        match first_track {
+                            Some(track) => {
+                                recommended_tracks.insert(0, track.clone());
                             }
-                            self.recommended_tracks = recommended_tracks.clone();
-                            self.set_tracks_to_table(recommended_tracks);
-                            self.track_table.context = Some(TrackTableContext::RecommendedTracks);
-                
-                            if self.get_current_route().id != RouteId::Recommendations {
-                                self.push_navigation_stack(RouteId::Recommendations, ActiveBlock::TrackTable);
-                            };
+                            None => {}
                         }
-                        self.start_recommendations_playback(Some(0));
+                        self.recommended_tracks = recommended_tracks.clone();
+                        self.set_tracks_to_table(recommended_tracks);
+                        self.track_table.context = Some(TrackTableContext::RecommendedTracks);
+
+                        if self.get_current_route().id != RouteId::Recommendations {
+                            self.push_navigation_stack(
+                                RouteId::Recommendations,
+                                ActiveBlock::TrackTable,
+                            );
+                        };
                     }
-                    Err(e) => {
-                        println!("error: {:?}", e)
-                    }
+                    self.start_recommendations_playback(Some(0));
                 }
+                Err(e) => println!("error: {:?}", e),
+            }
         }
     }
 
-    pub fn get_recommendations_for_trackid(&mut self, id : &str){
+    pub fn get_recommendations_for_trackid(&mut self, id: &str) {
         if let Some(track) = self.get_fulltrack_from_id(id).clone() {
             let track_id_list: Option<Vec<String>> = match &track.id {
-                Some(id) => {
-                    Some(vec![id.to_string()])
-                }
-                None => {
-                    None
-                }
+                Some(id) => Some(vec![id.to_string()]),
+                None => None,
             };
             self.get_recommendations_for_seed(None, track_id_list, Some(&track));
         }
@@ -642,15 +634,18 @@ impl App {
         }
     }
 
-    pub fn start_recommendations_playback(&mut self, offset: Option<usize>){
+    pub fn start_recommendations_playback(&mut self, offset: Option<usize>) {
         &self.start_playback(
             None,
-            Some(self.recommended_tracks
-                .iter()
-                .map(|x| x.uri.clone())
-                .collect::<Vec<String>>()),
+            Some(
+                self.recommended_tracks
+                    .iter()
+                    .map(|x| x.uri.clone())
+                    .collect::<Vec<String>>(),
+            ),
             //Some(self.song_progress_ms as usize) [this does not work]
-            offset);
+            offset,
+        );
     }
 
     pub fn start_playback(
@@ -809,26 +804,33 @@ impl App {
         );
     }
 
-    fn extract_recommended_tracks(&self, recommendations: &Recommendations) -> Option<Vec<FullTrack>>{
+    fn extract_recommended_tracks(
+        &self,
+        recommendations: &Recommendations,
+    ) -> Option<Vec<FullTrack>> {
         if let Some(spotify) = &self.spotify {
-            let tracks = recommendations.clone().tracks.into_iter().map(|item| item.uri).collect::<Vec<String>>();
-            if let Ok(result) = spotify.tracks(
-                tracks.iter().map(|x| &x[..]).collect::<Vec<&str>>(),
-                None
-            ){
+            let tracks = recommendations
+                .clone()
+                .tracks
+                .into_iter()
+                .map(|item| item.uri)
+                .collect::<Vec<String>>();
+            if let Ok(result) =
+                spotify.tracks(tracks.iter().map(|x| &x[..]).collect::<Vec<&str>>(), None)
+            {
                 return Some(result.tracks);
-            } 
+            }
         }
 
         None
     }
 
-    fn get_fulltrack_from_id(&self, id: &str) -> Option<FullTrack>{
+    fn get_fulltrack_from_id(&self, id: &str) -> Option<FullTrack> {
         if let Some(spotify) = &self.spotify {
-            match spotify.track(id){
+            match spotify.track(id) {
                 Ok(track) => {
                     return Some(track);
-                },
+                }
                 Err(_e) => {
                     return None;
                 }

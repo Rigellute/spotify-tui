@@ -1,6 +1,6 @@
 use super::common_key_events;
 use crate::{
-    app::{ActiveBlock, App, RouteId, RecommendationsContext},
+    app::{ActiveBlock, App, RecommendationsContext, RouteId},
     event::Key,
 };
 

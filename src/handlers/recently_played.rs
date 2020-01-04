@@ -1,8 +1,5 @@
 use super::{super::app::App, common_key_events};
-use crate::{
-    app::{RecommendationsContext},
-    event::Key,
-};
+use crate::{app::RecommendationsContext, event::Key};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -49,17 +46,16 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('r') => {
             if let Some(recently_played_result) = &app.recently_played.result.clone() {
-                let selected_track_history_item = recently_played_result
-                    .items
-                    .get(app.recently_played.index);
+                let selected_track_history_item =
+                    recently_played_result.items.get(app.recently_played.index);
 
-                    if let Some(item) = selected_track_history_item {
-                        if let Some(id) = &item.track.id {
-                            app.recommendations_context = Some(RecommendationsContext::Song);
-                            app.recommendations_seed = item.track.name.clone();
-                            app.get_recommendations_for_trackid(&id);
-                        }
+                if let Some(item) = selected_track_history_item {
+                    if let Some(id) = &item.track.id {
+                        app.recommendations_context = Some(RecommendationsContext::Song);
+                        app.recommendations_seed = item.track.name.clone();
+                        app.get_recommendations_for_trackid(&id);
                     }
+                }
             }
         }
         _ => {}

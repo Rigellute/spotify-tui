@@ -1,5 +1,5 @@
 use super::{
-    super::app::{App, TrackTable, TrackTableContext, RecommendationsContext},
+    super::app::{App, RecommendationsContext, TrackTable, TrackTableContext},
     common_key_events,
 };
 use crate::event::Key;
@@ -53,9 +53,9 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::RecommendedTracks => {
                         if let Some(_track) = tracks.get(*selected_index) {
-                            app.start_recommendations_playback(
-                                Some(app.track_table.selected_index)
-                            );
+                            app.start_recommendations_playback(Some(
+                                app.track_table.selected_index,
+                            ));
                         };
                     }
                     TrackTableContext::SavedTracks => {
@@ -127,7 +127,7 @@ pub fn handler(key: Key, app: &mut App) {
                             }
                         };
                     }
-                    TrackTableContext::RecommendedTracks => {} 
+                    TrackTableContext::RecommendedTracks => {}
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_next();
                     }
@@ -170,19 +170,13 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('a') => jump_to_start(app),
         //recommended song radio
         Key::Char('r') => {
-            let (selected_index,
-                 tracks)
-              = (&app.track_table.selected_index,
-                 &app.track_table.tracks);
+            let (selected_index, tracks) =
+                (&app.track_table.selected_index, &app.track_table.tracks);
             if let Some(track) = tracks.get(*selected_index) {
                 let first_track = track.clone();
                 let track_id_list: Option<Vec<String>> = match &track.id {
-                    Some(id) => {
-                        Some(vec![id.to_string()])
-                    }
-                    None => {
-                        None
-                    }
+                    Some(id) => Some(vec![id.to_string()]),
+                    None => None,
                 };
                 app.recommendations_context = Some(RecommendationsContext::Song);
                 app.recommendations_seed = first_track.name.clone();
@@ -219,7 +213,7 @@ fn jump_to_end(app: &mut App) {
                     }
                 }
             }
-            TrackTableContext::RecommendedTracks => {} 
+            TrackTableContext::RecommendedTracks => {}
             TrackTableContext::SavedTracks => {}
             TrackTableContext::AlbumSearch => {}
             TrackTableContext::PlaylistSearch => {}
@@ -244,7 +238,7 @@ fn jump_to_start(app: &mut App) {
                     }
                 }
             }
-            TrackTableContext::RecommendedTracks => {} 
+            TrackTableContext::RecommendedTracks => {}
             TrackTableContext::SavedTracks => {}
             TrackTableContext::AlbumSearch => {}
             TrackTableContext::PlaylistSearch => {}

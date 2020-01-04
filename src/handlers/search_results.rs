@@ -1,5 +1,7 @@
 use super::{
-    super::app::{ActiveBlock, App, RouteId, SearchResultBlock, TrackTableContext, RecommendationsContext},
+    super::app::{
+        ActiveBlock, App, RecommendationsContext, RouteId, SearchResultBlock, TrackTableContext,
+    },
     common_key_events,
 };
 use crate::event::Key;
@@ -305,12 +307,8 @@ pub fn handler(key: Key, app: &mut App) {
                     if let Some(result) = app.search_results.tracks.clone() {
                         if let Some(track) = result.tracks.items.get(index.to_owned()) {
                             let track_id_list: Option<Vec<String>> = match &track.id {
-                                Some(id) => {
-                                    Some(vec![id.to_string()])
-                                }
-                                None => {
-                                    None
-                                }
+                                Some(id) => Some(vec![id.to_string()]),
+                                None => None,
                             };
                             app.recommendations_context = Some(RecommendationsContext::Song);
                             app.recommendations_seed = track.name.clone();
@@ -333,7 +331,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
             SearchResultBlock::PlaylistSearch => {}
             SearchResultBlock::Empty => {}
-        }
+        },
         // Add `s` to "see more" on each option
         _ => {}
     }
