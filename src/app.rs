@@ -519,11 +519,8 @@ impl App {
                 Ok(result) => {
                     if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result) {
                         //custom first track
-                        match first_track {
-                            Some(track) => {
-                                recommended_tracks.insert(0, track.clone());
-                            }
-                            None => {}
+                        if let Some(track) = first_track {
+                            recommended_tracks.insert(0, track.clone());
                         }
                         self.recommended_tracks = recommended_tracks.clone();
                         self.set_tracks_to_table(recommended_tracks);
@@ -544,7 +541,7 @@ impl App {
     }
 
     pub fn get_recommendations_for_trackid(&mut self, id: &str) {
-        if let Some(track) = self.get_fulltrack_from_id(id).clone() {
+        if let Some(track) = self.get_fulltrack_from_id(id) {
             let track_id_list: Option<Vec<String>> = match &track.id {
                 Some(id) => Some(vec![id.to_string()]),
                 None => None,
@@ -635,7 +632,7 @@ impl App {
     }
 
     pub fn start_recommendations_playback(&mut self, offset: Option<usize>) {
-        &self.start_playback(
+        self.start_playback(
             None,
             Some(
                 self.recommended_tracks
@@ -643,7 +640,6 @@ impl App {
                     .map(|x| x.uri.clone())
                     .collect::<Vec<String>>(),
             ),
-            //Some(self.song_progress_ms as usize) [this does not work]
             offset,
         );
     }

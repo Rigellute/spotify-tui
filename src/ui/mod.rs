@@ -612,7 +612,7 @@ where
             "Recommendations based on Artist \'{}\'",
             &app.recommendations_seed
         ),
-        None => format!("Recommendations"),
+        None => "Recommendations".to_string(),
     };
     draw_table(
         f,

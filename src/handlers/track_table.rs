@@ -170,21 +170,24 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('a') => jump_to_start(app),
         //recommended song radio
         Key::Char('r') => {
-            let (selected_index, tracks) =
-                (&app.track_table.selected_index, &app.track_table.tracks);
-            if let Some(track) = tracks.get(*selected_index) {
-                let first_track = track.clone();
-                let track_id_list: Option<Vec<String>> = match &track.id {
-                    Some(id) => Some(vec![id.to_string()]),
-                    None => None,
-                };
-                app.recommendations_context = Some(RecommendationsContext::Song);
-                app.recommendations_seed = first_track.name.clone();
-                app.get_recommendations_for_seed(None, track_id_list, Some(&first_track));
-            };
+            handle_recommended_tracks(app);
         }
         _ => {}
     }
+}
+
+fn handle_recommended_tracks(app: &mut App) {
+    let (selected_index, tracks) = (&app.track_table.selected_index, &app.track_table.tracks);
+    if let Some(track) = tracks.get(*selected_index) {
+        let first_track = track.clone();
+        let track_id_list: Option<Vec<String>> = match &track.id {
+            Some(id) => Some(vec![id.to_string()]),
+            None => None,
+        };
+        app.recommendations_context = Some(RecommendationsContext::Song);
+        app.recommendations_seed = first_track.name.clone();
+        app.get_recommendations_for_seed(None, track_id_list, Some(&first_track));
+    };
 }
 
 fn jump_to_end(app: &mut App) {

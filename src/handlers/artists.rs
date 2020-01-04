@@ -40,7 +40,7 @@ pub fn handler(key: Key, app: &mut App) {
                 let artist_id_list: Option<Vec<String>> = Some(vec![artist.id.clone()]);
 
                 app.recommendations_context = Some(RecommendationsContext::Artist);
-                app.recommendations_seed = artist_name.clone();
+                app.recommendations_seed = artist_name;
                 app.get_recommendations_for_seed(artist_id_list, None, None);
             }
         }
