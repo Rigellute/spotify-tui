@@ -1,6 +1,6 @@
 use super::common_key_events;
 use crate::{
-    app::{AlbumTableContext, App},
+    app::{AlbumTableContext, App, RecommendationsContext},
     event::Key,
 };
 
@@ -103,6 +103,37 @@ pub fn handler(key: Key, app: &mut App) {
                         None,
                         Some(selected_album.selected_index),
                     );
+                };
+            }
+        },
+        //recommended playlist based on selected track
+        Key::Char('r') => match app.album_table_context {
+            AlbumTableContext::Full => {
+                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                        if let Some(track) = &selected_album
+                                                    .album
+                                                    .tracks
+                                                    .items.get(app.saved_album_tracks_index) {
+                                                        if let Some(id) = &track.id {
+                                                            app.recommendations_context = Some(RecommendationsContext::Song);
+                                                            app.recommendations_seed = track.name.clone();
+                                                            app.get_recommendations_for_trackid(&id);
+                                                        }
+                        }
+                    }
+                }
+            }
+            AlbumTableContext::Simplified => {
+                if let Some(selected_album) = &app.selected_album.clone() {
+                    if let Some(track) = &selected_album.tracks
+                                                    .items.get(selected_album.selected_index){
+                                                        if let Some(id) = &track.id {
+                                                            app.recommendations_context = Some(RecommendationsContext::Song);
+                                                            app.recommendations_seed = track.name.clone();
+                                                            app.get_recommendations_for_trackid(&id);
+                                                        }
+                    }
                 };
             }
         },

@@ -1,5 +1,5 @@
 use super::common_key_events;
-use crate::app::{App, ArtistBlock, TrackTableContext};
+use crate::app::{App, ArtistBlock, TrackTableContext, RecommendationsContext};
 use crate::event::Key;
 
 fn handle_down_press_on_selected_block(app: &mut App) {
@@ -94,6 +94,41 @@ fn handle_up_press_on_hovered_block(app: &mut App) {
     }
 }
 
+fn handle_recommend_event_on_selected_block(app: &mut App){
+    //recommendations.
+    if let Some(artist) = &mut app.artist.clone() {
+        match artist.artist_selected_block {
+            ArtistBlock::TopTracks => {
+                let selected_index = artist.selected_top_track_index;
+                if let Some(track) = artist.top_tracks.get(selected_index){
+                    let track_id_list: Option<Vec<String>> = match &track.id {
+                        Some(id) => {
+                            Some(vec![id.to_string()])
+                        }
+                        None => {
+                            None
+                        }
+                    };
+                    app.recommendations_context = Some(RecommendationsContext::Song);
+                    app.recommendations_seed = track.name.clone();
+                    app.get_recommendations_for_seed(None, track_id_list, Some(track));
+                }
+            }
+            ArtistBlock::RelatedArtists => {
+                let selected_index = artist.selected_related_artist_index;
+                let artist_id = &artist.related_artists[selected_index].id;
+                let artist_name = &artist.related_artists[selected_index].name;
+                let artist_id_list: Option<Vec<String>> = Some(vec![artist_id.clone()]);
+                
+                app.recommendations_context = Some(RecommendationsContext::Artist);
+                app.recommendations_seed = artist_name.clone();
+                app.get_recommendations_for_seed(artist_id_list, None, None);
+            }
+            _ => {}
+        }
+    }
+}
+
 fn handle_enter_event_on_selected_block(app: &mut App) {
     if let Some(artist) = &mut app.artist.clone() {
         match artist.artist_selected_block {
@@ -183,6 +218,11 @@ pub fn handler(key: Key, app: &mut App) {
                     handle_enter_event_on_selected_block(app);
                 } else {
                     handle_enter_event_on_hovered_block(app);
+                }
+            }
+            Key::Char('r') => {
+                if artist.artist_selected_block != ArtistBlock::Empty {
+                    handle_recommend_event_on_selected_block(app);
                 }
             }
             _ => {}
