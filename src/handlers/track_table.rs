@@ -170,11 +170,10 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Ctrl('a') => jump_to_start(app),
         //recommended song radio
         Key::Char('r') => {
-            let TrackTable {
-                context: _ ,
-                selected_index,
-                tracks,
-            } = &app.track_table;
+            let (selected_index,
+                 tracks)
+              = (&app.track_table.selected_index,
+                 &app.track_table.tracks);
             if let Some(track) = tracks.get(*selected_index) {
                 let first_track = track.clone();
                 let track_id_list: Option<Vec<String>> = match &track.id {
