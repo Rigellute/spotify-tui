@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Add Windows support [#99](https://github.com/Rigellute/spotify-tui/pull/99)
+- Add support for Related artists and top tacks [#191](https://github.com/Rigellute/spotify-tui/pull/191)
+
 ## [0.11.0] - 2019-12-23
 
 - Add support for adding an album and following a playlist. NOTE: that this will require the user to grant more permissions [#172](https://github.com/Rigellute/spotify-tui/pull/172)
