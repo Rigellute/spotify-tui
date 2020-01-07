@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const LOCALHOST: &str = "http://localhost:8888/callback";
+const DEFAULT_PORT: u16 = 8888;
 const FILE_NAME: &str = "client.yml";
 const CONFIG_DIR: &str = ".config";
 const APP_CONFIG_DIR: &str = "spotify-tui";
@@ -19,6 +19,7 @@ pub struct ClientConfig {
     pub client_id: String,
     pub client_secret: String,
     pub device_id: Option<String>,
+    pub port: Option<u16>,
 }
 
 pub struct ConfigPaths {
@@ -32,7 +33,16 @@ impl ClientConfig {
             client_id: "".to_string(),
             client_secret: "".to_string(),
             device_id: None,
+            port: None,
         }
+    }
+
+    pub fn get_redirect_uri(&self) -> String {
+        format!("http://localhost:{}/callback", self.get_port())
+    }
+
+    pub fn get_port(&self) -> u16 {
+        self.port.unwrap_or(DEFAULT_PORT)
     }
 
     pub fn get_or_build_paths(&self) -> Result<ConfigPaths, failure::Error> {
@@ -87,6 +97,7 @@ impl ClientConfig {
             self.client_id = config_yml.client_id;
             self.client_secret = config_yml.client_secret;
             self.device_id = config_yml.device_id;
+            self.port = config_yml.port;
 
             Ok(())
         } else {
@@ -103,7 +114,7 @@ impl ClientConfig {
                "Go to the Spotify dashboard - https://developer.spotify.com/dashboard/applications",
                "Click `Create a Client ID` and create an app",
                "Now click `Edit Settings`",
-               &format!("Add `{}` to the Redirect URIs", LOCALHOST),
+               &format!("Add `http://localhost:{}/callback` to the Redirect URIs", DEFAULT_PORT),
                "You are now ready to authenticate with Spotify!",
             ];
 
@@ -122,10 +133,16 @@ impl ClientConfig {
             println!("\nEnter your Client Secret: ");
             stdin().read_line(&mut client_secret)?;
 
+            let mut port = String::new();
+            println!("\nEnter port of redirect uri (default {}): ", DEFAULT_PORT);
+            stdin().read_line(&mut port)?;
+            let port = port.trim().parse::<u16>().unwrap_or(DEFAULT_PORT);
+
             let config_yml = ClientConfig {
                 client_id: client_id.trim().to_string(),
                 client_secret: client_secret.trim().to_string(),
                 device_id: None,
+                port: Some(port),
             };
 
             let content_yml = serde_yaml::to_string(&config_yml)?;
@@ -136,6 +153,7 @@ impl ClientConfig {
             self.client_id = config_yml.client_id;
             self.client_secret = config_yml.client_secret;
             self.device_id = config_yml.device_id;
+            self.port = config_yml.port;
 
             Ok(())
         }
