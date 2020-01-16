@@ -22,7 +22,7 @@ serde_yaml = "0.8"
 dirs = "2.0.2"
 clap = "2.33.0"
 unicode-width = "0.1.7"
-backtrace = "0.3.40"
+backtrace = "0.3.42"
 clipboard = "0.5.0"
 crossterm =  "0.14"
 
