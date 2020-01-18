@@ -560,6 +560,10 @@ impl App {
         }
     }
 
+    pub fn reset_track(&mut self) {
+        self.seek(0);
+    }
+
     pub fn start_playback(
         &mut self,
         context_uri: Option<String>,
