@@ -96,6 +96,7 @@ pub struct KeyBindingsString {
     seek_forwards: Option<String>,
     next_track: Option<String>,
     previous_track: Option<String>,
+    reset_track: Option<String>,
     help: Option<String>,
     shuffle: Option<String>,
     repeat: Option<String>,
@@ -116,6 +117,7 @@ pub struct KeyBindings {
     pub seek_forwards: Key,
     pub next_track: Key,
     pub previous_track: Key,
+    pub reset_track: Key,
     pub help: Key,
     pub shuffle: Key,
     pub repeat: Key,
@@ -159,6 +161,7 @@ impl UserConfig {
                 seek_forwards: Key::Char('>'),
                 next_track: Key::Char('n'),
                 previous_track: Key::Char('p'),
+                reset_track: Key::Char('0'),
                 help: Key::Char('?'),
                 shuffle: Key::Ctrl('s'),
                 repeat: Key::Ctrl('r'),
@@ -223,6 +226,7 @@ impl UserConfig {
         to_keys!(seek_forwards);
         to_keys!(next_track);
         to_keys!(previous_track);
+        to_keys!(reset_track);
         to_keys!(help);
         to_keys!(shuffle);
         to_keys!(repeat);
