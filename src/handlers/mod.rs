@@ -89,6 +89,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         _ if key == app.user_config.keys.previous_track => {
             app.previous_track();
         }
+        _ if key == app.user_config.keys.reset_track => {
+            app.reset_track();
+        }
         _ if key == app.user_config.keys.help => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
