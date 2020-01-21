@@ -55,10 +55,6 @@ impl Events {
                         let key = Key::from(key);
 
                         event_tx.send(Event::Input(key)).unwrap();
-
-                        if key == config.exit_key {
-                            return;
-                        }
                     }
                 }
 

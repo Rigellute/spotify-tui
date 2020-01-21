@@ -238,6 +238,13 @@ fn main() -> Result<(), failure::Error> {
                     cursor_offset,
                 ))?;
 
+                let close_application = || -> Result<(), failure::Error> {
+                    disable_raw_mode()?;
+                    let mut stdout = io::stdout();
+                    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+                    Ok(())
+                };
+
                 if Instant::now() > token_expiry {
                     // refresh token
                     if let Some(new_token_info) = get_token(&mut oauth) {
@@ -247,6 +254,7 @@ fn main() -> Result<(), failure::Error> {
                         app.spotify = Some(spotify);
                     } else {
                         println!("\nFailed to refresh authentication token");
+                        close_application()?;
                         break;
                     }
                 }
@@ -254,9 +262,7 @@ fn main() -> Result<(), failure::Error> {
                 match events.next()? {
                     event::Event::Input(key) => {
                         if key == Key::Ctrl('c') {
-                            disable_raw_mode()?;
-                            let mut stdout = io::stdout();
-                            execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+                            close_application()?;
                             break;
                         }
 
@@ -278,6 +284,7 @@ fn main() -> Result<(), failure::Error> {
                                     None => None,
                                 };
                                 if pop_result.is_none() {
+                                    close_application()?;
                                     break; // Exit application
                                 }
                             }
