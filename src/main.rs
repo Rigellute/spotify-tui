@@ -93,6 +93,13 @@ pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
     }
 }
 
+fn close_application() -> Result<(), failure::Error> {
+    disable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+    Ok(())
+}
+
 fn panic_hook(info: &PanicInfo<'_>) {
     if cfg!(debug_assertions) {
         let location = info.location().unwrap();
@@ -107,13 +114,15 @@ fn panic_hook(info: &PanicInfo<'_>) {
 
         let stacktrace: String = format!("{:?}", Backtrace::new()).replace('\n', "\n\r");
 
+        disable_raw_mode().unwrap();
         execute!(
             io::stdout(),
             LeaveAlternateScreen,
             Print(format!(
                 "thread '<unnamed>' panicked at '{}', {}\n\r{}",
                 msg, location, stacktrace
-            ))
+            )),
+            DisableMouseCapture
         )
         .unwrap();
     }
@@ -237,13 +246,6 @@ fn main() -> Result<(), failure::Error> {
                     cursor_offset + app.input_cursor_position,
                     cursor_offset,
                 ))?;
-
-                let close_application = || -> Result<(), failure::Error> {
-                    disable_raw_mode()?;
-                    let mut stdout = io::stdout();
-                    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
-                    Ok(())
-                };
 
                 if Instant::now() > token_expiry {
                     // refresh token
