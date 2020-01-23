@@ -6,6 +6,7 @@ The release is triggered by pushing a tag.
 
 1. Bump the version in `Cargo.toml` and run the app to update the `lock` file
 1. Update the "Unreleased" header for the new version in the `CHANGELOG`. Use `### Added/Fixed/Changed` headers as appropriate
+1. Commit the changes.
 1. Create a new tag e.g. `git tag -a v0.7.0`
 1. Push the tag `git push --tags`
 1. Wait for the build to finish on the [Actions page](https://github.com/Rigellute/spotify-tui/actions)

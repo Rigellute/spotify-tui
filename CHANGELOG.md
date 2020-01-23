@@ -2,16 +2,28 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2020-01-23
+
+### Added
+
 - Add Windows support [#99](https://github.com/Rigellute/spotify-tui/pull/99)
 - Add support for Related artists and top tacks [#191](https://github.com/Rigellute/spotify-tui/pull/191)
 
 ## [0.11.0] - 2019-12-23
 
+### Added
+
 - Add support for adding an album and following a playlist. NOTE: that this will require the user to grant more permissions [#172](https://github.com/Rigellute/spotify-tui/pull/172)
-- Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
 - Add shortcuts to jump to the start or the end of a playlist [#167](https://github.com/Rigellute/spotify-tui/pull/167)
+- Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
+
+### Fixed
+
 - Fix playlist index after search [#177](https://github.com/Rigellute/spotify-tui/pull/177)
 - Fix cursor offset in search input [#183](https://github.com/Rigellute/spotify-tui/pull/183)
+
+### Changed
+
 - Remove focus on input when jumping back [#184](https://github.com/Rigellute/spotify-tui/pull/184)
 - Pad strings in status bar to prevent reformatting [#188](https://github.com/Rigellute/spotify-tui/pull/188)
 
