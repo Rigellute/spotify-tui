@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Don't error if failed to open clipboard [#217](https://github.com/Rigellute/spotify-tui/pull/217)
+- Allow user to configure the port for the Spotify auth Redirect URI [#204](https://github.com/Rigellute/spotify-tui/pull/204)
+
 ## [0.12.0] - 2020-01-23
 
 ### Added
