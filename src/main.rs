@@ -13,7 +13,7 @@ use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
 use clap::App as ClapApp;
-use config::{ClientConfig, LOCALHOST};
+use config::ClientConfig;
 use crossterm::{
     cursor::MoveTo,
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -73,10 +73,10 @@ fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
     (spotify, token_expiry)
 }
 /// get token automatically with local webserver
-pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
+pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Option<TokenInfo> {
     match spotify_oauth.get_cached_token() {
         Some(token_info) => Some(token_info),
-        None => match redirect_uri_web_server(spotify_oauth) {
+        None => match redirect_uri_web_server(spotify_oauth, port) {
             Ok(mut url) => process_token(spotify_oauth, &mut url),
             Err(()) => {
                 println!("Starting webserver failed. Continuing with manual authentication");
@@ -153,12 +153,12 @@ fn main() -> Result<(), failure::Error> {
     let mut oauth = SpotifyOAuth::default()
         .client_id(&client_config.client_id)
         .client_secret(&client_config.client_secret)
-        .redirect_uri(LOCALHOST)
+        .redirect_uri(&client_config.get_redirect_uri())
         .cache_path(config_paths.token_cache_path)
         .scope(&SCOPES.join(" "))
         .build();
 
-    match get_token_auto(&mut oauth) {
+    match get_token_auto(&mut oauth, client_config.get_port()) {
         Some(token_info) => {
             // Terminal initialization
             let mut stdout = stdout();
