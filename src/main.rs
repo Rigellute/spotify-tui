@@ -22,7 +22,6 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use failure::format_err;
 use redirect_uri::redirect_uri_web_server;
 use rspotify::spotify::{
     client::Spotify,
@@ -182,10 +181,7 @@ fn main() -> Result<(), failure::Error> {
 
             app.spotify = Some(spotify);
 
-            app.clipboard_context =
-                Some(clipboard::ClipboardProvider::new().map_err(|err| {
-                    format_err!("failed to intialize clipboard context: {}", err)
-                })?);
+            app.clipboard_context = clipboard::ClipboardProvider::new().ok();
 
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
