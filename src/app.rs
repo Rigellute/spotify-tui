@@ -239,7 +239,7 @@ pub struct App {
     pub library: Library,
     pub playlist_offset: u32,
     pub playback_params: PlaybackParams,
-    pub playlist_tracks: Vec<PlaylistTrack>,
+    pub playlist_tracks: Option<Page<PlaylistTrack>>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub search_results: SearchResult,
@@ -291,7 +291,7 @@ impl App {
             input_idx: 0,
             input_cursor_position: 0,
             playlist_offset: 0,
-            playlist_tracks: vec![],
+            playlist_tracks: None,
             playlists: None,
             search_results: SearchResult {
                 hovered_block: SearchResultBlock::SongSearch,
@@ -619,7 +619,7 @@ impl App {
                 ) {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 
-                    self.playlist_tracks = playlist_tracks.items;
+                    self.playlist_tracks = Some(playlist_tracks);
                     if self.get_current_route().id != RouteId::TrackTable {
                         self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                     };

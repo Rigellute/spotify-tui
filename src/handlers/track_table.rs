@@ -114,9 +114,15 @@ pub fn handler(key: Key, app: &mut App) {
                             if let Some(selected_playlist) =
                                 playlists.items.get(selected_playlist_index.to_owned())
                             {
-                                app.playlist_offset += app.large_search_limit;
-                                let playlist_id = selected_playlist.id.to_owned();
-                                app.get_playlist_tracks(playlist_id);
+                                if let Some(playlist_tracks) = &app.playlist_tracks {
+                                    if app.playlist_offset + app.large_search_limit
+                                        < playlist_tracks.total
+                                    {
+                                        app.playlist_offset += app.large_search_limit;
+                                        let playlist_id = selected_playlist.id.to_owned();
+                                        app.get_playlist_tracks(playlist_id);
+                                    }
+                                }
                             }
                         };
                     }
