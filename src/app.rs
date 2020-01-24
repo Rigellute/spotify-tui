@@ -507,14 +507,12 @@ impl App {
             let empty_payload: Map<String, Value> = Map::new();
 
             match spotify.recommendations(
-                seed_artists, // artists
-                None,         // genres
-                seed_tracks,  // tracks
-                30,           // limit : 20-100 according to reference, but much higher than 30
-                // seems to give errors w/ playback
-                // I recommend leaving this at 30 for now
-                user_country,   // country
-                &empty_payload, // payload
+                seed_artists,            // artists
+                None,                    // genres
+                seed_tracks,             // tracks
+                self.large_search_limit, // adjust playlist to screen size
+                user_country,            // country
+                &empty_payload,          // payload
             ) {
                 Ok(result) => {
                     if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result) {
