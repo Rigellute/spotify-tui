@@ -159,6 +159,7 @@ keybindings:
   next_track: "n"
   previous_track: "p"
   copy_song_url: "c"
+  copy_album_url: "C"
   help: "?"
   shuffle: "s"
   repeat: "r"

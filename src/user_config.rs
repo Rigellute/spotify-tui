@@ -102,6 +102,7 @@ pub struct KeyBindingsString {
     search: Option<String>,
     submit: Option<String>,
     copy_song_url: Option<String>,
+    copy_album_url: Option<String>,
 }
 
 pub struct KeyBindings {
@@ -122,6 +123,7 @@ pub struct KeyBindings {
     pub search: Key,
     pub submit: Key,
     pub copy_song_url: Key,
+    pub copy_album_url: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -165,6 +167,7 @@ impl UserConfig {
                 search: Key::Char('/'),
                 submit: Key::Enter,
                 copy_song_url: Key::Char('c'),
+                copy_album_url: Key::Char('C'),
             },
             behavior: BehaviorConfig {
                 seek_milliseconds: 5 * 1000,
@@ -229,6 +232,7 @@ impl UserConfig {
         to_keys!(search);
         to_keys!(submit);
         to_keys!(copy_song_url);
+        to_keys!(copy_album_url);
 
         Ok(())
     }
