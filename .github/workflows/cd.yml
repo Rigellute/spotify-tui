@@ -11,15 +11,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         rust: [stable]
         include:
           - os: macos-latest
             artifact_prefix: macos
             target: x86_64-apple-darwin
+            binary_postfix: ""
           - os: ubuntu-latest
             artifact_prefix: linux
             target: x86_64-unknown-linux-gnu
+            binary_postfix: ""
+          - os: windows-latest
+            artifact_prefix: windows
+            target: x86_64-pc-windows-msvc
+            binary_postfix: ".exe"
 
     steps:
       - name: Installing Rust toolchain
@@ -49,9 +55,14 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
 
-          strip spt
-          tar czvf spotify-tui-${{ matrix.artifact_prefix }}.tar.gz spt
-          shasum -a 256 spotify-tui-${{ matrix.artifact_prefix }}.tar.gz > spotify-tui-${{ matrix.artifact_prefix }}.sha256
+          strip spt${{ matrix.binary_postfix }}
+          tar czvf spotify-tui-${{ matrix.artifact_prefix }}.tar.gz spt${{ matrix.binary_postfix }}
+          
+          if [[ ${{ runner.os }} == 'Windows' ]]; then
+            certutil -hashfile spotify-tui-${{ matrix.artifact_prefix }}.tar.gz sha256 | grep -E [A-Fa-f0-9]{64} > spotify-tui-${{ matrix.artifact_prefix }}.sha256
+          else
+            shasum -a 256 spotify-tui-${{ matrix.artifact_prefix }}.tar.gz > spotify-tui-${{ matrix.artifact_prefix }}.sha256
+          fi
       - name: Releasing assets
         uses: softprops/action-gh-release@v1
         with:
