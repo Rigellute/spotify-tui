@@ -700,9 +700,8 @@ impl App {
             None => return,
         };
 
-        // TODO: this is where changes need to be made to get the logic correct
         if let Some(FullPlayingContext {
-            item: Some(FullAlbum { id: Some(id), .. }),
+            item: Some(FullTrack { album: SimplifiedAlbum { id: Some(id), .. }, ..}),
             ..
         }) = &self.current_playback_context
         {
