@@ -88,6 +88,8 @@ For compilation on Linux the development packages for `libssl` are required.
 For basic installation instructions, see [install OpenSSL](https://docs.rs/openssl/0.10.25/openssl/#automatic).
 In order to locate dependencies, the compilation also requires `pkg-config` to be installed.
 
+If you are using the Windows Subsystem for Linux, you'll need to [install additional dependencies](#windows-subsystem-for-linux).
+
 ### Manual
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
@@ -193,6 +195,14 @@ After that there is not much to it.
 1. [Install `xorg-dev`](https://github.com/aweinstock314/rust-clipboard#prerequisites) (required for clipboard support)
 1. Clone or fork this repo and `cd` to it
 1. And then `cargo run`
+
+### Windows Subsystem for Linux
+
+You might get a linking error. If so, you'll probably need to install additional dependencies required by the clipboard package
+
+```bash
+sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+```
 
 ## Roadmap
 
