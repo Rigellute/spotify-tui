@@ -2,11 +2,22 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2020-01-26
+
+### Fixed
+
 - Don't error if failed to open clipboard [#217](https://github.com/Rigellute/spotify-tui/pull/217)
-- Allow user to configure the port for the Spotify auth Redirect URI [#204](https://github.com/Rigellute/spotify-tui/pull/204)
-- Change behavior of previous button (`p`) to mimic behavior in official Spotify client. When the track is more than three seconds in, pressing previous will restart the track. When less than three seconds it will jump to previous. [#219](https://github.com/Rigellute/spotify-tui/pull/219)
 - Fix scrolling beyond the end of pagination. [#216](https://github.com/Rigellute/spotify-tui/pull/216)
+
+### Added
+
+- Allow user to configure the port for the Spotify auth Redirect URI [#204](https://github.com/Rigellute/spotify-tui/pull/204)
 - Add play recommendations for song/artist on pressing 'r' [#200](https://github.com/Rigellute/spotify-tui/pull/200)
+- Added continuous deployment for Windows [#222](https://github.com/Rigellute/spotify-tui/pull/222)
+
+### Changed
+
+- Change behavior of previous button (`p`) to mimic behavior in official Spotify client. When the track is more than three seconds in, pressing previous will restart the track. When less than three seconds it will jump to previous. [#219](https://github.com/Rigellute/spotify-tui/pull/219)
 
 ## [0.12.0] - 2020-01-23
 
