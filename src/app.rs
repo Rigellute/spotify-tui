@@ -701,7 +701,11 @@ impl App {
         };
 
         if let Some(FullPlayingContext {
-            item: Some(FullTrack { album: SimplifiedAlbum { id: Some(id), .. }, ..}),
+            item:
+                Some(FullTrack {
+                    album: SimplifiedAlbum { id: Some(id), .. },
+                    ..
+                }),
             ..
         }) = &self.current_playback_context
         {
