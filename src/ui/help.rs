@@ -51,6 +51,11 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
             "<Enter>",
             "Selected block",
         ],
+        vec![
+            "Play recommendations for song/artist",
+            "r",
+            "Selected block",
+        ],
         vec!["Delete entire input", "<Ctrl+u>", "Search input"],
         vec!["Search with input text", "<Enter>", "Search input"],
         vec![
