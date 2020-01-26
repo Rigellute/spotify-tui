@@ -533,7 +533,9 @@ impl App {
                     }
                     self.start_recommendations_playback(Some(0));
                 }
-                Err(e) => println!("error: {:?}", e),
+                Err(e) => {
+                    self.handle_error(e);
+                }
             }
         }
     }
