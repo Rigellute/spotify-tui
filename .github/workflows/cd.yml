@@ -58,10 +58,10 @@ jobs:
           strip spt${{ matrix.binary_postfix }}
           tar czvf spotify-tui-${{ matrix.artifact_prefix }}.tar.gz spt${{ matrix.binary_postfix }}
           
-          if [[ ${{ runner.os }} == 'Linux' ]]; then
-            shasum -a 256 spotify-tui-${{ matrix.artifact_prefix }}.tar.gz > spotify-tui-${{ matrix.artifact_prefix }}.sha256
-          elif [[ ${{ runner.os }} == 'Windows' ]]; then
+          if [[ ${{ runner.os }} == 'Windows' ]]; then
             certutil -hashfile spotify-tui-${{ matrix.artifact_prefix }}.tar.gz sha256 | grep -E [A-Fa-f0-9]{64} > spotify-tui-${{ matrix.artifact_prefix }}.sha256
+          else
+            shasum -a 256 spotify-tui-${{ matrix.artifact_prefix }}.tar.gz > spotify-tui-${{ matrix.artifact_prefix }}.sha256
           fi
       - name: Releasing assets
         uses: softprops/action-gh-release@v1
