@@ -26,43 +26,14 @@ pub use input::handler as input_handler;
 pub fn handle_app(key: Key, app: &mut App) {
     // First handle any global event and then move to block event
     match key {
-        Key::Esc => match app.get_current_route().active_block {
-            ActiveBlock::SearchResultBlock => {
-                app.search_results.selected_block = SearchResultBlock::Empty;
-            }
-            ActiveBlock::ArtistBlock => {
-                if let Some(artist) = &mut app.artist {
-                    artist.artist_selected_block = ArtistBlock::Empty;
-                }
-            }
-            ActiveBlock::Error => {
-                app.pop_navigation_stack();
-            }
-            _ => {
-                app.set_current_route_state(Some(ActiveBlock::Empty), None);
-            }
-        },
-        // Jump to currently playing album
-        _ if key == app.user_config.keys.jump_to_album => {
-            if let Some(current_playback_context) = &app.current_playback_context {
-                if let Some(full_track) = &current_playback_context.item.clone() {
-                    app.get_album_tracks(full_track.album.clone());
-                }
-            };
+        Key::Esc => {
+            handle_escape(app);
         }
-        // Jump to currently playing artist's album list.
-        // NOTE: this only finds the first artist of the song and jumps to their albums
+        _ if key == app.user_config.keys.jump_to_album => {
+            handle_jump_to_album(app);
+        }
         _ if key == app.user_config.keys.jump_to_artist_album => {
-            if let Some(current_playback_context) = &app.current_playback_context {
-                if let Some(playing_item) = &current_playback_context.item.clone() {
-                    if let Some(artist) = playing_item.artists.first() {
-                        if let Some(artist_id) = &artist.id {
-                            app.get_artist(artist_id, &artist.name);
-                            app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
-                        }
-                    }
-                }
-            };
+            handle_jump_to_artist_album(app);
         }
         _ if key == app.user_config.keys.manage_devices => {
             app.handle_get_devices();
@@ -104,6 +75,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         }
         _ if key == app.user_config.keys.copy_song_url => {
             app.copy_song_url();
+        }
+        _ if key == app.user_config.keys.copy_album_url => {
+            app.copy_album_url();
         }
         _ => handle_block_events(key, app),
     }
@@ -168,4 +142,45 @@ fn handle_block_events(key: Key, app: &mut App) {
             playbar::handler(key, app);
         }
     }
+}
+
+fn handle_escape(app: &mut App) {
+    match app.get_current_route().active_block {
+        ActiveBlock::SearchResultBlock => {
+            app.search_results.selected_block = SearchResultBlock::Empty;
+        }
+        ActiveBlock::ArtistBlock => {
+            if let Some(artist) = &mut app.artist {
+                artist.artist_selected_block = ArtistBlock::Empty;
+            }
+        }
+        ActiveBlock::Error => {
+            app.pop_navigation_stack();
+        }
+        _ => {
+            app.set_current_route_state(Some(ActiveBlock::Empty), None);
+        }
+    }
+}
+
+fn handle_jump_to_album(app: &mut App) {
+    if let Some(current_playback_context) = &app.current_playback_context {
+        if let Some(full_track) = &current_playback_context.item.clone() {
+            app.get_album_tracks(full_track.album.clone());
+        }
+    };
+}
+
+// NOTE: this only finds the first artist of the song and jumps to their albums
+fn handle_jump_to_artist_album(app: &mut App) {
+    if let Some(current_playback_context) = &app.current_playback_context {
+        if let Some(playing_item) = &current_playback_context.item.clone() {
+            if let Some(artist) = playing_item.artists.first() {
+                if let Some(artist_id) = &artist.id {
+                    app.get_artist(artist_id, &artist.name);
+                    app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+                }
+            }
+        }
+    };
 }

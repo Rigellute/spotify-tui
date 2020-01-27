@@ -14,6 +14,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
         vec!["Seek forwards 5 seconds", ">", "General"],
         vec!["Toggle shuffle", "<Ctrl+s>", "General"],
         vec!["Copy url to currently playing song", "c", "General"],
+        vec!["Copy url to currently playing album", "C", "General"],
         vec!["Cycle repeat mode", "<Ctrl+r>", "General"],
         vec![
             "Move selection left",
