@@ -8,6 +8,7 @@
 
 - Don't error if failed to open clipboard [#217](https://github.com/Rigellute/spotify-tui/pull/217)
 - Fix scrolling beyond the end of pagination. [#216](https://github.com/Rigellute/spotify-tui/pull/216)
+- Add copy album url functionality [#226](https://github.com/Rigellute/spotify-tui/pull/226)
 
 ### Added
 
