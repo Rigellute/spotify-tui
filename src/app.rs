@@ -782,6 +782,28 @@ impl App {
         }
     }
 
+    pub fn copy_album_url(&mut self) {
+        let clipboard = match &mut self.clipboard_context {
+            Some(ctx) => ctx,
+            None => return,
+        };
+
+        if let Some(FullPlayingContext {
+            item:
+                Some(FullTrack {
+                    album: SimplifiedAlbum { id: Some(id), .. },
+                    ..
+                }),
+            ..
+        }) = &self.current_playback_context
+        {
+            if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/album/{}", id))
+            {
+                self.handle_error(format_err!("failed to set clipboard content: {}", e));
+            }
+        }
+    }
+
     fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
         self.set_tracks_to_table(
             saved_track_page

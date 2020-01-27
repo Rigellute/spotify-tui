@@ -105,6 +105,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         _ if key == app.user_config.keys.copy_song_url => {
             app.copy_song_url();
         }
+        _ if key == app.user_config.keys.copy_album_url => {
+            app.copy_album_url();
+        }
         _ => handle_block_events(key, app),
     }
 }
