@@ -29,7 +29,7 @@ use rspotify::spotify::{
     util::{get_token, process_token, request_token},
 };
 use std::{
-    cmp::min,
+    cmp::{max, min},
     io::{self, stdout, Write},
     panic::{self, PanicInfo},
     time::{Duration, Instant},
@@ -197,7 +197,8 @@ fn main() -> Result<(), failure::Error> {
                     app.size = size;
 
                     // Based on the size of the terminal, adjust the search limit.
-                    let max_limit = min((app.size.height as u32) - 13, 50);
+                    let potential_limit = max((app.size.height as i32) - 13, 0) as u32;
+                    let max_limit = min(potential_limit, 50);
                     app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
                     app.small_search_limit =
                         min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
