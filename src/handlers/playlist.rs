@@ -33,6 +33,33 @@ pub fn handler(key: Key, app: &mut App) {
                 None => {}
             };
         }
+        k if common_key_events::high_event(k) => {
+            match &app.playlists {
+                Some(_p) => {
+                    let next_index = common_key_events::on_high_press_handler();
+                    app.selected_playlist_index = Some(next_index);
+                }
+                None => {}
+            };
+        }
+        k if common_key_events::middle_event(k) => {
+            match &app.playlists {
+                Some(p) => {
+                    let next_index = common_key_events::on_middle_press_handler(&p.items);
+                    app.selected_playlist_index = Some(next_index);
+                }
+                None => {}
+            };
+        }
+        k if common_key_events::low_event(k) => {
+            match &app.playlists {
+                Some(p) => {
+                    let next_index = common_key_events::on_low_press_handler(&p.items);
+                    app.selected_playlist_index = Some(next_index);
+                }
+                None => {}
+            };
+        }
         Key::Enter => {
             if let (Some(playlists), Some(selected_playlist_index)) =
                 (&app.playlists, &app.selected_playlist_index)

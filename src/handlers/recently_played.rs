@@ -22,6 +22,26 @@ pub fn handler(key: Key, app: &mut App) {
                 app.recently_played.index = next_index;
             }
         }
+        k if common_key_events::high_event(k) => {
+            if let Some(_recently_played_result) = &app.recently_played.result {
+                let next_index = common_key_events::on_high_press_handler();
+                app.recently_played.index = next_index;
+            }
+        }
+        k if common_key_events::middle_event(k) => {
+            if let Some(recently_played_result) = &app.recently_played.result {
+                let next_index =
+                    common_key_events::on_middle_press_handler(&recently_played_result.items);
+                app.recently_played.index = next_index;
+            }
+        }
+        k if common_key_events::low_event(k) => {
+            if let Some(recently_played_result) = &app.recently_played.result {
+                let next_index =
+                    common_key_events::on_low_press_handler(&recently_played_result.items);
+                app.recently_played.index = next_index;
+            }
+        }
         Key::Char('s') => {
             if let Some(recently_played_result) = &app.recently_played.result.clone() {
                 if let Some(selected_track) =
