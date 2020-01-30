@@ -3,6 +3,12 @@ on: [push, pull_request]
 name: Continuous Integration
 
 jobs:
+  print_env:
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}
+    steps:
+      - run: echo "$GITHUB_CONTEXT"
+
   # Workaround for making Github Actions skip commits found here
   # https://github.com/srz-zumix/ci-skip/blob/master/docs/github/WORKAROUND.md
   prepare:
