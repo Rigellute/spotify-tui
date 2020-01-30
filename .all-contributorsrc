@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "MCOfficer",
+      "name": "M*C*O",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/22377202?v=4",
+      "profile": "https://mcofficer.me",
+      "contributions": [
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,
