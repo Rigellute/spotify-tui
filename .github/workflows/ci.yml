@@ -3,15 +3,9 @@ on: [push, pull_request]
 name: Continuous Integration
 
 jobs:
-  print_env:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_CONTEXT: ${{ toJson(github) }}
-    steps:
-      - run: echo "$GITHUB_CONTEXT"
-
   # Workaround for making Github Actions skip commits found here
   # https://github.com/srz-zumix/ci-skip/blob/master/docs/github/WORKAROUND.md
+  # NOTE: this this only skips CI on `push` events, not from pull_request
   prepare:
     runs-on: ubuntu-latest
     if: "! contains(github.event.head_commit.message, '[skip ci]')"
