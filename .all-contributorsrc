@@ -276,6 +276,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "baxtea",
+      "name": "Audrey Baxter",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/22502477?v=4",
+      "profile": "https://github.com/baxtea",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
