@@ -320,6 +320,15 @@
         "platform",
         "review"
       ]
+    },
+    {
+      "login": "mikepombal",
+      "name": "Mickael Marques",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6864231?v=4",
+      "profile": "https://github.com/mikepombal",
+      "contributions": [
+        "financial"
+      ]
     }
   ],
   "contributorsPerLine": 7,
