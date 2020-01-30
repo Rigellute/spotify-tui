@@ -1,7 +1,9 @@
 # Spotify TUI
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![Continuous Integration](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg?branch=master&event=push)
@@ -230,6 +232,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
@@ -315,5 +318,3 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | repeat                                            | Yes              | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |
 | shuffle                                           | Yes              | Toggle Shuffle For User’s Playback                                                                                                                           | Yes        |
-
-[spotify-dev]: https://developer.spotify.com/dashboard/applications

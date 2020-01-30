@@ -58,6 +58,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "radogost",
+      "name": "Micha",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/15713820?v=4",
+      "profile": "https://github.com/radogost",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
