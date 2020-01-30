@@ -239,6 +239,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "stuarth",
+      "name": "Stuart Hinson",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7055?v=4",
+      "profile": "http://stuarth.github.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
