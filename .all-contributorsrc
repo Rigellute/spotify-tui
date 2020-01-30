@@ -294,6 +294,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "blackwolf12333",
+      "name": "Peter Maatman",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1572975?v=4",
+      "profile": "https://github.com/blackwolf12333",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
