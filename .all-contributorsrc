@@ -76,6 +76,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "TimonPost",
+      "name": "Timon",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/19969910?v=4",
+      "profile": "https://github.com/TimonPost",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
