@@ -5,6 +5,9 @@
 ![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
 [![Crates.io](https://img.shields.io/crates/v/spotify-tui.svg)](https://crates.io/crates/spotify-tui)
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-33-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END --> 
 
 A Spotify client for the terminal written in Rust.
 
@@ -204,6 +207,10 @@ You might get a linking error. If so, you'll probably need to install additional
 ```bash
 sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
 ```
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
 ## Roadmap
 
