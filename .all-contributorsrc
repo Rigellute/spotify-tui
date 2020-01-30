@@ -258,6 +258,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "jwijenbergh",
+      "name": "Jeroen Wijenbergh",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/46386452?v=4",
+      "profile": "https://github.com/jwijenbergh",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
