@@ -94,6 +94,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "D-Nice",
+      "name": "D-Nice",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2888248?v=4",
+      "profile": "https://github.com/D-Nice",
+      "contributions": [
+        "doc",
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,
