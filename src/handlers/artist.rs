@@ -94,6 +94,67 @@ fn handle_up_press_on_hovered_block(app: &mut App) {
     }
 }
 
+fn handle_high_press_on_selected_block(app: &mut App) {
+    if let Some(artist) = &mut app.artist {
+        match artist.artist_selected_block {
+            ArtistBlock::TopTracks => {
+                let next_index = common_key_events::on_high_press_handler();
+                artist.selected_top_track_index = next_index;
+            }
+            ArtistBlock::Albums => {
+                let next_index = common_key_events::on_high_press_handler();
+                artist.selected_album_index = next_index;
+            }
+            ArtistBlock::RelatedArtists => {
+                let next_index = common_key_events::on_high_press_handler();
+                artist.selected_related_artist_index = next_index;
+            }
+            ArtistBlock::Empty => {}
+        }
+    }
+}
+
+fn handle_middle_press_on_selected_block(app: &mut App) {
+    if let Some(artist) = &mut app.artist {
+        match artist.artist_selected_block {
+            ArtistBlock::TopTracks => {
+                let next_index = common_key_events::on_middle_press_handler(&artist.top_tracks);
+                artist.selected_top_track_index = next_index;
+            }
+            ArtistBlock::Albums => {
+                let next_index = common_key_events::on_middle_press_handler(&artist.albums.items);
+                artist.selected_album_index = next_index;
+            }
+            ArtistBlock::RelatedArtists => {
+                let next_index =
+                    common_key_events::on_middle_press_handler(&artist.related_artists);
+                artist.selected_related_artist_index = next_index;
+            }
+            ArtistBlock::Empty => {}
+        }
+    }
+}
+
+fn handle_low_press_on_selected_block(app: &mut App) {
+    if let Some(artist) = &mut app.artist {
+        match artist.artist_selected_block {
+            ArtistBlock::TopTracks => {
+                let next_index = common_key_events::on_low_press_handler(&artist.top_tracks);
+                artist.selected_top_track_index = next_index;
+            }
+            ArtistBlock::Albums => {
+                let next_index = common_key_events::on_low_press_handler(&artist.albums.items);
+                artist.selected_album_index = next_index;
+            }
+            ArtistBlock::RelatedArtists => {
+                let next_index = common_key_events::on_low_press_handler(&artist.related_artists);
+                artist.selected_related_artist_index = next_index;
+            }
+            ArtistBlock::Empty => {}
+        }
+    }
+}
+
 fn handle_recommend_event_on_selected_block(app: &mut App) {
     //recommendations.
     if let Some(artist) = &mut app.artist.clone() {
@@ -208,6 +269,21 @@ pub fn handler(key: Key, app: &mut App) {
             k if common_key_events::right_event(k) => {
                 artist.artist_selected_block = ArtistBlock::Empty;
                 handle_down_press_on_hovered_block(app);
+            }
+            k if common_key_events::high_event(k) => {
+                if artist.artist_selected_block != ArtistBlock::Empty {
+                    handle_high_press_on_selected_block(app);
+                }
+            }
+            k if common_key_events::middle_event(k) => {
+                if artist.artist_selected_block != ArtistBlock::Empty {
+                    handle_middle_press_on_selected_block(app);
+                }
+            }
+            k if common_key_events::low_event(k) => {
+                if artist.artist_selected_block != ArtistBlock::Empty {
+                    handle_low_press_on_selected_block(app);
+                }
             }
             Key::Enter => {
                 if artist.artist_selected_block != ArtistBlock::Empty {

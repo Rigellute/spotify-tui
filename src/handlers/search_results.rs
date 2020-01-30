@@ -128,6 +128,97 @@ fn handle_up_press_on_hovered_block(app: &mut App) {
     }
 }
 
+fn handle_high_press_on_selected_block(app: &mut App) {
+    match app.search_results.selected_block {
+        SearchResultBlock::AlbumSearch => {
+            if let Some(_result) = &app.search_results.albums {
+                let next_index = common_key_events::on_high_press_handler();
+                app.search_results.selected_album_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::SongSearch => {
+            if let Some(_result) = &app.search_results.tracks {
+                let next_index = common_key_events::on_high_press_handler();
+                app.search_results.selected_tracks_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::ArtistSearch => {
+            if let Some(_result) = &app.search_results.artists {
+                let next_index = common_key_events::on_high_press_handler();
+                app.search_results.selected_artists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::PlaylistSearch => {
+            if let Some(_result) = &app.search_results.playlists {
+                let next_index = common_key_events::on_high_press_handler();
+                app.search_results.selected_playlists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::Empty => {}
+    }
+}
+
+fn handle_middle_press_on_selected_block(app: &mut App) {
+    match app.search_results.selected_block {
+        SearchResultBlock::AlbumSearch => {
+            if let Some(result) = &app.search_results.albums {
+                let next_index = common_key_events::on_middle_press_handler(&result.albums.items);
+                app.search_results.selected_album_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::SongSearch => {
+            if let Some(result) = &app.search_results.tracks {
+                let next_index = common_key_events::on_middle_press_handler(&result.tracks.items);
+                app.search_results.selected_tracks_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::ArtistSearch => {
+            if let Some(result) = &app.search_results.artists {
+                let next_index = common_key_events::on_middle_press_handler(&result.artists.items);
+                app.search_results.selected_artists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::PlaylistSearch => {
+            if let Some(result) = &app.search_results.playlists {
+                let next_index =
+                    common_key_events::on_middle_press_handler(&result.playlists.items);
+                app.search_results.selected_playlists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::Empty => {}
+    }
+}
+
+fn handle_low_press_on_selected_block(app: &mut App) {
+    match app.search_results.selected_block {
+        SearchResultBlock::AlbumSearch => {
+            if let Some(result) = &app.search_results.albums {
+                let next_index = common_key_events::on_low_press_handler(&result.albums.items);
+                app.search_results.selected_album_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::SongSearch => {
+            if let Some(result) = &app.search_results.tracks {
+                let next_index = common_key_events::on_low_press_handler(&result.tracks.items);
+                app.search_results.selected_tracks_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::ArtistSearch => {
+            if let Some(result) = &app.search_results.artists {
+                let next_index = common_key_events::on_low_press_handler(&result.artists.items);
+                app.search_results.selected_artists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::PlaylistSearch => {
+            if let Some(result) = &app.search_results.playlists {
+                let next_index = common_key_events::on_low_press_handler(&result.playlists.items);
+                app.search_results.selected_playlists_index = Some(next_index);
+            }
+        }
+        SearchResultBlock::Empty => {}
+    }
+}
+
 fn handle_enter_event_on_selected_block(app: &mut App) {
     match &app.search_results.selected_block {
         SearchResultBlock::AlbumSearch => {
@@ -219,6 +310,41 @@ fn handle_enter_event_on_hovered_block(app: &mut App) {
     };
 }
 
+fn handle_recommended_tracks(app: &mut App) {
+    match app.search_results.selected_block {
+        SearchResultBlock::AlbumSearch => {}
+        SearchResultBlock::SongSearch => {
+            if let Some(index) = &app.search_results.selected_tracks_index {
+                if let Some(result) = app.search_results.tracks.clone() {
+                    if let Some(track) = result.tracks.items.get(index.to_owned()) {
+                        let track_id_list: Option<Vec<String>> = match &track.id {
+                            Some(id) => Some(vec![id.to_string()]),
+                            None => None,
+                        };
+                        app.recommendations_context = Some(RecommendationsContext::Song);
+                        app.recommendations_seed = track.name.clone();
+                        app.get_recommendations_for_seed(None, track_id_list, Some(track));
+                    };
+                };
+            };
+        }
+        SearchResultBlock::ArtistSearch => {
+            if let Some(index) = &app.search_results.selected_artists_index {
+                if let Some(result) = app.search_results.artists.clone() {
+                    if let Some(artist) = result.artists.items.get(index.to_owned()) {
+                        let artist_id_list: Option<Vec<String>> = Some(vec![artist.id.clone()]);
+                        app.recommendations_context = Some(RecommendationsContext::Artist);
+                        app.recommendations_seed = artist.name.clone();
+                        app.get_recommendations_for_seed(artist_id_list, None, None);
+                    };
+                };
+            };
+        }
+        SearchResultBlock::PlaylistSearch => {}
+        SearchResultBlock::Empty => {}
+    }
+}
+
 pub fn handler(key: Key, app: &mut App) {
     match key {
         Key::Esc => {
@@ -274,6 +400,21 @@ pub fn handler(key: Key, app: &mut App) {
                 SearchResultBlock::Empty => {}
             }
         }
+        k if common_key_events::high_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                handle_high_press_on_selected_block(app);
+            }
+        }
+        k if common_key_events::middle_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                handle_middle_press_on_selected_block(app);
+            }
+        }
+        k if common_key_events::low_event(k) => {
+            if app.search_results.selected_block != SearchResultBlock::Empty {
+                handle_low_press_on_selected_block(app)
+            }
+        }
         // Handle pressing enter when block is selected to start playing track
         Key::Enter => match app.search_results.selected_block {
             SearchResultBlock::Empty => handle_enter_event_on_hovered_block(app),
@@ -300,38 +441,7 @@ pub fn handler(key: Key, app: &mut App) {
             }
             SearchResultBlock::Empty => {}
         },
-        Key::Char('r') => match app.search_results.selected_block {
-            SearchResultBlock::AlbumSearch => {}
-            SearchResultBlock::SongSearch => {
-                if let Some(index) = &app.search_results.selected_tracks_index {
-                    if let Some(result) = app.search_results.tracks.clone() {
-                        if let Some(track) = result.tracks.items.get(index.to_owned()) {
-                            let track_id_list: Option<Vec<String>> = match &track.id {
-                                Some(id) => Some(vec![id.to_string()]),
-                                None => None,
-                            };
-                            app.recommendations_context = Some(RecommendationsContext::Song);
-                            app.recommendations_seed = track.name.clone();
-                            app.get_recommendations_for_seed(None, track_id_list, Some(track));
-                        };
-                    };
-                };
-            }
-            SearchResultBlock::ArtistSearch => {
-                if let Some(index) = &app.search_results.selected_artists_index {
-                    if let Some(result) = app.search_results.artists.clone() {
-                        if let Some(artist) = result.artists.items.get(index.to_owned()) {
-                            let artist_id_list: Option<Vec<String>> = Some(vec![artist.id.clone()]);
-                            app.recommendations_context = Some(RecommendationsContext::Artist);
-                            app.recommendations_seed = artist.name.clone();
-                            app.get_recommendations_for_seed(artist_id_list, None, None);
-                        };
-                    };
-                };
-            }
-            SearchResultBlock::PlaylistSearch => {}
-            SearchResultBlock::Empty => {}
-        },
+        Key::Char('r') => handle_recommended_tracks(app),
         // Add `s` to "see more" on each option
         _ => {}
     }

@@ -37,6 +37,39 @@ pub fn handler(key: Key, app: &mut App) {
                 None => {}
             };
         }
+        k if common_key_events::high_event(k) => {
+            match &app.devices {
+                Some(_p) => {
+                    if let Some(_selected_device_index) = app.selected_device_index {
+                        let next_index = common_key_events::on_high_press_handler();
+                        app.selected_device_index = Some(next_index);
+                    }
+                }
+                None => {}
+            };
+        }
+        k if common_key_events::middle_event(k) => {
+            match &app.devices {
+                Some(p) => {
+                    if let Some(_selected_device_index) = app.selected_device_index {
+                        let next_index = common_key_events::on_middle_press_handler(&p.devices);
+                        app.selected_device_index = Some(next_index);
+                    }
+                }
+                None => {}
+            };
+        }
+        k if common_key_events::low_event(k) => {
+            match &app.devices {
+                Some(p) => {
+                    if let Some(_selected_device_index) = app.selected_device_index {
+                        let next_index = common_key_events::on_low_press_handler(&p.devices);
+                        app.selected_device_index = Some(next_index);
+                    }
+                }
+                None => {}
+            };
+        }
         Key::Enter => {
             if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {

@@ -15,7 +15,6 @@ pub fn handler(key: Key, app: &mut App) {
                             &selected_album.album.tracks.items,
                             Some(app.saved_album_tracks_index),
                         );
-
                         app.saved_album_tracks_index = next_index;
                     }
                 };
@@ -38,7 +37,6 @@ pub fn handler(key: Key, app: &mut App) {
                             &selected_album.album.tracks.items,
                             Some(app.saved_album_tracks_index),
                         );
-
                         app.saved_album_tracks_index = next_index;
                     }
                 };
@@ -53,37 +51,10 @@ pub fn handler(key: Key, app: &mut App) {
                 }
             }
         },
-        Key::Char('s') => match app.album_table_context {
-            AlbumTableContext::Full => {
-                if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
-                    if let Some(selected_album) = albums.items.get(app.album_list_index) {
-                        if let Some(selected_track) = selected_album
-                            .album
-                            .tracks
-                            .items
-                            .get(app.saved_album_tracks_index)
-                        {
-                            if let Some(track_id) = &selected_track.id {
-                                app.toggle_save_track(track_id.clone());
-                            };
-                        };
-                    }
-                };
-            }
-            AlbumTableContext::Simplified => {
-                if let Some(selected_album) = app.selected_album.clone() {
-                    if let Some(selected_track) = selected_album
-                        .tracks
-                        .items
-                        .get(selected_album.selected_index)
-                    {
-                        if let Some(track_id) = &selected_track.id {
-                            app.toggle_save_track(track_id.clone());
-                        };
-                    };
-                };
-            }
-        },
+        k if common_key_events::high_event(k) => handle_high_event(app),
+        k if common_key_events::middle_event(k) => handle_middle_event(app),
+        k if common_key_events::low_event(k) => handle_low_event(app),
+        Key::Char('s') => handle_save_event(app),
         Key::Enter => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
@@ -112,6 +83,68 @@ pub fn handler(key: Key, app: &mut App) {
         }
         _ => {}
     };
+}
+
+fn handle_high_event(app: &mut App) {
+    match app.album_table_context {
+        AlbumTableContext::Full => {
+            if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                if let Some(_selected_album) = albums.items.get(app.album_list_index) {
+                    let next_index = common_key_events::on_high_press_handler();
+                    app.saved_album_tracks_index = next_index;
+                }
+            };
+        }
+        AlbumTableContext::Simplified => {
+            if let Some(selected_album) = &mut app.selected_album {
+                let next_index = common_key_events::on_high_press_handler();
+                selected_album.selected_index = next_index;
+            }
+        }
+    }
+}
+
+fn handle_middle_event(app: &mut App) {
+    match app.album_table_context {
+        AlbumTableContext::Full => {
+            if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                    let next_index = common_key_events::on_middle_press_handler(
+                        &selected_album.album.tracks.items,
+                    );
+                    app.saved_album_tracks_index = next_index;
+                }
+            };
+        }
+        AlbumTableContext::Simplified => {
+            if let Some(selected_album) = &mut app.selected_album {
+                let next_index =
+                    common_key_events::on_middle_press_handler(&selected_album.tracks.items);
+                selected_album.selected_index = next_index;
+            }
+        }
+    }
+}
+
+fn handle_low_event(app: &mut App) {
+    match app.album_table_context {
+        AlbumTableContext::Full => {
+            if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                    let next_index =
+                        common_key_events::on_low_press_handler(&selected_album.album.tracks.items);
+                    app.saved_album_tracks_index = next_index;
+                }
+            };
+        }
+        AlbumTableContext::Simplified => {
+            if let Some(selected_album) = &mut app.selected_album {
+                let next_index =
+                    common_key_events::on_low_press_handler(&selected_album.tracks.items);
+                selected_album.selected_index = next_index;
+            }
+        }
+    }
 }
 
 fn handle_recommended_tracks(app: &mut App) {
@@ -147,6 +180,40 @@ fn handle_recommended_tracks(app: &mut App) {
                         app.get_recommendations_for_trackid(&id);
                     }
                 }
+            };
+        }
+    }
+}
+
+fn handle_save_event(app: &mut App) {
+    match app.album_table_context {
+        AlbumTableContext::Full => {
+            if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
+                if let Some(selected_album) = albums.items.get(app.album_list_index) {
+                    if let Some(selected_track) = selected_album
+                        .album
+                        .tracks
+                        .items
+                        .get(app.saved_album_tracks_index)
+                    {
+                        if let Some(track_id) = &selected_track.id {
+                            app.toggle_save_track(track_id.clone());
+                        };
+                    };
+                }
+            };
+        }
+        AlbumTableContext::Simplified => {
+            if let Some(selected_album) = app.selected_album.clone() {
+                if let Some(selected_track) = selected_album
+                    .tracks
+                    .items
+                    .get(selected_album.selected_index)
+                {
+                    if let Some(track_id) = &selected_track.id {
+                        app.toggle_save_track(track_id.clone());
+                    };
+                };
             };
         }
     }
