@@ -248,6 +248,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "samcal",
+      "name": "Sam Calvert",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/2117940?v=4",
+      "profile": "https://github.com/samcal",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
