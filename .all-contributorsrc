@@ -104,6 +104,15 @@
         "doc",
         "infra"
       ]
+    },
+    {
+      "login": "gpawlik",
+      "name": "Grzegorz Pawlik",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6296883?v=4",
+      "profile": "http://gpawlik.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
