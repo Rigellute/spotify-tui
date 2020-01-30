@@ -303,6 +303,23 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Rigellute",
+      "name": "Alexander Keliris",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/12150276?v=4",
+      "profile": "https://keliris.dev/",
+      "contributions": [
+        "code",
+        "doc",
+        "design",
+        "blog",
+        "ideas",
+        "infra",
+        "maintenance",
+        "platform",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7,
