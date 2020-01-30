@@ -6,6 +6,32 @@
   "commit": false,
   "contributors": [
     {
+      "login": "Rigellute",
+      "name": "Alexander Keliris",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/12150276?v=4",
+      "profile": "https://keliris.dev/",
+      "contributions": [
+        "code",
+        "doc",
+        "design",
+        "blog",
+        "ideas",
+        "infra",
+        "maintenance",
+        "platform",
+        "review"
+      ]
+    },
+    {
+      "login": "mikepombal",
+      "name": "Mickael Marques",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6864231?v=4",
+      "profile": "https://github.com/mikepombal",
+      "contributions": [
+        "financial"
+      ]
+    },
+    {
       "login": "HakierGrzonzo",
       "name": "Grzegorz Koperwas",
       "avatar_url": "https://avatars0.githubusercontent.com/u/36668331?v=4",
@@ -302,32 +328,6 @@
       "profile": "https://github.com/blackwolf12333",
       "contributions": [
         "code"
-      ]
-    },
-    {
-      "login": "Rigellute",
-      "name": "Alexander Keliris",
-      "avatar_url": "https://avatars2.githubusercontent.com/u/12150276?v=4",
-      "profile": "https://keliris.dev/",
-      "contributions": [
-        "code",
-        "doc",
-        "design",
-        "blog",
-        "ideas",
-        "infra",
-        "maintenance",
-        "platform",
-        "review"
-      ]
-    },
-    {
-      "login": "mikepombal",
-      "name": "Mickael Marques",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/6864231?v=4",
-      "profile": "https://github.com/mikepombal",
-      "contributions": [
-        "financial"
       ]
     }
   ],
