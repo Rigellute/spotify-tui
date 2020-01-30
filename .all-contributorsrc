@@ -185,6 +185,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "fangyi-zhou",
+      "name": "Fangyi Zhou",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7815439?v=4",
+      "profile": "https://github.com/fangyi-zhou",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
