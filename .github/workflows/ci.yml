@@ -4,6 +4,7 @@ name: Continuous Integration
 
 jobs:
   print_env:
+    runs-on: ubuntu-latest
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
     steps:
