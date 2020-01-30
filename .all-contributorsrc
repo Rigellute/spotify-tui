@@ -85,6 +85,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "echoSayonara",
+      "name": "echoSayonara",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/54503126?v=4",
+      "profile": "https://github.com/echoSayonara",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
