@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Fix crash on small terminals [#231](https://github.com/Rigellute/spotify-tui/pull/231)
+- Add high-middle-low navigation (`H`, `M`, `L` respectively) for jumping around lists [#234](https://github.com/Rigellute/spotify-tui/pull/234).
+
 ## [0.13.0] - 2020-01-26
 
 ### Fixed
