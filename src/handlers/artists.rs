@@ -50,6 +50,13 @@ pub fn handler(key: Key, app: &mut App) {
             app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
         }
         Key::Char('D') => app.user_unfollow_artists(),
+        Key::Char('e') => {
+            let artists = app.artists.to_owned();
+            let artist = artists.get(app.artists_list_index);
+            if let Some(artist) = artist {
+                app.start_playback(Some(artist.uri.to_owned()), None, None);
+            }
+        }
         Key::Char('r') => {
             let artists = app.artists.to_owned();
             let artist = artists.get(app.artists_list_index);
