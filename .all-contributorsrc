@@ -176,6 +176,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Bios-Marcel",
+      "name": "Marcel Schramm",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/19377618?v=4",
+      "profile": "https://marcelschr.me",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
