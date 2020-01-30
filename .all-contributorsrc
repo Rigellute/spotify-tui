@@ -285,6 +285,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "nkoehring",
+      "name": "Norman",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/246402?v=4",
+      "profile": "https://koehr.in",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
