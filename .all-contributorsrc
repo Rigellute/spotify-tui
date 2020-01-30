@@ -113,6 +113,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "LennyPenny",
+      "name": "Lennart Bernhardt",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/4027243?v=4",
+      "profile": "http://lenny.ninja",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
