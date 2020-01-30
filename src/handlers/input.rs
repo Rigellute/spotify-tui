@@ -4,6 +4,7 @@ use super::super::app::{ActiveBlock, App, RouteId};
 use crate::event::Key;
 use rspotify::spotify::senum::Country;
 use std::convert::TryInto;
+use std::str::FromStr;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 // Handle event when the search input block is active
@@ -46,15 +47,11 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Enter => {
             if let (Some(spotify), Some(user)) = (app.spotify.clone(), app.user.clone()) {
-                let country = Country::from_str(&user.country.unwrap_or_else(|| "".to_string()));
+                let country =
+                    Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
                 let input_str: String = app.input.iter().collect();
                 // Can I run these functions in parellel?
-                match spotify.search_track(
-                    &input_str,
-                    app.small_search_limit,
-                    0,
-                    country.to_owned(),
-                ) {
+                match spotify.search_track(&input_str, app.small_search_limit, 0, country) {
                     Ok(result) => {
                         app.set_tracks_to_table(result.tracks.items.clone());
                         app.search_results.tracks = Some(result);
@@ -64,12 +61,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_artist(
-                    &input_str,
-                    app.small_search_limit,
-                    0,
-                    country.to_owned(),
-                ) {
+                match spotify.search_artist(&input_str, app.small_search_limit, 0, country) {
                     Ok(result) => {
                         app.search_results.artists = Some(result);
                     }
@@ -78,12 +70,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_album(
-                    &input_str,
-                    app.small_search_limit,
-                    0,
-                    country.to_owned(),
-                ) {
+                match spotify.search_album(&input_str, app.small_search_limit, 0, country) {
                     Ok(result) => {
                         app.search_results.albums = Some(result);
                     }

@@ -19,6 +19,7 @@ use rspotify::spotify::{
     senum::{Country, RepeatState},
 };
 use serde_json::{map::Map, Value};
+use std::str::FromStr;
 use std::{
     cmp::{max, min},
     collections::HashSet,
@@ -503,7 +504,7 @@ impl App {
     ) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
             let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
             let empty_payload: Map<String, Value> = Map::new();
 
             match spotify.recommendations(
@@ -1022,11 +1023,11 @@ impl App {
     pub fn get_artist(&mut self, artist_id: &str, artist_name: &str) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
             let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
             let albums = spotify.artist_albums(
                 artist_id,
                 None,
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())),
+                user_country,
                 Some(self.large_search_limit),
                 Some(0),
             );
