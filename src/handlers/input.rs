@@ -128,6 +128,13 @@ mod tests {
     }
 
     #[test]
+    fn test_compute_character_width_with_multiple_characters() {
+        assert_eq!(1, compute_character_width('a'));
+        assert_eq!(1, compute_character_width('ß'));
+        assert_eq!(1, compute_character_width('ç'));
+    }
+
+    #[test]
     fn test_input_handler_clear_input_on_ctrl_u() {
         let mut app = App::new();
 
