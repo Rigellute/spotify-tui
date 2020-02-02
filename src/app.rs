@@ -251,8 +251,10 @@ pub struct App {
     pub large_search_limit: u32,
     pub library: Library,
     pub playlist_offset: u32,
+    pub made_for_you_offset: u32,
     pub playback_params: PlaybackParams,
     pub playlist_tracks: Option<Page<PlaylistTrack>>,
+    pub made_for_you_tracks: Option<Page<PlaylistTrack>>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub recommended_tracks: Vec<FullTrack>,
@@ -310,7 +312,9 @@ impl App {
             input_idx: 0,
             input_cursor_position: 0,
             playlist_offset: 0,
+            made_for_you_offset: 0,
             playlist_tracks: None,
+            made_for_you_tracks: None,
             playlists: None,
             recommended_tracks: vec![],
             recommendations_context: None,
@@ -720,6 +724,26 @@ impl App {
                 };
             }
             None => {}
+        }
+    }
+
+    pub fn get_made_for_you_playlist_tracks(&mut self, playlist_id: String) {
+        if let Some(spotify) = &self.spotify {
+            if let Ok(made_for_you_tracks) = spotify.user_playlist_tracks(
+                "spotify",
+                &playlist_id,
+                None,
+                Some(self.large_search_limit),
+                Some(self.made_for_you_offset),
+                None,
+            ) {
+                self.set_playlist_tracks_to_table(&made_for_you_tracks);
+
+                self.made_for_you_tracks = Some(made_for_you_tracks);
+                if self.get_current_route().id != RouteId::TrackTable {
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                }
+            }
         }
     }
 
@@ -1220,19 +1244,20 @@ impl App {
     }
 
     fn made_for_you_search_and_add(&mut self, search_string: &str) {
-        const SEARCH_LIMIT: u32 = 10;
         const SPOTIFY_ID: &str = "spotify";
 
         if let (Some(spotify), Some(user)) = (self.spotify.clone(), self.user.clone()) {
             let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
-            match spotify.search_playlist(search_string, SEARCH_LIMIT, 0, user_country) {
+                Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
+            match spotify.search_playlist(search_string, self.large_search_limit, 0, user_country) {
                 Ok(mut search_playlists) => {
                     let mut filtered_playlists = search_playlists
                         .playlists
                         .items
                         .iter()
-                        .filter(|playlist| playlist.owner.id == SPOTIFY_ID)
+                        .filter(|playlist| {
+                            playlist.owner.id == SPOTIFY_ID && playlist.name == search_string
+                        })
                         .map(|playlist| playlist.to_owned())
                         .collect::<Vec<SimplifiedPlaylist>>();
 

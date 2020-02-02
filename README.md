@@ -16,14 +16,26 @@ A Spotify client for the terminal written in Rust.
 
 The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.com/).
 
-- [Installation](#installation)
-- [Connecting to Spotify’s API](#connecting-to-spotifys-api)
-- [Usage](#usage)
-- [Limitations](#limitations)
-- [Using with spotifyd](#using-with-spotifyd)
-- [Development](#development)
-- [Contributors](#contributors)
-- [Roadmap](#roadmap)
+- [Spotify TUI](#spotify-tui)
+  - [Installation](#installation)
+    - [Homebrew](#homebrew)
+    - [Snap](#snap)
+    - [AUR](#aur)
+    - [Void Linux](#void-linux)
+    - [Cargo](#cargo)
+      - [Note on Linux](#note-on-linux)
+    - [Manual](#manual)
+  - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
+  - [Usage](#usage)
+- [Configuration](#configuration)
+  - [Limitations](#limitations)
+  - [Using with spotifyd](#using-with-spotifyd)
+  - [Libraries used](#libraries-used)
+  - [Development](#development)
+    - [Windows Subsystem for Linux](#windows-subsystem-for-linux)
+  - [Contributors](#contributors)
+  - [Roadmap](#roadmap)
+    - [High-level requirements yet to be implemented](#high-level-requirements-yet-to-be-implemented)
 
 ## Installation
 
@@ -275,11 +287,10 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 The goal is to eventually implement almost every Spotify feature.
 
-### High level requirements yet to be implemented
+### High-level requirements yet to be implemented
 
 - Add songs to a playlist
 - Be able to scroll through result pages in every view
-- View Library "Made for you"
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
