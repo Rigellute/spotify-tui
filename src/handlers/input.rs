@@ -30,16 +30,14 @@ pub fn handler(key: Key, app: &mut App) {
             if !app.input.is_empty() && app.input_idx > 0 {
                 let last_c = app.input[app.input_idx - 1];
                 app.input_idx -= 1;
-                let width: u16 = UnicodeWidthChar::width(last_c).unwrap().try_into().unwrap();
-                app.input_cursor_position -= width;
+                app.input_cursor_position -= compute_character_width(last_c);
             }
         }
         Key::Right => {
             if app.input_idx < app.input.len() {
                 let next_c = app.input[app.input_idx];
                 app.input_idx += 1;
-                let width: u16 = UnicodeWidthChar::width(next_c).unwrap().try_into().unwrap();
-                app.input_cursor_position += width;
+                app.input_cursor_position += compute_character_width(next_c);
             }
         }
         Key::Esc => {
@@ -96,15 +94,13 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Char(c) => {
             app.input.insert(app.input_idx, c);
             app.input_idx += 1;
-            let width: u16 = UnicodeWidthChar::width(c).unwrap().try_into().unwrap();
-            app.input_cursor_position += width;
+            app.input_cursor_position += compute_character_width(c);
         }
         Key::Backspace => {
             if !app.input.is_empty() && app.input_idx > 0 {
                 let last_c = app.input.remove(app.input_idx - 1);
                 app.input_idx -= 1;
-                let width: u16 = UnicodeWidthChar::width(last_c).unwrap().try_into().unwrap();
-                app.input_cursor_position -= width;
+                app.input_cursor_position -= compute_character_width(last_c);
             }
         }
         Key::Delete => {
@@ -114,6 +110,13 @@ pub fn handler(key: Key, app: &mut App) {
         }
         _ => {}
     }
+}
+
+fn compute_character_width(character: char) -> u16 {
+    UnicodeWidthChar::width(character)
+        .unwrap()
+        .try_into()
+        .unwrap()
 }
 
 #[cfg(test)]
