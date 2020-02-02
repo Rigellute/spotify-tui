@@ -1,5 +1,6 @@
 use super::super::app::{ActiveBlock, App, ArtistBlock, SearchResultBlock};
 use rspotify::spotify::model::artist::SimplifiedArtist;
+use std::cmp::max;
 use tui::style::{Color, Style};
 
 pub fn get_search_results_highlight_state(
@@ -61,7 +62,9 @@ pub fn millis_to_minutes(millis: u128) -> String {
 pub fn display_track_progress(progress: u128, track_duration: u32) -> String {
     let duration = millis_to_minutes(u128::from(track_duration));
     let progress_display = millis_to_minutes(progress);
-    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
+
+    let safe_remaining_ms = max(i128::from(track_duration) - progress as i128, 0) as u128;
+    let remaining = millis_to_minutes(safe_remaining_ms);
 
     format!("{}/{} (-{})", progress_display, duration, remaining,)
 }

@@ -30,6 +30,7 @@ pub enum TableId {
     Artist,
     Song,
     RecentlyPlayed,
+    MadeForYou,
 }
 
 #[derive(PartialEq)]
@@ -216,7 +217,7 @@ where
             draw_home(f, app, chunks[1]);
         }
         RouteId::MadeForYou => {
-            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::MadeForYou, "Made For You");
+            draw_made_for_you(f, app, chunks[1]);
         }
         RouteId::Artists => {
             draw_artist_table(f, app, chunks[1]);
@@ -1116,6 +1117,47 @@ where
             highlight_state,
         )
     };
+}
+
+pub fn draw_made_for_you<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = TableHeader {
+        id: TableId::MadeForYou,
+        items: vec![TableHeaderItem {
+            text: "Name",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+            ..Default::default()
+        }],
+    };
+
+    if let Some(playlists) = &app.library.made_for_you_playlists.get_results(None) {
+        let items = playlists
+            .items
+            .iter()
+            .map(|playlist| TableItem {
+                id: playlist.id.to_owned(),
+                format: vec![playlist.name.to_owned()],
+            })
+            .collect::<Vec<TableItem>>();
+
+        let current_route = app.get_current_route();
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::MadeForYou,
+            current_route.hovered_block == ActiveBlock::MadeForYou,
+        );
+
+        draw_table(
+            f,
+            app,
+            layout_chunk,
+            ("Made For You", &header),
+            &items,
+            app.made_for_you_index,
+            highlight_state,
+        );
+    }
 }
 
 pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

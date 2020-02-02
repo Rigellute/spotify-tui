@@ -59,12 +59,10 @@ pub fn handler(key: Key, app: &mut App) {
                             }
                         };
                     }
-                    TrackTableContext::RecommendedTracks => {}
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_next();
                     }
-                    TrackTableContext::AlbumSearch => {}
-                    TrackTableContext::PlaylistSearch => {}
+                    _ => {}
                 },
                 None => {}
             };
@@ -88,12 +86,10 @@ pub fn handler(key: Key, app: &mut App) {
                             }
                         };
                     }
-                    TrackTableContext::RecommendedTracks => {}
                     TrackTableContext::SavedTracks => {
                         app.get_current_user_saved_tracks_previous();
                     }
-                    TrackTableContext::AlbumSearch => {}
-                    TrackTableContext::PlaylistSearch => {}
+                    _ => {}
                 },
                 None => {}
             };
@@ -123,37 +119,30 @@ fn handle_recommended_tracks(app: &mut App) {
 }
 
 fn jump_to_end(app: &mut App) {
-    match &app.track_table.context {
-        Some(context) => match context {
-            TrackTableContext::MyPlaylists => {
-                if let (Some(playlists), Some(selected_playlist_index)) =
-                    (&app.playlists, &app.selected_playlist_index)
+    if let Some(context) = &app.track_table.context {
+        if let TrackTableContext::MyPlaylists = context {
+            if let (Some(playlists), Some(selected_playlist_index)) =
+                (&app.playlists, &app.selected_playlist_index)
+            {
+                if let Some(selected_playlist) =
+                    playlists.items.get(selected_playlist_index.to_owned())
                 {
-                    if let Some(selected_playlist) =
-                        playlists.items.get(selected_playlist_index.to_owned())
-                    {
-                        let total_tracks = selected_playlist
-                            .tracks
-                            .get("total")
-                            .and_then(|total| total.as_u64())
-                            .expect("playlist.tracks object should have a total field")
-                            as u32;
+                    let total_tracks = selected_playlist
+                        .tracks
+                        .get("total")
+                        .and_then(|total| total.as_u64())
+                        .expect("playlist.tracks object should have a total field")
+                        as u32;
 
-                        if app.large_search_limit < total_tracks {
-                            app.playlist_offset =
-                                total_tracks - (total_tracks % app.large_search_limit);
-                            let playlist_id = selected_playlist.id.to_owned();
-                            app.get_playlist_tracks(playlist_id);
-                        }
+                    if app.large_search_limit < total_tracks {
+                        app.playlist_offset =
+                            total_tracks - (total_tracks % app.large_search_limit);
+                        let playlist_id = selected_playlist.id.to_owned();
+                        app.get_playlist_tracks(playlist_id);
                     }
                 }
             }
-            TrackTableContext::RecommendedTracks => {}
-            TrackTableContext::SavedTracks => {}
-            TrackTableContext::AlbumSearch => {}
-            TrackTableContext::PlaylistSearch => {}
-        },
-        None => {}
+        }
     }
 }
 
@@ -207,7 +196,6 @@ fn on_enter(app: &mut App) {
                     );
                 };
             }
-            TrackTableContext::AlbumSearch => {}
             TrackTableContext::PlaylistSearch => {
                 let TrackTable {
                     selected_index,
@@ -236,31 +224,43 @@ fn on_enter(app: &mut App) {
                     app.start_playback(context_uri, None, Some(app.track_table.selected_index));
                 };
             }
+            TrackTableContext::MadeForYou => {
+                if let Some(_track) = tracks.get(*selected_index) {
+                    let context_uri = Some(
+                        app.library.made_for_you_playlists.pages[0]
+                            .items
+                            .get(app.made_for_you_index)
+                            .unwrap()
+                            .uri
+                            .to_owned(),
+                    );
+
+                    app.start_playback(
+                        context_uri,
+                        None,
+                        Some(app.track_table.selected_index as usize),
+                    );
+                }
+            }
+            _ => {}
         },
         None => {}
     };
 }
 fn jump_to_start(app: &mut App) {
-    match &app.track_table.context {
-        Some(context) => match context {
-            TrackTableContext::MyPlaylists => {
-                if let (Some(playlists), Some(selected_playlist_index)) =
-                    (&app.playlists, &app.selected_playlist_index)
+    if let Some(context) = &app.track_table.context {
+        if let TrackTableContext::MyPlaylists = context {
+            if let (Some(playlists), Some(selected_playlist_index)) =
+                (&app.playlists, &app.selected_playlist_index)
+            {
+                if let Some(selected_playlist) =
+                    playlists.items.get(selected_playlist_index.to_owned())
                 {
-                    if let Some(selected_playlist) =
-                        playlists.items.get(selected_playlist_index.to_owned())
-                    {
-                        app.playlist_offset = 0;
-                        let playlist_id = selected_playlist.id.to_owned();
-                        app.get_playlist_tracks(playlist_id);
-                    }
+                    app.playlist_offset = 0;
+                    let playlist_id = selected_playlist.id.to_owned();
+                    app.get_playlist_tracks(playlist_id);
                 }
             }
-            TrackTableContext::RecommendedTracks => {}
-            TrackTableContext::SavedTracks => {}
-            TrackTableContext::AlbumSearch => {}
-            TrackTableContext::PlaylistSearch => {}
-        },
-        None => {}
+        }
     }
 }

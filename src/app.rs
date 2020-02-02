@@ -46,8 +46,8 @@ const DEFAULT_ROUTE: Route = Route {
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
-    index: usize,
-    pages: Vec<T>,
+    pub index: usize,
+    pub pages: Vec<T>,
 }
 
 impl<T> ScrollableResultPages<T> {
@@ -82,6 +82,7 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 pub struct Library {
     pub selected_index: usize,
     pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
+    pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
     pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
     pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
 }
@@ -163,6 +164,7 @@ pub enum TrackTableContext {
     PlaylistSearch,
     SavedTracks,
     RecommendedTracks,
+    MadeForYou,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -268,6 +270,7 @@ pub struct App {
     pub track_table: TrackTable,
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
+    pub made_for_you_index: usize,
     pub artists_list_index: usize,
     pub clipboard_context: Option<ClipboardContext>,
 }
@@ -277,6 +280,7 @@ impl App {
         App {
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            made_for_you_index: 0,
             artists_list_index: 0,
             artists: vec![],
             artist: None,
@@ -290,6 +294,7 @@ impl App {
             home_scroll: 0,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
+                made_for_you_playlists: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),
                 saved_artists: ScrollableResultPages::new(),
                 selected_index: 0,
@@ -1195,6 +1200,56 @@ impl App {
             let selected_id = &selected_playlist.id;
             if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
                 self.handle_error(e);
+            }
+        }
+    }
+
+    pub fn get_made_for_you(&mut self) {
+        // TODO: replace searches when relevant endpoint is added
+        const DISCOVER_WEEKLY: &str = "Discover Weekly";
+        const RELEASE_RADAR: &str = "Release Radar";
+        const ON_REPEAT: &str = "On Repeat";
+        const REPEAT_REWIND: &str = "Repeat Rewind";
+
+        if self.library.made_for_you_playlists.pages.is_empty() {
+            self.made_for_you_search_and_add(DISCOVER_WEEKLY);
+            self.made_for_you_search_and_add(RELEASE_RADAR);
+            self.made_for_you_search_and_add(ON_REPEAT);
+            self.made_for_you_search_and_add(REPEAT_REWIND);
+        }
+    }
+
+    fn made_for_you_search_and_add(&mut self, search_string: &str) {
+        const SEARCH_LIMIT: u32 = 10;
+        const SPOTIFY_ID: &str = "spotify";
+
+        if let (Some(spotify), Some(user)) = (self.spotify.clone(), self.user.clone()) {
+            let user_country =
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
+            match spotify.search_playlist(search_string, SEARCH_LIMIT, 0, user_country) {
+                Ok(mut search_playlists) => {
+                    let mut filtered_playlists = search_playlists
+                        .playlists
+                        .items
+                        .iter()
+                        .filter(|playlist| playlist.owner.id == SPOTIFY_ID)
+                        .map(|playlist| playlist.to_owned())
+                        .collect::<Vec<SimplifiedPlaylist>>();
+
+                    if !self.library.made_for_you_playlists.pages.is_empty() {
+                        self.library.made_for_you_playlists.pages[0]
+                            .items
+                            .append(&mut filtered_playlists);
+                    } else {
+                        search_playlists.playlists.items = filtered_playlists;
+                        self.library
+                            .made_for_you_playlists
+                            .add_pages(search_playlists.playlists);
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
             }
         }
     }
