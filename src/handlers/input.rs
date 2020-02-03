@@ -65,7 +65,7 @@ pub fn handler(key: Key, app: &mut App) {
                             app.push_navigation_stack(
                                 RouteId::AlbumTracks,
                                 ActiveBlock::AlbumTracks,
-                            )
+                            );
                         }
                         Err(e) => {
                             app.handle_error(e);

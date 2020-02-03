@@ -476,10 +476,36 @@ where
         current_route.hovered_block == ActiveBlock::AlbumTracks,
     );
 
-    let album_ui = match app.album_table_context.clone() {
-        AlbumTableContext::Simplified => match &app.selected_album {
+    let album_ui = match &app.album_table_context {
+        AlbumTableContext::Simplified => match &app.selected_album_simplified {
+            Some(selected_album_simplified) => Some(AlbumUI {
+                items: selected_album_simplified
+                    .tracks
+                    .items
+                    .iter()
+                    .map(|item| TableItem {
+                        id: item.id.clone().unwrap_or_else(|| "".to_string()),
+                        format: vec![
+                            "".to_string(),
+                            item.track_number.to_string(),
+                            item.name.to_owned(),
+                            millis_to_minutes(u128::from(item.duration_ms)),
+                        ],
+                    })
+                    .collect::<Vec<TableItem>>(),
+                title: format!(
+                    "{} by {}",
+                    selected_album_simplified.album.name,
+                    create_artist_string(&selected_album_simplified.album.artists)
+                ),
+                selected_index: selected_album_simplified.selected_index,
+            }),
+            None => None,
+        },
+        AlbumTableContext::Full => match app.selected_album_full.clone() {
             Some(selected_album) => Some(AlbumUI {
                 items: selected_album
+                    .album
                     .tracks
                     .items
                     .iter()
@@ -498,37 +524,8 @@ where
                     selected_album.album.name,
                     create_artist_string(&selected_album.album.artists)
                 ),
-                selected_index: selected_album.selected_index,
+                selected_index: app.saved_album_tracks_index,
             }),
-            None => None,
-        },
-        AlbumTableContext::Full => match &app.library.saved_albums.get_results(None) {
-            Some(albums) => match albums.items.get(app.album_list_index) {
-                Some(selected_album) => Some(AlbumUI {
-                    items: selected_album
-                        .album
-                        .tracks
-                        .items
-                        .iter()
-                        .map(|item| TableItem {
-                            id: item.id.clone().unwrap_or_else(|| "".to_string()),
-                            format: vec![
-                                "".to_string(),
-                                item.track_number.to_string(),
-                                item.name.to_owned(),
-                                millis_to_minutes(u128::from(item.duration_ms)),
-                            ],
-                        })
-                        .collect::<Vec<TableItem>>(),
-                    title: format!(
-                        "{} by {}",
-                        selected_album.album.name,
-                        create_artist_string(&selected_album.album.artists)
-                    ),
-                    selected_index: app.saved_album_tracks_index,
-                }),
-                None => None,
-            },
             None => None,
         },
     };
