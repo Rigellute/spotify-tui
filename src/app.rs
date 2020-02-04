@@ -149,6 +149,7 @@ pub enum RouteId {
     Recommendations,
 }
 
+#[derive(Debug)]
 pub struct Route {
     pub id: RouteId,
     pub active_block: ActiveBlock,
@@ -165,7 +166,7 @@ pub enum TrackTableContext {
     RecommendedTracks,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Copy)]
 pub enum AlbumTableContext {
     Simplified,
     Full,
@@ -257,7 +258,7 @@ pub struct App {
     pub recommendations_seed: String,
     pub recommendations_context: Option<RecommendationsContext>,
     pub search_results: SearchResult,
-    pub selected_album: Option<SelectedAlbum>,
+    pub selected_album_simplified: Option<SelectedAlbum>,
     pub selected_album_full: Option<SelectedFullAlbum>,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
@@ -285,7 +286,7 @@ impl App {
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
-            selected_album: None,
+            selected_album_simplified: None,
             selected_album_full: None,
             home_scroll: 0,
             library: Library {
@@ -926,7 +927,7 @@ impl App {
             if let Some(spotify) = &self.spotify {
                 match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
                     Ok(tracks) => {
-                        self.selected_album = Some(SelectedAlbum {
+                        self.selected_album_simplified = Some(SelectedAlbum {
                             album,
                             tracks: tracks.clone(),
                             selected_index: 0,

@@ -1,6 +1,6 @@
 extern crate unicode_width;
 
-use super::super::app::{ActiveBlock, App, RouteId};
+use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
 use crate::event::Key;
 use rspotify::spotify::senum::Country;
 use std::convert::TryInto;
@@ -30,16 +30,14 @@ pub fn handler(key: Key, app: &mut App) {
             if !app.input.is_empty() && app.input_idx > 0 {
                 let last_c = app.input[app.input_idx - 1];
                 app.input_idx -= 1;
-                let width: u16 = UnicodeWidthChar::width(last_c).unwrap().try_into().unwrap();
-                app.input_cursor_position -= width;
+                app.input_cursor_position -= compute_character_width(last_c);
             }
         }
         Key::Right => {
             if app.input_idx < app.input.len() {
                 let next_c = app.input[app.input_idx];
                 app.input_idx += 1;
-                let width: u16 = UnicodeWidthChar::width(next_c).unwrap().try_into().unwrap();
-                app.input_cursor_position += width;
+                app.input_cursor_position += compute_character_width(next_c);
             }
         }
         Key::Esc => {
@@ -50,6 +48,32 @@ pub fn handler(key: Key, app: &mut App) {
                 let country =
                     Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
                 let input_str: String = app.input.iter().collect();
+
+                let album_url_prefix = "https://open.spotify.com/album/";
+
+                if input_str.starts_with(album_url_prefix) {
+                    let album_id = input_str.trim_start_matches(album_url_prefix);
+                    match spotify.album(&album_id) {
+                        Ok(album) => {
+                            let selected_album = SelectedFullAlbum {
+                                album,
+                                selected_index: 0,
+                            };
+
+                            app.selected_album_full = Some(selected_album);
+                            app.album_table_context = AlbumTableContext::Full;
+                            app.push_navigation_stack(
+                                RouteId::AlbumTracks,
+                                ActiveBlock::AlbumTracks,
+                            );
+                        }
+                        Err(e) => {
+                            app.handle_error(e);
+                        }
+                    }
+                    return;
+                }
+
                 // Can I run these functions in parellel?
                 match spotify.search_track(&input_str, app.small_search_limit, 0, country) {
                     Ok(result) => {
@@ -96,15 +120,13 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Char(c) => {
             app.input.insert(app.input_idx, c);
             app.input_idx += 1;
-            let width: u16 = UnicodeWidthChar::width(c).unwrap().try_into().unwrap();
-            app.input_cursor_position += width;
+            app.input_cursor_position += compute_character_width(c);
         }
         Key::Backspace => {
             if !app.input.is_empty() && app.input_idx > 0 {
                 let last_c = app.input.remove(app.input_idx - 1);
                 app.input_idx -= 1;
-                let width: u16 = UnicodeWidthChar::width(last_c).unwrap().try_into().unwrap();
-                app.input_cursor_position -= width;
+                app.input_cursor_position -= compute_character_width(last_c);
             }
         }
         Key::Delete => {
@@ -116,12 +138,26 @@ pub fn handler(key: Key, app: &mut App) {
     }
 }
 
+fn compute_character_width(character: char) -> u16 {
+    UnicodeWidthChar::width(character)
+        .unwrap()
+        .try_into()
+        .unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn str_to_vec_char(s: &str) -> Vec<char> {
         String::from(s).chars().collect()
+    }
+
+    #[test]
+    fn test_compute_character_width_with_multiple_characters() {
+        assert_eq!(1, compute_character_width('a'));
+        assert_eq!(1, compute_character_width('ß'));
+        assert_eq!(1, compute_character_width('ç'));
     }
 
     #[test]
