@@ -112,7 +112,7 @@ pub fn handler(key: Key, app: &mut App) {
             let width: u16 = UnicodeWidthChar::width(c).unwrap().try_into().unwrap();
             app.input_cursor_position += width;
         }
-        Key::Backspace => {
+        Key::Backspace | Key::Ctrl('h') => {
             if !app.input.is_empty() && app.input_idx > 0 {
                 let last_c = app.input.remove(app.input_idx - 1);
                 app.input_idx -= 1;
