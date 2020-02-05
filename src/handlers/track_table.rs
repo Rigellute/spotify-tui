@@ -69,7 +69,9 @@ pub fn handler(key: Key, app: &mut App) {
                         let (playlists, selected_playlist_index) =
                             (&app.library.made_for_you_playlists, &app.made_for_you_index);
 
-                        if let Some(selected_playlist) = playlists.pages[0]
+                        if let Some(selected_playlist) = playlists
+                            .get_results(Some(0))
+                            .unwrap()
                             .items
                             .get(selected_playlist_index.to_owned())
                         {
@@ -115,7 +117,10 @@ pub fn handler(key: Key, app: &mut App) {
                     TrackTableContext::PlaylistSearch => {}
                     TrackTableContext::MadeForYou => {
                         let (playlists, selected_playlist_index) = (
-                            &app.library.made_for_you_playlists.pages[0],
+                            &app.library
+                                .made_for_you_playlists
+                                .get_results(Some(0))
+                                .unwrap(),
                             app.made_for_you_index,
                         );
                         if app.made_for_you_offset >= app.large_search_limit {
@@ -274,7 +279,10 @@ fn on_enter(app: &mut App) {
             TrackTableContext::MadeForYou => {
                 if let Some(_track) = tracks.get(*selected_index) {
                     let context_uri = Some(
-                        app.library.made_for_you_playlists.pages[0]
+                        app.library
+                            .made_for_you_playlists
+                            .get_results(Some(0))
+                            .unwrap()
                             .items
                             .get(app.made_for_you_index)
                             .unwrap()

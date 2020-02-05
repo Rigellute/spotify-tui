@@ -46,8 +46,8 @@ const DEFAULT_ROUTE: Route = Route {
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
-    pub index: usize,
-    pub pages: Vec<T>,
+    index: usize,
+    pages: Vec<T>,
 }
 
 impl<T> ScrollableResultPages<T> {
@@ -62,6 +62,13 @@ impl<T> ScrollableResultPages<T> {
         match at_index {
             Some(index) => self.pages.get(index),
             None => self.pages.get(self.index),
+        }
+    }
+
+    pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
+        match at_index {
+            Some(index) => self.pages.get_mut(index),
+            None => self.pages.get_mut(self.index),
         }
     }
 
@@ -1262,7 +1269,10 @@ impl App {
                         .collect::<Vec<SimplifiedPlaylist>>();
 
                     if !self.library.made_for_you_playlists.pages.is_empty() {
-                        self.library.made_for_you_playlists.pages[0]
+                        self.library
+                            .made_for_you_playlists
+                            .get_mut_results(None)
+                            .unwrap()
                             .items
                             .append(&mut filtered_playlists);
                     } else {

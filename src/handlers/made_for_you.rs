@@ -45,7 +45,10 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Enter => {
             let (playlists, selected_playlist_index) = (
-                &app.library.made_for_you_playlists.pages[0],
+                &app.library
+                    .made_for_you_playlists
+                    .get_results(Some(0))
+                    .unwrap(),
                 &app.made_for_you_index,
             );
             app.track_table.context = Some(TrackTableContext::MadeForYou);
