@@ -38,6 +38,7 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Enter => match app.library.selected_index {
             // Made For You,
             0 => {
+                app.get_made_for_you();
                 app.push_navigation_stack(RouteId::MadeForYou, ActiveBlock::MadeForYou);
             }
             // Recently Played,

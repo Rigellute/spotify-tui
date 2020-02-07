@@ -61,7 +61,7 @@ pub fn millis_to_minutes(millis: u128) -> String {
 pub fn display_track_progress(progress: u128, track_duration: u32) -> String {
     let duration = millis_to_minutes(u128::from(track_duration));
     let progress_display = millis_to_minutes(progress);
-    let remaining = millis_to_minutes(u128::from(track_duration) - progress);
+    let remaining = millis_to_minutes(u128::from(track_duration).saturating_sub(progress));
 
     format!("{}/{} (-{})", progress_display, duration, remaining,)
 }

@@ -65,6 +65,13 @@ impl<T> ScrollableResultPages<T> {
         }
     }
 
+    pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
+        match at_index {
+            Some(index) => self.pages.get_mut(index),
+            None => self.pages.get_mut(self.index),
+        }
+    }
+
     pub fn add_pages(&mut self, new_pages: T) {
         self.pages.push(new_pages);
         // Whenever a new page is added, set the active index to the end of the vector
@@ -82,6 +89,7 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 pub struct Library {
     pub selected_index: usize,
     pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
+    pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
     pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
     pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
 }
@@ -164,6 +172,7 @@ pub enum TrackTableContext {
     PlaylistSearch,
     SavedTracks,
     RecommendedTracks,
+    MadeForYou,
 }
 
 #[derive(Clone, PartialEq, Debug, Copy)]
@@ -250,8 +259,10 @@ pub struct App {
     pub large_search_limit: u32,
     pub library: Library,
     pub playlist_offset: u32,
+    pub made_for_you_offset: u32,
     pub playback_params: PlaybackParams,
     pub playlist_tracks: Option<Page<PlaylistTrack>>,
+    pub made_for_you_tracks: Option<Page<PlaylistTrack>>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
     pub recommended_tracks: Vec<FullTrack>,
@@ -269,6 +280,7 @@ pub struct App {
     pub track_table: TrackTable,
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
+    pub made_for_you_index: usize,
     pub artists_list_index: usize,
     pub clipboard_context: Option<ClipboardContext>,
 }
@@ -278,6 +290,7 @@ impl App {
         App {
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            made_for_you_index: 0,
             artists_list_index: 0,
             artists: vec![],
             artist: None,
@@ -291,6 +304,7 @@ impl App {
             home_scroll: 0,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
+                made_for_you_playlists: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),
                 saved_artists: ScrollableResultPages::new(),
                 selected_index: 0,
@@ -306,7 +320,9 @@ impl App {
             input_idx: 0,
             input_cursor_position: 0,
             playlist_offset: 0,
+            made_for_you_offset: 0,
             playlist_tracks: None,
+            made_for_you_tracks: None,
             playlists: None,
             recommended_tracks: vec![],
             recommendations_context: None,
@@ -716,6 +732,26 @@ impl App {
                 };
             }
             None => {}
+        }
+    }
+
+    pub fn get_made_for_you_playlist_tracks(&mut self, playlist_id: String) {
+        if let Some(spotify) = &self.spotify {
+            if let Ok(made_for_you_tracks) = spotify.user_playlist_tracks(
+                "spotify",
+                &playlist_id,
+                None,
+                Some(self.large_search_limit),
+                Some(self.made_for_you_offset),
+                None,
+            ) {
+                self.set_playlist_tracks_to_table(&made_for_you_tracks);
+
+                self.made_for_you_tracks = Some(made_for_you_tracks);
+                if self.get_current_route().id != RouteId::TrackTable {
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                }
+            }
         }
     }
 
@@ -1196,6 +1232,60 @@ impl App {
             let selected_id = &selected_playlist.id;
             if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
                 self.handle_error(e);
+            }
+        }
+    }
+
+    pub fn get_made_for_you(&mut self) {
+        // TODO: replace searches when relevant endpoint is added
+        const DISCOVER_WEEKLY: &str = "Discover Weekly";
+        const RELEASE_RADAR: &str = "Release Radar";
+        const ON_REPEAT: &str = "On Repeat";
+        const REPEAT_REWIND: &str = "Repeat Rewind";
+
+        if self.library.made_for_you_playlists.pages.is_empty() {
+            self.made_for_you_search_and_add(DISCOVER_WEEKLY);
+            self.made_for_you_search_and_add(RELEASE_RADAR);
+            self.made_for_you_search_and_add(ON_REPEAT);
+            self.made_for_you_search_and_add(REPEAT_REWIND);
+        }
+    }
+
+    fn made_for_you_search_and_add(&mut self, search_string: &str) {
+        const SPOTIFY_ID: &str = "spotify";
+
+        if let (Some(spotify), Some(user)) = (self.spotify.clone(), self.user.clone()) {
+            let user_country =
+                Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
+            match spotify.search_playlist(search_string, self.large_search_limit, 0, user_country) {
+                Ok(mut search_playlists) => {
+                    let mut filtered_playlists = search_playlists
+                        .playlists
+                        .items
+                        .iter()
+                        .filter(|playlist| {
+                            playlist.owner.id == SPOTIFY_ID && playlist.name == search_string
+                        })
+                        .map(|playlist| playlist.to_owned())
+                        .collect::<Vec<SimplifiedPlaylist>>();
+
+                    if !self.library.made_for_you_playlists.pages.is_empty() {
+                        self.library
+                            .made_for_you_playlists
+                            .get_mut_results(None)
+                            .unwrap()
+                            .items
+                            .append(&mut filtered_playlists);
+                    } else {
+                        search_playlists.playlists.items = filtered_playlists;
+                        self.library
+                            .made_for_you_playlists
+                            .add_pages(search_playlists.playlists);
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
             }
         }
     }

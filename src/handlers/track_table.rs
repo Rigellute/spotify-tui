@@ -65,6 +65,27 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
+                    TrackTableContext::MadeForYou => {
+                        let (playlists, selected_playlist_index) =
+                            (&app.library.made_for_you_playlists, &app.made_for_you_index);
+
+                        if let Some(selected_playlist) = playlists
+                            .get_results(Some(0))
+                            .unwrap()
+                            .items
+                            .get(selected_playlist_index.to_owned())
+                        {
+                            if let Some(playlist_tracks) = &app.made_for_you_tracks {
+                                if app.made_for_you_offset + app.large_search_limit
+                                    < playlist_tracks.total
+                                {
+                                    app.made_for_you_offset += app.large_search_limit;
+                                    let playlist_id = selected_playlist.id.to_owned();
+                                    app.get_made_for_you_playlist_tracks(playlist_id);
+                                }
+                            }
+                        }
+                    }
                 },
                 None => {}
             };
@@ -94,6 +115,24 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
+                    TrackTableContext::MadeForYou => {
+                        let (playlists, selected_playlist_index) = (
+                            &app.library
+                                .made_for_you_playlists
+                                .get_results(Some(0))
+                                .unwrap(),
+                            app.made_for_you_index,
+                        );
+                        if app.made_for_you_offset >= app.large_search_limit {
+                            app.made_for_you_offset -= app.large_search_limit;
+                        }
+                        if let Some(selected_playlist) =
+                            playlists.items.get(selected_playlist_index)
+                        {
+                            let playlist_id = selected_playlist.id.to_owned();
+                            app.get_made_for_you_playlist_tracks(playlist_id);
+                        }
+                    }
                 },
                 None => {}
             };
@@ -152,6 +191,7 @@ fn jump_to_end(app: &mut App) {
             TrackTableContext::SavedTracks => {}
             TrackTableContext::AlbumSearch => {}
             TrackTableContext::PlaylistSearch => {}
+            TrackTableContext::MadeForYou => {}
         },
         None => {}
     }
@@ -236,6 +276,27 @@ fn on_enter(app: &mut App) {
                     app.start_playback(context_uri, None, Some(app.track_table.selected_index));
                 };
             }
+            TrackTableContext::MadeForYou => {
+                if let Some(_track) = tracks.get(*selected_index) {
+                    let context_uri = Some(
+                        app.library
+                            .made_for_you_playlists
+                            .get_results(Some(0))
+                            .unwrap()
+                            .items
+                            .get(app.made_for_you_index)
+                            .unwrap()
+                            .uri
+                            .to_owned(),
+                    );
+
+                    app.start_playback(
+                        context_uri,
+                        None,
+                        Some(app.track_table.selected_index + app.made_for_you_offset as usize),
+                    );
+                }
+            }
         },
         None => {}
     };
@@ -260,6 +321,7 @@ fn jump_to_start(app: &mut App) {
             TrackTableContext::SavedTracks => {}
             TrackTableContext::AlbumSearch => {}
             TrackTableContext::PlaylistSearch => {}
+            TrackTableContext::MadeForYou => {}
         },
         None => {}
     }
