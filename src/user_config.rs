@@ -6,10 +6,62 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use tui::style::Color;
 
 const FILE_NAME: &str = "config.yml";
 const CONFIG_DIR: &str = ".config";
 const APP_CONFIG_DIR: &str = "spotify-tui";
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct UserTheme {
+    pub active: Option<String>,
+    pub banner: Option<String>,
+    pub error_border: Option<String>,
+    pub error_text: Option<String>,
+    pub hint: Option<String>,
+    pub hovered: Option<String>,
+    pub inactive: Option<String>,
+    pub playbar_background: Option<String>,
+    pub playbar_progress: Option<String>,
+    pub playbar_text: Option<String>,
+    pub selected: Option<String>,
+    pub text: Option<String>,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Theme {
+    pub active: Color,
+    pub banner: Color,
+    pub error_border: Color,
+    pub error_text: Color,
+    pub hint: Color,
+    pub hovered: Color,
+    pub inactive: Color,
+    pub playbar_background: Color,
+    pub playbar_progress: Color,
+    pub playbar_text: Color,
+    pub selected: Color,
+    pub text: Color,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Theme {
+            active: Color::Cyan,
+            banner: Color::LightCyan,
+            error_border: Color::Red,
+            error_text: Color::LightRed,
+            hint: Color::Yellow,
+            hovered: Color::Magenta,
+            inactive: Color::Gray,
+            playbar_background: Color::Black,
+            playbar_progress: Color::LightCyan,
+            playbar_text: Color::White,
+            selected: Color::LightCyan,
+            text: Color::White,
+        }
+    }
+}
 
 fn parse_key(key: String) -> Result<Key, failure::Error> {
     fn get_single_char(string: &str) -> char {
@@ -142,16 +194,19 @@ pub struct BehaviorConfig {
 pub struct UserConfigString {
     keybindings: Option<KeyBindingsString>,
     behavior: Option<BehaviorConfigString>,
+    theme: Option<UserTheme>,
 }
 
 pub struct UserConfig {
     pub keys: KeyBindings,
+    pub theme: Theme,
     pub behavior: BehaviorConfig,
 }
 
 impl UserConfig {
     pub fn new() -> UserConfig {
         UserConfig {
+            theme: Default::default(),
             keys: KeyBindings {
                 back: Key::Char('q'),
                 jump_to_album: Key::Char('a'),
@@ -240,19 +295,37 @@ impl UserConfig {
         Ok(())
     }
 
-    pub fn load_behaviorconfig(
-        &mut self,
-        behaviorconfig: BehaviorConfigString,
-    ) -> Result<(), failure::Error> {
-        macro_rules! to_behavior {
+    pub fn load_theme(&mut self, theme: UserTheme) -> Result<(), failure::Error> {
+        macro_rules! to_theme_item {
             ($name: ident) => {
-                if let Some(behavior_string) = behaviorconfig.$name {
-                    self.behavior.$name = behavior_string;
+                if let Some(theme_item) = theme.$name {
+                    self.theme.$name = parse_theme_item(&theme_item)?;
                 }
             };
-        }
+        };
 
-        to_behavior!(seek_milliseconds);
+        to_theme_item!(active);
+        to_theme_item!(banner);
+        to_theme_item!(error_border);
+        to_theme_item!(error_text);
+        to_theme_item!(hint);
+        to_theme_item!(hovered);
+        to_theme_item!(inactive);
+        to_theme_item!(playbar_background);
+        to_theme_item!(playbar_progress);
+        to_theme_item!(playbar_text);
+        to_theme_item!(selected);
+        to_theme_item!(text);
+        Ok(())
+    }
+
+    pub fn load_behaviorconfig(
+        &mut self,
+        behavior_config: BehaviorConfigString,
+    ) -> Result<(), failure::Error> {
+        if let Some(behavior_string) = behavior_config.seek_milliseconds {
+            self.behavior.seek_milliseconds = behavior_string;
+        }
 
         Ok(())
     }
@@ -275,12 +348,52 @@ impl UserConfig {
             if let Some(behavior) = config_yml.behavior {
                 self.load_behaviorconfig(behavior)?;
             }
+            if let Some(theme) = config_yml.theme {
+                self.load_theme(theme)?;
+            }
 
             Ok(())
         } else {
             Ok(())
         }
     }
+}
+
+fn parse_theme_item(theme_item: &str) -> Result<Color, failure::Error> {
+    let color = match theme_item {
+        "Reset" => Color::Reset,
+        "Black" => Color::Black,
+        "Red" => Color::Red,
+        "Green" => Color::Green,
+        "Yellow" => Color::Yellow,
+        "Blue" => Color::Blue,
+        "Magenta" => Color::Magenta,
+        "Cyan" => Color::Cyan,
+        "Gray" => Color::Gray,
+        "DarkGray" => Color::DarkGray,
+        "LightRed" => Color::LightRed,
+        "LightGreen" => Color::LightGreen,
+        "LightYellow" => Color::LightYellow,
+        "LightBlue" => Color::LightBlue,
+        "LightMagenta" => Color::LightMagenta,
+        "LightCyan" => Color::LightCyan,
+        "White" => Color::White,
+        _ => {
+            let colors = theme_item.split(',').collect::<Vec<&str>>();
+            if let (Some(r), Some(g), Some(b)) = (colors.get(0), colors.get(1), colors.get(2)) {
+                Color::Rgb(
+                    r.trim().parse::<u8>()?,
+                    g.trim().parse::<u8>()?,
+                    b.trim().parse::<u8>()?,
+                )
+            } else {
+                println!("Unexpected color {}", theme_item);
+                Color::Black
+            }
+        }
+    };
+
+    Ok(color)
 }
 
 #[cfg(test)]
@@ -296,6 +409,36 @@ mod tests {
         assert_eq!(parse_key(String::from("-")).unwrap(), Key::Char('-'));
         assert_eq!(parse_key(String::from("esc")).unwrap(), Key::Esc);
         assert_eq!(parse_key(String::from("del")).unwrap(), Key::Delete);
+    }
+
+    #[test]
+    fn parse_theme_item_test() {
+        use super::parse_theme_item;
+        use tui::style::Color;
+        assert_eq!(parse_theme_item("Reset").unwrap(), Color::Reset);
+        assert_eq!(parse_theme_item("Black").unwrap(), Color::Black);
+        assert_eq!(parse_theme_item("Red").unwrap(), Color::Red);
+        assert_eq!(parse_theme_item("Green").unwrap(), Color::Green);
+        assert_eq!(parse_theme_item("Yellow").unwrap(), Color::Yellow);
+        assert_eq!(parse_theme_item("Blue").unwrap(), Color::Blue);
+        assert_eq!(parse_theme_item("Magenta").unwrap(), Color::Magenta);
+        assert_eq!(parse_theme_item("Cyan").unwrap(), Color::Cyan);
+        assert_eq!(parse_theme_item("Gray").unwrap(), Color::Gray);
+        assert_eq!(parse_theme_item("DarkGray").unwrap(), Color::DarkGray);
+        assert_eq!(parse_theme_item("LightRed").unwrap(), Color::LightRed);
+        assert_eq!(parse_theme_item("LightGreen").unwrap(), Color::LightGreen);
+        assert_eq!(parse_theme_item("LightYellow").unwrap(), Color::LightYellow);
+        assert_eq!(parse_theme_item("LightBlue").unwrap(), Color::LightBlue);
+        assert_eq!(
+            parse_theme_item("LightMagenta").unwrap(),
+            Color::LightMagenta
+        );
+        assert_eq!(parse_theme_item("LightCyan").unwrap(), Color::LightCyan);
+        assert_eq!(parse_theme_item("White").unwrap(), Color::White);
+        assert_eq!(
+            parse_theme_item("23, 43, 45").unwrap(),
+            Color::Rgb(23, 43, 45)
+        );
     }
 
     #[test]
