@@ -1,0 +1,45 @@
+name: spt
+base: core18
+adopt-info: spotify-tui
+summary: Spotify TUI
+description: |
+  Spotify for the terminal written in Rust
+
+grade: stable
+confinement: strict
+
+parts:
+  spotify-tui:
+    plugin: rust
+    source: https://github.com/Rigellute/spotify-tui.git
+    build-packages:
+      - libssl-dev
+      - pkg-config
+    override-pull: |
+      snapcraftctl pull
+      last_committed_tag="$(git describe --tags --abbrev=0)"
+      echo $last_committed_tag
+      last_released_tag="$(snap info $SNAPCRAFT_PROJECT_NAME | awk '$1 == "beta:" { print $2 }')"
+      echo $last_released_tag
+      # If the latest tag from the upstream project has not been released to
+      # beta, build that tag instead of master.
+      if [ "${last_committed_tag}" != "${last_released_tag}" ]; then
+        VERSION=${last_committed_tag}
+        git fetch
+        git checkout "${VERSION}"
+      else
+        VERSION=$(git rev-parse --short HEAD)
+      fi
+      echo "Setting version to $VERSION"
+      snapcraftctl set-version "${VERSION}"
+
+apps:
+  spt:
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
+    command: spt
+    plugs:
+      - desktop
+      - network
+      - network-bind
+      - pulseaudio
