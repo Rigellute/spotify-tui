@@ -12,7 +12,7 @@ use rspotify::spotify::senum::RepeatState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
     Frame,
 };
@@ -69,7 +69,7 @@ pub struct TableItem {
     format: Vec<String>,
 }
 
-pub fn draw_help_menu<B>(f: &mut Frame<B>)
+pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
@@ -79,8 +79,8 @@ where
         .margin(2)
         .split(f.size());
 
-    let white = Style::default().fg(Color::White);
-    let gray = Style::default().fg(Color::White);
+    let white = Style::default().fg(app.user_config.theme.text);
+    let gray = Style::default().fg(app.user_config.theme.text);
     let header = ["Description", "Event", "Context"];
 
     let help_docs = get_help_docs();
@@ -98,7 +98,7 @@ where
                 .title_style(gray)
                 .border_style(gray),
         )
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .widths(&[
             Constraint::Length(50),
             Constraint::Length(40),
@@ -125,25 +125,24 @@ where
 
     let input_string: String = app.input.iter().collect();
     Paragraph::new([Text::raw(&input_string)].iter())
-        .style(Style::default().fg(Color::Yellow))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Search")
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
         .render(f, chunks[0]);
 
     let block = Block::default()
         .title("Help")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Gray))
-        .title_style(Style::default().fg(Color::Gray));
+        .border_style(Style::default().fg(app.user_config.theme.inactive))
+        .title_style(Style::default().fg(app.user_config.theme.inactive));
 
     Paragraph::new([Text::raw("Type ?")].iter())
         .block(block)
-        .style(Style::default().fg(Color::Gray))
+        .style(Style::default().fg(app.user_config.theme.inactive))
         .render(f, chunks[1]);
 }
 
@@ -244,6 +243,7 @@ where
     );
     draw_selectable_list(
         f,
+        app,
         layout_chunk,
         "Library",
         &LIBRARY_OPTIONS,
@@ -270,6 +270,7 @@ where
 
     draw_selectable_list(
         f,
+        app,
         layout_chunk,
         "Playlists",
         &playlist_items,
@@ -319,6 +320,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             song_artist_block[0],
             "Songs",
             &songs,
@@ -338,6 +340,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             song_artist_block[1],
             "Artists",
             &artists,
@@ -370,6 +373,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             albums_playlist_block[0],
             "Albums",
             &albums,
@@ -388,6 +392,7 @@ where
         };
         draw_selectable_list(
             f,
+            app,
             albums_playlist_block[1],
             "Playlists",
             &playlists,
@@ -741,8 +746,8 @@ where
             Block::default()
                 .borders(Borders::ALL)
                 .title(&title)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state))
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme))
                 .render(f, layout_chunk);
 
             let track_name = if app
@@ -757,15 +762,15 @@ where
             Paragraph::new(
                 [Text::styled(
                     create_artist_string(&track_item.artists),
-                    Style::default().fg(Color::White),
+                    Style::default().fg(app.user_config.theme.text),
                 )]
                 .iter(),
             )
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(app.user_config.theme.text))
             .block(
                 Block::default().title(&track_name).title_style(
                     Style::default()
-                        .fg(Color::LightCyan)
+                        .fg(app.user_config.theme.selected)
                         .modifier(Modifier::BOLD),
                 ),
             )
@@ -776,8 +781,8 @@ where
                 .block(Block::default().title(""))
                 .style(
                     Style::default()
-                        .fg(Color::LightCyan)
-                        .bg(Color::Black)
+                        .fg(app.user_config.theme.playbar_progress)
+                        .bg(app.user_config.theme.playbar_background)
                         .modifier(Modifier::ITALIC | Modifier::BOLD),
                 )
                 .percent(perc)
@@ -802,7 +807,7 @@ where
 
     let mut playing_text = vec![
         Text::raw("Api response: "),
-        Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
+        Text::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
         Text::styled(
             "
 
@@ -811,34 +816,34 @@ If you are trying to play a track, please check that
     2. Your playback device is active and selected - press `d` to go to device selection menu
     3. If you're using spotifyd as a playback device, your device name must not contain spaces
             ",
-            Style::default().fg(Color::White),
+            Style::default().fg(app.user_config.theme.text),
         ),
         Text::styled("
 Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
         ",
-        Style::default().fg(Color::Yellow)),
+        Style::default().fg(app.user_config.theme.hint)),
         Text::styled(
             "\nPress <Esc> to return",
-            Style::default().fg(Color::Gray),
+            Style::default().fg(app.user_config.theme.inactive),
         ),
     ];
 
     if app.client_config.device_id.is_none() {
         playing_text.push(Text::styled(
             "\nNo playback device is selected - follow point 2 above",
-            Style::default().fg(Color::LightMagenta),
+            Style::default().fg(app.user_config.theme.hint),
         ))
     }
 
     Paragraph::new(playing_text.iter())
         .wrap(true)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Error")
-                .title_style(Style::default().fg(Color::Red))
-                .border_style(Style::default().fg(Color::Red)),
+                .title_style(Style::default().fg(app.user_config.theme.error_border))
+                .border_style(Style::default().fg(app.user_config.theme.error_border)),
         )
         .render(f, chunks[0]);
 }
@@ -862,8 +867,8 @@ where
     Block::default()
         .title("Welcome!")
         .borders(Borders::ALL)
-        .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state))
+        .title_style(get_color(highlight_state, app.user_config.theme))
+        .border_style(get_color(highlight_state, app.user_config.theme))
         .render(f, layout_chunk);
 
     let changelog = include_str!("../../CHANGELOG.md").to_string();
@@ -876,7 +881,10 @@ where
         changelog.replace("\n## [Unreleased]\n", "")
     };
 
-    let top_text = vec![Text::styled(BANNER, Style::default().fg(Color::LightCyan))];
+    let top_text = vec![Text::styled(
+        BANNER,
+        Style::default().fg(app.user_config.theme.banner),
+    )];
 
     let bottom_text = vec![
         Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
@@ -885,13 +893,13 @@ where
 
     // Contains the banner
     Paragraph::new(top_text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(Block::default())
         .render(f, chunks[0]);
 
     // CHANGELOG
     Paragraph::new(bottom_text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(Block::default())
         .wrap(true)
         .scroll(app.home_scroll)
@@ -915,13 +923,13 @@ fn draw_not_implemented_yet<B>(
     let display_block = Block::default()
         .title(title)
         .borders(Borders::ALL)
-        .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state));
+        .title_style(get_color(highlight_state, app.user_config.theme))
+        .border_style(get_color(highlight_state, app.user_config.theme));
 
     let text = vec![Text::raw("Not implemented yet!")];
 
     Paragraph::new(text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(display_block)
         .wrap(true)
         .render(f, layout_chunk);
@@ -952,6 +960,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[0],
             &format!("{} - Top Tracks", &artist.artist_name),
             &top_tracks,
@@ -968,6 +977,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[1],
             "Albums",
             albums,
@@ -983,6 +993,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[2],
             "Related artists",
             &related_artists,
@@ -1010,13 +1021,17 @@ where
     ];
 
     Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .wrap(true)
         .block(
             Block::default()
                 .borders(Borders::NONE)
                 .title("Welcome to spotify-tui!")
-                .title_style(Style::default().fg(Color::Cyan).modifier(Modifier::BOLD)),
+                .title_style(
+                    Style::default()
+                        .fg(app.user_config.theme.active)
+                        .modifier(Modifier::BOLD),
+                ),
         )
         .render(f, chunks[0]);
 
@@ -1042,15 +1057,15 @@ where
             Block::default()
                 .title("Devices")
                 .borders(Borders::ALL)
-                .title_style(Style::default().fg(Color::LightCyan))
-                .border_style(Style::default().fg(Color::Gray)),
+                .title_style(Style::default().fg(app.user_config.theme.active))
+                .border_style(Style::default().fg(app.user_config.theme.inactive)),
         )
         .items(&items)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .select(app.selected_device_index)
         .highlight_style(
             Style::default()
-                .fg(Color::LightCyan)
+                .fg(app.user_config.theme.active)
                 .modifier(Modifier::BOLD),
         )
         .render(f, chunks[1]);
@@ -1226,6 +1241,7 @@ where
 
 fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
+    app: &App,
     layout_chunk: Rect,
     title: &str,
     items: &[S],
@@ -1240,13 +1256,13 @@ fn draw_selectable_list<B, S>(
             Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
         .items(items)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .select(selected_index)
-        .highlight_style(get_color(highlight_state).modifier(Modifier::BOLD))
+        .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD))
         .render(f, layout_chunk);
 }
 
@@ -1261,7 +1277,7 @@ fn draw_table<B>(
 ) where
     B: Backend,
 {
-    let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
+    let selected_style = get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD);
 
     let track_playing_index = match &app.current_playback_context {
         Some(ctx) => items.iter().position(|t| match &ctx.item {
@@ -1284,7 +1300,7 @@ fn draw_table<B>(
 
     let rows = items.iter().skip(offset).enumerate().map(|(i, item)| {
         let mut formatted_row = item.format.clone();
-        let mut style = Style::default().fg(Color::White); // default styling
+        let mut style = Style::default().fg(app.user_config.theme.text); // default styling
 
         // if table displays songs
         match header.id {
@@ -1296,7 +1312,9 @@ fn draw_table<B>(
                     {
                         if i == track_playing_offset_index {
                             formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
-                            style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
+                            style = Style::default()
+                                .fg(app.user_config.theme.active)
+                                .modifier(Modifier::BOLD);
                         }
                     }
                 }
@@ -1330,12 +1348,12 @@ fn draw_table<B>(
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
+                .style(Style::default().fg(app.user_config.theme.text))
                 .title(title)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .widths(&widths)
         .render(f, layout_chunk);
 }

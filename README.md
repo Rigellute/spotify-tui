@@ -7,7 +7,9 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-36-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A Spotify client for the terminal written in Rust.
@@ -154,6 +156,21 @@ The following is a sample config.yml file:
 ```yaml
 # Sample config file
 
+# The theme colours can be an rgb string of the form "255, 255, 255" or a string that references the colours from your terminal theme: Reset, Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, LightRed, LightGreen, LightYellow, LightBlue, LightMagenta, LightCyan, White.
+theme:
+  active: Cyan
+  banner: LightCyan
+  error_border: Red
+  error_text: LightRed
+  hint: Yellow
+  hovered: Magenta
+  inactive: Gray
+  playbar_background: Black
+  playbar_progress: LightCyan
+  playbar_text: White
+  selected: LightCyan
+  text: "255, 255, 255"
+
 behavior:
   seek_milliseconds: 5000
 
@@ -282,6 +299,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

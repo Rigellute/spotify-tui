@@ -1,6 +1,7 @@
 use super::super::app::{ActiveBlock, App, ArtistBlock, SearchResultBlock};
+use crate::user_config::Theme;
 use rspotify::spotify::model::artist::SimplifiedArtist;
-use tui::style::{Color, Style};
+use tui::style::Style;
 
 pub fn get_search_results_highlight_state(
     app: &App,
@@ -26,11 +27,11 @@ pub fn get_artist_highlight_state(app: &App, block_to_match: ArtistBlock) -> (bo
     }
 }
 
-pub fn get_color((is_active, is_hovered): (bool, bool)) -> Style {
+pub fn get_color((is_active, is_hovered): (bool, bool), theme: Theme) -> Style {
     match (is_active, is_hovered) {
-        (true, _) => Style::default().fg(Color::LightCyan),
-        (false, true) => Style::default().fg(Color::Magenta),
-        _ => Style::default().fg(Color::Gray),
+        (true, _) => Style::default().fg(theme.selected),
+        (false, true) => Style::default().fg(theme.hovered),
+        _ => Style::default().fg(theme.inactive),
     }
 }
 

@@ -207,7 +207,7 @@ fn main() -> Result<(), failure::Error> {
                 let current_route = app.get_current_route();
                 terminal.draw(|mut f| match current_route.active_block {
                     ActiveBlock::HelpMenu => {
-                        ui::draw_help_menu(&mut f);
+                        ui::draw_help_menu(&mut f, &app);
                     }
                     ActiveBlock::Error => {
                         ui::draw_error_screen(&mut f, &app);
