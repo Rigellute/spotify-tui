@@ -184,10 +184,12 @@ pub struct KeyBindings {
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BehaviorConfigString {
     pub seek_milliseconds: Option<u32>,
+    pub volume_increment: Option<u8>,
 }
 
 pub struct BehaviorConfig {
     pub seek_milliseconds: u32,
+    pub volume_increment: u8,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -229,6 +231,7 @@ impl UserConfig {
             },
             behavior: BehaviorConfig {
                 seek_milliseconds: 5 * 1000,
+                volume_increment: 10,
             },
         }
     }
@@ -325,6 +328,10 @@ impl UserConfig {
     ) -> Result<(), failure::Error> {
         if let Some(behavior_string) = behavior_config.seek_milliseconds {
             self.behavior.seek_milliseconds = behavior_string;
+        }
+
+        if let Some(behavior_string) = behavior_config.volume_increment {
+            self.behavior.volume_increment = behavior_string;
         }
 
         Ok(())
