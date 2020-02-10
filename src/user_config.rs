@@ -331,6 +331,12 @@ impl UserConfig {
         }
 
         if let Some(behavior_string) = behavior_config.volume_increment {
+            if behavior_string > 100 {
+                return Err(failure::format_err!(
+                    "Volume increment must be between 0 and 100, is {}",
+                    behavior_string,
+                ));
+            }
             self.behavior.volume_increment = behavior_string;
         }
 
