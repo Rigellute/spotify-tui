@@ -6,3 +6,9 @@
 .spotify_token_cache.json 
 .cached_device_id.txt
 spotify-tui.sketch
+
+spt*.txt
+*.snap
+.ci/lp-creds
+snapcraft-login
+secrets.tar
