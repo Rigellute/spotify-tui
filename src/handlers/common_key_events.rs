@@ -161,6 +161,7 @@ pub fn handle_right_event(app: &mut App) {
             }
             RouteId::SelectedDevice => {}
             RouteId::Error => {}
+            RouteId::Analysis => {}
         },
         _ => {}
     };

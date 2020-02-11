@@ -215,6 +215,9 @@ fn main() -> Result<(), failure::Error> {
                     ActiveBlock::SelectDevice => {
                         ui::draw_device_list(&mut f, &app);
                     }
+                    ActiveBlock::Analysis => {
+                        ui::draw_analysis(&mut f, &app);
+                    }
                     _ => {
                         ui::draw_main_layout(&mut f, &app);
                     }

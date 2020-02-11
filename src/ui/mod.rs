@@ -12,8 +12,10 @@ use rspotify::spotify::senum::RepeatState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Modifier, Style},
-    widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
+    style::{Color, Modifier, Style},
+    widgets::{
+        BarChart, Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget,
+    },
     Frame,
 };
 use util::{
@@ -67,6 +69,41 @@ pub struct TableHeaderItem<'a> {
 pub struct TableItem {
     id: String,
     format: Vec<String>,
+}
+
+pub fn draw_analysis<B>(f: &mut Frame<B>, app: &App)
+where
+    B: Backend,
+{
+    if let (Some(analysis), Some(context)) = (&app.audio_analysis, &app.current_playback_context) {
+        let segment = analysis.segments.iter().find(|segment| {
+            segment.start
+                >= context
+                    .progress_ms
+                    .map(|progress| progress / 1000)
+                    .unwrap_or(0) as f32
+        });
+
+        if let Some(segment) = segment {
+            let data: Vec<(&str, u64)> = segment
+                .pitches
+                .iter()
+                .map(|d| ("C", (d * 1000.0) as u64))
+                .collect();
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(100)].as_ref())
+                .margin(2)
+                .split(f.size());
+            BarChart::default()
+                .block(Block::default().title("Data1").borders(Borders::ALL))
+                .data(&data)
+                .bar_width(9)
+                .style(Style::default().fg(Color::Yellow))
+                .value_style(Style::default().fg(Color::Black).bg(Color::Yellow))
+                .render(f, chunks[0]);
+        };
+    }
 }
 
 pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
@@ -229,6 +266,7 @@ where
         }
         RouteId::Error => {} // This is handled as a "full screen" route in main.rs
         RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
+        RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
     };
 }
 

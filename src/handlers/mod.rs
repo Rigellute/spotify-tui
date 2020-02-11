@@ -1,5 +1,6 @@
 mod album_list;
 mod album_tracks;
+mod analysis;
 mod artist;
 mod artists;
 mod common_key_events;
@@ -79,6 +80,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         _ if key == app.user_config.keys.copy_album_url => {
             app.copy_album_url();
         }
+        Key::Char('v') => {
+            app.get_audio_analysis();
+        }
         _ => handle_block_events(key, app),
     }
 }
@@ -87,6 +91,9 @@ pub fn handle_app(key: Key, app: &mut App) {
 fn handle_block_events(key: Key, app: &mut App) {
     let current_route = app.get_current_route();
     match current_route.active_block {
+        ActiveBlock::Analysis => {
+            analysis::handler(key, app);
+        }
         ActiveBlock::ArtistBlock => {
             artist::handler(key, app);
         }
