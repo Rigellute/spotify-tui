@@ -25,7 +25,7 @@ clap = "2.33.0"
 unicode-width = "0.1.7"
 backtrace = "0.3.43"
 clipboard = "0.5.0"
-crossterm =  "0.15"
+crossterm =  "0.16"
 
 [[bin]]
 bench = false
