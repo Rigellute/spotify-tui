@@ -173,6 +173,7 @@ theme:
 
 behavior:
   seek_milliseconds: 5000
+  volume_increment: 10
 
 keybindings:
   # Key stroke can be used if it only uses two keys:

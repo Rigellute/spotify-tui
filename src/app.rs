@@ -588,7 +588,10 @@ impl App {
     pub fn increase_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
             let current_volume = context.device.volume_percent as u8;
-            let next_volume = min(current_volume + 10, 100);
+            let next_volume = min(
+                current_volume + self.user_config.behavior.volume_increment,
+                100,
+            );
 
             if next_volume != current_volume {
                 self.change_volume(next_volume);
@@ -599,7 +602,10 @@ impl App {
     pub fn decrease_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
             let current_volume = context.device.volume_percent as i8;
-            let next_volume = max(current_volume - 10, 0);
+            let next_volume = max(
+                current_volume - self.user_config.behavior.volume_increment as i8,
+                0,
+            );
 
             if next_volume != current_volume {
                 self.change_volume(next_volume as u8);
