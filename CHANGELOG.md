@@ -2,12 +2,20 @@
 
 ## [Unreleased]
 
-- Fix crash on small terminals [#231](https://github.com/Rigellute/spotify-tui/pull/231)
+## [0.14.0] - 2020-02-11
+
+### Added
+
 - Add high-middle-low navigation (`H`, `M`, `L` respectively) for jumping around lists [#234](https://github.com/Rigellute/spotify-tui/pull/234).
 - Play every known song with `e` [#228](https://github.com/Rigellute/spotify-tui/pull/228)
 - Search album by url: paste a spotify album link into the search input to go to that album [#281](https://github.com/Rigellute/spotify-tui/pull/281)
 - Implement 'Made For You' section of Library [#278](https://github.com/Rigellute/spotify-tui/pull/278)
 - Add user theme configuration [#284](https://github.com/Rigellute/spotify-tui/pull/284)
+- Allow user to define the volume increment [#288](https://github.com/Rigellute/spotify-tui/pull/288)
+
+### Fixed
+
+- Fix crash on small terminals [#231](https://github.com/Rigellute/spotify-tui/pull/231)
 
 ## [0.13.0] - 2020-01-26
 
