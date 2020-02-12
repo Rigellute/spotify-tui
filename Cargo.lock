@@ -52,7 +52,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "backtrace"
-version = "0.3.43"
+version = "0.3.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "backtrace-sys 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -409,7 +409,7 @@ name = "failure"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "backtrace 0.3.43 (registry+https://github.com/rust-lang/crates.io-index)",
+ "backtrace 0.3.44 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1450,7 +1450,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "spotify-tui"
 version = "0.14.0"
 dependencies = [
- "backtrace 0.3.43 (registry+https://github.com/rust-lang/crates.io-index)",
+ "backtrace 0.3.44 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clipboard 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossterm 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1935,7 +1935,7 @@ dependencies = [
 "checksum arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 "checksum atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1803c647a3ec87095e7ae7acfca019e98de5ec9a7d01343f611cf3152ed71a90"
 "checksum autocfg 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
-"checksum backtrace 0.3.43 (registry+https://github.com/rust-lang/crates.io-index)" = "7f80256bc78f67e7df7e36d77366f636ed976895d91fe2ab9efa3973e8fe8c4f"
+"checksum backtrace 0.3.44 (registry+https://github.com/rust-lang/crates.io-index)" = "e4036b9bf40f3cf16aba72a3d65e8a520fc4bafcdc7079aea8f848c58c5b5536"
 "checksum backtrace-sys 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)" = "5d6575f128516de27e3ce99689419835fce9643a9b215a14d2b5b685be018491"
 "checksum base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 "checksum base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
