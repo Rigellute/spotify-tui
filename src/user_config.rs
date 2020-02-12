@@ -30,6 +30,8 @@ pub struct UserTheme {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Theme {
+    pub analysis_bar: Color,
+    pub analysis_bar_text: Color,
     pub active: Color,
     pub banner: Color,
     pub error_border: Color,
@@ -47,6 +49,8 @@ pub struct Theme {
 impl Default for Theme {
     fn default() -> Self {
         Theme {
+            analysis_bar: Color::LightCyan,
+            analysis_bar_text: Color::Black,
             active: Color::Cyan,
             banner: Color::LightCyan,
             error_border: Color::Red,
