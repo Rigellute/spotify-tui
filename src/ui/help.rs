@@ -42,6 +42,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
         vec!["Enter input for search", "/", "General"],
         vec!["Pause/Resume playback", "<Space>", "General"],
         vec!["Enter active mode", "<Enter>", "General"],
+        vec!["Go to audio analysis screen", "v", "General"],
         vec![
             "Go back or exit when nowhere left to back to",
             "q",
