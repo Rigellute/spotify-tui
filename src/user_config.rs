@@ -194,6 +194,7 @@ pub struct BehaviorConfigString {
 pub struct BehaviorConfig {
     pub seek_milliseconds: u32,
     pub volume_increment: u8,
+    pub tick_rate: u64,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -236,6 +237,7 @@ impl UserConfig {
             behavior: BehaviorConfig {
                 seek_milliseconds: 5 * 1000,
                 volume_increment: 10,
+                tick_rate: 250,
             },
         }
     }

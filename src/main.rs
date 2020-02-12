@@ -169,7 +169,7 @@ fn main() -> Result<(), failure::Error> {
             let mut terminal = Terminal::new(backend)?;
             terminal.hide_cursor()?;
 
-            let events = event::Events::new();
+            let events = event::Events::new(user_config.behavior.tick_rate);
 
             // Initialise app state
             let mut app = App::new();

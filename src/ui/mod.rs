@@ -158,7 +158,10 @@ where
                     Block::default()
                         .borders(Borders::ALL)
                         .style(white)
-                        .title("Pitches")
+                        .title(&format!(
+                            "Pitches | Tick Rate {}",
+                            app.user_config.behavior.tick_rate
+                        ))
                         .title_style(gray)
                         .border_style(gray),
                 )
