@@ -175,7 +175,7 @@ behavior:
   seek_milliseconds: 5000
   volume_increment: 10
   # The lower the number the higher the "frames per second". You can decrease this number so that the audio visualisation is smoother but this can be expensive!
-  tick_rate: 250
+  tick_rate_milliseconds: 250
 
 keybindings:
   # Key stroke can be used if it only uses two keys:

@@ -35,20 +35,6 @@ where
             .find(|section| section.start >= progress_seconds);
 
         if let (Some(segment), Some(section)) = (segment, section) {
-            let data: Vec<(&str, u64)> = segment
-                .pitches
-                .iter()
-                .enumerate()
-                .map(|(index, pitch)| {
-                    let display_pitch = *PITCHES.get(index).unwrap_or(&PITCHES[0]);
-                    let bar_value = ((pitch * 1000.0) as u64)
-                        // Add a beat offset to make the bar animate between beats
-                        .checked_add((beat_offset * 3000.0) as u64)
-                        .unwrap_or(0);
-
-                    (display_pitch, bar_value)
-                })
-                .collect();
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
@@ -87,22 +73,39 @@ where
 
             let white = Style::default().fg(app.user_config.theme.text);
             let gray = Style::default().fg(app.user_config.theme.inactive);
-            let width = f.size().width / PITCHES.len() as u16;
+            let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
+
+            let data: Vec<(&str, u64)> = segment
+                .pitches
+                .iter()
+                .enumerate()
+                .map(|(index, pitch)| {
+                    let display_pitch = *PITCHES.get(index).unwrap_or(&PITCHES[0]);
+                    let bar_value = ((pitch * 1000.0) as u64)
+                        // Add a beat offset to make the bar animate between beats
+                        .checked_add((beat_offset * 3000.0) as u64)
+                        .unwrap_or(0);
+
+                    (display_pitch, bar_value)
+                })
+                .collect();
+
+            let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
             BarChart::default()
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
                         .style(white)
                         .title(&format!(
-                            "Pitches | Tick Rate {}",
-                            app.user_config.behavior.tick_rate
+                            "Pitches | Tick Rate {} {}FPS",
+                            tick_rate,
+                            1000 / tick_rate
                         ))
                         .title_style(gray)
                         .border_style(gray),
                 )
                 .data(&data)
-                .bar_width(width)
-                .bar_gap(1)
+                .bar_width(width as u16)
                 .style(Style::default().fg(app.user_config.theme.analysis_bar))
                 .value_style(
                     Style::default()
