@@ -1,4 +1,4 @@
-name: spt
+name: spt-temp
 base: core18
 adopt-info: spotify-tui
 summary: Spotify TUI
@@ -11,7 +11,7 @@ confinement: strict
 parts:
   spotify-tui:
     plugin: rust
-    source: https://github.com/Rigellute/spotify-tui.git
+    source: .
     build-packages:
       - libssl-dev
       - pkg-config
