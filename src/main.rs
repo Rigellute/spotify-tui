@@ -142,7 +142,7 @@ fn main() -> Result<(), failure::Error> {
          .arg(Arg::with_name("tick-rate")
                                .short("t")
                                .long("tick-rate")
-                               .help("Set the tick rate: the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
+                               .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
                                .takes_value(true))
         .get_matches();
 
@@ -153,7 +153,11 @@ fn main() -> Result<(), failure::Error> {
         .value_of("tick-rate")
         .and_then(|tick_rate| tick_rate.parse().ok())
     {
-        user_config.behavior.tick_rate = tick_rate;
+        if tick_rate >= 1000 {
+            panic!("Tick rate must be below 1000");
+        } else {
+            user_config.behavior.tick_rate_milliseconds = tick_rate;
+        }
     }
 
     let mut client_config = ClientConfig::new();
@@ -181,7 +185,7 @@ fn main() -> Result<(), failure::Error> {
             let mut terminal = Terminal::new(backend)?;
             terminal.hide_cursor()?;
 
-            let events = event::Events::new(user_config.behavior.tick_rate);
+            let events = event::Events::new(user_config.behavior.tick_rate_milliseconds);
 
             // Initialise app state
             let mut app = App::new();

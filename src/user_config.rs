@@ -189,12 +189,13 @@ pub struct KeyBindings {
 pub struct BehaviorConfigString {
     pub seek_milliseconds: Option<u32>,
     pub volume_increment: Option<u8>,
+    pub tick_rate_milliseconds: Option<u64>,
 }
 
 pub struct BehaviorConfig {
     pub seek_milliseconds: u32,
     pub volume_increment: u8,
-    pub tick_rate: u64,
+    pub tick_rate_milliseconds: u64,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -237,7 +238,7 @@ impl UserConfig {
             behavior: BehaviorConfig {
                 seek_milliseconds: 5 * 1000,
                 volume_increment: 10,
-                tick_rate: 250,
+                tick_rate_milliseconds: 250,
             },
         }
     }
@@ -344,6 +345,14 @@ impl UserConfig {
                 ));
             }
             self.behavior.volume_increment = behavior_string;
+        }
+
+        if let Some(tick_rate) = behavior_config.tick_rate_milliseconds {
+            if tick_rate >= 1000 {
+                return Err(err_msg("Tick rate must be below 1000"));
+            } else {
+                self.behavior.tick_rate_milliseconds = tick_rate;
+            }
         }
 
         Ok(())
