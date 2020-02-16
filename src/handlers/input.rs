@@ -74,6 +74,15 @@ pub fn handler(key: Key, app: &mut App) {
                     return;
                 }
 
+                let artist_url_prefix = "https://open.spotify.com/artist/";
+
+                if input_str.starts_with(artist_url_prefix) {
+                    let artist_id = input_str.trim_start_matches(artist_url_prefix);
+                    app.get_artist(&artist_id, "");
+                    app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+                    return;
+                }
+
                 // Can I run these functions in parellel?
                 match spotify.search_track(&input_str, app.small_search_limit, 0, country) {
                     Ok(result) => {
