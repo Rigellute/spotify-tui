@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add experimental audio visualizer (press `v` to navigate to it). The feature uses the audio analysis data from Spotify and animates the pitch information.
+
 ## [0.14.0] - 2020-02-11
 
 ### Added
