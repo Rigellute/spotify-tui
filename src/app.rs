@@ -5,6 +5,7 @@ use rspotify::spotify::{
     model::{
         album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
         artist::FullArtist,
+        audio::AudioAnalysis,
         context::FullPlayingContext,
         device::DevicePayload,
         offset::{for_position, Offset},
@@ -120,6 +121,7 @@ pub enum ArtistBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
+    Analysis,
     PlayBar,
     AlbumTracks,
     AlbumList,
@@ -142,6 +144,7 @@ pub enum ActiveBlock {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum RouteId {
+    Analysis,
     AlbumTracks,
     AlbumList,
     Artist,
@@ -236,6 +239,7 @@ pub struct Artist {
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
+    pub audio_analysis: Option<AudioAnalysis>,
     pub home_scroll: u16,
     pub client_config: ClientConfig,
     pub user_config: UserConfig,
@@ -288,6 +292,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
+            audio_analysis: None,
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
             made_for_you_index: 0,
@@ -1291,6 +1296,24 @@ impl App {
                 }
                 Err(e) => {
                     self.handle_error(e);
+                }
+            }
+        }
+    }
+
+    pub fn get_audio_analysis(&mut self) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &self.current_playback_context) {
+            if let Some(track) = &context.item {
+                let uri = &track.uri;
+
+                match spotify.audio_analysis(uri) {
+                    Ok(result) => {
+                        self.audio_analysis = Some(result);
+                        self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
+                    }
+                    Err(e) => {
+                        self.handle_error(e);
+                    }
                 }
             }
         }

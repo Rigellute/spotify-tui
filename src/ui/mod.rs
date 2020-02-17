@@ -1,3 +1,4 @@
+pub mod audio_analysis;
 mod help;
 mod util;
 use super::{
@@ -229,6 +230,7 @@ where
         }
         RouteId::Error => {} // This is handled as a "full screen" route in main.rs
         RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
+        RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
     };
 }
 

@@ -12,7 +12,7 @@ use crate::event::Key;
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
-use clap::App as ClapApp;
+use clap::{App as ClapApp, Arg};
 use config::ClientConfig;
 use crossterm::{
     cursor::MoveTo,
@@ -132,17 +132,33 @@ fn main() -> Result<(), failure::Error> {
         panic_hook(info);
     }));
 
-    ClapApp::new(env!("CARGO_PKG_NAME"))
+    let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .usage("Press `?` while running the app to see keybindings")
         .before_help(BANNER)
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
+         .arg(Arg::with_name("tick-rate")
+                               .short("t")
+                               .long("tick-rate")
+                               .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
+                               .takes_value(true))
         .get_matches();
 
     let mut user_config = UserConfig::new();
     user_config.load_config()?;
+
+    if let Some(tick_rate) = matches
+        .value_of("tick-rate")
+        .and_then(|tick_rate| tick_rate.parse().ok())
+    {
+        if tick_rate >= 1000 {
+            panic!("Tick rate must be below 1000");
+        } else {
+            user_config.behavior.tick_rate_milliseconds = tick_rate;
+        }
+    }
 
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
@@ -169,7 +185,7 @@ fn main() -> Result<(), failure::Error> {
             let mut terminal = Terminal::new(backend)?;
             terminal.hide_cursor()?;
 
-            let events = event::Events::new();
+            let events = event::Events::new(user_config.behavior.tick_rate_milliseconds);
 
             // Initialise app state
             let mut app = App::new();
@@ -214,6 +230,9 @@ fn main() -> Result<(), failure::Error> {
                     }
                     ActiveBlock::SelectDevice => {
                         ui::draw_device_list(&mut f, &app);
+                    }
+                    ActiveBlock::Analysis => {
+                        ui::audio_analysis::draw(&mut f, &app);
                     }
                     _ => {
                         ui::draw_main_layout(&mut f, &app);
