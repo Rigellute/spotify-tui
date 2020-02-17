@@ -1068,7 +1068,7 @@ impl App {
         }
     }
 
-    pub fn get_artist(&mut self, artist_id: &str, artist_name: &str) {
+    pub fn get_artist(&mut self, artist_id: &str, input_artist_name: &str) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
             let user_country =
                 Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
@@ -1079,6 +1079,14 @@ impl App {
                 Some(self.large_search_limit),
                 Some(0),
             );
+            let mut artist_name = String::from("");
+            if input_artist_name == "" {
+                if let Ok(full_artist) = spotify.artist(&artist_id) {
+                    artist_name = full_artist.name;
+                }
+            } else {
+                artist_name = String::from(input_artist_name);
+            }
             let top_tracks = spotify.artist_top_tracks(artist_id, user_country);
             let related_artist = spotify.artist_related_artists(artist_id);
 
@@ -1086,7 +1094,7 @@ impl App {
                 (albums, top_tracks, related_artist)
             {
                 self.artist = Some(Artist {
-                    artist_name: artist_name.to_owned(),
+                    artist_name,
                     albums,
                     related_artists: related_artist.artists,
                     top_tracks: top_tracks.tracks,
