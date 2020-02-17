@@ -62,10 +62,16 @@ brew upgrade spotify-tui
 For a system with Snap installed, run
 
 ```bash
-snap install spt --channel=edge
+snap install spt
 ```
 
-The latest version will be installed for you automatically.
+The stable version will be installed for you automatically.
+
+If you want to install the nightly build, run
+
+```bash
+snap install spt --edge
+```
 
 ### AUR
 
