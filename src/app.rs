@@ -287,6 +287,10 @@ pub struct App {
     pub made_for_you_index: usize,
     pub artists_list_index: usize,
     pub clipboard_context: Option<ClipboardContext>,
+    pub help_docs_size: u32,
+    pub help_menu_page: u32,
+    pub help_menu_max_lines: u32,
+    pub help_menu_offset: u32,
 }
 
 impl App {
@@ -357,6 +361,10 @@ impl App {
             user: None,
             instant_since_last_current_playback_poll: Instant::now(),
             clipboard_context: None,
+            help_docs_size: 0,
+            help_menu_page: 0,
+            help_menu_max_lines: 0,
+            help_menu_offset: 0,
         }
     }
 
@@ -1324,6 +1332,18 @@ impl App {
                     }
                 }
             }
+        }
+    }
+
+    pub fn calculate_help_menu_offset(&mut self) {
+        let old_offset = self.help_menu_offset;
+
+        if self.help_menu_max_lines < self.help_docs_size {
+            self.help_menu_offset = self.help_menu_page * self.help_menu_max_lines + 1;
+        }
+        if self.help_menu_offset > self.help_docs_size {
+            self.help_menu_offset = old_offset;
+            self.help_menu_page -= 1;
         }
     }
 }

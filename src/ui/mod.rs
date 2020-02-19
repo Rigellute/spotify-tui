@@ -1,5 +1,5 @@
 pub mod audio_analysis;
-mod help;
+pub mod help;
 mod util;
 use super::{
     app::{
@@ -85,6 +85,7 @@ where
     let header = ["Description", "Event", "Context"];
 
     let help_docs = get_help_docs();
+    let help_docs = &help_docs[app.help_menu_offset as usize..];
 
     let rows = help_docs
         .iter()
