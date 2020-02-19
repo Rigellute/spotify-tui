@@ -1,5 +1,5 @@
-use crate::{app::App, event::Key};
 use super::common_key_events;
+use crate::{app::App, event::Key};
 
 #[derive(PartialEq)]
 enum Direction {
