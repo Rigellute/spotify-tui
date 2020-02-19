@@ -1,0 +1,68 @@
+name: snap
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # checkout code
+      - uses: actions/checkout@v1.0.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -qy git gawk
+          git config --global user.email "spotify-tui@techbyte.ca"
+          git config --global user.name "Spotify-TUI"
+          rm -f .git/index.lock
+
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+
+      - name: Store Launchpad Secrets
+        run: |
+          lp_creds_dst="$HOME/.local/share/snapcraft/provider/launchpad"
+          lp_creds="$lp_creds_dst/credentials"
+          mkdir -p "$lp_creds_dst"
+          echo "${{ secrets.lp_creds }}" > \
+          "$lp_creds"
+          chmod 600 "$lp_creds"
+
+      - name: Store Snapcraft Creds
+        run: |
+          snapcraft_creds_dst=".snapcraft"
+          snapcraft_creds="$snapcraft_creds_dst/snapcraft.cfg"
+          mkdir -p "$snapcraft_creds_dst"
+          echo "${{ secrets.snapcraft_login }}" > "$snapcraft_creds"
+
+      - name: User should be logged in
+        run: snapcraft whoami
+
+      # You can now run Snapcraft shell commands
+      - name: Build Snap Remotely
+        run: |
+          snapcraft remote-build \
+            --launchpad-user spotify-tui \
+            --launchpad-accept-public-upload \
+            --build-on=amd64,arm64
+
+      - name: Push snap to edge channel
+        run: |
+          for snap in *.snap; do
+            snapcraft push "$snap" --release edge
+          done
+        shell: bash
+
+      - name: Push snap to beta channel
+        run: |
+          if [[ $GITHUB_REF =~ "refs/tags" ]]; then
+            for snap in *.snap; do
+              snapcraft push "$snap" --release beta
+            done
+          else
+            echo "No beta..."
+          fi
+        shell: bash
