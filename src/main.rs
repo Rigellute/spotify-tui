@@ -227,8 +227,8 @@ fn main() -> Result<(), failure::Error> {
                     app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
                     app.small_search_limit =
                         min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
-                    
-                    // Based on the size of the terminal, adjust how many lines are 
+
+                    // Based on the size of the terminal, adjust how many lines are
                     // dislayed in the help menu
                     if app.size.height > 8 {
                         app.help_menu_max_lines = (app.size.height as u32) - 8;
