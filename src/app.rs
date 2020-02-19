@@ -1339,7 +1339,7 @@ impl App {
         let old_offset = self.help_menu_offset;
 
         if self.help_menu_max_lines < self.help_docs_size {
-            self.help_menu_offset = self.help_menu_page * self.help_menu_max_lines + 1;
+            self.help_menu_offset = self.help_menu_page * self.help_menu_max_lines;
         }
         if self.help_menu_offset > self.help_docs_size {
             self.help_menu_offset = old_offset;
