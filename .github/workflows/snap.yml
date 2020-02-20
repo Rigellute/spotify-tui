@@ -4,24 +4,20 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    container:
+      image: snapcore/snapcraft
     steps:
       # checkout code
       - uses: actions/checkout@v1.0.0
 
       - name: Install dependencies
         run: |
-          sudo apt-get install -qy git gawk
+          sudo apt-get update
+          sudo apt-get install -qy git gawk python3-pip python3-setuptools python3-wheel
           git config --global user.email "spotify-tui@techbyte.ca"
           git config --global user.name "Spotify-TUI"
           rm -f .git/index.lock
-
-      - name: Install Snapcraft
-        run: |
-          sudo snap install snapcraft --classic
-
       - name: Store Launchpad Secrets
         run: |
           lp_creds_dst="$HOME/.local/share/snapcraft/provider/launchpad"
@@ -42,13 +38,9 @@ jobs:
         run: snapcraft whoami
 
       # You can now run Snapcraft shell commands
-      - name: Build Snap Remotely
+      - name: Build Snap
         run: |
-          snapcraft remote-build \
-            --launchpad-user spotify-tui \
-            --launchpad-accept-public-upload \
-            --build-on=amd64,arm64
-
+          snapcraft
       - name: Push snap to edge channel
         run: |
           for snap in *.snap; do
