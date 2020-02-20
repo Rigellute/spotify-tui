@@ -199,6 +199,8 @@ fn main() -> Result<(), failure::Error> {
 
             app.clipboard_context = clipboard::ClipboardProvider::new().ok();
 
+            app.help_docs_size = ui::help::get_help_docs().len() as u32;
+
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
             if app.client_config.device_id.is_none() {
@@ -210,6 +212,13 @@ fn main() -> Result<(), failure::Error> {
             loop {
                 // Get the size of the screen on each loop to account for resize event
                 if let Ok(size) = terminal.backend().size() {
+                    // Reset the help menu is the terminal was resized
+                    if app.size != size {
+                        app.help_menu_max_lines = 0;
+                        app.help_menu_offset = 0;
+                        app.help_menu_page = 0;
+                    }
+
                     app.size = size;
 
                     // Based on the size of the terminal, adjust the search limit.
@@ -218,6 +227,14 @@ fn main() -> Result<(), failure::Error> {
                     app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
                     app.small_search_limit =
                         min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
+
+                    // Based on the size of the terminal, adjust how many lines are
+                    // dislayed in the help menu
+                    if app.size.height > 8 {
+                        app.help_menu_max_lines = (app.size.height as u32) - 8;
+                    } else {
+                        app.help_menu_max_lines = 0;
+                    }
                 };
 
                 let current_route = app.get_current_route();
