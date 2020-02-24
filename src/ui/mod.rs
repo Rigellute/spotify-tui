@@ -1,6 +1,6 @@
 pub mod audio_analysis;
 pub mod help;
-mod util;
+pub mod util;
 use super::{
     app::{
         ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
@@ -22,8 +22,6 @@ use util::{
     get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
     millis_to_minutes,
 };
-
-pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
 
 pub enum TableId {
     Album,
@@ -152,13 +150,7 @@ pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
-    // Make better use of space on small terminals
-    let margin = if app.size.height > SMALL_TERMINAL_HEIGHT {
-        1
-    } else {
-        0
-    };
-
+    let margin = util::get_main_layout_margin(app);
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -857,7 +849,7 @@ where
 {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(17), Constraint::Percentage(83)].as_ref())
+        .constraints([Constraint::Length(7), Constraint::Length(93)].as_ref())
         .margin(2)
         .split(layout_chunk);
 

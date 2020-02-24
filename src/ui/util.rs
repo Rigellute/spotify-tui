@@ -3,6 +3,8 @@ use crate::user_config::Theme;
 use rspotify::spotify::model::artist::SimplifiedArtist;
 use tui::style::Style;
 
+pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
+
 pub fn get_search_results_highlight_state(
     app: &App,
     block_to_match: SearchResultBlock,
@@ -80,6 +82,17 @@ pub fn get_track_progress_percentage(song_progress_ms: u128, track_duration_ms: 
     let track_progress = std::cmp::min(song_progress_ms, track_duration_ms.into());
     let track_perc = (track_progress as f64 / f64::from(track_duration_ms)) * 100_f64;
     min_perc.max(track_perc) as u16
+}
+
+// Make better use of space on small terminals
+pub fn get_main_layout_margin(app: &App) -> u16 {
+    let margin = if app.size.height > SMALL_TERMINAL_HEIGHT {
+        1
+    } else {
+        0
+    };
+
+    margin
 }
 
 #[cfg(test)]
