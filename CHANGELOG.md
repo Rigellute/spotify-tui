@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2020-02-24
+
 - Add experimental audio visualizer (press `v` to navigate to it). The feature uses the audio analysis data from Spotify and animates the pitch information.
 - Display Artist layout when searching an artist url [#298](https://github.com/Rigellute/spotify-tui/pull/298)
 - Add pagination to the help menu [#302](https://github.com/Rigellute/spotify-tui/pull/302)
