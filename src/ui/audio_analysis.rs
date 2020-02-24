@@ -15,6 +15,46 @@ pub fn draw<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
+    let margin = util::get_main_layout_margin(app);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(5), Constraint::Length(95)].as_ref())
+        .margin(margin)
+        .split(f.size());
+
+    let analysis_block = Block::default()
+        .title("Analysis")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(app.user_config.theme.inactive))
+        .title_style(Style::default().fg(app.user_config.theme.inactive));
+
+    let white = Style::default().fg(app.user_config.theme.text);
+    let gray = Style::default().fg(app.user_config.theme.inactive);
+    let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
+    let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
+    let bar_chart_title = &format!("Pitches | Tick Rate {} {}FPS", tick_rate, 1000 / tick_rate);
+
+    let bar_chart_block = Block::default()
+        .borders(Borders::ALL)
+        .style(white)
+        .title(bar_chart_title)
+        .title_style(gray)
+        .border_style(gray);
+
+    let analysis_text = [Text::raw("No analysis available")];
+    let empty_analysis_block = || {
+        Paragraph::new(analysis_text.iter())
+            .block(analysis_block)
+            .style(Style::default().fg(app.user_config.theme.text))
+    };
+    let pitch_text = [Text::raw("No pitch information available")];
+    let empty_pitches_block = || {
+        Paragraph::new(pitch_text.iter())
+            .block(bar_chart_block)
+            .style(Style::default().fg(app.user_config.theme.text))
+    };
+
     if let Some(analysis) = &app.audio_analysis {
         let progress_seconds = (app.song_progress_ms as f32) / 1000.0;
 
@@ -34,32 +74,6 @@ where
             .sections
             .iter()
             .find(|section| section.start >= progress_seconds);
-        let margin = util::get_main_layout_margin(app);
-
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(5), Constraint::Length(95)].as_ref())
-            .margin(margin)
-            .split(f.size());
-
-        let analysis_block = Block::default()
-            .title("Analysis")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(app.user_config.theme.inactive))
-            .title_style(Style::default().fg(app.user_config.theme.inactive));
-
-        let white = Style::default().fg(app.user_config.theme.text);
-        let gray = Style::default().fg(app.user_config.theme.inactive);
-        let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
-        let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
-        let bar_chart_title = &format!("Pitches | Tick Rate {} {}FPS", tick_rate, 1000 / tick_rate);
-
-        let bar_chart_block = Block::default()
-            .borders(Borders::ALL)
-            .style(white)
-            .title(bar_chart_title)
-            .title_style(gray)
-            .border_style(gray);
 
         if let (Some(segment), Some(section)) = (segment, section) {
             Paragraph::new(
@@ -113,14 +127,11 @@ where
                 )
                 .render(f, chunks[1]);
         } else {
-            Paragraph::new([Text::raw("No analysis available")].iter())
-                .block(analysis_block)
-                .style(Style::default().fg(app.user_config.theme.text))
-                .render(f, chunks[0]);
-            Paragraph::new([Text::raw("No pitch information available")].iter())
-                .block(bar_chart_block)
-                .style(Style::default().fg(app.user_config.theme.error_text))
-                .render(f, chunks[1]);
+            empty_analysis_block().render(f, chunks[0]);
+            empty_pitches_block().render(f, chunks[1]);
         };
+    } else {
+        empty_analysis_block().render(f, chunks[0]);
+        empty_pitches_block().render(f, chunks[1]);
     }
 }
