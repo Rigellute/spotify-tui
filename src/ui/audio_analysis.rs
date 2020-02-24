@@ -1,3 +1,4 @@
+use super::util;
 use crate::app::App;
 use tui::{
     backend::Backend,
@@ -33,20 +34,34 @@ where
             .sections
             .iter()
             .find(|section| section.start >= progress_seconds);
+        let margin = util::get_main_layout_margin(app);
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(5), Constraint::Length(95)].as_ref())
+            .margin(margin)
+            .split(f.size());
+
+        let analysis_block = Block::default()
+            .title("Analysis")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(app.user_config.theme.inactive))
+            .title_style(Style::default().fg(app.user_config.theme.inactive));
+
+        let white = Style::default().fg(app.user_config.theme.text);
+        let gray = Style::default().fg(app.user_config.theme.inactive);
+        let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
+        let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
+        let bar_chart_title = &format!("Pitches | Tick Rate {} {}FPS", tick_rate, 1000 / tick_rate);
+
+        let bar_chart_block = Block::default()
+            .borders(Borders::ALL)
+            .style(white)
+            .title(bar_chart_title)
+            .title_style(gray)
+            .border_style(gray);
 
         if let (Some(segment), Some(section)) = (segment, section) {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
-                .margin(2)
-                .split(f.size());
-
-            let analysis_block = Block::default()
-                .title("Analysis")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(app.user_config.theme.inactive))
-                .title_style(Style::default().fg(app.user_config.theme.inactive));
-
             Paragraph::new(
                 [
                     Text::raw(format!(
@@ -71,10 +86,6 @@ where
             .style(Style::default().fg(app.user_config.theme.text))
             .render(f, chunks[0]);
 
-            let white = Style::default().fg(app.user_config.theme.text);
-            let gray = Style::default().fg(app.user_config.theme.inactive);
-            let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
-
             let data: Vec<(&str, u64)> = segment
                 .pitches
                 .iter()
@@ -90,20 +101,8 @@ where
                 })
                 .collect();
 
-            let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
             BarChart::default()
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(white)
-                        .title(&format!(
-                            "Pitches | Tick Rate {} {}FPS",
-                            tick_rate,
-                            1000 / tick_rate
-                        ))
-                        .title_style(gray)
-                        .border_style(gray),
-                )
+                .block(bar_chart_block)
                 .data(&data)
                 .bar_width(width as u16)
                 .style(Style::default().fg(app.user_config.theme.analysis_bar))
@@ -112,6 +111,15 @@ where
                         .fg(app.user_config.theme.analysis_bar_text)
                         .bg(app.user_config.theme.analysis_bar),
                 )
+                .render(f, chunks[1]);
+        } else {
+            Paragraph::new([Text::raw("No analysis available")].iter())
+                .block(analysis_block)
+                .style(Style::default().fg(app.user_config.theme.text))
+                .render(f, chunks[0]);
+            Paragraph::new([Text::raw("No pitch information available")].iter())
+                .block(bar_chart_block)
+                .style(Style::default().fg(app.user_config.theme.error_text))
                 .render(f, chunks[1]);
         };
     }
