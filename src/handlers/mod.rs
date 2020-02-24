@@ -80,7 +80,7 @@ pub fn handle_app(key: Key, app: &mut App) {
         _ if key == app.user_config.keys.copy_album_url => {
             app.copy_album_url();
         }
-        Key::Char('v') => {
+        _ if key == app.user_config.keys.audio_analysis => {
             app.get_audio_analysis();
         }
         _ => handle_block_events(key, app),

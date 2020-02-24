@@ -268,7 +268,7 @@ fn main() -> Result<(), failure::Error> {
                     };
                 }
 
-                let cursor_offset = if app.size.height > ui::SMALL_TERMINAL_HEIGHT {
+                let cursor_offset = if app.size.height > ui::util::SMALL_TERMINAL_HEIGHT {
                     2
                 } else {
                     1
