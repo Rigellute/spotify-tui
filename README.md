@@ -152,7 +152,7 @@ When running `spotify-tui` press `?` to bring up a help menu that shows currentl
 
 # Configuration
 
-A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`
+A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`, for snap `${HOME}/snap/spt/current/.config/spotify-tui/config.yml`
 (not to be confused with client.yml which handles spotify authentication)
 
 The following is a sample config.yml file:
