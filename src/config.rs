@@ -19,6 +19,7 @@ pub struct ClientConfig {
     pub client_id: String,
     pub client_secret: String,
     pub device_id: Option<String>,
+    // FIXME: port should be defined in `user_config` not in here
     pub port: Option<u16>,
 }
 
