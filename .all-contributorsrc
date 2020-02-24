@@ -365,6 +365,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jtagcat",
+      "name": "jtagcat",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/38327267?v=4",
+      "profile": "https://gitlab.com/jtagcat/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
