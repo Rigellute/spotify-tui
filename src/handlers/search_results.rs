@@ -5,6 +5,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 fn handle_down_press_on_selected_block(app: &mut App) {
     // Start selecting within the selected block
@@ -228,7 +229,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
             ) {
                 if let Some(album) = albums_result.albums.items.get(index.to_owned()).cloned() {
                     app.track_table.context = Some(TrackTableContext::AlbumSearch);
-                    app.get_album_tracks(album);
+                    app.dispatch(IoEvent::GetAlbumTracks(Box::new(album)));
                 };
             }
         }
@@ -236,7 +237,11 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
             if let Some(index) = &app.search_results.selected_tracks_index {
                 if let Some(result) = app.search_results.tracks.clone() {
                     if let Some(track) = result.tracks.items.get(index.to_owned()) {
-                        app.start_playback(None, Some(vec![track.uri.to_owned()]), Some(0));
+                        app.dispatch(IoEvent::StartPlayback(
+                            None,
+                            Some(vec![track.uri.to_owned()]),
+                            Some(0),
+                        ));
                     };
                 };
             };
@@ -245,7 +250,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
             if let Some(index) = &app.search_results.selected_artists_index {
                 if let Some(result) = app.search_results.artists.clone() {
                     if let Some(artist) = result.artists.items.get(index.to_owned()) {
-                        app.get_artist(&artist.id, &artist.name);
+                        app.get_artist(artist.id.clone(), artist.name.clone());
                         app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
                     };
                 };
@@ -260,7 +265,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                     // Go to playlist tracks table
                     app.track_table.context = Some(TrackTableContext::PlaylistSearch);
                     let playlist_id = playlist.id.to_owned();
-                    app.get_playlist_tracks(playlist_id);
+                    app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
                 };
             }
         }
@@ -323,7 +328,7 @@ fn handle_recommended_tracks(app: &mut App) {
                         };
                         app.recommendations_context = Some(RecommendationsContext::Song);
                         app.recommendations_seed = track.name.clone();
-                        app.get_recommendations_for_seed(None, track_id_list, Some(track));
+                        app.get_recommendations_for_seed(None, track_id_list, Some(track.clone()));
                     };
                 };
             };
@@ -429,15 +434,7 @@ pub fn handler(key: Key, app: &mut App) {
             SearchResultBlock::SongSearch => {}
             SearchResultBlock::ArtistSearch => app.user_follow_artists(),
             SearchResultBlock::PlaylistSearch => {
-                app.user_follow_playlists();
-                if let Some(spotify) = &app.spotify {
-                    let playlists = spotify.current_user_playlists(app.large_search_limit, None);
-
-                    match playlists {
-                        Ok(p) => app.playlists = Some(p),
-                        Err(e) => app.handle_error(e),
-                    }
-                }
+                app.user_follow_playlist();
             }
             SearchResultBlock::Empty => {}
         },

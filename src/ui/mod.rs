@@ -9,7 +9,7 @@ use super::{
     banner::BANNER,
 };
 use help::get_help_docs;
-use rspotify::spotify::senum::RepeatState;
+use rspotify::senum::RepeatState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -134,15 +134,21 @@ where
         )
         .render(f, chunks[0]);
 
+    let help_block_text = if app.is_loading {
+        (app.user_config.theme.hint, "Loading...")
+    } else {
+        (app.user_config.theme.inactive, "Type ?")
+    };
+
     let block = Block::default()
         .title("Help")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(app.user_config.theme.inactive))
-        .title_style(Style::default().fg(app.user_config.theme.inactive));
+        .border_style(Style::default().fg(help_block_text.0))
+        .title_style(Style::default().fg(help_block_text.0));
 
-    Paragraph::new([Text::raw("Type ?")].iter())
+    Paragraph::new([Text::raw(help_block_text.1)].iter())
         .block(block)
-        .style(Style::default().fg(app.user_config.theme.inactive))
+        .style(Style::default().fg(help_block_text.0))
         .render(f, chunks[1]);
 }
 
@@ -800,7 +806,7 @@ where
         .margin(5)
         .split(f.size());
 
-    let mut playing_text = vec![
+    let playing_text = vec![
         Text::raw("Api response: "),
         Text::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
         Text::styled(
@@ -822,13 +828,6 @@ Hint: a playback device must be either an official spotify client or a light wei
             Style::default().fg(app.user_config.theme.inactive),
         ),
     ];
-
-    if app.client_config.device_id.is_none() {
-        playing_text.push(Text::styled(
-            "\nNo playback device is selected - follow point 2 above",
-            Style::default().fg(app.user_config.theme.hint),
-        ))
-    }
 
     Paragraph::new(playing_text.iter())
         .wrap(true)

@@ -1,4 +1,4 @@
-use rspotify::spotify::{oauth2::SpotifyOAuth, util::request_token};
+use rspotify::{oauth2::SpotifyOAuth, util::request_token};
 use std::{
     io::prelude::*,
     net::{TcpListener, TcpStream},

@@ -1,10 +1,9 @@
 extern crate unicode_width;
 
-use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
+use super::super::app::{ActiveBlock, App, RouteId};
 use crate::event::Key;
-use rspotify::spotify::senum::Country;
+use crate::network::IoEvent;
 use std::convert::TryInto;
-use std::str::FromStr;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 // Handle event when the search input block is active
@@ -44,87 +43,31 @@ pub fn handler(key: Key, app: &mut App) {
             app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         }
         Key::Enter => {
-            if let (Some(spotify), Some(user)) = (app.spotify.clone(), app.user.clone()) {
-                let country =
-                    Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
-                let input_str: String = app.input.iter().collect();
+            let user_country = app.get_user_country();
+            let input_str: String = app.input.iter().collect();
 
-                let album_url_prefix = "https://open.spotify.com/album/";
+            let album_url_prefix = "https://open.spotify.com/album/";
 
-                if input_str.starts_with(album_url_prefix) {
-                    let album_id = input_str.trim_start_matches(album_url_prefix);
-                    match spotify.album(&album_id) {
-                        Ok(album) => {
-                            let selected_album = SelectedFullAlbum {
-                                album,
-                                selected_index: 0,
-                            };
-
-                            app.selected_album_full = Some(selected_album);
-                            app.album_table_context = AlbumTableContext::Full;
-                            app.push_navigation_stack(
-                                RouteId::AlbumTracks,
-                                ActiveBlock::AlbumTracks,
-                            );
-                        }
-                        Err(e) => {
-                            app.handle_error(e);
-                        }
-                    }
-                    return;
-                }
-
-                let artist_url_prefix = "https://open.spotify.com/artist/";
-
-                if input_str.starts_with(artist_url_prefix) {
-                    let artist_id = input_str.trim_start_matches(artist_url_prefix);
-                    app.get_artist(&artist_id, "");
-                    app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
-                    return;
-                }
-
-                // Can I run these functions in parellel?
-                match spotify.search_track(&input_str, app.small_search_limit, 0, country) {
-                    Ok(result) => {
-                        app.set_tracks_to_table(result.tracks.items.clone());
-                        app.search_results.tracks = Some(result);
-                    }
-                    Err(e) => {
-                        app.handle_error(e);
-                    }
-                }
-
-                match spotify.search_artist(&input_str, app.small_search_limit, 0, country) {
-                    Ok(result) => {
-                        app.search_results.artists = Some(result);
-                    }
-                    Err(e) => {
-                        app.handle_error(e);
-                    }
-                }
-
-                match spotify.search_album(&input_str, app.small_search_limit, 0, country) {
-                    Ok(result) => {
-                        app.search_results.albums = Some(result);
-                    }
-                    Err(e) => {
-                        app.handle_error(e);
-                    }
-                }
-
-                match spotify.search_playlist(&input_str, app.small_search_limit, 0, country) {
-                    Ok(result) => {
-                        app.search_results.playlists = Some(result);
-                    }
-                    Err(e) => {
-                        app.handle_error(e);
-                    }
-                }
-
-                // On searching for a track, clear the playlist selection
-                app.selected_playlist_index = Some(0);
-                app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
+            if input_str.starts_with(album_url_prefix) {
+                let album_id = input_str.trim_start_matches(album_url_prefix);
+                app.dispatch(IoEvent::GetAlbum(album_id.to_string()));
+                return;
             }
+
+            let artist_url_prefix = "https://open.spotify.com/artist/";
+
+            if input_str.starts_with(artist_url_prefix) {
+                let artist_id = input_str.trim_start_matches(artist_url_prefix);
+                app.get_artist(artist_id.to_string(), "".to_string());
+                app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+                return;
+            }
+
+            app.dispatch(IoEvent::GetSearchResults(input_str, user_country));
+
+            // On searching for a track, clear the playlist selection
+            app.selected_playlist_index = Some(0);
+            app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
         }
         Key::Char(c) => {
             app.input.insert(app.input_idx, c);
@@ -171,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_clear_input_on_ctrl_u() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("My text");
 
@@ -182,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_esc_back_to_playlist() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.set_current_route_state(Some(ActiveBlock::MyPlaylists), None);
         handler(Key::Esc, &mut app);
@@ -193,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_on_enter_text() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("My tex");
         app.input_cursor_position = app.input.len().try_into().unwrap();
@@ -206,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_backspace() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("My text");
         app.input_cursor_position = app.input.len().try_into().unwrap();
@@ -225,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_delete() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("My text");
         app.input_idx = 3;
@@ -244,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_left_event() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("My text");
         let input_len = app.input.len().try_into().unwrap();
@@ -268,7 +211,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_on_enter_text_non_english_char() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("ыа");
         app.input_cursor_position = app.input.len().try_into().unwrap();
@@ -281,7 +224,7 @@ mod tests {
 
     #[test]
     fn test_input_handler_on_enter_text_wide_char() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.input = str_to_vec_char("你");
         app.input_cursor_position = 2; // 你 is 2 char wide

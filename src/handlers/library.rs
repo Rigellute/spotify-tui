@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -43,48 +44,20 @@ pub fn handler(key: Key, app: &mut App) {
             }
             // Recently Played,
             1 => {
-                if let Some(spotify) = &app.spotify {
-                    match spotify
-                        // Seems I need to clone here becuase `current_user_recently_played`
-                        // consumes `self`?
-                        .clone()
-                        .current_user_recently_played(app.large_search_limit)
-                    {
-                        Ok(result) => {
-                            app.recently_played.result = Some(result.clone());
-
-                            app.current_user_saved_tracks_contains(
-                                result
-                                    .items
-                                    .iter()
-                                    .filter_map(|item| item.track.id.clone())
-                                    .collect::<Vec<String>>(),
-                            );
-
-                            app.push_navigation_stack(
-                                RouteId::RecentlyPlayed,
-                                ActiveBlock::RecentlyPlayed,
-                            );
-                        }
-                        Err(e) => {
-                            app.handle_error(e);
-                        }
-                    }
-                };
+                app.dispatch(IoEvent::GetRecentlyPlayed);
             }
             // Liked Songs,
             2 => {
-                app.get_current_user_saved_tracks(None);
-                app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                app.dispatch(IoEvent::GetCurrentSavedTracks(None, true));
             }
             // Albums,
             3 => {
-                app.get_current_user_saved_albums(Some(0));
+                app.dispatch(IoEvent::GetCurrentUserSavedAlbums(Some(0)));
                 app.push_navigation_stack(RouteId::AlbumList, ActiveBlock::AlbumList);
             }
             //  Artists,
             4 => {
-                app.get_artists(None);
+                app.dispatch(IoEvent::GetFollowedArtists(None));
                 app.push_navigation_stack(RouteId::Artists, ActiveBlock::Artists);
             }
             // Podcasts,

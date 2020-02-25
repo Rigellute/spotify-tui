@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn on_small_down_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Down, &mut app);
         assert_eq!(app.home_scroll, SMALL_SCROLL);
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn on_small_up_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Up, &mut app);
         assert_eq!(app.home_scroll, 0);
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn on_large_down_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Ctrl('d'), &mut app);
         assert_eq!(app.home_scroll, LARGE_SCROLL);
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn on_large_up_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         let scroll = 37;
         app.home_scroll = scroll;

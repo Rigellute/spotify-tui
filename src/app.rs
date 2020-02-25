@@ -1,26 +1,24 @@
-use super::{config::ClientConfig, user_config::UserConfig};
-use failure::{err_msg, format_err};
-use rspotify::spotify::{
-    client::Spotify,
+use super::user_config::UserConfig;
+use crate::network::IoEvent;
+use failure::format_err;
+use rspotify::{
     model::{
         album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
         artist::FullArtist,
         audio::AudioAnalysis,
         context::FullPlayingContext,
         device::DevicePayload,
-        offset::{for_position, Offset},
         page::{CursorBasedPage, Page},
         playing::PlayHistory,
         playlist::{PlaylistTrack, SimplifiedPlaylist},
-        recommend::Recommendations,
         search::{SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks},
         track::{FullTrack, SavedTrack, SimplifiedTrack},
         user::PrivateUser,
     },
-    senum::{Country, RepeatState},
+    senum::Country,
 };
-use serde_json::{map::Map, Value};
 use std::str::FromStr;
+use std::sync::mpsc::Sender;
 use std::{
     cmp::{max, min},
     collections::HashSet,
@@ -48,7 +46,7 @@ const DEFAULT_ROUTE: Route = Route {
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
     index: usize,
-    pages: Vec<T>,
+    pub pages: Vec<T>,
 }
 
 impl<T> ScrollableResultPages<T> {
@@ -93,13 +91,6 @@ pub struct Library {
     pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
     pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
     pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
-}
-
-#[derive(Clone)]
-pub struct PlaybackParams {
-    context_uri: Option<String>,
-    uris: Option<Vec<String>>,
-    offset: Option<Offset>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -237,11 +228,10 @@ pub struct Artist {
 }
 
 pub struct App {
-    instant_since_last_current_playback_poll: Instant,
+    pub instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
     pub audio_analysis: Option<AudioAnalysis>,
     pub home_scroll: u16,
-    pub client_config: ClientConfig,
     pub user_config: UserConfig,
     pub artists: Vec<FullArtist>,
     pub artist: Option<Artist>,
@@ -264,7 +254,6 @@ pub struct App {
     pub library: Library,
     pub playlist_offset: u32,
     pub made_for_you_offset: u32,
-    pub playback_params: PlaybackParams,
     pub playlist_tracks: Option<Page<PlaylistTrack>>,
     pub made_for_you_tracks: Option<Page<PlaylistTrack>>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
@@ -280,7 +269,6 @@ pub struct App {
     pub size: Rect,
     pub small_search_limit: u32,
     pub song_progress_ms: u128,
-    pub spotify: Option<Spotify>,
     pub track_table: TrackTable,
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
@@ -291,10 +279,13 @@ pub struct App {
     pub help_menu_page: u32,
     pub help_menu_max_lines: u32,
     pub help_menu_offset: u32,
+    pub is_loading: bool,
+    io_tx: Option<Sender<IoEvent>>,
+    pub is_fetching_current_playback: bool,
 }
 
-impl App {
-    pub fn new() -> App {
+impl Default for App {
+    fn default() -> Self {
         App {
             audio_analysis: None,
             album_table_context: AlbumTableContext::Full,
@@ -304,7 +295,6 @@ impl App {
             artists: vec![],
             artist: None,
             user_config: UserConfig::new(),
-            client_config: Default::default(),
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
@@ -351,88 +341,40 @@ impl App {
             song_progress_ms: 0,
             selected_device_index: None,
             selected_playlist_index: None,
-            spotify: None,
             track_table: Default::default(),
-            playback_params: PlaybackParams {
-                context_uri: None,
-                uris: None,
-                offset: None,
-            },
             user: None,
             instant_since_last_current_playback_poll: Instant::now(),
-            clipboard_context: None,
+            clipboard_context: clipboard::ClipboardProvider::new().ok(),
             help_docs_size: 0,
             help_menu_page: 0,
             help_menu_max_lines: 0,
             help_menu_offset: 0,
+            is_loading: false,
+            io_tx: None,
+            is_fetching_current_playback: false,
+        }
+    }
+}
+
+impl App {
+    pub fn new(io_tx: Sender<IoEvent>, user_config: UserConfig) -> App {
+        App {
+            io_tx: Some(io_tx),
+            user_config,
+            ..App::default()
         }
     }
 
-    pub fn get_user(&mut self) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user() {
-                Ok(user) => {
-                    self.user = Some(user);
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        }
-    }
-
-    pub fn handle_get_devices(&mut self) {
-        if let Some(spotify) = &self.spotify {
-            if let Ok(result) = spotify.device() {
-                self.push_navigation_stack(RouteId::SelectedDevice, ActiveBlock::SelectDevice);
-                if !result.devices.is_empty() {
-                    self.devices = Some(result);
-                    // Select the first device in the list
-                    self.selected_device_index = Some(0);
-                }
-            }
-        }
-    }
-
-    pub fn get_current_playback(&mut self) {
-        if let Some(spotify) = &self.spotify {
-            let context = spotify.current_playback(None);
-            if let Ok(ctx) = context {
-                if let Some(c) = ctx {
-                    self.current_playback_context = Some(c.clone());
-                    self.instant_since_last_current_playback_poll = Instant::now();
-
-                    if let Some(track) = c.item {
-                        if let Some(track_id) = track.id {
-                            self.current_user_saved_tracks_contains(vec![track_id]);
-                        }
-                    }
-                }
+    // Send a network event to the network thread
+    pub fn dispatch(&mut self, action: IoEvent) {
+        // `is_loading` will be set to false again after the async action has finished in network.rs
+        self.is_loading = true;
+        if let Some(io_tx) = &self.io_tx {
+            if let Err(e) = io_tx.send(action) {
+                self.is_loading = false;
+                println!("Error from dispatch {}", e);
+                // TODO: handle error
             };
-        }
-    }
-
-    pub fn current_user_saved_tracks_contains(&mut self, ids: Vec<String>) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_saved_tracks_contains(&ids) {
-                Ok(is_saved_vec) => {
-                    for (i, id) in ids.iter().enumerate() {
-                        if let Some(is_liked) = is_saved_vec.get(i) {
-                            if *is_liked {
-                                self.liked_song_ids_set.insert(id.to_string());
-                            } else {
-                                // The song is not liked, so check if it should be removed
-                                if self.liked_song_ids_set.contains(id) {
-                                    self.liked_song_ids_set.remove(id);
-                                }
-                            }
-                        };
-                    }
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
         }
     }
 
@@ -445,8 +387,9 @@ impl App {
             .elapsed()
             .as_millis();
 
-        if elapsed >= poll_interval_ms {
-            self.get_current_playback();
+        if !self.is_fetching_current_playback && elapsed >= poll_interval_ms {
+            self.is_fetching_current_playback = true;
+            self.dispatch(IoEvent::GetCurrentPlayback);
         }
     }
 
@@ -474,30 +417,17 @@ impl App {
         }
     }
 
-    fn seek(&mut self, position_ms: u32) {
-        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
-            match spotify.seek_track(position_ms, Some(device_id.to_string())) {
-                Ok(()) => {
-                    self.get_current_playback();
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
-        }
-    }
-
     pub fn seek_forwards(&mut self) {
         if let Some(current_playback_context) = &self.current_playback_context {
             if let Some(track) = &current_playback_context.item {
                 if track.duration_ms - self.song_progress_ms as u32
                     > self.user_config.behavior.seek_milliseconds
                 {
-                    self.seek(
+                    self.dispatch(IoEvent::Seek(
                         self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds,
-                    );
+                    ));
                 } else {
-                    self.next_track();
+                    self.dispatch(IoEvent::NextTrack);
                 }
             }
         }
@@ -510,92 +440,27 @@ impl App {
             } else {
                 0u32
             };
-        self.seek(new_progress);
-    }
-
-    pub fn pause_playback(&mut self) {
-        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
-            match spotify.pause_playback(Some(device_id.to_string())) {
-                Ok(()) => {
-                    self.get_current_playback();
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
-        }
+        self.dispatch(IoEvent::Seek(new_progress));
     }
 
     pub fn get_recommendations_for_seed(
         &mut self,
         seed_artists: Option<Vec<String>>,
         seed_tracks: Option<Vec<String>>,
-        first_track: Option<&FullTrack>,
+        first_track: Option<FullTrack>,
     ) {
-        if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
-            let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
-            let empty_payload: Map<String, Value> = Map::new();
-
-            match spotify.recommendations(
-                seed_artists,            // artists
-                None,                    // genres
-                seed_tracks,             // tracks
-                self.large_search_limit, // adjust playlist to screen size
-                user_country,            // country
-                &empty_payload,          // payload
-            ) {
-                Ok(result) => {
-                    if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result) {
-                        //custom first track
-                        if let Some(track) = first_track {
-                            recommended_tracks.insert(0, track.clone());
-                        }
-                        self.recommended_tracks = recommended_tracks.clone();
-                        self.set_tracks_to_table(recommended_tracks);
-                        self.track_table.context = Some(TrackTableContext::RecommendedTracks);
-
-                        if self.get_current_route().id != RouteId::Recommendations {
-                            self.push_navigation_stack(
-                                RouteId::Recommendations,
-                                ActiveBlock::TrackTable,
-                            );
-                        };
-                    }
-                    self.start_recommendations_playback(Some(0));
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        }
+        let user_country = self.get_user_country();
+        self.dispatch(IoEvent::GetRecommendationsForSeed(
+            seed_artists,
+            seed_tracks,
+            Box::new(first_track),
+            user_country,
+        ));
     }
 
-    pub fn get_recommendations_for_trackid(&mut self, id: &str) {
-        if let Some(track) = self.get_fulltrack_from_id(id) {
-            let track_id_list: Option<Vec<String>> = match &track.id {
-                Some(id) => Some(vec![id.to_string()]),
-                None => None,
-            };
-            self.get_recommendations_for_seed(None, track_id_list, Some(&track));
-        }
-    }
-
-    fn change_volume(&mut self, volume_percent: u8) {
-        if let (Some(spotify), Some(device_id), Some(context)) = (
-            &self.spotify,
-            &self.client_config.device_id,
-            &mut self.current_playback_context,
-        ) {
-            match spotify.volume(volume_percent, Some(device_id.to_string())) {
-                Ok(()) => {
-                    context.device.volume_percent = volume_percent.into();
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
-        }
+    pub fn get_recommendations_for_track_id(&mut self, id: String) {
+        let user_country = self.get_user_country();
+        self.dispatch(IoEvent::GetRecommendationsForTrackId(id, user_country));
     }
 
     pub fn increase_volume(&mut self) {
@@ -607,7 +472,7 @@ impl App {
             );
 
             if next_volume != current_volume {
-                self.change_volume(next_volume);
+                self.dispatch(IoEvent::ChangeVolume(next_volume));
             }
         }
     }
@@ -621,7 +486,7 @@ impl App {
             );
 
             if next_volume != current_volume {
-                self.change_volume(next_volume as u8);
+                self.dispatch(IoEvent::ChangeVolume(next_volume as u8));
             }
         }
     }
@@ -634,143 +499,19 @@ impl App {
     pub fn toggle_playback(&mut self) {
         if let Some(current_playback_context) = &self.current_playback_context {
             if current_playback_context.is_playing {
-                self.pause_playback();
+                self.dispatch(IoEvent::PausePlayback);
             } else {
                 // When no offset or uris are passed, spotify will resume current playback
-                self.start_playback(None, None, None);
+                self.dispatch(IoEvent::StartPlayback(None, None, None));
             }
-        }
-    }
-
-    pub fn next_track(&mut self) {
-        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
-            match spotify.next_track(Some(device_id.to_string())) {
-                Ok(()) => {
-                    self.get_current_playback();
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
         }
     }
 
     pub fn previous_track(&mut self) {
-        if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
-            if self.song_progress_ms >= 3_000 {
-                self.seek(0);
-            } else {
-                match spotify.previous_track(Some(device_id.to_string())) {
-                    Ok(()) => {
-                        self.get_current_playback();
-                    }
-                    Err(e) => {
-                        self.handle_error(e);
-                    }
-                };
-            }
-        }
-    }
-
-    pub fn start_recommendations_playback(&mut self, offset: Option<usize>) {
-        self.start_playback(
-            None,
-            Some(
-                self.recommended_tracks
-                    .iter()
-                    .map(|x| x.uri.clone())
-                    .collect::<Vec<String>>(),
-            ),
-            offset,
-        );
-    }
-
-    pub fn start_playback(
-        &mut self,
-        context_uri: Option<String>,
-        uris: Option<Vec<String>>,
-        offset: Option<usize>,
-    ) {
-        let (uris, context_uri) = if context_uri.is_some() {
-            (None, context_uri)
-        } else if uris.is_some() {
-            (uris, None)
+        if self.song_progress_ms >= 3_000 {
+            self.dispatch(IoEvent::Seek(0));
         } else {
-            (None, None)
-        };
-
-        let offset = offset.and_then(|o| for_position(o as u32));
-
-        let result = match &self.client_config.device_id {
-            Some(device_id) => match &self.spotify {
-                Some(spotify) => spotify.start_playback(
-                    Some(device_id.to_string()),
-                    context_uri.clone(),
-                    uris.clone(),
-                    offset.clone(),
-                    None,
-                ),
-                None => Err(err_msg("Spotify is not ready to be used".to_string())),
-            },
-            None => Err(err_msg("No device_id selected")),
-        };
-
-        match result {
-            Ok(()) => {
-                self.get_current_playback();
-                self.song_progress_ms = 0;
-                self.playback_params = PlaybackParams {
-                    context_uri,
-                    uris,
-                    offset,
-                }
-            }
-            Err(e) => {
-                self.handle_error(e);
-            }
-        }
-    }
-
-    pub fn get_playlist_tracks(&mut self, playlist_id: String) {
-        match &self.spotify {
-            Some(spotify) => {
-                if let Ok(playlist_tracks) = spotify.user_playlist_tracks(
-                    "spotify",
-                    &playlist_id,
-                    None,
-                    Some(self.large_search_limit),
-                    Some(self.playlist_offset),
-                    None,
-                ) {
-                    self.set_playlist_tracks_to_table(&playlist_tracks);
-
-                    self.playlist_tracks = Some(playlist_tracks);
-                    if self.get_current_route().id != RouteId::TrackTable {
-                        self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
-                    };
-                };
-            }
-            None => {}
-        }
-    }
-
-    pub fn get_made_for_you_playlist_tracks(&mut self, playlist_id: String) {
-        if let Some(spotify) = &self.spotify {
-            if let Ok(made_for_you_tracks) = spotify.user_playlist_tracks(
-                "spotify",
-                &playlist_id,
-                None,
-                Some(self.large_search_limit),
-                Some(self.made_for_you_offset),
-                None,
-            ) {
-                self.set_playlist_tracks_to_table(&made_for_you_tracks);
-
-                self.made_for_you_tracks = Some(made_for_you_tracks);
-                if self.get_current_route().id != RouteId::TrackTable {
-                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
-                }
-            }
+            self.dispatch(IoEvent::PreviousTrack);
         }
     }
 
@@ -861,89 +602,15 @@ impl App {
         }
     }
 
-    fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
-        self.set_tracks_to_table(
+    pub fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
+        self.dispatch(IoEvent::SetTracksToTable(
             saved_track_page
                 .items
                 .clone()
                 .into_iter()
                 .map(|item| item.track)
                 .collect::<Vec<FullTrack>>(),
-        );
-    }
-
-    fn set_playlist_tracks_to_table(&mut self, playlist_track_page: &Page<PlaylistTrack>) {
-        self.set_tracks_to_table(
-            playlist_track_page
-                .items
-                .clone()
-                .into_iter()
-                .map(|item| item.track)
-                .collect::<Vec<FullTrack>>(),
-        );
-    }
-
-    fn extract_recommended_tracks(
-        &self,
-        recommendations: &Recommendations,
-    ) -> Option<Vec<FullTrack>> {
-        if let Some(spotify) = &self.spotify {
-            let tracks = recommendations
-                .clone()
-                .tracks
-                .into_iter()
-                .map(|item| item.uri)
-                .collect::<Vec<String>>();
-            if let Ok(result) =
-                spotify.tracks(tracks.iter().map(|x| &x[..]).collect::<Vec<&str>>(), None)
-            {
-                return Some(result.tracks);
-            }
-        }
-
-        None
-    }
-
-    fn get_fulltrack_from_id(&self, id: &str) -> Option<FullTrack> {
-        if let Some(spotify) = &self.spotify {
-            match spotify.track(id) {
-                Ok(track) => {
-                    return Some(track);
-                }
-                Err(_e) => {
-                    return None;
-                }
-            };
-        }
-
-        None
-    }
-
-    pub fn set_tracks_to_table(&mut self, tracks: Vec<FullTrack>) {
-        self.track_table.tracks = tracks.clone();
-
-        self.current_user_saved_tracks_contains(
-            tracks
-                .into_iter()
-                .filter_map(|item| item.id)
-                .collect::<Vec<String>>(),
-        );
-    }
-
-    pub fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_saved_tracks(self.large_search_limit, offset) {
-                Ok(saved_tracks) => {
-                    self.set_saved_tracks_to_table(&saved_tracks);
-
-                    self.library.saved_tracks.add_pages(saved_tracks);
-                    self.track_table.context = Some(TrackTableContext::SavedTracks);
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        }
+        ));
     }
 
     pub fn get_current_user_saved_tracks_next(&mut self) {
@@ -961,7 +628,7 @@ impl App {
             None => {
                 if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
                     let offset = Some(saved_tracks.offset + saved_tracks.limit);
-                    self.get_current_user_saved_tracks(offset);
+                    self.dispatch(IoEvent::GetCurrentSavedTracks(offset, false));
                 }
             }
         }
@@ -977,173 +644,10 @@ impl App {
         }
     }
 
-    pub fn get_album_tracks(&mut self, album: SimplifiedAlbum) {
-        if let Some(album_id) = &album.id {
-            if let Some(spotify) = &self.spotify {
-                match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
-                    Ok(tracks) => {
-                        self.selected_album_simplified = Some(SelectedAlbum {
-                            album,
-                            tracks: tracks.clone(),
-                            selected_index: 0,
-                        });
-
-                        self.current_user_saved_tracks_contains(
-                            tracks
-                                .items
-                                .into_iter()
-                                .filter_map(|item| item.id)
-                                .collect::<Vec<String>>(),
-                        );
-
-                        self.album_table_context = AlbumTableContext::Simplified;
-                        self.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
-                    }
-                    Err(e) => {
-                        self.handle_error(e);
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn toggle_save_track(&mut self, track_id: String) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_saved_tracks_contains(&[track_id.clone()]) {
-                Ok(saved) => {
-                    if saved.first() == Some(&true) {
-                        match spotify.current_user_saved_tracks_delete(&[track_id.clone()]) {
-                            Ok(()) => {
-                                self.liked_song_ids_set.remove(&track_id);
-                            }
-                            Err(e) => {
-                                self.handle_error(e);
-                            }
-                        }
-                    } else {
-                        match spotify.current_user_saved_tracks_add(&[track_id.clone()]) {
-                            Ok(()) => {
-                                // TODO: This should ideally use the same logic as `self.current_user_saved_tracks_contains`
-                                self.liked_song_ids_set.insert(track_id);
-                            }
-                            Err(e) => {
-                                self.handle_error(e);
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        };
-    }
-
     pub fn shuffle(&mut self) {
-        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
-        {
-            match spotify.shuffle(!context.shuffle_state, self.client_config.device_id.clone()) {
-                Ok(()) => {
-                    // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
-                    // due to polling playback context)
-                    context.shuffle_state = !context.shuffle_state;
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
+        if let Some(context) = &self.current_playback_context.clone() {
+            self.dispatch(IoEvent::Shuffle(context.shuffle_state));
         };
-    }
-
-    pub fn repeat(&mut self) {
-        if let (Some(spotify), Some(context)) = (&self.spotify, &mut self.current_playback_context)
-        {
-            let next_repeat_state = match context.repeat_state {
-                RepeatState::Off => RepeatState::Context,
-                RepeatState::Context => RepeatState::Track,
-                RepeatState::Track => RepeatState::Off,
-            };
-            match spotify.repeat(next_repeat_state, self.client_config.device_id.clone()) {
-                Ok(()) => {
-                    // Update the UI eagerly (otherwise the UI will wait until the next 5 second interval
-                    // due to polling playback context)
-                    context.repeat_state = next_repeat_state;
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        }
-    }
-
-    pub fn get_artist(&mut self, artist_id: &str, input_artist_name: &str) {
-        if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
-            let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
-            let albums = spotify.artist_albums(
-                artist_id,
-                None,
-                user_country,
-                Some(self.large_search_limit),
-                Some(0),
-            );
-            let mut artist_name = String::from("");
-            if input_artist_name == "" {
-                if let Ok(full_artist) = spotify.artist(&artist_id) {
-                    artist_name = full_artist.name;
-                }
-            } else {
-                artist_name = String::from(input_artist_name);
-            }
-            let top_tracks = spotify.artist_top_tracks(artist_id, user_country);
-            let related_artist = spotify.artist_related_artists(artist_id);
-
-            if let (Ok(albums), Ok(top_tracks), Ok(related_artist)) =
-                (albums, top_tracks, related_artist)
-            {
-                self.artist = Some(Artist {
-                    artist_name,
-                    albums,
-                    related_artists: related_artist.artists,
-                    top_tracks: top_tracks.tracks,
-                    selected_album_index: 0,
-                    selected_related_artist_index: 0,
-                    selected_top_track_index: 0,
-                    artist_hovered_block: ArtistBlock::TopTracks,
-                    artist_selected_block: ArtistBlock::Empty,
-                });
-            }
-        }
-    }
-
-    pub fn get_artists(&mut self, offset: Option<String>) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_followed_artists(self.large_search_limit, offset) {
-                Ok(saved_artists) => {
-                    self.artists = saved_artists.artists.items.to_owned();
-                    self.library.saved_artists.add_pages(saved_artists.artists);
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
-        };
-    }
-
-    pub fn get_current_user_saved_albums(&mut self, offset: Option<u32>) {
-        if let Some(spotify) = &self.spotify {
-            match spotify.current_user_saved_albums(self.large_search_limit, offset) {
-                Ok(saved_albums) => {
-                    // not to show a blank page
-                    if !saved_albums.items.is_empty() {
-                        self.library.saved_albums.add_pages(saved_albums);
-                    }
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            }
-        }
     }
 
     pub fn get_current_user_saved_albums_next(&mut self) {
@@ -1157,7 +661,7 @@ impl App {
             None => {
                 if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
                     let offset = Some(saved_albums.offset + saved_albums.limit);
-                    self.get_current_user_saved_albums(offset);
+                    self.dispatch(IoEvent::GetCurrentUserSavedAlbums(offset));
                 }
             }
         }
@@ -1172,13 +676,8 @@ impl App {
     pub fn current_user_saved_album_delete(&mut self) {
         if let Some(albums) = self.library.saved_albums.get_results(None) {
             if let Some(selected_album) = albums.items.get(self.album_list_index) {
-                if let Some(spotify) = &mut self.spotify {
-                    let album_id = &selected_album.album.id;
-                    match spotify.current_user_saved_albums_delete(&[album_id.to_owned()]) {
-                        Ok(_) => self.get_current_user_saved_albums(None),
-                        Err(e) => self.handle_error(e),
-                    }
-                }
+                let album_id = selected_album.album.id.clone();
+                self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
             }
         }
     }
@@ -1186,15 +685,9 @@ impl App {
     pub fn current_user_saved_album_add(&mut self) {
         if let Some(albums) = &self.search_results.albums {
             if let Some(selected_index) = self.search_results.selected_album_index {
-                if let Some(spotify) = &self.spotify {
-                    let selected_album = &albums.albums.items[selected_index];
-                    if let Some(artist_id) = &selected_album.id {
-                        if let Err(e) =
-                            spotify.current_user_saved_albums_add(&[artist_id.to_owned()])
-                        {
-                            self.handle_error(e);
-                        }
-                    }
+                let selected_album = &albums.albums.items[selected_index];
+                if let Some(album_id) = selected_album.id.clone() {
+                    self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
                 }
             }
         }
@@ -1203,13 +696,8 @@ impl App {
     pub fn user_unfollow_artists(&mut self) {
         if let Some(artists) = self.library.saved_artists.get_results(None) {
             if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
-                if let Some(spotify) = &mut self.spotify {
-                    let artist_id = &selected_artist.id;
-                    match spotify.user_unfollow_artists(&[artist_id.to_owned()]) {
-                        Ok(_) => self.get_artists(None),
-                        Err(e) => self.handle_error(e),
-                    }
-                }
+                let artist_id = selected_artist.id.clone();
+                self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
             }
         }
     }
@@ -1217,49 +705,38 @@ impl App {
     pub fn user_follow_artists(&mut self) {
         if let Some(artists) = &self.search_results.artists {
             if let Some(selected_index) = self.search_results.selected_artists_index {
-                if let Some(spotify) = &mut self.spotify {
-                    let selected_artist: &FullArtist = &artists.artists.items[selected_index];
-                    let artist_id = &selected_artist.id;
-                    if let Err(e) = spotify.user_follow_artists(&[artist_id.to_owned()]) {
-                        self.handle_error(e);
-                    }
-                }
+                let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+                let artist_id = selected_artist.id.clone();
+                self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
             }
         }
     }
 
-    pub fn user_follow_playlists(&mut self) {
-        if let (Some(playlists), Some(selected_index), Some(spotify)) = (
+    pub fn user_follow_playlist(&mut self) {
+        if let (Some(playlists), Some(selected_index)) = (
             &self.search_results.playlists,
             self.search_results.selected_playlists_index,
-            &self.spotify,
         ) {
             let selected_playlist: &SimplifiedPlaylist = &playlists.playlists.items[selected_index];
-            let selected_id = &selected_playlist.id;
+            let selected_id = selected_playlist.id.clone();
             let selected_public = selected_playlist.public;
-            let selected_owner_id = &selected_playlist.owner.id;
-            if let Err(e) = spotify.user_playlist_follow_playlist(
-                &selected_owner_id,
-                &selected_id,
+            let selected_owner_id = selected_playlist.owner.id.clone();
+            self.dispatch(IoEvent::UserFollowPlaylist(
+                selected_owner_id,
+                selected_id,
                 selected_public,
-            ) {
-                self.handle_error(e);
-            }
+            ));
         }
     }
 
-    pub fn user_unfollow_playlists(&mut self) {
-        if let (Some(playlists), Some(selected_index), Some(user), Some(spotify)) = (
-            &self.playlists,
-            self.selected_playlist_index,
-            &self.user,
-            &self.spotify,
-        ) {
+    pub fn user_unfollow_playlist(&mut self) {
+        if let (Some(playlists), Some(selected_index), Some(user)) =
+            (&self.playlists, self.selected_playlist_index, &self.user)
+        {
             let selected_playlist = &playlists.items[selected_index];
-            let selected_id = &selected_playlist.id;
-            if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
-                self.handle_error(e);
-            }
+            let selected_id = selected_playlist.id.clone();
+            let user_id = user.id.clone();
+            self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
         }
     }
 
@@ -1271,6 +748,8 @@ impl App {
         const REPEAT_REWIND: &str = "Repeat Rewind";
 
         if self.library.made_for_you_playlists.pages.is_empty() {
+            // We shouldn't be fetching all the results immediately - only load the data when the
+            // user selects the playlist
             self.made_for_you_search_and_add(DISCOVER_WEEKLY);
             self.made_for_you_search_and_add(RELEASE_RADAR);
             self.made_for_you_search_and_add(ON_REPEAT);
@@ -1279,60 +758,42 @@ impl App {
     }
 
     fn made_for_you_search_and_add(&mut self, search_string: &str) {
-        const SPOTIFY_ID: &str = "spotify";
+        let user_country = self.get_user_country();
+        self.dispatch(IoEvent::MadeForYouSearchAndAdd(
+            search_string.to_string(),
+            user_country,
+        ));
+    }
 
-        if let (Some(spotify), Some(user)) = (self.spotify.clone(), self.user.clone()) {
-            let user_country =
-                Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
-            match spotify.search_playlist(search_string, self.large_search_limit, 0, user_country) {
-                Ok(mut search_playlists) => {
-                    let mut filtered_playlists = search_playlists
-                        .playlists
-                        .items
-                        .iter()
-                        .filter(|playlist| {
-                            playlist.owner.id == SPOTIFY_ID && playlist.name == search_string
-                        })
-                        .map(|playlist| playlist.to_owned())
-                        .collect::<Vec<SimplifiedPlaylist>>();
+    pub fn get_audio_analysis(&mut self) {
+        if let Some(context) = &self.current_playback_context {
+            if let Some(track) = &context.item {
+                let uri = track.uri.clone();
 
-                    if !self.library.made_for_you_playlists.pages.is_empty() {
-                        self.library
-                            .made_for_you_playlists
-                            .get_mut_results(None)
-                            .unwrap()
-                            .items
-                            .append(&mut filtered_playlists);
-                    } else {
-                        search_playlists.playlists.items = filtered_playlists;
-                        self.library
-                            .made_for_you_playlists
-                            .add_pages(search_playlists.playlists);
-                    }
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
+                self.dispatch(IoEvent::GetAudioAnalysis(uri));
             }
         }
     }
 
-    pub fn get_audio_analysis(&mut self) {
-        if let (Some(spotify), Some(context)) = (&self.spotify, &self.current_playback_context) {
-            if let Some(track) = &context.item {
-                let uri = &track.uri;
-
-                match spotify.audio_analysis(uri) {
-                    Ok(result) => {
-                        self.audio_analysis = Some(result);
-                        self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
-                    }
-                    Err(e) => {
-                        self.handle_error(e);
-                    }
-                }
-            }
+    pub fn repeat(&mut self) {
+        if let Some(context) = &self.current_playback_context.clone() {
+            self.dispatch(IoEvent::Repeat(context.repeat_state));
         }
+    }
+
+    pub fn get_artist(&mut self, artist_id: String, input_artist_name: String) {
+        let user_country = self.get_user_country();
+        self.dispatch(IoEvent::GetArtist(
+            artist_id,
+            input_artist_name,
+            user_country,
+        ));
+    }
+
+    pub fn get_user_country(&self) -> Option<Country> {
+        self.user.to_owned().and_then(|user| {
+            Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok()
+        })
     }
 
     pub fn calculate_help_menu_offset(&mut self) {

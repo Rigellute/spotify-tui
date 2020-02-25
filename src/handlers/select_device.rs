@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -71,16 +72,9 @@ pub fn handler(key: Key, app: &mut App) {
             };
         }
         Key::Enter => {
-            if let (Some(devices), Some(index)) = (&app.devices, app.selected_device_index) {
+            if let (Some(devices), Some(index)) = (app.devices.clone(), app.selected_device_index) {
                 if let Some(device) = &devices.devices.get(index) {
-                    match app.client_config.set_device_id(device.id.clone()) {
-                        Ok(()) => {
-                            app.pop_navigation_stack();
-                        }
-                        Err(e) => {
-                            app.handle_error(e);
-                        }
-                    };
+                    app.dispatch(IoEvent::SetDeviceIdInConfig(device.id.clone()));
                 }
             };
         }

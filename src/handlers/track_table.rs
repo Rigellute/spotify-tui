@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -53,7 +54,10 @@ pub fn handler(key: Key, app: &mut App) {
                                     {
                                         app.playlist_offset += app.large_search_limit;
                                         let playlist_id = selected_playlist.id.to_owned();
-                                        app.get_playlist_tracks(playlist_id);
+                                        app.dispatch(IoEvent::GetPlaylistTracks(
+                                            playlist_id,
+                                            app.playlist_offset,
+                                        ));
                                     }
                                 }
                             }
@@ -81,7 +85,10 @@ pub fn handler(key: Key, app: &mut App) {
                                 {
                                     app.made_for_you_offset += app.large_search_limit;
                                     let playlist_id = selected_playlist.id.to_owned();
-                                    app.get_made_for_you_playlist_tracks(playlist_id);
+                                    app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
+                                        playlist_id,
+                                        app.made_for_you_offset,
+                                    ));
                                 }
                             }
                         }
@@ -105,7 +112,10 @@ pub fn handler(key: Key, app: &mut App) {
                                 playlists.items.get(selected_playlist_index.to_owned())
                             {
                                 let playlist_id = selected_playlist.id.to_owned();
-                                app.get_playlist_tracks(playlist_id);
+                                app.dispatch(IoEvent::GetPlaylistTracks(
+                                    playlist_id,
+                                    app.playlist_offset,
+                                ));
                             }
                         };
                     }
@@ -130,7 +140,10 @@ pub fn handler(key: Key, app: &mut App) {
                             playlists.items.get(selected_playlist_index)
                         {
                             let playlist_id = selected_playlist.id.to_owned();
-                            app.get_made_for_you_playlist_tracks(playlist_id);
+                            app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
+                                playlist_id,
+                                app.made_for_you_offset,
+                            ));
                         }
                     }
                 },
@@ -157,7 +170,7 @@ fn handle_recommended_tracks(app: &mut App) {
         };
         app.recommendations_context = Some(RecommendationsContext::Song);
         app.recommendations_seed = first_track.name.clone();
-        app.get_recommendations_for_seed(None, track_id_list, Some(&first_track));
+        app.get_recommendations_for_seed(None, track_id_list, Some(first_track));
     };
 }
 
@@ -182,7 +195,10 @@ fn jump_to_end(app: &mut App) {
                             app.playlist_offset =
                                 total_tracks - (total_tracks % app.large_search_limit);
                             let playlist_id = selected_playlist.id.to_owned();
-                            app.get_playlist_tracks(playlist_id);
+                            app.dispatch(IoEvent::GetPlaylistTracks(
+                                playlist_id,
+                                app.playlist_offset,
+                            ));
                         }
                     }
                 }
@@ -220,17 +236,24 @@ fn on_enter(app: &mut App) {
                         _ => None,
                     };
 
-                    app.start_playback(
+                    app.dispatch(IoEvent::StartPlayback(
                         context_uri,
                         None,
                         Some(app.track_table.selected_index + app.playlist_offset as usize),
-                    );
+                    ));
                 };
             }
             TrackTableContext::RecommendedTracks => {
-                if let Some(_track) = tracks.get(*selected_index) {
-                    app.start_recommendations_playback(Some(app.track_table.selected_index));
-                };
+                app.dispatch(IoEvent::StartPlayback(
+                    None,
+                    Some(
+                        app.recommended_tracks
+                            .iter()
+                            .map(|x| x.uri.clone())
+                            .collect::<Vec<String>>(),
+                    ),
+                    Some(app.track_table.selected_index),
+                ));
             }
             TrackTableContext::SavedTracks => {
                 if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
@@ -240,11 +263,11 @@ fn on_enter(app: &mut App) {
                         .map(|item| item.track.uri.to_owned())
                         .collect();
 
-                    app.start_playback(
+                    app.dispatch(IoEvent::StartPlayback(
                         None,
                         Some(track_uris),
                         Some(app.track_table.selected_index),
-                    );
+                    ));
                 };
             }
             TrackTableContext::AlbumSearch => {}
@@ -273,7 +296,11 @@ fn on_enter(app: &mut App) {
                         _ => None,
                     };
 
-                    app.start_playback(context_uri, None, Some(app.track_table.selected_index));
+                    app.dispatch(IoEvent::StartPlayback(
+                        context_uri,
+                        None,
+                        Some(app.track_table.selected_index),
+                    ));
                 };
             }
             TrackTableContext::MadeForYou => {
@@ -290,17 +317,18 @@ fn on_enter(app: &mut App) {
                             .to_owned(),
                     );
 
-                    app.start_playback(
+                    app.dispatch(IoEvent::StartPlayback(
                         context_uri,
                         None,
                         Some(app.track_table.selected_index + app.made_for_you_offset as usize),
-                    );
+                    ));
                 }
             }
         },
         None => {}
     };
 }
+
 fn jump_to_start(app: &mut App) {
     match &app.track_table.context {
         Some(context) => match context {
@@ -313,7 +341,7 @@ fn jump_to_start(app: &mut App) {
                     {
                         app.playlist_offset = 0;
                         let playlist_id = selected_playlist.id.to_owned();
-                        app.get_playlist_tracks(playlist_id);
+                        app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
                     }
                 }
             }

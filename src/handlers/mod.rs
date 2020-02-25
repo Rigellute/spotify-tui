@@ -21,6 +21,7 @@ mod track_table;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub use input::handler as input_handler;
 
@@ -37,7 +38,7 @@ pub fn handle_app(key: Key, app: &mut App) {
             handle_jump_to_artist_album(app);
         }
         _ if key == app.user_config.keys.manage_devices => {
-            app.handle_get_devices();
+            app.dispatch(IoEvent::GetDevices);
         }
         _ if key == app.user_config.keys.decrease_volume => {
             app.decrease_volume();
@@ -56,7 +57,7 @@ pub fn handle_app(key: Key, app: &mut App) {
             app.seek_forwards();
         }
         _ if key == app.user_config.keys.next_track => {
-            app.next_track();
+            app.dispatch(IoEvent::NextTrack);
         }
         _ if key == app.user_config.keys.previous_track => {
             app.previous_track();
@@ -174,8 +175,8 @@ fn handle_escape(app: &mut App) {
 
 fn handle_jump_to_album(app: &mut App) {
     if let Some(current_playback_context) = &app.current_playback_context {
-        if let Some(full_track) = &current_playback_context.item.clone() {
-            app.get_album_tracks(full_track.album.clone());
+        if let Some(full_track) = current_playback_context.item.clone() {
+            app.dispatch(IoEvent::GetAlbumTracks(Box::new(full_track.album)));
         }
     };
 }
@@ -185,8 +186,8 @@ fn handle_jump_to_artist_album(app: &mut App) {
     if let Some(current_playback_context) = &app.current_playback_context {
         if let Some(playing_item) = &current_playback_context.item.clone() {
             if let Some(artist) = playing_item.artists.first() {
-                if let Some(artist_id) = &artist.id {
-                    app.get_artist(artist_id, &artist.name);
+                if let Some(artist_id) = artist.id.clone() {
+                    app.get_artist(artist_id, artist.name.clone());
                     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
                 }
             }
