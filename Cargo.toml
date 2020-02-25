@@ -14,7 +14,7 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rspotify = "0.8.0"
+rspotify = { git = "https://github.com/Rigellute/rspotify.git", rev = "2def685"}
 tui = { version = "0.8.0", features = ["crossterm"], default-features = false }
 failure = "0.1.6"
 serde = { version = "1.0", features = ["derive"] }
@@ -26,6 +26,9 @@ unicode-width = "0.1.7"
 backtrace = "0.3.44"
 clipboard = "0.5.0"
 crossterm =  "0.16"
+tokio = { version = "0.2", features = ["full"] }
+proc-macro2 = "1.0.9"
+futures = "0.3.4"
 
 [[bin]]
 bench = false

@@ -2,13 +2,13 @@ extern crate unicode_width;
 
 use super::super::app::{ActiveBlock, AlbumTableContext, App, RouteId, SelectedFullAlbum};
 use crate::event::Key;
-use rspotify::spotify::senum::Country;
+use rspotify::senum::Country;
 use std::convert::TryInto;
 use std::str::FromStr;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 // Handle event when the search input block is active
-pub fn handler(key: Key, app: &mut App) {
+pub async fn handler(key: Key, app: &mut App) {
     match key {
         Key::Ctrl('u') => {
             app.input = vec![];
@@ -53,7 +53,7 @@ pub fn handler(key: Key, app: &mut App) {
 
                 if input_str.starts_with(album_url_prefix) {
                     let album_id = input_str.trim_start_matches(album_url_prefix);
-                    match spotify.album(&album_id) {
+                    match spotify.album(&album_id).await {
                         Ok(album) => {
                             let selected_album = SelectedFullAlbum {
                                 album,
@@ -78,15 +78,18 @@ pub fn handler(key: Key, app: &mut App) {
 
                 if input_str.starts_with(artist_url_prefix) {
                     let artist_id = input_str.trim_start_matches(artist_url_prefix);
-                    app.get_artist(&artist_id, "");
+                    app.get_artist(&artist_id, "").await;
                     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
                     return;
                 }
 
                 // Can I run these functions in parellel?
-                match spotify.search_track(&input_str, app.small_search_limit, 0, country) {
+                match spotify
+                    .search_track(&input_str, app.small_search_limit, 0, country)
+                    .await
+                {
                     Ok(result) => {
-                        app.set_tracks_to_table(result.tracks.items.clone());
+                        app.set_tracks_to_table(result.tracks.items.clone()).await;
                         app.search_results.tracks = Some(result);
                     }
                     Err(e) => {
@@ -94,7 +97,10 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_artist(&input_str, app.small_search_limit, 0, country) {
+                match spotify
+                    .search_artist(&input_str, app.small_search_limit, 0, country)
+                    .await
+                {
                     Ok(result) => {
                         app.search_results.artists = Some(result);
                     }
@@ -103,7 +109,10 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_album(&input_str, app.small_search_limit, 0, country) {
+                match spotify
+                    .search_album(&input_str, app.small_search_limit, 0, country)
+                    .await
+                {
                     Ok(result) => {
                         app.search_results.albums = Some(result);
                     }
@@ -112,7 +121,10 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                 }
 
-                match spotify.search_playlist(&input_str, app.small_search_limit, 0, country) {
+                match spotify
+                    .search_playlist(&input_str, app.small_search_limit, 0, country)
+                    .await
+                {
                     Ok(result) => {
                         app.search_results.playlists = Some(result);
                     }
@@ -169,81 +181,81 @@ mod tests {
         assert_eq!(1, compute_character_width('ç'));
     }
 
-    #[test]
-    fn test_input_handler_clear_input_on_ctrl_u() {
+    #[tokio::test]
+    async fn test_input_handler_clear_input_on_ctrl_u() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("My text");
 
-        handler(Key::Ctrl('u'), &mut app);
+        handler(Key::Ctrl('u'), &mut app).await;
 
         assert_eq!(app.input, str_to_vec_char(""));
     }
 
-    #[test]
-    fn test_input_handler_esc_back_to_playlist() {
+    #[tokio::test]
+    async fn test_input_handler_esc_back_to_playlist() {
         let mut app = App::new();
 
         app.set_current_route_state(Some(ActiveBlock::MyPlaylists), None);
-        handler(Key::Esc, &mut app);
+        handler(Key::Esc, &mut app).await;
 
         let current_route = app.get_current_route();
         assert_eq!(current_route.active_block, ActiveBlock::Empty);
     }
 
-    #[test]
-    fn test_input_handler_on_enter_text() {
+    #[tokio::test]
+    async fn test_input_handler_on_enter_text() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("My tex");
         app.input_cursor_position = app.input.len().try_into().unwrap();
         app.input_idx = app.input.len();
 
-        handler(Key::Char('t'), &mut app);
+        handler(Key::Char('t'), &mut app).await;
 
         assert_eq!(app.input, str_to_vec_char("My text"));
     }
 
-    #[test]
-    fn test_input_handler_backspace() {
+    #[tokio::test]
+    async fn test_input_handler_backspace() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("My text");
         app.input_cursor_position = app.input.len().try_into().unwrap();
         app.input_idx = app.input.len();
 
-        handler(Key::Backspace, &mut app);
+        handler(Key::Backspace, &mut app).await;
         assert_eq!(app.input, str_to_vec_char("My tex"));
 
         // Test that backspace deletes from the cursor position
         app.input_idx = 2;
         app.input_cursor_position = 2;
 
-        handler(Key::Backspace, &mut app);
+        handler(Key::Backspace, &mut app).await;
         assert_eq!(app.input, str_to_vec_char("M tex"));
     }
 
-    #[test]
-    fn test_input_handler_delete() {
+    #[tokio::test]
+    async fn test_input_handler_delete() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("My text");
         app.input_idx = 3;
         app.input_cursor_position = 3;
 
-        handler(Key::Delete, &mut app);
+        handler(Key::Delete, &mut app).await;
         assert_eq!(app.input, str_to_vec_char("My ext"));
 
         app.input = str_to_vec_char("ラスト");
         app.input_idx = 1;
         app.input_cursor_position = 1;
 
-        handler(Key::Delete, &mut app);
+        handler(Key::Delete, &mut app).await;
         assert_eq!(app.input, str_to_vec_char("ラト"));
     }
 
-    #[test]
-    fn test_input_handler_left_event() {
+    #[tokio::test]
+    async fn test_input_handler_left_event() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("My text");
@@ -251,43 +263,43 @@ mod tests {
         app.input_idx = app.input.len();
         app.input_cursor_position = input_len;
 
-        handler(Key::Left, &mut app);
+        handler(Key::Left, &mut app).await;
         assert_eq!(app.input_cursor_position, input_len - 1);
-        handler(Key::Left, &mut app);
+        handler(Key::Left, &mut app).await;
         assert_eq!(app.input_cursor_position, input_len - 2);
-        handler(Key::Left, &mut app);
+        handler(Key::Left, &mut app).await;
         assert_eq!(app.input_cursor_position, input_len - 3);
 
         // Pretend to smash the left event to test the we have no out-of-bounds crash
         for _ in 0..20 {
-            handler(Key::Left, &mut app);
+            handler(Key::Left, &mut app).await;
         }
 
         assert_eq!(app.input_cursor_position, 0);
     }
 
-    #[test]
-    fn test_input_handler_on_enter_text_non_english_char() {
+    #[tokio::test]
+    async fn test_input_handler_on_enter_text_non_english_char() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("ыа");
         app.input_cursor_position = app.input.len().try_into().unwrap();
         app.input_idx = app.input.len();
 
-        handler(Key::Char('ы'), &mut app);
+        handler(Key::Char('ы'), &mut app).await;
 
         assert_eq!(app.input, str_to_vec_char("ыаы"));
     }
 
-    #[test]
-    fn test_input_handler_on_enter_text_wide_char() {
+    #[tokio::test]
+    async fn test_input_handler_on_enter_text_wide_char() {
         let mut app = App::new();
 
         app.input = str_to_vec_char("你");
         app.input_cursor_position = 2; // 你 is 2 char wide
         app.input_idx = 1; // 1 char
 
-        handler(Key::Char('好'), &mut app);
+        handler(Key::Char('好'), &mut app).await;
 
         assert_eq!(app.input, str_to_vec_char("你好"));
         assert_eq!(app.input_idx, 2);

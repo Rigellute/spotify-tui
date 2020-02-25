@@ -4,7 +4,7 @@ use super::{
 };
 use crate::event::Key;
 
-pub fn handler(key: Key, app: &mut App) {
+pub async fn handler(key: Key, app: &mut App) {
     match key {
         k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
         k if common_key_events::down_event(k) => {
@@ -34,7 +34,7 @@ pub fn handler(key: Key, app: &mut App) {
             app.track_table.selected_index = next_index;
         }
         Key::Enter => {
-            on_enter(app);
+            on_enter(app).await;
         }
         // Scroll down
         Key::Ctrl('d') => {
@@ -53,7 +53,7 @@ pub fn handler(key: Key, app: &mut App) {
                                     {
                                         app.playlist_offset += app.large_search_limit;
                                         let playlist_id = selected_playlist.id.to_owned();
-                                        app.get_playlist_tracks(playlist_id);
+                                        app.get_playlist_tracks(playlist_id).await;
                                     }
                                 }
                             }
@@ -61,7 +61,7 @@ pub fn handler(key: Key, app: &mut App) {
                     }
                     TrackTableContext::RecommendedTracks => {}
                     TrackTableContext::SavedTracks => {
-                        app.get_current_user_saved_tracks_next();
+                        app.get_current_user_saved_tracks_next().await;
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
@@ -81,7 +81,7 @@ pub fn handler(key: Key, app: &mut App) {
                                 {
                                     app.made_for_you_offset += app.large_search_limit;
                                     let playlist_id = selected_playlist.id.to_owned();
-                                    app.get_made_for_you_playlist_tracks(playlist_id);
+                                    app.get_made_for_you_playlist_tracks(playlist_id).await;
                                 }
                             }
                         }
@@ -105,13 +105,13 @@ pub fn handler(key: Key, app: &mut App) {
                                 playlists.items.get(selected_playlist_index.to_owned())
                             {
                                 let playlist_id = selected_playlist.id.to_owned();
-                                app.get_playlist_tracks(playlist_id);
+                                app.get_playlist_tracks(playlist_id).await;
                             }
                         };
                     }
                     TrackTableContext::RecommendedTracks => {}
                     TrackTableContext::SavedTracks => {
-                        app.get_current_user_saved_tracks_previous();
+                        app.get_current_user_saved_tracks_previous().await;
                     }
                     TrackTableContext::AlbumSearch => {}
                     TrackTableContext::PlaylistSearch => {}
@@ -130,24 +130,24 @@ pub fn handler(key: Key, app: &mut App) {
                             playlists.items.get(selected_playlist_index)
                         {
                             let playlist_id = selected_playlist.id.to_owned();
-                            app.get_made_for_you_playlist_tracks(playlist_id);
+                            app.get_made_for_you_playlist_tracks(playlist_id).await;
                         }
                     }
                 },
                 None => {}
             };
         }
-        Key::Ctrl('e') => jump_to_end(app),
-        Key::Ctrl('a') => jump_to_start(app),
+        Key::Ctrl('e') => jump_to_end(app).await,
+        Key::Ctrl('a') => jump_to_start(app).await,
         //recommended song radio
         Key::Char('r') => {
-            handle_recommended_tracks(app);
+            handle_recommended_tracks(app).await;
         }
         _ => {}
     }
 }
 
-fn handle_recommended_tracks(app: &mut App) {
+async fn handle_recommended_tracks(app: &mut App) {
     let (selected_index, tracks) = (&app.track_table.selected_index, &app.track_table.tracks);
     if let Some(track) = tracks.get(*selected_index) {
         let first_track = track.clone();
@@ -157,11 +157,12 @@ fn handle_recommended_tracks(app: &mut App) {
         };
         app.recommendations_context = Some(RecommendationsContext::Song);
         app.recommendations_seed = first_track.name.clone();
-        app.get_recommendations_for_seed(None, track_id_list, Some(&first_track));
+        app.get_recommendations_for_seed(None, track_id_list, Some(&first_track))
+            .await;
     };
 }
 
-fn jump_to_end(app: &mut App) {
+async fn jump_to_end(app: &mut App) {
     match &app.track_table.context {
         Some(context) => match context {
             TrackTableContext::MyPlaylists => {
@@ -182,7 +183,7 @@ fn jump_to_end(app: &mut App) {
                             app.playlist_offset =
                                 total_tracks - (total_tracks % app.large_search_limit);
                             let playlist_id = selected_playlist.id.to_owned();
-                            app.get_playlist_tracks(playlist_id);
+                            app.get_playlist_tracks(playlist_id).await;
                         }
                     }
                 }
@@ -197,7 +198,7 @@ fn jump_to_end(app: &mut App) {
     }
 }
 
-fn on_enter(app: &mut App) {
+async fn on_enter(app: &mut App) {
     let TrackTable {
         context,
         selected_index,
@@ -224,12 +225,14 @@ fn on_enter(app: &mut App) {
                         context_uri,
                         None,
                         Some(app.track_table.selected_index + app.playlist_offset as usize),
-                    );
+                    )
+                    .await;
                 };
             }
             TrackTableContext::RecommendedTracks => {
                 if let Some(_track) = tracks.get(*selected_index) {
-                    app.start_recommendations_playback(Some(app.track_table.selected_index));
+                    app.start_recommendations_playback(Some(app.track_table.selected_index))
+                        .await;
                 };
             }
             TrackTableContext::SavedTracks => {
@@ -244,7 +247,8 @@ fn on_enter(app: &mut App) {
                         None,
                         Some(track_uris),
                         Some(app.track_table.selected_index),
-                    );
+                    )
+                    .await;
                 };
             }
             TrackTableContext::AlbumSearch => {}
@@ -273,7 +277,8 @@ fn on_enter(app: &mut App) {
                         _ => None,
                     };
 
-                    app.start_playback(context_uri, None, Some(app.track_table.selected_index));
+                    app.start_playback(context_uri, None, Some(app.track_table.selected_index))
+                        .await;
                 };
             }
             TrackTableContext::MadeForYou => {
@@ -294,14 +299,16 @@ fn on_enter(app: &mut App) {
                         context_uri,
                         None,
                         Some(app.track_table.selected_index + app.made_for_you_offset as usize),
-                    );
+                    )
+                    .await;
                 }
             }
         },
         None => {}
     };
 }
-fn jump_to_start(app: &mut App) {
+
+async fn jump_to_start(app: &mut App) {
     match &app.track_table.context {
         Some(context) => match context {
             TrackTableContext::MyPlaylists => {
@@ -313,7 +320,7 @@ fn jump_to_start(app: &mut App) {
                     {
                         app.playlist_offset = 0;
                         let playlist_id = selected_playlist.id.to_owned();
-                        app.get_playlist_tracks(playlist_id);
+                        app.get_playlist_tracks(playlist_id).await;
                     }
                 }
             }

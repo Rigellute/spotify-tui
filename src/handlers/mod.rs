@@ -24,52 +24,52 @@ use crate::event::Key;
 
 pub use input::handler as input_handler;
 
-pub fn handle_app(key: Key, app: &mut App) {
+pub async fn handle_app(key: Key, app: &mut App) {
     // First handle any global event and then move to block event
     match key {
         Key::Esc => {
             handle_escape(app);
         }
         _ if key == app.user_config.keys.jump_to_album => {
-            handle_jump_to_album(app);
+            handle_jump_to_album(app).await;
         }
         _ if key == app.user_config.keys.jump_to_artist_album => {
-            handle_jump_to_artist_album(app);
+            handle_jump_to_artist_album(app).await;
         }
         _ if key == app.user_config.keys.manage_devices => {
-            app.handle_get_devices();
+            app.handle_get_devices().await;
         }
         _ if key == app.user_config.keys.decrease_volume => {
-            app.decrease_volume();
+            app.decrease_volume().await;
         }
         _ if key == app.user_config.keys.increase_volume => {
-            app.increase_volume();
+            app.increase_volume().await;
         }
         // Press space to toggle playback
         _ if key == app.user_config.keys.toggle_playback => {
-            app.toggle_playback();
+            app.toggle_playback().await;
         }
         _ if key == app.user_config.keys.seek_backwards => {
-            app.seek_backwards();
+            app.seek_backwards().await;
         }
         _ if key == app.user_config.keys.seek_forwards => {
-            app.seek_forwards();
+            app.seek_forwards().await;
         }
         _ if key == app.user_config.keys.next_track => {
-            app.next_track();
+            app.next_track().await;
         }
         _ if key == app.user_config.keys.previous_track => {
-            app.previous_track();
+            app.previous_track().await;
         }
         _ if key == app.user_config.keys.help => {
             app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
         }
 
         _ if key == app.user_config.keys.shuffle => {
-            app.shuffle();
+            app.shuffle().await;
         }
         _ if key == app.user_config.keys.repeat => {
-            app.repeat();
+            app.repeat().await;
         }
         _ if key == app.user_config.keys.search => {
             app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
@@ -81,30 +81,30 @@ pub fn handle_app(key: Key, app: &mut App) {
             app.copy_album_url();
         }
         _ if key == app.user_config.keys.audio_analysis => {
-            app.get_audio_analysis();
+            app.get_audio_analysis().await;
         }
-        _ => handle_block_events(key, app),
+        _ => handle_block_events(key, app).await,
     }
 }
 
 // Handle event for the current active block
-fn handle_block_events(key: Key, app: &mut App) {
+async fn handle_block_events(key: Key, app: &mut App) {
     let current_route = app.get_current_route();
     match current_route.active_block {
         ActiveBlock::Analysis => {
             analysis::handler(key, app);
         }
         ActiveBlock::ArtistBlock => {
-            artist::handler(key, app);
+            artist::handler(key, app).await;
         }
         ActiveBlock::Input => {
-            input::handler(key, app);
+            input::handler(key, app).await;
         }
         ActiveBlock::MyPlaylists => {
-            playlist::handler(key, app);
+            playlist::handler(key, app).await;
         }
         ActiveBlock::TrackTable => {
-            track_table::handler(key, app);
+            track_table::handler(key, app).await;
         }
         ActiveBlock::HelpMenu => {
             help_menu::handler(key, app);
@@ -116,37 +116,37 @@ fn handle_block_events(key: Key, app: &mut App) {
             select_device::handler(key, app);
         }
         ActiveBlock::SearchResultBlock => {
-            search_results::handler(key, app);
+            search_results::handler(key, app).await;
         }
         ActiveBlock::Home => {
             home::handler(key, app);
         }
         ActiveBlock::AlbumList => {
-            album_list::handler(key, app);
+            album_list::handler(key, app).await;
         }
         ActiveBlock::AlbumTracks => {
-            album_tracks::handler(key, app);
+            album_tracks::handler(key, app).await;
         }
         ActiveBlock::Library => {
-            library::handler(key, app);
+            library::handler(key, app).await;
         }
         ActiveBlock::Empty => {
             empty::handler(key, app);
         }
         ActiveBlock::RecentlyPlayed => {
-            recently_played::handler(key, app);
+            recently_played::handler(key, app).await;
         }
         ActiveBlock::Artists => {
-            artists::handler(key, app);
+            artists::handler(key, app).await;
         }
         ActiveBlock::MadeForYou => {
-            made_for_you::handler(key, app);
+            made_for_you::handler(key, app).await;
         }
         ActiveBlock::Podcasts => {
             podcasts::handler(key, app);
         }
         ActiveBlock::PlayBar => {
-            playbar::handler(key, app);
+            playbar::handler(key, app).await;
         }
     }
 }
@@ -170,21 +170,21 @@ fn handle_escape(app: &mut App) {
     }
 }
 
-fn handle_jump_to_album(app: &mut App) {
+async fn handle_jump_to_album(app: &mut App) {
     if let Some(current_playback_context) = &app.current_playback_context {
         if let Some(full_track) = &current_playback_context.item.clone() {
-            app.get_album_tracks(full_track.album.clone());
+            app.get_album_tracks(full_track.album.clone()).await;
         }
     };
 }
 
 // NOTE: this only finds the first artist of the song and jumps to their albums
-fn handle_jump_to_artist_album(app: &mut App) {
+async fn handle_jump_to_artist_album(app: &mut App) {
     if let Some(current_playback_context) = &app.current_playback_context {
         if let Some(playing_item) = &current_playback_context.item.clone() {
             if let Some(artist) = playing_item.artists.first() {
                 if let Some(artist_id) = &artist.id {
-                    app.get_artist(artist_id, &artist.name);
+                    app.get_artist(artist_id, &artist.name).await;
                     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
                 }
             }

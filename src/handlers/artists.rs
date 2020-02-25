@@ -4,7 +4,7 @@ use crate::{
     event::Key,
 };
 
-pub fn handler(key: Key, app: &mut App) {
+pub async fn handler(key: Key, app: &mut App) {
     match key {
         k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
         k if common_key_events::down_event(k) => {
@@ -46,15 +46,16 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Enter => {
             let artists = app.artists.to_owned();
             let artist = &artists[app.artists_list_index];
-            app.get_artist(&artist.id, &artist.name);
+            app.get_artist(&artist.id, &artist.name).await;
             app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
         }
-        Key::Char('D') => app.user_unfollow_artists(),
+        Key::Char('D') => app.user_unfollow_artists().await,
         Key::Char('e') => {
             let artists = app.artists.to_owned();
             let artist = artists.get(app.artists_list_index);
             if let Some(artist) = artist {
-                app.start_playback(Some(artist.uri.to_owned()), None, None);
+                app.start_playback(Some(artist.uri.to_owned()), None, None)
+                    .await;
             }
         }
         Key::Char('r') => {
@@ -66,7 +67,8 @@ pub fn handler(key: Key, app: &mut App) {
 
                 app.recommendations_context = Some(RecommendationsContext::Artist);
                 app.recommendations_seed = artist_name;
-                app.get_recommendations_for_seed(artist_id_list, None, None);
+                app.get_recommendations_for_seed(artist_id_list, None, None)
+                    .await;
             }
         }
         _ => {}

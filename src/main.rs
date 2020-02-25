@@ -23,7 +23,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use redirect_uri::redirect_uri_web_server;
-use rspotify::spotify::{
+use rspotify::{
     client::Spotify,
     oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
     util::{get_token, process_token, request_token},
@@ -73,18 +73,18 @@ fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
     (spotify, token_expiry)
 }
 /// get token automatically with local webserver
-pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Option<TokenInfo> {
-    match spotify_oauth.get_cached_token() {
+pub async fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Option<TokenInfo> {
+    match spotify_oauth.get_cached_token().await {
         Some(token_info) => Some(token_info),
         None => match redirect_uri_web_server(spotify_oauth, port) {
-            Ok(mut url) => process_token(spotify_oauth, &mut url),
+            Ok(mut url) => process_token(spotify_oauth, &mut url).await,
             Err(()) => {
                 println!("Starting webserver failed. Continuing with manual authentication");
                 request_token(spotify_oauth);
                 println!("Enter the URL you were redirected to: ");
                 let mut input = String::new();
                 match io::stdin().read_line(&mut input) {
-                    Ok(_) => process_token(spotify_oauth, &mut input),
+                    Ok(_) => process_token(spotify_oauth, &mut input).await,
                     Err(_) => None,
                 }
             }
@@ -127,7 +127,8 @@ fn panic_hook(info: &PanicInfo<'_>) {
     }
 }
 
-fn main() -> Result<(), failure::Error> {
+#[tokio::main]
+async fn main() -> Result<(), failure::Error> {
     panic::set_hook(Box::new(|info| {
         panic_hook(info);
     }));
@@ -174,7 +175,7 @@ fn main() -> Result<(), failure::Error> {
         .scope(&SCOPES.join(" "))
         .build();
 
-    match get_token_auto(&mut oauth, client_config.get_port()) {
+    match get_token_auto(&mut oauth, client_config.get_port()).await {
         Some(token_info) => {
             // Terminal initialization
             let mut stdout = stdout();
@@ -204,7 +205,7 @@ fn main() -> Result<(), failure::Error> {
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
             if app.client_config.device_id.is_none() {
-                app.handle_get_devices();
+                app.handle_get_devices().await;
             }
 
             let mut is_first_render = true;
@@ -282,7 +283,7 @@ fn main() -> Result<(), failure::Error> {
 
                 if Instant::now() > token_expiry {
                     // refresh token
-                    if let Some(new_token_info) = get_token(&mut oauth) {
+                    if let Some(new_token_info) = get_token(&mut oauth).await {
                         let (new_spotify, new_token_expiry) = get_spotify(new_token_info);
                         spotify = new_spotify;
                         token_expiry = new_token_expiry;
@@ -306,7 +307,7 @@ fn main() -> Result<(), failure::Error> {
                         // To avoid swallowing the global key presses `q` and `-` make a special
                         // case for the input handler
                         if current_active_block == ActiveBlock::Input {
-                            handlers::input_handler(key, &mut app);
+                            handlers::input_handler(key, &mut app).await;
                         } else if key == app.user_config.keys.back {
                             if app.get_current_route().active_block != ActiveBlock::Input {
                                 // Go back through navigation stack when not in search input mode and exit the app if there are no more places to back to
@@ -324,11 +325,11 @@ fn main() -> Result<(), failure::Error> {
                                 }
                             }
                         } else {
-                            handlers::handle_app(key, &mut app);
+                            handlers::handle_app(key, &mut app).await;
                         }
                     }
                     event::Event::Tick => {
-                        app.update_on_tick();
+                        app.update_on_tick().await;
                     }
                 }
 
@@ -336,8 +337,9 @@ fn main() -> Result<(), failure::Error> {
                 // startup speed
                 if is_first_render {
                     if let Some(spotify) = &app.spotify {
-                        let playlists =
-                            spotify.current_user_playlists(app.large_search_limit, None);
+                        let playlists = spotify
+                            .current_user_playlists(app.large_search_limit, None)
+                            .await;
 
                         match playlists {
                             Ok(p) => {
@@ -350,10 +352,10 @@ fn main() -> Result<(), failure::Error> {
                             }
                         };
 
-                        app.get_user();
+                        app.get_user().await;
                     }
 
-                    app.get_current_playback();
+                    app.get_current_playback().await;
                     is_first_render = false;
                 }
             }

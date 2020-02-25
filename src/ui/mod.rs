@@ -9,7 +9,7 @@ use super::{
     banner::BANNER,
 };
 use help::get_help_docs;
-use rspotify::spotify::senum::RepeatState;
+use rspotify::senum::RepeatState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
