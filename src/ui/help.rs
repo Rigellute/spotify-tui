@@ -14,6 +14,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
         vec!["Seek forwards 5 seconds", ">", "General"],
         vec!["Toggle shuffle", "<Ctrl+s>", "General"],
         vec!["Copy url to currently playing song", "c", "General"],
+        vec!["Copy url to currently playing album", "C", "General"],
         vec!["Cycle repeat mode", "<Ctrl+r>", "General"],
         vec![
             "Move selection left",
@@ -35,9 +36,13 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
             "l | <Right Arrow Key> | <Ctrl+f>",
             "General",
         ],
+        vec!["Move selection to top of list", "H", "General"],
+        vec!["Move selection to middle of list", "M", "General"],
+        vec!["Move selection to bottom of list", "L", "General"],
         vec!["Enter input for search", "/", "General"],
         vec!["Pause/Resume playback", "<Space>", "General"],
         vec!["Enter active mode", "<Enter>", "General"],
+        vec!["Go to audio analysis screen", "v", "General"],
         vec![
             "Go back or exit when nowhere left to back to",
             "q",
@@ -51,6 +56,12 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
             "<Enter>",
             "Selected block",
         ],
+        vec![
+            "Play recommendations for song/artist",
+            "r",
+            "Selected block",
+        ],
+        vec!["Play all tracks for artist", "e", "Library -> Artists"],
         vec!["Delete entire input", "<Ctrl+u>", "Search input"],
         vec!["Search with input text", "<Enter>", "Search input"],
         vec![

@@ -6,10 +6,66 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use tui::style::Color;
 
 const FILE_NAME: &str = "config.yml";
 const CONFIG_DIR: &str = ".config";
 const APP_CONFIG_DIR: &str = "spotify-tui";
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct UserTheme {
+    pub active: Option<String>,
+    pub banner: Option<String>,
+    pub error_border: Option<String>,
+    pub error_text: Option<String>,
+    pub hint: Option<String>,
+    pub hovered: Option<String>,
+    pub inactive: Option<String>,
+    pub playbar_background: Option<String>,
+    pub playbar_progress: Option<String>,
+    pub playbar_text: Option<String>,
+    pub selected: Option<String>,
+    pub text: Option<String>,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Theme {
+    pub analysis_bar: Color,
+    pub analysis_bar_text: Color,
+    pub active: Color,
+    pub banner: Color,
+    pub error_border: Color,
+    pub error_text: Color,
+    pub hint: Color,
+    pub hovered: Color,
+    pub inactive: Color,
+    pub playbar_background: Color,
+    pub playbar_progress: Color,
+    pub playbar_text: Color,
+    pub selected: Color,
+    pub text: Color,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Theme {
+            analysis_bar: Color::LightCyan,
+            analysis_bar_text: Color::Black,
+            active: Color::Cyan,
+            banner: Color::LightCyan,
+            error_border: Color::Red,
+            error_text: Color::LightRed,
+            hint: Color::Yellow,
+            hovered: Color::Magenta,
+            inactive: Color::Gray,
+            playbar_background: Color::Black,
+            playbar_progress: Color::LightCyan,
+            playbar_text: Color::White,
+            selected: Color::LightCyan,
+            text: Color::White,
+        }
+    }
+}
 
 fn parse_key(key: String) -> Result<Key, failure::Error> {
     fn get_single_char(string: &str) -> char {
@@ -60,6 +116,9 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
         Key::Char('j'),
         Key::Char('k'),
         Key::Char('l'),
+        Key::Char('H'),
+        Key::Char('M'),
+        Key::Char('L'),
         Key::Up,
         Key::Down,
         Key::Left,
@@ -102,6 +161,8 @@ pub struct KeyBindingsString {
     search: Option<String>,
     submit: Option<String>,
     copy_song_url: Option<String>,
+    copy_album_url: Option<String>,
+    audio_analysis: Option<String>,
 }
 
 pub struct KeyBindings {
@@ -122,31 +183,40 @@ pub struct KeyBindings {
     pub search: Key,
     pub submit: Key,
     pub copy_song_url: Key,
+    pub copy_album_url: Key,
+    pub audio_analysis: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BehaviorConfigString {
     pub seek_milliseconds: Option<u32>,
+    pub volume_increment: Option<u8>,
+    pub tick_rate_milliseconds: Option<u64>,
 }
 
 pub struct BehaviorConfig {
     pub seek_milliseconds: u32,
+    pub volume_increment: u8,
+    pub tick_rate_milliseconds: u64,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
     keybindings: Option<KeyBindingsString>,
     behavior: Option<BehaviorConfigString>,
+    theme: Option<UserTheme>,
 }
 
 pub struct UserConfig {
     pub keys: KeyBindings,
+    pub theme: Theme,
     pub behavior: BehaviorConfig,
 }
 
 impl UserConfig {
     pub fn new() -> UserConfig {
         UserConfig {
+            theme: Default::default(),
             keys: KeyBindings {
                 back: Key::Char('q'),
                 jump_to_album: Key::Char('a'),
@@ -165,9 +235,13 @@ impl UserConfig {
                 search: Key::Char('/'),
                 submit: Key::Enter,
                 copy_song_url: Key::Char('c'),
+                copy_album_url: Key::Char('C'),
+                audio_analysis: Key::Char('v'),
             },
             behavior: BehaviorConfig {
                 seek_milliseconds: 5 * 1000,
+                volume_increment: 10,
+                tick_rate_milliseconds: 250,
             },
         }
     }
@@ -229,23 +303,61 @@ impl UserConfig {
         to_keys!(search);
         to_keys!(submit);
         to_keys!(copy_song_url);
+        to_keys!(copy_album_url);
+        to_keys!(audio_analysis);
 
+        Ok(())
+    }
+
+    pub fn load_theme(&mut self, theme: UserTheme) -> Result<(), failure::Error> {
+        macro_rules! to_theme_item {
+            ($name: ident) => {
+                if let Some(theme_item) = theme.$name {
+                    self.theme.$name = parse_theme_item(&theme_item)?;
+                }
+            };
+        };
+
+        to_theme_item!(active);
+        to_theme_item!(banner);
+        to_theme_item!(error_border);
+        to_theme_item!(error_text);
+        to_theme_item!(hint);
+        to_theme_item!(hovered);
+        to_theme_item!(inactive);
+        to_theme_item!(playbar_background);
+        to_theme_item!(playbar_progress);
+        to_theme_item!(playbar_text);
+        to_theme_item!(selected);
+        to_theme_item!(text);
         Ok(())
     }
 
     pub fn load_behaviorconfig(
         &mut self,
-        behaviorconfig: BehaviorConfigString,
+        behavior_config: BehaviorConfigString,
     ) -> Result<(), failure::Error> {
-        macro_rules! to_behavior {
-            ($name: ident) => {
-                if let Some(behavior_string) = behaviorconfig.$name {
-                    self.behavior.$name = behavior_string;
-                }
-            };
+        if let Some(behavior_string) = behavior_config.seek_milliseconds {
+            self.behavior.seek_milliseconds = behavior_string;
         }
 
-        to_behavior!(seek_milliseconds);
+        if let Some(behavior_string) = behavior_config.volume_increment {
+            if behavior_string > 100 {
+                return Err(failure::format_err!(
+                    "Volume increment must be between 0 and 100, is {}",
+                    behavior_string,
+                ));
+            }
+            self.behavior.volume_increment = behavior_string;
+        }
+
+        if let Some(tick_rate) = behavior_config.tick_rate_milliseconds {
+            if tick_rate >= 1000 {
+                return Err(err_msg("Tick rate must be below 1000"));
+            } else {
+                self.behavior.tick_rate_milliseconds = tick_rate;
+            }
+        }
 
         Ok(())
     }
@@ -268,12 +380,52 @@ impl UserConfig {
             if let Some(behavior) = config_yml.behavior {
                 self.load_behaviorconfig(behavior)?;
             }
+            if let Some(theme) = config_yml.theme {
+                self.load_theme(theme)?;
+            }
 
             Ok(())
         } else {
             Ok(())
         }
     }
+}
+
+fn parse_theme_item(theme_item: &str) -> Result<Color, failure::Error> {
+    let color = match theme_item {
+        "Reset" => Color::Reset,
+        "Black" => Color::Black,
+        "Red" => Color::Red,
+        "Green" => Color::Green,
+        "Yellow" => Color::Yellow,
+        "Blue" => Color::Blue,
+        "Magenta" => Color::Magenta,
+        "Cyan" => Color::Cyan,
+        "Gray" => Color::Gray,
+        "DarkGray" => Color::DarkGray,
+        "LightRed" => Color::LightRed,
+        "LightGreen" => Color::LightGreen,
+        "LightYellow" => Color::LightYellow,
+        "LightBlue" => Color::LightBlue,
+        "LightMagenta" => Color::LightMagenta,
+        "LightCyan" => Color::LightCyan,
+        "White" => Color::White,
+        _ => {
+            let colors = theme_item.split(',').collect::<Vec<&str>>();
+            if let (Some(r), Some(g), Some(b)) = (colors.get(0), colors.get(1), colors.get(2)) {
+                Color::Rgb(
+                    r.trim().parse::<u8>()?,
+                    g.trim().parse::<u8>()?,
+                    b.trim().parse::<u8>()?,
+                )
+            } else {
+                println!("Unexpected color {}", theme_item);
+                Color::Black
+            }
+        }
+    };
+
+    Ok(color)
 }
 
 #[cfg(test)]
@@ -289,6 +441,36 @@ mod tests {
         assert_eq!(parse_key(String::from("-")).unwrap(), Key::Char('-'));
         assert_eq!(parse_key(String::from("esc")).unwrap(), Key::Esc);
         assert_eq!(parse_key(String::from("del")).unwrap(), Key::Delete);
+    }
+
+    #[test]
+    fn parse_theme_item_test() {
+        use super::parse_theme_item;
+        use tui::style::Color;
+        assert_eq!(parse_theme_item("Reset").unwrap(), Color::Reset);
+        assert_eq!(parse_theme_item("Black").unwrap(), Color::Black);
+        assert_eq!(parse_theme_item("Red").unwrap(), Color::Red);
+        assert_eq!(parse_theme_item("Green").unwrap(), Color::Green);
+        assert_eq!(parse_theme_item("Yellow").unwrap(), Color::Yellow);
+        assert_eq!(parse_theme_item("Blue").unwrap(), Color::Blue);
+        assert_eq!(parse_theme_item("Magenta").unwrap(), Color::Magenta);
+        assert_eq!(parse_theme_item("Cyan").unwrap(), Color::Cyan);
+        assert_eq!(parse_theme_item("Gray").unwrap(), Color::Gray);
+        assert_eq!(parse_theme_item("DarkGray").unwrap(), Color::DarkGray);
+        assert_eq!(parse_theme_item("LightRed").unwrap(), Color::LightRed);
+        assert_eq!(parse_theme_item("LightGreen").unwrap(), Color::LightGreen);
+        assert_eq!(parse_theme_item("LightYellow").unwrap(), Color::LightYellow);
+        assert_eq!(parse_theme_item("LightBlue").unwrap(), Color::LightBlue);
+        assert_eq!(
+            parse_theme_item("LightMagenta").unwrap(),
+            Color::LightMagenta
+        );
+        assert_eq!(parse_theme_item("LightCyan").unwrap(), Color::LightCyan);
+        assert_eq!(parse_theme_item("White").unwrap(), Color::White);
+        assert_eq!(
+            parse_theme_item("23, 43, 45").unwrap(),
+            Color::Rgb(23, 43, 45)
+        );
     }
 
     #[test]

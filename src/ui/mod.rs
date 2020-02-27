@@ -1,9 +1,10 @@
-mod help;
-mod util;
+pub mod audio_analysis;
+pub mod help;
+pub mod util;
 use super::{
     app::{
-        ActiveBlock, AlbumTableContext, App, ArtistBlock, RouteId, SearchResultBlock,
-        LIBRARY_OPTIONS,
+        ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
+        SearchResultBlock, LIBRARY_OPTIONS,
     },
     banner::BANNER,
 };
@@ -12,7 +13,7 @@ use rspotify::spotify::senum::RepeatState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
     Frame,
 };
@@ -22,14 +23,13 @@ use util::{
     millis_to_minutes,
 };
 
-pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
-
 pub enum TableId {
     Album,
     AlbumList,
     Artist,
     Song,
     RecentlyPlayed,
+    MadeForYou,
 }
 
 #[derive(PartialEq)]
@@ -68,7 +68,7 @@ pub struct TableItem {
     format: Vec<String>,
 }
 
-pub fn draw_help_menu<B>(f: &mut Frame<B>)
+pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
@@ -78,11 +78,12 @@ where
         .margin(2)
         .split(f.size());
 
-    let white = Style::default().fg(Color::White);
-    let gray = Style::default().fg(Color::White);
+    let white = Style::default().fg(app.user_config.theme.text);
+    let gray = Style::default().fg(app.user_config.theme.text);
     let header = ["Description", "Event", "Context"];
 
     let help_docs = get_help_docs();
+    let help_docs = &help_docs[app.help_menu_offset as usize..];
 
     let rows = help_docs
         .iter()
@@ -97,7 +98,7 @@ where
                 .title_style(gray)
                 .border_style(gray),
         )
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .widths(&[
             Constraint::Length(50),
             Constraint::Length(40),
@@ -124,25 +125,24 @@ where
 
     let input_string: String = app.input.iter().collect();
     Paragraph::new([Text::raw(&input_string)].iter())
-        .style(Style::default().fg(Color::Yellow))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Search")
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
         .render(f, chunks[0]);
 
     let block = Block::default()
         .title("Help")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Gray))
-        .title_style(Style::default().fg(Color::Gray));
+        .border_style(Style::default().fg(app.user_config.theme.inactive))
+        .title_style(Style::default().fg(app.user_config.theme.inactive));
 
     Paragraph::new([Text::raw("Type ?")].iter())
         .block(block)
-        .style(Style::default().fg(Color::Gray))
+        .style(Style::default().fg(app.user_config.theme.inactive))
         .render(f, chunks[1]);
 }
 
@@ -150,13 +150,7 @@ pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
 where
     B: Backend,
 {
-    // Make better use of space on small terminals
-    let margin = if app.size.height > SMALL_TERMINAL_HEIGHT {
-        1
-    } else {
-        0
-    };
-
+    let margin = util::get_main_layout_margin(app);
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -216,7 +210,7 @@ where
             draw_home(f, app, chunks[1]);
         }
         RouteId::MadeForYou => {
-            draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::MadeForYou, "Made For You");
+            draw_made_for_you(f, app, chunks[1]);
         }
         RouteId::Artists => {
             draw_artist_table(f, app, chunks[1]);
@@ -224,8 +218,12 @@ where
         RouteId::Podcasts => {
             draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Podcasts, "Podcasts");
         }
+        RouteId::Recommendations => {
+            draw_recommendations_table(f, app, chunks[1]);
+        }
         RouteId::Error => {} // This is handled as a "full screen" route in main.rs
         RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
+        RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
     };
 }
 
@@ -240,6 +238,7 @@ where
     );
     draw_selectable_list(
         f,
+        app,
         layout_chunk,
         "Library",
         &LIBRARY_OPTIONS,
@@ -266,6 +265,7 @@ where
 
     draw_selectable_list(
         f,
+        app,
         layout_chunk,
         "Playlists",
         &playlist_items,
@@ -315,6 +315,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             song_artist_block[0],
             "Songs",
             &songs,
@@ -334,6 +335,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             song_artist_block[1],
             "Artists",
             &artists,
@@ -366,6 +368,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             albums_playlist_block[0],
             "Albums",
             &albums,
@@ -384,6 +387,7 @@ where
         };
         draw_selectable_list(
             f,
+            app,
             albums_playlist_block[1],
             "Playlists",
             &playlists,
@@ -473,10 +477,36 @@ where
         current_route.hovered_block == ActiveBlock::AlbumTracks,
     );
 
-    let album_ui = match app.album_table_context.clone() {
-        AlbumTableContext::Simplified => match &app.selected_album {
+    let album_ui = match &app.album_table_context {
+        AlbumTableContext::Simplified => match &app.selected_album_simplified {
+            Some(selected_album_simplified) => Some(AlbumUI {
+                items: selected_album_simplified
+                    .tracks
+                    .items
+                    .iter()
+                    .map(|item| TableItem {
+                        id: item.id.clone().unwrap_or_else(|| "".to_string()),
+                        format: vec![
+                            "".to_string(),
+                            item.track_number.to_string(),
+                            item.name.to_owned(),
+                            millis_to_minutes(u128::from(item.duration_ms)),
+                        ],
+                    })
+                    .collect::<Vec<TableItem>>(),
+                title: format!(
+                    "{} by {}",
+                    selected_album_simplified.album.name,
+                    create_artist_string(&selected_album_simplified.album.artists)
+                ),
+                selected_index: selected_album_simplified.selected_index,
+            }),
+            None => None,
+        },
+        AlbumTableContext::Full => match app.selected_album_full.clone() {
             Some(selected_album) => Some(AlbumUI {
                 items: selected_album
+                    .album
                     .tracks
                     .items
                     .iter()
@@ -495,37 +525,8 @@ where
                     selected_album.album.name,
                     create_artist_string(&selected_album.album.artists)
                 ),
-                selected_index: selected_album.selected_index,
+                selected_index: app.saved_album_tracks_index,
             }),
-            None => None,
-        },
-        AlbumTableContext::Full => match &app.library.saved_albums.get_results(None) {
-            Some(albums) => match albums.items.get(app.album_list_index) {
-                Some(selected_album) => Some(AlbumUI {
-                    items: selected_album
-                        .album
-                        .tracks
-                        .items
-                        .iter()
-                        .map(|item| TableItem {
-                            id: item.id.clone().unwrap_or_else(|| "".to_string()),
-                            format: vec![
-                                "".to_string(),
-                                item.track_number.to_string(),
-                                item.name.to_owned(),
-                                millis_to_minutes(u128::from(item.duration_ms)),
-                            ],
-                        })
-                        .collect::<Vec<TableItem>>(),
-                    title: format!(
-                        "{} by {}",
-                        selected_album.album.name,
-                        create_artist_string(&selected_album.album.artists)
-                    ),
-                    selected_index: app.saved_album_tracks_index,
-                }),
-                None => None,
-            },
             None => None,
         },
     };
@@ -541,6 +542,85 @@ where
             highlight_state,
         );
     };
+}
+
+pub fn draw_recommendations_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = TableHeader {
+        id: TableId::Song,
+        items: vec![
+            TableHeaderItem {
+                id: ColumnId::Liked,
+                text: "",
+                width: 2,
+            },
+            TableHeaderItem {
+                id: ColumnId::SongTitle,
+                text: "Title",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+            },
+            TableHeaderItem {
+                text: "Artist",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Album",
+                width: get_percentage_width(layout_chunk.width, 0.3),
+                ..Default::default()
+            },
+            TableHeaderItem {
+                text: "Length",
+                width: get_percentage_width(layout_chunk.width, 0.1),
+                ..Default::default()
+            },
+        ],
+    };
+
+    let current_route = app.get_current_route();
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::TrackTable,
+        current_route.hovered_block == ActiveBlock::TrackTable,
+    );
+
+    let items = app
+        .track_table
+        .tracks
+        .iter()
+        .map(|item| TableItem {
+            id: item.id.clone().unwrap_or_else(|| "".to_string()),
+            format: vec![
+                "".to_string(),
+                item.name.to_owned(),
+                create_artist_string(&item.artists),
+                item.album.name.to_owned(),
+                millis_to_minutes(u128::from(item.duration_ms)),
+            ],
+        })
+        .collect::<Vec<TableItem>>();
+    // match RecommendedContext
+    let recommendations_ui = match &app.recommendations_context {
+        Some(RecommendationsContext::Song) => format!(
+            "Recommendations based on Song \'{}\'",
+            &app.recommendations_seed
+        ),
+        Some(RecommendationsContext::Artist) => format!(
+            "Recommendations based on Artist \'{}\'",
+            &app.recommendations_seed
+        ),
+        None => "Recommendations".to_string(),
+    };
+    draw_table(
+        f,
+        app,
+        layout_chunk,
+        (&recommendations_ui[..], &header),
+        &items,
+        app.track_table.selected_index,
+        highlight_state,
+    )
 }
 
 pub fn draw_song_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -661,8 +741,8 @@ where
             Block::default()
                 .borders(Borders::ALL)
                 .title(&title)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state))
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme))
                 .render(f, layout_chunk);
 
             let track_name = if app
@@ -677,15 +757,15 @@ where
             Paragraph::new(
                 [Text::styled(
                     create_artist_string(&track_item.artists),
-                    Style::default().fg(Color::White),
+                    Style::default().fg(app.user_config.theme.text),
                 )]
                 .iter(),
             )
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(app.user_config.theme.text))
             .block(
                 Block::default().title(&track_name).title_style(
                     Style::default()
-                        .fg(Color::LightCyan)
+                        .fg(app.user_config.theme.selected)
                         .modifier(Modifier::BOLD),
                 ),
             )
@@ -696,8 +776,8 @@ where
                 .block(Block::default().title(""))
                 .style(
                     Style::default()
-                        .fg(Color::LightCyan)
-                        .bg(Color::Black)
+                        .fg(app.user_config.theme.playbar_progress)
+                        .bg(app.user_config.theme.playbar_background)
                         .modifier(Modifier::ITALIC | Modifier::BOLD),
                 )
                 .percent(perc)
@@ -722,7 +802,7 @@ where
 
     let mut playing_text = vec![
         Text::raw("Api response: "),
-        Text::styled(&app.api_error, Style::default().fg(Color::LightRed)),
+        Text::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
         Text::styled(
             "
 
@@ -731,34 +811,34 @@ If you are trying to play a track, please check that
     2. Your playback device is active and selected - press `d` to go to device selection menu
     3. If you're using spotifyd as a playback device, your device name must not contain spaces
             ",
-            Style::default().fg(Color::White),
+            Style::default().fg(app.user_config.theme.text),
         ),
         Text::styled("
 Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
         ",
-        Style::default().fg(Color::Yellow)),
+        Style::default().fg(app.user_config.theme.hint)),
         Text::styled(
             "\nPress <Esc> to return",
-            Style::default().fg(Color::Gray),
+            Style::default().fg(app.user_config.theme.inactive),
         ),
     ];
 
     if app.client_config.device_id.is_none() {
         playing_text.push(Text::styled(
             "\nNo playback device is selected - follow point 2 above",
-            Style::default().fg(Color::LightMagenta),
+            Style::default().fg(app.user_config.theme.hint),
         ))
     }
 
     Paragraph::new(playing_text.iter())
         .wrap(true)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title("Error")
-                .title_style(Style::default().fg(Color::Red))
-                .border_style(Style::default().fg(Color::Red)),
+                .title_style(Style::default().fg(app.user_config.theme.error_border))
+                .border_style(Style::default().fg(app.user_config.theme.error_border)),
         )
         .render(f, chunks[0]);
 }
@@ -769,7 +849,7 @@ where
 {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(17), Constraint::Percentage(83)].as_ref())
+        .constraints([Constraint::Length(7), Constraint::Length(93)].as_ref())
         .margin(2)
         .split(layout_chunk);
 
@@ -782,8 +862,8 @@ where
     Block::default()
         .title("Welcome!")
         .borders(Borders::ALL)
-        .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state))
+        .title_style(get_color(highlight_state, app.user_config.theme))
+        .border_style(get_color(highlight_state, app.user_config.theme))
         .render(f, layout_chunk);
 
     let changelog = include_str!("../../CHANGELOG.md").to_string();
@@ -796,7 +876,10 @@ where
         changelog.replace("\n## [Unreleased]\n", "")
     };
 
-    let top_text = vec![Text::styled(BANNER, Style::default().fg(Color::LightCyan))];
+    let top_text = vec![Text::styled(
+        BANNER,
+        Style::default().fg(app.user_config.theme.banner),
+    )];
 
     let bottom_text = vec![
         Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
@@ -805,13 +888,13 @@ where
 
     // Contains the banner
     Paragraph::new(top_text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(Block::default())
         .render(f, chunks[0]);
 
     // CHANGELOG
     Paragraph::new(bottom_text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(Block::default())
         .wrap(true)
         .scroll(app.home_scroll)
@@ -835,13 +918,13 @@ fn draw_not_implemented_yet<B>(
     let display_block = Block::default()
         .title(title)
         .borders(Borders::ALL)
-        .title_style(get_color(highlight_state))
-        .border_style(get_color(highlight_state));
+        .title_style(get_color(highlight_state, app.user_config.theme))
+        .border_style(get_color(highlight_state, app.user_config.theme));
 
     let text = vec![Text::raw("Not implemented yet!")];
 
     Paragraph::new(text.iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .block(display_block)
         .wrap(true)
         .render(f, layout_chunk);
@@ -872,6 +955,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[0],
             &format!("{} - Top Tracks", &artist.artist_name),
             &top_tracks,
@@ -888,6 +972,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[1],
             "Albums",
             albums,
@@ -903,6 +988,7 @@ where
 
         draw_selectable_list(
             f,
+            app,
             chunks[2],
             "Related artists",
             &related_artists,
@@ -930,13 +1016,17 @@ where
     ];
 
     Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .wrap(true)
         .block(
             Block::default()
                 .borders(Borders::NONE)
                 .title("Welcome to spotify-tui!")
-                .title_style(Style::default().fg(Color::Cyan).modifier(Modifier::BOLD)),
+                .title_style(
+                    Style::default()
+                        .fg(app.user_config.theme.active)
+                        .modifier(Modifier::BOLD),
+                ),
         )
         .render(f, chunks[0]);
 
@@ -962,15 +1052,15 @@ where
             Block::default()
                 .title("Devices")
                 .borders(Borders::ALL)
-                .title_style(Style::default().fg(Color::LightCyan))
-                .border_style(Style::default().fg(Color::Gray)),
+                .title_style(Style::default().fg(app.user_config.theme.active))
+                .border_style(Style::default().fg(app.user_config.theme.inactive)),
         )
         .items(&items)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .select(app.selected_device_index)
         .highlight_style(
             Style::default()
-                .fg(Color::LightCyan)
+                .fg(app.user_config.theme.active)
                 .modifier(Modifier::BOLD),
         )
         .render(f, chunks[1]);
@@ -1034,6 +1124,47 @@ where
             highlight_state,
         )
     };
+}
+
+pub fn draw_made_for_you<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+    B: Backend,
+{
+    let header = TableHeader {
+        id: TableId::MadeForYou,
+        items: vec![TableHeaderItem {
+            text: "Name",
+            width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+            ..Default::default()
+        }],
+    };
+
+    if let Some(playlists) = &app.library.made_for_you_playlists.get_results(None) {
+        let items = playlists
+            .items
+            .iter()
+            .map(|playlist| TableItem {
+                id: playlist.id.to_owned(),
+                format: vec![playlist.name.to_owned()],
+            })
+            .collect::<Vec<TableItem>>();
+
+        let current_route = app.get_current_route();
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::MadeForYou,
+            current_route.hovered_block == ActiveBlock::MadeForYou,
+        );
+
+        draw_table(
+            f,
+            app,
+            layout_chunk,
+            ("Made For You", &header),
+            &items,
+            app.made_for_you_index,
+            highlight_state,
+        );
+    }
 }
 
 pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1105,6 +1236,7 @@ where
 
 fn draw_selectable_list<B, S>(
     f: &mut Frame<B>,
+    app: &App,
     layout_chunk: Rect,
     title: &str,
     items: &[S],
@@ -1119,13 +1251,13 @@ fn draw_selectable_list<B, S>(
             Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
         .items(items)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .select(selected_index)
-        .highlight_style(get_color(highlight_state).modifier(Modifier::BOLD))
+        .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD))
         .render(f, layout_chunk);
 }
 
@@ -1140,7 +1272,7 @@ fn draw_table<B>(
 ) where
     B: Backend,
 {
-    let selected_style = get_color(highlight_state).modifier(Modifier::BOLD);
+    let selected_style = get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD);
 
     let track_playing_index = match &app.current_playback_context {
         Some(ctx) => items.iter().position(|t| match &ctx.item {
@@ -1163,7 +1295,7 @@ fn draw_table<B>(
 
     let rows = items.iter().skip(offset).enumerate().map(|(i, item)| {
         let mut formatted_row = item.format.clone();
-        let mut style = Style::default().fg(Color::White); // default styling
+        let mut style = Style::default().fg(app.user_config.theme.text); // default styling
 
         // if table displays songs
         match header.id {
@@ -1175,7 +1307,9 @@ fn draw_table<B>(
                     {
                         if i == track_playing_offset_index {
                             formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
-                            style = Style::default().fg(Color::Cyan).modifier(Modifier::BOLD);
+                            style = Style::default()
+                                .fg(app.user_config.theme.active)
+                                .modifier(Modifier::BOLD);
                         }
                     }
                 }
@@ -1209,12 +1343,12 @@ fn draw_table<B>(
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
+                .style(Style::default().fg(app.user_config.theme.text))
                 .title(title)
-                .title_style(get_color(highlight_state))
-                .border_style(get_color(highlight_state)),
+                .title_style(get_color(highlight_state, app.user_config.theme))
+                .border_style(get_color(highlight_state, app.user_config.theme)),
         )
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.user_config.theme.text))
         .widths(&widths)
         .render(f, layout_chunk);
 }

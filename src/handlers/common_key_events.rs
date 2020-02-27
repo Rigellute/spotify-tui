@@ -1,6 +1,5 @@
 use super::super::app::{ActiveBlock, App, RouteId};
 use crate::event::Key;
-
 pub fn down_event(key: Key) -> bool {
     match key {
         Key::Down | Key::Char('j') | Key::Ctrl('n') => true,
@@ -25,6 +24,27 @@ pub fn left_event(key: Key) -> bool {
 pub fn right_event(key: Key) -> bool {
     match key {
         Key::Right | Key::Char('l') | Key::Ctrl('f') => true,
+        _ => false,
+    }
+}
+
+pub fn high_event(key: Key) -> bool {
+    match key {
+        Key::Char('H') => true,
+        _ => false,
+    }
+}
+
+pub fn middle_event(key: Key) -> bool {
+    match key {
+        Key::Char('M') => true,
+        _ => false,
+    }
+}
+
+pub fn low_event(key: Key) -> bool {
+    match key {
+        Key::Char('L') => true,
         _ => false,
     }
 }
@@ -62,6 +82,22 @@ pub fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usiz
     }
 }
 
+pub fn on_high_press_handler() -> usize {
+    0
+}
+
+pub fn on_middle_press_handler<T>(selection_data: &[T]) -> usize {
+    let mut index = selection_data.len() / 2;
+    if selection_data.len() % 2 == 0 {
+        index -= 1;
+    }
+    index
+}
+
+pub fn on_low_press_handler<T>(selection_data: &[T]) -> usize {
+    selection_data.len() - 1
+}
+
 pub fn handle_right_event(app: &mut App) {
     match app.get_current_route().hovered_block {
         ActiveBlock::MyPlaylists | ActiveBlock::Library => match app.get_current_route().id {
@@ -81,6 +117,12 @@ pub fn handle_right_event(app: &mut App) {
                 app.set_current_route_state(
                     Some(ActiveBlock::Podcasts),
                     Some(ActiveBlock::Podcasts),
+                );
+            }
+            RouteId::Recommendations => {
+                app.set_current_route_state(
+                    Some(ActiveBlock::TrackTable),
+                    Some(ActiveBlock::TrackTable),
                 );
             }
             RouteId::AlbumList => {
@@ -119,6 +161,7 @@ pub fn handle_right_event(app: &mut App) {
             }
             RouteId::SelectedDevice => {}
             RouteId::Error => {}
+            RouteId::Analysis => {}
         },
         _ => {}
     };

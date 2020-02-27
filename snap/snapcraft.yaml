@@ -1,0 +1,46 @@
+name: spt-temp
+base: core18
+adopt-info: spotify-tui
+summary: Spotify TUI
+description: |
+  Spotify for the terminal written in Rust
+
+grade: stable
+confinement: strict
+
+parts:
+  spotify-tui:
+    plugin: rust
+    source: .
+    build-packages:
+      - libssl-dev
+      - pkg-config
+      - libxcb1-dev
+      - libxcb-render0-dev
+      - libxcb-shape0-dev
+      - libxcb-xfixes0-dev
+    stage-packages:
+      - libxau6
+      - libxcb-render0
+      - libxcb-shape0
+      - libxcb-xfixes0
+      - libxcb1
+      - libxdmcp6
+    override-pull: |
+      snapcraftctl pull
+      last_committed_tag="$(git describe --tags --abbrev=0)"
+      echo $last_committed_tag
+      VERSION="$(git describe --first-parent --tags --always)"
+      echo "Setting version to $VERSION"
+      snapcraftctl set-version "${VERSION}"
+
+apps:
+  spt-temp:
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
+    command: spt
+    plugs:
+      - desktop
+      - network
+      - network-bind
+      - pulseaudio

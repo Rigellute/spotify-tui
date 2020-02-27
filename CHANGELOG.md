@@ -2,16 +2,67 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2020-02-24
+
+- Add experimental audio visualizer (press `v` to navigate to it). The feature uses the audio analysis data from Spotify and animates the pitch information.
+- Display Artist layout when searching an artist url [#298](https://github.com/Rigellute/spotify-tui/pull/298)
+- Add pagination to the help menu [#302](https://github.com/Rigellute/spotify-tui/pull/302)
+
+## [0.14.0] - 2020-02-11
+
+### Added
+
+- Add high-middle-low navigation (`H`, `M`, `L` respectively) for jumping around lists [#234](https://github.com/Rigellute/spotify-tui/pull/234).
+- Play every known song with `e` [#228](https://github.com/Rigellute/spotify-tui/pull/228)
+- Search album by url: paste a spotify album link into the search input to go to that album [#281](https://github.com/Rigellute/spotify-tui/pull/281)
+- Implement 'Made For You' section of Library [#278](https://github.com/Rigellute/spotify-tui/pull/278)
+- Add user theme configuration [#284](https://github.com/Rigellute/spotify-tui/pull/284)
+- Allow user to define the volume increment [#288](https://github.com/Rigellute/spotify-tui/pull/288)
+
+### Fixed
+
+- Fix crash on small terminals [#231](https://github.com/Rigellute/spotify-tui/pull/231)
+
+## [0.13.0] - 2020-01-26
+
+### Fixed
+
+- Don't error if failed to open clipboard [#217](https://github.com/Rigellute/spotify-tui/pull/217)
+- Fix scrolling beyond the end of pagination. [#216](https://github.com/Rigellute/spotify-tui/pull/216)
+- Add copy album url functionality [#226](https://github.com/Rigellute/spotify-tui/pull/226)
+
+### Added
+
+- Allow user to configure the port for the Spotify auth Redirect URI [#204](https://github.com/Rigellute/spotify-tui/pull/204)
+- Add play recommendations for song/artist on pressing 'r' [#200](https://github.com/Rigellute/spotify-tui/pull/200)
+- Added continuous deployment for Windows [#222](https://github.com/Rigellute/spotify-tui/pull/222)
+
+### Changed
+
+- Change behavior of previous button (`p`) to mimic behavior in official Spotify client. When the track is more than three seconds in, pressing previous will restart the track. When less than three seconds it will jump to previous. [#219](https://github.com/Rigellute/spotify-tui/pull/219)
+
+## [0.12.0] - 2020-01-23
+
+### Added
+
 - Add Windows support [#99](https://github.com/Rigellute/spotify-tui/pull/99)
 - Add support for Related artists and top tacks [#191](https://github.com/Rigellute/spotify-tui/pull/191)
 
 ## [0.11.0] - 2019-12-23
 
+### Added
+
 - Add support for adding an album and following a playlist. NOTE: that this will require the user to grant more permissions [#172](https://github.com/Rigellute/spotify-tui/pull/172)
-- Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
 - Add shortcuts to jump to the start or the end of a playlist [#167](https://github.com/Rigellute/spotify-tui/pull/167)
+- Make seeking amount configurable [#168](https://github.com/Rigellute/spotify-tui/pull/168)
+
+### Fixed
+
 - Fix playlist index after search [#177](https://github.com/Rigellute/spotify-tui/pull/177)
 - Fix cursor offset in search input [#183](https://github.com/Rigellute/spotify-tui/pull/183)
+
+### Changed
+
 - Remove focus on input when jumping back [#184](https://github.com/Rigellute/spotify-tui/pull/184)
 - Pad strings in status bar to prevent reformatting [#188](https://github.com/Rigellute/spotify-tui/pull/188)
 

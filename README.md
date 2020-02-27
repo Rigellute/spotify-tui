@@ -1,24 +1,43 @@
 # Spotify TUI
 
-![](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg)
+![Continuous Integration](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg?branch=master&event=push)
 ![](https://img.shields.io/badge/license-MIT-blueviolet.svg)
 ![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
 [![Crates.io](https://img.shields.io/crates/v/spotify-tui.svg)](https://crates.io/crates/spotify-tui)
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
+[![All Contributors](https://img.shields.io/badge/all_contributors-40-orange.svg?style=flat-square)](#contributors-)
+
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 A Spotify client for the terminal written in Rust.
 
-![Demo](https://user-images.githubusercontent.com/12150276/64545371-84af3580-d320-11e9-867d-c368fd888b3b.gif)
+![Demo](https://user-images.githubusercontent.com/12150276/75177190-91d4ab00-572d-11ea-80bd-c5e28c7b17ad.gif)
 
 The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.com/).
 
-- [Installation](#installation)
-- [Connecting to Spotify’s API](#connecting-to-spotifys-api)
-- [Usage](#usage)
-- [Limitations](#limitations)
-- [Using with spotifyd](#using-with-spotifyd)
-- [Development](#development)
-- [Roadmap](#roadmap)
+- [Spotify TUI](#spotify-tui)
+  - [Installation](#installation)
+    - [Homebrew](#homebrew)
+    - [Snap](#snap)
+    - [AUR](#aur)
+    - [Void Linux](#void-linux)
+    - [Cargo](#cargo)
+      - [Note on Linux](#note-on-linux)
+    - [Manual](#manual)
+  - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
+  - [Usage](#usage)
+- [Configuration](#configuration)
+  - [Limitations](#limitations)
+  - [Using with spotifyd](#using-with-spotifyd)
+  - [Libraries used](#libraries-used)
+  - [Development](#development)
+    - [Windows Subsystem for Linux](#windows-subsystem-for-linux)
+  - [Contributors](#contributors)
+  - [Roadmap](#roadmap)
+    - [High-level requirements yet to be implemented](#high-level-requirements-yet-to-be-implemented)
 
 ## Installation
 
@@ -43,10 +62,16 @@ brew upgrade spotify-tui
 For a system with Snap installed, run
 
 ```bash
-snap install spt --channel=edge
+snap install spt
 ```
 
-The latest version will be installed for you automatically.
+The stable version will be installed for you automatically.
+
+If you want to install the nightly build, run
+
+```bash
+snap install spt --edge
+```
 
 ### AUR
 
@@ -88,6 +113,8 @@ For compilation on Linux the development packages for `libssl` are required.
 For basic installation instructions, see [install OpenSSL](https://docs.rs/openssl/0.10.25/openssl/#automatic).
 In order to locate dependencies, the compilation also requires `pkg-config` to be installed.
 
+If you are using the Windows Subsystem for Linux, you'll need to [install additional dependencies](#windows-subsystem-for-linux).
+
 ### Manual
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
@@ -127,7 +154,7 @@ When running `spotify-tui` press `?` to bring up a help menu that shows currentl
 
 # Configuration
 
-A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`
+A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`, for snap `${HOME}/snap/spt/current/.config/spotify-tui/config.yml`
 (not to be confused with client.yml which handles spotify authentication)
 
 The following is a sample config.yml file:
@@ -135,8 +162,26 @@ The following is a sample config.yml file:
 ```yaml
 # Sample config file
 
+# The theme colours can be an rgb string of the form "255, 255, 255" or a string that references the colours from your terminal theme: Reset, Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, LightRed, LightGreen, LightYellow, LightBlue, LightMagenta, LightCyan, White.
+theme:
+  active: Cyan
+  banner: LightCyan
+  error_border: Red
+  error_text: LightRed
+  hint: Yellow
+  hovered: Magenta
+  inactive: Gray
+  playbar_background: Black
+  playbar_progress: LightCyan
+  playbar_text: White
+  selected: LightCyan
+  text: "255, 255, 255"
+
 behavior:
   seek_milliseconds: 5000
+  volume_increment: 10
+  # The lower the number the higher the "frames per second". You can decrease this number so that the audio visualisation is smoother but this can be expensive!
+  tick_rate_milliseconds: 250
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
@@ -159,10 +204,12 @@ keybindings:
   next_track: "n"
   previous_track: "p"
   copy_song_url: "c"
+  copy_album_url: "C"
   help: "?"
   shuffle: "s"
   repeat: "r"
   search: "/"
+  audio_analysis: "v"
 ```
 
 ## Limitations
@@ -194,15 +241,91 @@ After that there is not much to it.
 1. Clone or fork this repo and `cd` to it
 1. And then `cargo run`
 
+### Windows Subsystem for Linux
+
+You might get a linking error. If so, you'll probably need to install additional dependencies required by the clipboard package
+
+```bash
+sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+```
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://keliris.dev/"><img src="https://avatars2.githubusercontent.com/u/12150276?v=4" width="100px;" alt=""/><br /><sub><b>Alexander Keliris</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=Rigellute" title="Code">💻</a> <a href="https://github.com/Rigellute/spotify-tui/commits?author=Rigellute" title="Documentation">📖</a> <a href="#design-Rigellute" title="Design">🎨</a> <a href="#blog-Rigellute" title="Blogposts">📝</a> <a href="#ideas-Rigellute" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-Rigellute" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Rigellute" title="Maintenance">🚧</a> <a href="#platform-Rigellute" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/Rigellute/spotify-tui/pulls?q=is%3Apr+reviewed-by%3ARigellute" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://github.com/mikepombal"><img src="https://avatars3.githubusercontent.com/u/6864231?v=4" width="100px;" alt=""/><br /><sub><b>Mickael Marques</b></sub></a><br /><a href="#financial-mikepombal" title="Financial">💵</a></td>
+    <td align="center"><a href="https://github.com/HakierGrzonzo"><img src="https://avatars0.githubusercontent.com/u/36668331?v=4" width="100px;" alt=""/><br /><sub><b>Grzegorz Koperwas</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=HakierGrzonzo" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/amgassert"><img src="https://avatars2.githubusercontent.com/u/22896005?v=4" width="100px;" alt=""/><br /><sub><b>Austin Gassert</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=amgassert" title="Code">💻</a></td>
+    <td align="center"><a href="https://robinette.dev"><img src="https://avatars2.githubusercontent.com/u/30757528?v=4" width="100px;" alt=""/><br /><sub><b>Calen Robinette</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=calenrobinette" title="Code">💻</a></td>
+    <td align="center"><a href="https://mcofficer.me"><img src="https://avatars0.githubusercontent.com/u/22377202?v=4" width="100px;" alt=""/><br /><sub><b>M*C*O</b></sub></a><br /><a href="#infra-MCOfficer" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://github.com/eminence"><img src="https://avatars0.githubusercontent.com/u/402454?v=4" width="100px;" alt=""/><br /><sub><b>Andrew Chin</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=eminence" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.samnaser.com/"><img src="https://avatars0.githubusercontent.com/u/4377348?v=4" width="100px;" alt=""/><br /><sub><b>Sam Naser</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=Monkeyanator" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/radogost"><img src="https://avatars0.githubusercontent.com/u/15713820?v=4" width="100px;" alt=""/><br /><sub><b>Micha</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=radogost" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/neriglissar"><img src="https://avatars2.githubusercontent.com/u/53038761?v=4" width="100px;" alt=""/><br /><sub><b>neriglissar</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=neriglissar" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/TimonPost"><img src="https://avatars3.githubusercontent.com/u/19969910?v=4" width="100px;" alt=""/><br /><sub><b>Timon</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=TimonPost" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/echoSayonara"><img src="https://avatars2.githubusercontent.com/u/54503126?v=4" width="100px;" alt=""/><br /><sub><b>echoSayonara</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=echoSayonara" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/D-Nice"><img src="https://avatars1.githubusercontent.com/u/2888248?v=4" width="100px;" alt=""/><br /><sub><b>D-Nice</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=D-Nice" title="Documentation">📖</a> <a href="#infra-D-Nice" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="http://gpawlik.com"><img src="https://avatars3.githubusercontent.com/u/6296883?v=4" width="100px;" alt=""/><br /><sub><b>Grzegorz Pawlik</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=gpawlik" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://lenny.ninja"><img src="https://avatars1.githubusercontent.com/u/4027243?v=4" width="100px;" alt=""/><br /><sub><b>Lennart Bernhardt</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=LennyPenny" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/BlackYoup"><img src="https://avatars3.githubusercontent.com/u/6098160?v=4" width="100px;" alt=""/><br /><sub><b>Arnaud Lefebvre</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=BlackYoup" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/tem1029"><img src="https://avatars3.githubusercontent.com/u/57712713?v=4" width="100px;" alt=""/><br /><sub><b>tem1029</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=tem1029" title="Code">💻</a></td>
+    <td align="center"><a href="http://peter.moss.dk"><img src="https://avatars2.githubusercontent.com/u/12544579?v=4" width="100px;" alt=""/><br /><sub><b>Peter K. Moss</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=Peterkmoss" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.zephyrizing.net/"><img src="https://avatars1.githubusercontent.com/u/113102?v=4" width="100px;" alt=""/><br /><sub><b>Geoff Shannon</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=RadicalZephyr" title="Code">💻</a></td>
+    <td align="center"><a href="http://zacklukem.info"><img src="https://avatars0.githubusercontent.com/u/8787486?v=4" width="100px;" alt=""/><br /><sub><b>Zachary Mayhew</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=zacklukem" title="Code">💻</a></td>
+    <td align="center"><a href="http://jfaltis.de"><img src="https://avatars2.githubusercontent.com/u/45465572?v=4" width="100px;" alt=""/><br /><sub><b>jfaltis</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jfaltis" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://marcelschr.me"><img src="https://avatars3.githubusercontent.com/u/19377618?v=4" width="100px;" alt=""/><br /><sub><b>Marcel Schramm</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=Bios-Marcel" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/fangyi-zhou"><img src="https://avatars3.githubusercontent.com/u/7815439?v=4" width="100px;" alt=""/><br /><sub><b>Fangyi Zhou</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=fangyi-zhou" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/synth-ruiner"><img src="https://avatars1.githubusercontent.com/u/8642013?v=4" width="100px;" alt=""/><br /><sub><b>Max</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=synth-ruiner" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/svenvNL"><img src="https://avatars1.githubusercontent.com/u/13982006?v=4" width="100px;" alt=""/><br /><sub><b>Sven van der Vlist</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=svenvNL" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jacobchrismarsh"><img src="https://avatars2.githubusercontent.com/u/15932179?v=4" width="100px;" alt=""/><br /><sub><b>jacobchrismarsh</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jacobchrismarsh" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/TheWalkingLeek"><img src="https://avatars2.githubusercontent.com/u/36076343?v=4" width="100px;" alt=""/><br /><sub><b>Nils Rauch</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=TheWalkingLeek" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/sputnick1124"><img src="https://avatars1.githubusercontent.com/u/8843309?v=4" width="100px;" alt=""/><br /><sub><b>Nick Stockton</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=sputnick1124" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://stuarth.github.io"><img src="https://avatars3.githubusercontent.com/u/7055?v=4" width="100px;" alt=""/><br /><sub><b>Stuart Hinson</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=stuarth" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/samcal"><img src="https://avatars3.githubusercontent.com/u/2117940?v=4" width="100px;" alt=""/><br /><sub><b>Sam Calvert</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=samcal" title="Code">💻</a> <a href="https://github.com/Rigellute/spotify-tui/commits?author=samcal" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/jwijenbergh"><img src="https://avatars0.githubusercontent.com/u/46386452?v=4" width="100px;" alt=""/><br /><sub><b>Jeroen Wijenbergh</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jwijenbergh" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://twitter.com/KimberleyCook91"><img src="https://avatars3.githubusercontent.com/u/2683270?v=4" width="100px;" alt=""/><br /><sub><b>Kimberley Cook</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=KimberleyCook" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/baxtea"><img src="https://avatars0.githubusercontent.com/u/22502477?v=4" width="100px;" alt=""/><br /><sub><b>Audrey Baxter</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=baxtea" title="Code">💻</a></td>
+    <td align="center"><a href="https://koehr.in"><img src="https://avatars2.githubusercontent.com/u/246402?v=4" width="100px;" alt=""/><br /><sub><b>Norman</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=nkoehring" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/blackwolf12333"><img src="https://avatars0.githubusercontent.com/u/1572975?v=4" width="100px;" alt=""/><br /><sub><b>Peter Maatman</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=blackwolf12333" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/AlexandreSi"><img src="https://avatars1.githubusercontent.com/u/32449369?v=4" width="100px;" alt=""/><br /><sub><b>AlexandreS</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=AlexandreSi" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/fiinnnn"><img src="https://avatars2.githubusercontent.com/u/5011796?v=4" width="100px;" alt=""/><br /><sub><b>Finn Vos</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=fiinnnn" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/hurricanehrndz"><img src="https://avatars0.githubusercontent.com/u/5804237?v=4" width="100px;" alt=""/><br /><sub><b>Carlos Hernandez</b></sub></a><br /><a href="#platform-hurricanehrndz" title="Packaging/porting to new platform">📦</a></td>
+    <td align="center"><a href="https://github.com/pedrohva"><img src="https://avatars3.githubusercontent.com/u/33297928?v=4" width="100px;" alt=""/><br /><sub><b>Pedro Alves</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=pedrohva" title="Code">💻</a></td>
+    <td align="center"><a href="https://gitlab.com/jtagcat/"><img src="https://avatars1.githubusercontent.com/u/38327267?v=4" width="100px;" alt=""/><br /><sub><b>jtagcat</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jtagcat" title="Documentation">📖</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+
 ## Roadmap
 
 The goal is to eventually implement almost every Spotify feature.
 
-### High level requirements yet to be implemented
+### High-level requirements yet to be implemented
 
 - Add songs to a playlist
 - Be able to scroll through result pages in every view
-- View Library "Made for you"
 
 This table shows all that is possible with the Spotify API, what is implemented already, and whether that is essential.
 
@@ -242,7 +365,7 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | current_user                                      | No               | Alias for `me`                                                                                                                                               | Yes        |
 | current_user_playing_track                        | Yes              | Get information about the current users currently playing track.                                                                                             | Yes        |
 | current_user_saved_albums                         | No               | Gets a list of the albums saved in the current authorized user's "Your Music" library                                                                        | Yes        |
-| current_user_saved_tracks                         | Yes              | Gets the user's saved tracks or "Liked Songs"                                                                                                                |
+| current_user_saved_tracks                         | Yes              | Gets the user's saved tracks or "Liked Songs"                                                                                                                | Yes        |
 | current_user_followed_artists                     | No               | Gets a list of the artists followed by the current authorized user                                                                                           | Yes        |
 | current_user_saved_tracks_delete                  | No               | Remove one or more tracks from the current user's "Your Music" library.                                                                                      | Yes        |
 | current_user_saved_tracks_contain                 | No               | Check if one or more tracks is already saved in the current Spotify user’s “Your Music” library.                                                             | Yes        |
@@ -275,5 +398,3 @@ This table shows all that is possible with the Spotify API, what is implemented 
 | repeat                                            | Yes              | Set Repeat Mode On User’s Playback                                                                                                                           | Yes        |
 | volume                                            | No               | Set Volume For User’s Playback                                                                                                                               | No         |
 | shuffle                                           | Yes              | Toggle Shuffle For User’s Playback                                                                                                                           | Yes        |
-
-[spotify-dev]: https://developer.spotify.com/dashboard/applications

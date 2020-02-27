@@ -38,8 +38,11 @@ pub struct Events {
 
 impl Events {
     /// Constructs an new instance of `Events` with the default config.
-    pub fn new() -> Events {
-        Events::with_config(EventConfig::default())
+    pub fn new(tick_rate: u64) -> Events {
+        Events::with_config(EventConfig {
+            tick_rate: Duration::from_millis(tick_rate),
+            ..Default::default()
+        })
     }
 
     /// Constructs an new instance of `Events` from given config.
@@ -55,10 +58,6 @@ impl Events {
                         let key = Key::from(key);
 
                         event_tx.send(Event::Input(key)).unwrap();
-
-                        if key == config.exit_key {
-                            return;
-                        }
                     }
                 }
 

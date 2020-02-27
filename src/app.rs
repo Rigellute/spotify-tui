@@ -5,18 +5,22 @@ use rspotify::spotify::{
     model::{
         album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
         artist::FullArtist,
+        audio::AudioAnalysis,
         context::FullPlayingContext,
         device::DevicePayload,
         offset::{for_position, Offset},
         page::{CursorBasedPage, Page},
         playing::PlayHistory,
         playlist::{PlaylistTrack, SimplifiedPlaylist},
+        recommend::Recommendations,
         search::{SearchAlbums, SearchArtists, SearchPlaylists, SearchTracks},
         track::{FullTrack, SavedTrack, SimplifiedTrack},
         user::PrivateUser,
     },
     senum::{Country, RepeatState},
 };
+use serde_json::{map::Map, Value};
+use std::str::FromStr;
 use std::{
     cmp::{max, min},
     collections::HashSet,
@@ -62,6 +66,13 @@ impl<T> ScrollableResultPages<T> {
         }
     }
 
+    pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
+        match at_index {
+            Some(index) => self.pages.get_mut(index),
+            None => self.pages.get_mut(self.index),
+        }
+    }
+
     pub fn add_pages(&mut self, new_pages: T) {
         self.pages.push(new_pages);
         // Whenever a new page is added, set the active index to the end of the vector
@@ -79,6 +90,7 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 pub struct Library {
     pub selected_index: usize,
     pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
+    pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
     pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
     pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
 }
@@ -109,6 +121,7 @@ pub enum ArtistBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
+    Analysis,
     PlayBar,
     AlbumTracks,
     AlbumList,
@@ -131,6 +144,7 @@ pub enum ActiveBlock {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum RouteId {
+    Analysis,
     AlbumTracks,
     AlbumList,
     Artist,
@@ -143,8 +157,10 @@ pub enum RouteId {
     MadeForYou,
     Artists,
     Podcasts,
+    Recommendations,
 }
 
+#[derive(Debug)]
 pub struct Route {
     pub id: RouteId,
     pub active_block: ActiveBlock,
@@ -158,12 +174,20 @@ pub enum TrackTableContext {
     AlbumSearch,
     PlaylistSearch,
     SavedTracks,
+    RecommendedTracks,
+    MadeForYou,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Copy)]
 pub enum AlbumTableContext {
     Simplified,
     Full,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum RecommendationsContext {
+    Artist,
+    Song,
 }
 
 pub struct SearchResult {
@@ -215,6 +239,7 @@ pub struct Artist {
 pub struct App {
     instant_since_last_current_playback_poll: Instant,
     navigation_stack: Vec<Route>,
+    pub audio_analysis: Option<AudioAnalysis>,
     pub home_scroll: u16,
     pub client_config: ClientConfig,
     pub user_config: UserConfig,
@@ -238,12 +263,17 @@ pub struct App {
     pub large_search_limit: u32,
     pub library: Library,
     pub playlist_offset: u32,
+    pub made_for_you_offset: u32,
     pub playback_params: PlaybackParams,
-    pub playlist_tracks: Vec<PlaylistTrack>,
+    pub playlist_tracks: Option<Page<PlaylistTrack>>,
+    pub made_for_you_tracks: Option<Page<PlaylistTrack>>,
     pub playlists: Option<Page<SimplifiedPlaylist>>,
     pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
+    pub recommended_tracks: Vec<FullTrack>,
+    pub recommendations_seed: String,
+    pub recommendations_context: Option<RecommendationsContext>,
     pub search_results: SearchResult,
-    pub selected_album: Option<SelectedAlbum>,
+    pub selected_album_simplified: Option<SelectedAlbum>,
     pub selected_album_full: Option<SelectedFullAlbum>,
     pub selected_device_index: Option<usize>,
     pub selected_playlist_index: Option<usize>,
@@ -254,15 +284,22 @@ pub struct App {
     pub track_table: TrackTable,
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
+    pub made_for_you_index: usize,
     pub artists_list_index: usize,
     pub clipboard_context: Option<ClipboardContext>,
+    pub help_docs_size: u32,
+    pub help_menu_page: u32,
+    pub help_menu_max_lines: u32,
+    pub help_menu_offset: u32,
 }
 
 impl App {
     pub fn new() -> App {
         App {
+            audio_analysis: None,
             album_table_context: AlbumTableContext::Full,
             album_list_index: 0,
+            made_for_you_index: 0,
             artists_list_index: 0,
             artists: vec![],
             artist: None,
@@ -271,11 +308,12 @@ impl App {
             saved_album_tracks_index: 0,
             recently_played: Default::default(),
             size: Rect::default(),
-            selected_album: None,
+            selected_album_simplified: None,
             selected_album_full: None,
             home_scroll: 0,
             library: Library {
                 saved_tracks: ScrollableResultPages::new(),
+                made_for_you_playlists: ScrollableResultPages::new(),
                 saved_albums: ScrollableResultPages::new(),
                 saved_artists: ScrollableResultPages::new(),
                 selected_index: 0,
@@ -291,8 +329,13 @@ impl App {
             input_idx: 0,
             input_cursor_position: 0,
             playlist_offset: 0,
-            playlist_tracks: vec![],
+            made_for_you_offset: 0,
+            playlist_tracks: None,
+            made_for_you_tracks: None,
             playlists: None,
+            recommended_tracks: vec![],
+            recommendations_context: None,
+            recommendations_seed: "".to_string(),
             search_results: SearchResult {
                 hovered_block: SearchResultBlock::SongSearch,
                 selected_block: SearchResultBlock::Empty,
@@ -318,6 +361,10 @@ impl App {
             user: None,
             instant_since_last_current_playback_poll: Instant::now(),
             clipboard_context: None,
+            help_docs_size: 0,
+            help_menu_page: 0,
+            help_menu_max_lines: 0,
+            help_menu_offset: 0,
         }
     }
 
@@ -479,6 +526,61 @@ impl App {
         }
     }
 
+    pub fn get_recommendations_for_seed(
+        &mut self,
+        seed_artists: Option<Vec<String>>,
+        seed_tracks: Option<Vec<String>>,
+        first_track: Option<&FullTrack>,
+    ) {
+        if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
+            let user_country =
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
+            let empty_payload: Map<String, Value> = Map::new();
+
+            match spotify.recommendations(
+                seed_artists,            // artists
+                None,                    // genres
+                seed_tracks,             // tracks
+                self.large_search_limit, // adjust playlist to screen size
+                user_country,            // country
+                &empty_payload,          // payload
+            ) {
+                Ok(result) => {
+                    if let Some(mut recommended_tracks) = self.extract_recommended_tracks(&result) {
+                        //custom first track
+                        if let Some(track) = first_track {
+                            recommended_tracks.insert(0, track.clone());
+                        }
+                        self.recommended_tracks = recommended_tracks.clone();
+                        self.set_tracks_to_table(recommended_tracks);
+                        self.track_table.context = Some(TrackTableContext::RecommendedTracks);
+
+                        if self.get_current_route().id != RouteId::Recommendations {
+                            self.push_navigation_stack(
+                                RouteId::Recommendations,
+                                ActiveBlock::TrackTable,
+                            );
+                        };
+                    }
+                    self.start_recommendations_playback(Some(0));
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
+    }
+
+    pub fn get_recommendations_for_trackid(&mut self, id: &str) {
+        if let Some(track) = self.get_fulltrack_from_id(id) {
+            let track_id_list: Option<Vec<String>> = match &track.id {
+                Some(id) => Some(vec![id.to_string()]),
+                None => None,
+            };
+            self.get_recommendations_for_seed(None, track_id_list, Some(&track));
+        }
+    }
+
     fn change_volume(&mut self, volume_percent: u8) {
         if let (Some(spotify), Some(device_id), Some(context)) = (
             &self.spotify,
@@ -499,7 +601,10 @@ impl App {
     pub fn increase_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
             let current_volume = context.device.volume_percent as u8;
-            let next_volume = min(current_volume + 10, 100);
+            let next_volume = min(
+                current_volume + self.user_config.behavior.volume_increment,
+                100,
+            );
 
             if next_volume != current_volume {
                 self.change_volume(next_volume);
@@ -510,7 +615,10 @@ impl App {
     pub fn decrease_volume(&mut self) {
         if let Some(context) = self.current_playback_context.clone() {
             let current_volume = context.device.volume_percent as i8;
-            let next_volume = max(current_volume - 10, 0);
+            let next_volume = max(
+                current_volume - self.user_config.behavior.volume_increment as i8,
+                0,
+            );
 
             if next_volume != current_volume {
                 self.change_volume(next_volume as u8);
@@ -549,15 +657,32 @@ impl App {
 
     pub fn previous_track(&mut self) {
         if let (Some(spotify), Some(device_id)) = (&self.spotify, &self.client_config.device_id) {
-            match spotify.previous_track(Some(device_id.to_string())) {
-                Ok(()) => {
-                    self.get_current_playback();
-                }
-                Err(e) => {
-                    self.handle_error(e);
-                }
-            };
+            if self.song_progress_ms >= 3_000 {
+                self.seek(0);
+            } else {
+                match spotify.previous_track(Some(device_id.to_string())) {
+                    Ok(()) => {
+                        self.get_current_playback();
+                    }
+                    Err(e) => {
+                        self.handle_error(e);
+                    }
+                };
+            }
         }
+    }
+
+    pub fn start_recommendations_playback(&mut self, offset: Option<usize>) {
+        self.start_playback(
+            None,
+            Some(
+                self.recommended_tracks
+                    .iter()
+                    .map(|x| x.uri.clone())
+                    .collect::<Vec<String>>(),
+            ),
+            offset,
+        );
     }
 
     pub fn start_playback(
@@ -619,13 +744,33 @@ impl App {
                 ) {
                     self.set_playlist_tracks_to_table(&playlist_tracks);
 
-                    self.playlist_tracks = playlist_tracks.items;
+                    self.playlist_tracks = Some(playlist_tracks);
                     if self.get_current_route().id != RouteId::TrackTable {
                         self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
                     };
                 };
             }
             None => {}
+        }
+    }
+
+    pub fn get_made_for_you_playlist_tracks(&mut self, playlist_id: String) {
+        if let Some(spotify) = &self.spotify {
+            if let Ok(made_for_you_tracks) = spotify.user_playlist_tracks(
+                "spotify",
+                &playlist_id,
+                None,
+                Some(self.large_search_limit),
+                Some(self.made_for_you_offset),
+                None,
+            ) {
+                self.set_playlist_tracks_to_table(&made_for_you_tracks);
+
+                self.made_for_you_tracks = Some(made_for_you_tracks);
+                if self.get_current_route().id != RouteId::TrackTable {
+                    self.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+                }
+            }
         }
     }
 
@@ -694,6 +839,28 @@ impl App {
         }
     }
 
+    pub fn copy_album_url(&mut self) {
+        let clipboard = match &mut self.clipboard_context {
+            Some(ctx) => ctx,
+            None => return,
+        };
+
+        if let Some(FullPlayingContext {
+            item:
+                Some(FullTrack {
+                    album: SimplifiedAlbum { id: Some(id), .. },
+                    ..
+                }),
+            ..
+        }) = &self.current_playback_context
+        {
+            if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/album/{}", id))
+            {
+                self.handle_error(format_err!("failed to set clipboard content: {}", e));
+            }
+        }
+    }
+
     fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
         self.set_tracks_to_table(
             saved_track_page
@@ -714,6 +881,42 @@ impl App {
                 .map(|item| item.track)
                 .collect::<Vec<FullTrack>>(),
         );
+    }
+
+    fn extract_recommended_tracks(
+        &self,
+        recommendations: &Recommendations,
+    ) -> Option<Vec<FullTrack>> {
+        if let Some(spotify) = &self.spotify {
+            let tracks = recommendations
+                .clone()
+                .tracks
+                .into_iter()
+                .map(|item| item.uri)
+                .collect::<Vec<String>>();
+            if let Ok(result) =
+                spotify.tracks(tracks.iter().map(|x| &x[..]).collect::<Vec<&str>>(), None)
+            {
+                return Some(result.tracks);
+            }
+        }
+
+        None
+    }
+
+    fn get_fulltrack_from_id(&self, id: &str) -> Option<FullTrack> {
+        if let Some(spotify) = &self.spotify {
+            match spotify.track(id) {
+                Ok(track) => {
+                    return Some(track);
+                }
+                Err(_e) => {
+                    return None;
+                }
+            };
+        }
+
+        None
     }
 
     pub fn set_tracks_to_table(&mut self, tracks: Vec<FullTrack>) {
@@ -779,7 +982,7 @@ impl App {
             if let Some(spotify) = &self.spotify {
                 match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
                     Ok(tracks) => {
-                        self.selected_album = Some(SelectedAlbum {
+                        self.selected_album_simplified = Some(SelectedAlbum {
                             album,
                             tracks: tracks.clone(),
                             selected_index: 0,
@@ -873,17 +1076,25 @@ impl App {
         }
     }
 
-    pub fn get_artist(&mut self, artist_id: &str, artist_name: &str) {
+    pub fn get_artist(&mut self, artist_id: &str, input_artist_name: &str) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
             let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string()));
+                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
             let albums = spotify.artist_albums(
                 artist_id,
                 None,
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())),
+                user_country,
                 Some(self.large_search_limit),
                 Some(0),
             );
+            let mut artist_name = String::from("");
+            if input_artist_name == "" {
+                if let Ok(full_artist) = spotify.artist(&artist_id) {
+                    artist_name = full_artist.name;
+                }
+            } else {
+                artist_name = String::from(input_artist_name);
+            }
             let top_tracks = spotify.artist_top_tracks(artist_id, user_country);
             let related_artist = spotify.artist_related_artists(artist_id);
 
@@ -891,7 +1102,7 @@ impl App {
                 (albums, top_tracks, related_artist)
             {
                 self.artist = Some(Artist {
-                    artist_name: artist_name.to_owned(),
+                    artist_name,
                     albums,
                     related_artists: related_artist.artists,
                     top_tracks: top_tracks.tracks,
@@ -1049,6 +1260,90 @@ impl App {
             if let Err(e) = spotify.user_playlist_unfollow(&user.id, &selected_id) {
                 self.handle_error(e);
             }
+        }
+    }
+
+    pub fn get_made_for_you(&mut self) {
+        // TODO: replace searches when relevant endpoint is added
+        const DISCOVER_WEEKLY: &str = "Discover Weekly";
+        const RELEASE_RADAR: &str = "Release Radar";
+        const ON_REPEAT: &str = "On Repeat";
+        const REPEAT_REWIND: &str = "Repeat Rewind";
+
+        if self.library.made_for_you_playlists.pages.is_empty() {
+            self.made_for_you_search_and_add(DISCOVER_WEEKLY);
+            self.made_for_you_search_and_add(RELEASE_RADAR);
+            self.made_for_you_search_and_add(ON_REPEAT);
+            self.made_for_you_search_and_add(REPEAT_REWIND);
+        }
+    }
+
+    fn made_for_you_search_and_add(&mut self, search_string: &str) {
+        const SPOTIFY_ID: &str = "spotify";
+
+        if let (Some(spotify), Some(user)) = (self.spotify.clone(), self.user.clone()) {
+            let user_country =
+                Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok();
+            match spotify.search_playlist(search_string, self.large_search_limit, 0, user_country) {
+                Ok(mut search_playlists) => {
+                    let mut filtered_playlists = search_playlists
+                        .playlists
+                        .items
+                        .iter()
+                        .filter(|playlist| {
+                            playlist.owner.id == SPOTIFY_ID && playlist.name == search_string
+                        })
+                        .map(|playlist| playlist.to_owned())
+                        .collect::<Vec<SimplifiedPlaylist>>();
+
+                    if !self.library.made_for_you_playlists.pages.is_empty() {
+                        self.library
+                            .made_for_you_playlists
+                            .get_mut_results(None)
+                            .unwrap()
+                            .items
+                            .append(&mut filtered_playlists);
+                    } else {
+                        search_playlists.playlists.items = filtered_playlists;
+                        self.library
+                            .made_for_you_playlists
+                            .add_pages(search_playlists.playlists);
+                    }
+                }
+                Err(e) => {
+                    self.handle_error(e);
+                }
+            }
+        }
+    }
+
+    pub fn get_audio_analysis(&mut self) {
+        if let (Some(spotify), Some(context)) = (&self.spotify, &self.current_playback_context) {
+            if let Some(track) = &context.item {
+                let uri = &track.uri;
+
+                match spotify.audio_analysis(uri) {
+                    Ok(result) => {
+                        self.audio_analysis = Some(result);
+                        self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
+                    }
+                    Err(e) => {
+                        self.handle_error(e);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn calculate_help_menu_offset(&mut self) {
+        let old_offset = self.help_menu_offset;
+
+        if self.help_menu_max_lines < self.help_docs_size {
+            self.help_menu_offset = self.help_menu_page * self.help_menu_max_lines;
+        }
+        if self.help_menu_offset > self.help_docs_size {
+            self.help_menu_offset = old_offset;
+            self.help_menu_page -= 1;
         }
     }
 }

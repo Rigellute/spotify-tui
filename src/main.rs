@@ -12,8 +12,8 @@ use crate::event::Key;
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
-use clap::App as ClapApp;
-use config::{ClientConfig, LOCALHOST};
+use clap::{App as ClapApp, Arg};
+use config::ClientConfig;
 use crossterm::{
     cursor::MoveTo,
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -22,7 +22,6 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use failure::format_err;
 use redirect_uri::redirect_uri_web_server;
 use rspotify::spotify::{
     client::Spotify,
@@ -30,7 +29,7 @@ use rspotify::spotify::{
     util::{get_token, process_token, request_token},
 };
 use std::{
-    cmp::min,
+    cmp::{max, min},
     io::{self, stdout, Write},
     panic::{self, PanicInfo},
     time::{Duration, Instant},
@@ -74,10 +73,10 @@ fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
     (spotify, token_expiry)
 }
 /// get token automatically with local webserver
-pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
+pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Option<TokenInfo> {
     match spotify_oauth.get_cached_token() {
         Some(token_info) => Some(token_info),
-        None => match redirect_uri_web_server(spotify_oauth) {
+        None => match redirect_uri_web_server(spotify_oauth, port) {
             Ok(mut url) => process_token(spotify_oauth, &mut url),
             Err(()) => {
                 println!("Starting webserver failed. Continuing with manual authentication");
@@ -91,6 +90,13 @@ pub fn get_token_auto(spotify_oauth: &mut SpotifyOAuth) -> Option<TokenInfo> {
             }
         },
     }
+}
+
+fn close_application() -> Result<(), failure::Error> {
+    disable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+    Ok(())
 }
 
 fn panic_hook(info: &PanicInfo<'_>) {
@@ -107,13 +113,15 @@ fn panic_hook(info: &PanicInfo<'_>) {
 
         let stacktrace: String = format!("{:?}", Backtrace::new()).replace('\n', "\n\r");
 
+        disable_raw_mode().unwrap();
         execute!(
             io::stdout(),
             LeaveAlternateScreen,
             Print(format!(
                 "thread '<unnamed>' panicked at '{}', {}\n\r{}",
                 msg, location, stacktrace
-            ))
+            )),
+            DisableMouseCapture
         )
         .unwrap();
     }
@@ -124,17 +132,33 @@ fn main() -> Result<(), failure::Error> {
         panic_hook(info);
     }));
 
-    ClapApp::new(env!("CARGO_PKG_NAME"))
+    let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .usage("Press `?` while running the app to see keybindings")
         .before_help(BANNER)
         .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
+         .arg(Arg::with_name("tick-rate")
+                               .short("t")
+                               .long("tick-rate")
+                               .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
+                               .takes_value(true))
         .get_matches();
 
     let mut user_config = UserConfig::new();
     user_config.load_config()?;
+
+    if let Some(tick_rate) = matches
+        .value_of("tick-rate")
+        .and_then(|tick_rate| tick_rate.parse().ok())
+    {
+        if tick_rate >= 1000 {
+            panic!("Tick rate must be below 1000");
+        } else {
+            user_config.behavior.tick_rate_milliseconds = tick_rate;
+        }
+    }
 
     let mut client_config = ClientConfig::new();
     client_config.load_config()?;
@@ -145,12 +169,12 @@ fn main() -> Result<(), failure::Error> {
     let mut oauth = SpotifyOAuth::default()
         .client_id(&client_config.client_id)
         .client_secret(&client_config.client_secret)
-        .redirect_uri(LOCALHOST)
+        .redirect_uri(&client_config.get_redirect_uri())
         .cache_path(config_paths.token_cache_path)
         .scope(&SCOPES.join(" "))
         .build();
 
-    match get_token_auto(&mut oauth) {
+    match get_token_auto(&mut oauth, client_config.get_port()) {
         Some(token_info) => {
             // Terminal initialization
             let mut stdout = stdout();
@@ -161,7 +185,7 @@ fn main() -> Result<(), failure::Error> {
             let mut terminal = Terminal::new(backend)?;
             terminal.hide_cursor()?;
 
-            let events = event::Events::new();
+            let events = event::Events::new(user_config.behavior.tick_rate_milliseconds);
 
             // Initialise app state
             let mut app = App::new();
@@ -173,10 +197,9 @@ fn main() -> Result<(), failure::Error> {
 
             app.spotify = Some(spotify);
 
-            app.clipboard_context =
-                Some(clipboard::ClipboardProvider::new().map_err(|err| {
-                    format_err!("failed to intialize clipboard context: {}", err)
-                })?);
+            app.clipboard_context = clipboard::ClipboardProvider::new().ok();
+
+            app.help_docs_size = ui::help::get_help_docs().len() as u32;
 
             // Now that spotify is ready, check if the user has already selected a device_id to
             // play music on, if not send them to the device selection view
@@ -189,25 +212,44 @@ fn main() -> Result<(), failure::Error> {
             loop {
                 // Get the size of the screen on each loop to account for resize event
                 if let Ok(size) = terminal.backend().size() {
+                    // Reset the help menu is the terminal was resized
+                    if app.size != size {
+                        app.help_menu_max_lines = 0;
+                        app.help_menu_offset = 0;
+                        app.help_menu_page = 0;
+                    }
+
                     app.size = size;
 
                     // Based on the size of the terminal, adjust the search limit.
-                    let max_limit = min((app.size.height as u32) - 13, 50);
+                    let potential_limit = max((app.size.height as i32) - 13, 0) as u32;
+                    let max_limit = min(potential_limit, 50);
                     app.large_search_limit = min((f32::from(size.height) / 1.4) as u32, max_limit);
                     app.small_search_limit =
                         min((f32::from(size.height) / 2.85) as u32, max_limit / 2);
+
+                    // Based on the size of the terminal, adjust how many lines are
+                    // dislayed in the help menu
+                    if app.size.height > 8 {
+                        app.help_menu_max_lines = (app.size.height as u32) - 8;
+                    } else {
+                        app.help_menu_max_lines = 0;
+                    }
                 };
 
                 let current_route = app.get_current_route();
                 terminal.draw(|mut f| match current_route.active_block {
                     ActiveBlock::HelpMenu => {
-                        ui::draw_help_menu(&mut f);
+                        ui::draw_help_menu(&mut f, &app);
                     }
                     ActiveBlock::Error => {
                         ui::draw_error_screen(&mut f, &app);
                     }
                     ActiveBlock::SelectDevice => {
                         ui::draw_device_list(&mut f, &app);
+                    }
+                    ActiveBlock::Analysis => {
+                        ui::audio_analysis::draw(&mut f, &app);
                     }
                     _ => {
                         ui::draw_main_layout(&mut f, &app);
@@ -226,7 +268,7 @@ fn main() -> Result<(), failure::Error> {
                     };
                 }
 
-                let cursor_offset = if app.size.height > ui::SMALL_TERMINAL_HEIGHT {
+                let cursor_offset = if app.size.height > ui::util::SMALL_TERMINAL_HEIGHT {
                     2
                 } else {
                     1
@@ -247,6 +289,7 @@ fn main() -> Result<(), failure::Error> {
                         app.spotify = Some(spotify);
                     } else {
                         println!("\nFailed to refresh authentication token");
+                        close_application()?;
                         break;
                     }
                 }
@@ -254,9 +297,7 @@ fn main() -> Result<(), failure::Error> {
                 match events.next()? {
                     event::Event::Input(key) => {
                         if key == Key::Ctrl('c') {
-                            disable_raw_mode()?;
-                            let mut stdout = io::stdout();
-                            execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+                            close_application()?;
                             break;
                         }
 
@@ -278,6 +319,7 @@ fn main() -> Result<(), failure::Error> {
                                     None => None,
                                 };
                                 if pop_result.is_none() {
+                                    close_application()?;
                                     break; // Exit application
                                 }
                             }

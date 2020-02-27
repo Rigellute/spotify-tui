@@ -1,5 +1,5 @@
 use super::{super::app::App, common_key_events};
-use crate::event::Key;
+use crate::{app::RecommendationsContext, event::Key};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -19,6 +19,26 @@ pub fn handler(key: Key, app: &mut App) {
                     &recently_played_result.items,
                     Some(app.recently_played.index),
                 );
+                app.recently_played.index = next_index;
+            }
+        }
+        k if common_key_events::high_event(k) => {
+            if let Some(_recently_played_result) = &app.recently_played.result {
+                let next_index = common_key_events::on_high_press_handler();
+                app.recently_played.index = next_index;
+            }
+        }
+        k if common_key_events::middle_event(k) => {
+            if let Some(recently_played_result) = &app.recently_played.result {
+                let next_index =
+                    common_key_events::on_middle_press_handler(&recently_played_result.items);
+                app.recently_played.index = next_index;
+            }
+        }
+        k if common_key_events::low_event(k) => {
+            if let Some(recently_played_result) = &app.recently_played.result {
+                let next_index =
+                    common_key_events::on_low_press_handler(&recently_played_result.items);
                 app.recently_played.index = next_index;
             }
         }
@@ -43,6 +63,20 @@ pub fn handler(key: Key, app: &mut App) {
 
                 app.start_playback(None, Some(track_uris), Some(app.recently_played.index));
             };
+        }
+        Key::Char('r') => {
+            if let Some(recently_played_result) = &app.recently_played.result.clone() {
+                let selected_track_history_item =
+                    recently_played_result.items.get(app.recently_played.index);
+
+                if let Some(item) = selected_track_history_item {
+                    if let Some(id) = &item.track.id {
+                        app.recommendations_context = Some(RecommendationsContext::Song);
+                        app.recommendations_seed = item.track.name.clone();
+                        app.get_recommendations_for_trackid(&id);
+                    }
+                }
+            }
         }
         _ => {}
     };
