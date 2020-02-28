@@ -1,4 +1,5 @@
-use super::{config::ClientConfig, user_config::UserConfig};
+use crate::network::IoEvent;
+use crate::{config::ClientConfig, user_config::UserConfig};
 use failure::{err_msg, format_err};
 use futures::try_join;
 use rspotify::{
@@ -282,6 +283,7 @@ pub struct App {
     pub small_search_limit: u32,
     pub song_progress_ms: u128,
     pub spotify: Option<Spotify>,
+    pub spotify_token_expiry: Option<Instant>,
     pub track_table: TrackTable,
     pub user: Option<PrivateUser>,
     pub album_list_index: usize,
@@ -292,10 +294,11 @@ pub struct App {
     pub help_menu_page: u32,
     pub help_menu_max_lines: u32,
     pub help_menu_offset: u32,
+    pub io_tx: tokio::sync::mpsc::Sender<IoEvent>,
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(io_tx: tokio::sync::mpsc::Sender<IoEvent>) -> App {
         App {
             audio_analysis: None,
             album_table_context: AlbumTableContext::Full,
@@ -353,6 +356,7 @@ impl App {
             selected_device_index: None,
             selected_playlist_index: None,
             spotify: None,
+            spotify_token_expiry: None,
             track_table: Default::default(),
             playback_params: PlaybackParams {
                 context_uri: None,
@@ -366,6 +370,7 @@ impl App {
             help_menu_page: 0,
             help_menu_max_lines: 0,
             help_menu_offset: 0,
+            io_tx,
         }
     }
 
