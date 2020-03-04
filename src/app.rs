@@ -60,17 +60,11 @@ impl<T> ScrollableResultPages<T> {
     }
 
     pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
-        match at_index {
-            Some(index) => self.pages.get(index),
-            None => self.pages.get(self.index),
-        }
+        self.pages.get(at_index.unwrap_or(self.index))
     }
 
     pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
-        match at_index {
-            Some(index) => self.pages.get_mut(index),
-            None => self.pages.get_mut(self.index),
-        }
+        self.pages.get_mut(at_index.unwrap_or(self.index))
     }
 
     pub fn add_pages(&mut self, new_pages: T) {
@@ -573,10 +567,8 @@ impl App {
 
     pub fn get_recommendations_for_trackid(&mut self, id: &str) {
         if let Some(track) = self.get_fulltrack_from_id(id) {
-            let track_id_list: Option<Vec<String>> = match &track.id {
-                Some(id) => Some(vec![id.to_string()]),
-                None => None,
-            };
+            let track_id_list: Option<Vec<String>> =
+                track.id.as_ref().map(|id| vec![id.to_string()]);
             self.get_recommendations_for_seed(None, track_id_list, Some(&track));
         }
     }
@@ -905,18 +897,10 @@ impl App {
     }
 
     fn get_fulltrack_from_id(&self, id: &str) -> Option<FullTrack> {
-        if let Some(spotify) = &self.spotify {
-            match spotify.track(id) {
-                Ok(track) => {
-                    return Some(track);
-                }
-                Err(_e) => {
-                    return None;
-                }
-            };
-        }
-
-        None
+        self.spotify
+            .as_ref()
+            .map(|spotify| spotify.track(id).ok())
+            .flatten()
     }
 
     pub fn set_tracks_to_table(&mut self, tracks: Vec<FullTrack>) {
@@ -978,30 +962,28 @@ impl App {
     }
 
     pub fn get_album_tracks(&mut self, album: SimplifiedAlbum) {
-        if let Some(album_id) = &album.id {
-            if let Some(spotify) = &self.spotify {
-                match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
-                    Ok(tracks) => {
-                        self.selected_album_simplified = Some(SelectedAlbum {
-                            album,
-                            tracks: tracks.clone(),
-                            selected_index: 0,
-                        });
+        if let (Some(album_id), Some(spotify)) = (&album.id, &self.spotify) {
+            match spotify.album_track(&album_id.clone(), self.large_search_limit, 0) {
+                Ok(tracks) => {
+                    self.selected_album_simplified = Some(SelectedAlbum {
+                        album,
+                        tracks: tracks.clone(),
+                        selected_index: 0,
+                    });
 
-                        self.current_user_saved_tracks_contains(
-                            tracks
-                                .items
-                                .into_iter()
-                                .filter_map(|item| item.id)
-                                .collect::<Vec<String>>(),
-                        );
+                    self.current_user_saved_tracks_contains(
+                        tracks
+                            .items
+                            .into_iter()
+                            .filter_map(|item| item.id)
+                            .collect::<Vec<String>>(),
+                    );
 
-                        self.album_table_context = AlbumTableContext::Simplified;
-                        self.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
-                    }
-                    Err(e) => {
-                        self.handle_error(e);
-                    }
+                    self.album_table_context = AlbumTableContext::Simplified;
+                    self.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+                }
+                Err(e) => {
+                    self.handle_error(e);
                 }
             }
         }
@@ -1078,8 +1060,7 @@ impl App {
 
     pub fn get_artist(&mut self, artist_id: &str, input_artist_name: &str) {
         if let (Some(spotify), Some(user)) = (&self.spotify, &self.user.to_owned()) {
-            let user_country =
-                Country::from_str(&user.country.to_owned().unwrap_or_else(|| "".to_string())).ok();
+            let user_country = Country::from_str(&user.country.to_owned().unwrap_or_default()).ok();
             let albums = spotify.artist_albums(
                 artist_id,
                 None,
@@ -1087,14 +1068,14 @@ impl App {
                 Some(self.large_search_limit),
                 Some(0),
             );
-            let mut artist_name = String::from("");
-            if input_artist_name == "" {
-                if let Ok(full_artist) = spotify.artist(&artist_id) {
-                    artist_name = full_artist.name;
-                }
+            let artist_name = if input_artist_name == "" {
+                spotify
+                    .artist(&artist_id)
+                    .map(|full_artist| full_artist.name)
+                    .unwrap_or_default()
             } else {
-                artist_name = String::from(input_artist_name);
-            }
+                String::from(input_artist_name)
+            };
             let top_tracks = spotify.artist_top_tracks(artist_id, user_country);
             let related_artist = spotify.artist_related_artists(artist_id);
 
