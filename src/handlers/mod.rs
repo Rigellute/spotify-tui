@@ -164,6 +164,8 @@ fn handle_escape(app: &mut App) {
         ActiveBlock::Error => {
             app.pop_navigation_stack();
         }
+        // These are global views that have no active/inactive distinction so do nothing
+        ActiveBlock::SelectDevice | ActiveBlock::Analysis => {}
         _ => {
             app.set_current_route_state(Some(ActiveBlock::Empty), None);
         }
