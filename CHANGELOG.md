@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Remove escape event from device and analysis views [#315](https://github.com/Rigellute/spotify-tui/pull/315)
+
 ## [0.15.0] - 2020-02-24
 
 - Add experimental audio visualizer (press `v` to navigate to it). The feature uses the audio analysis data from Spotify and animates the pitch information.
