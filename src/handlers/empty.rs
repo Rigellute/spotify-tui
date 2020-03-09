@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn on_enter() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
 
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn on_down_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
 
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn on_up_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::MyPlaylists));
 
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn on_left_press() {
-        let mut app = App::new();
+        let mut app = App::default();
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::AlbumTracks));
 
         handler(Key::Left, &mut app);
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn on_right_press() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
         app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);

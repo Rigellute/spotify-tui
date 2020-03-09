@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -11,9 +12,9 @@ pub fn handler(key: Key, app: &mut App) {
         }
         Key::Char('s') => {
             if let Some(playing_context) = &app.current_playback_context {
-                if let Some(track) = &playing_context.item {
-                    if let Some(id) = track.id.to_owned() {
-                        app.toggle_save_track(id);
+                if let Some(track) = &playing_context.clone().item {
+                    if let Some(id) = &track.id {
+                        app.dispatch(IoEvent::ToggleSaveTrack(id.to_string()));
                     }
                 }
             }
@@ -28,7 +29,7 @@ mod tests {
 
     #[test]
     fn on_left_press() {
-        let mut app = App::new();
+        let mut app = App::default();
         app.set_current_route_state(Some(ActiveBlock::PlayBar), Some(ActiveBlock::PlayBar));
 
         handler(Key::Up, &mut app);

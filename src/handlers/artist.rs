@@ -1,6 +1,7 @@
 use super::common_key_events;
 use crate::app::{App, ArtistBlock, RecommendationsContext, TrackTableContext};
 use crate::event::Key;
+use crate::network::IoEvent;
 
 fn handle_down_press_on_selected_block(app: &mut App) {
     if let Some(artist) = &mut app.artist {
@@ -168,7 +169,7 @@ fn handle_recommend_event_on_selected_block(app: &mut App) {
                     };
                     app.recommendations_context = Some(RecommendationsContext::Song);
                     app.recommendations_seed = track.name.clone();
-                    app.get_recommendations_for_seed(None, track_id_list, Some(track));
+                    app.get_recommendations_for_seed(None, track_id_list, Some(track.clone()));
                 }
             }
             ArtistBlock::RelatedArtists => {
@@ -196,7 +197,11 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                     .iter()
                     .map(|track| track.uri.to_owned())
                     .collect();
-                app.start_playback(None, Some(top_tracks), Some(selected_index));
+                app.dispatch(IoEvent::StartPlayback(
+                    None,
+                    Some(top_tracks),
+                    Some(selected_index),
+                ));
             }
             ArtistBlock::Albums => {
                 if let Some(selected_album) = artist
@@ -206,14 +211,14 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
                     .cloned()
                 {
                     app.track_table.context = Some(TrackTableContext::AlbumSearch);
-                    app.get_album_tracks(selected_album);
+                    app.dispatch(IoEvent::GetAlbumTracks(Box::new(selected_album)));
                 }
             }
             ArtistBlock::RelatedArtists => {
                 let selected_index = artist.selected_related_artist_index;
-                let artist_id = &artist.related_artists[selected_index].id;
-                let artist_name = &artist.related_artists[selected_index].name;
-                app.get_artist(&artist_id, &artist_name);
+                let artist_id = artist.related_artists[selected_index].id.clone();
+                let artist_name = artist.related_artists[selected_index].name.clone();
+                app.get_artist(artist_id, artist_name);
             }
             ArtistBlock::Empty => {}
         }
@@ -309,7 +314,7 @@ mod tests {
 
     #[test]
     fn on_esc() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Esc, &mut app);
 

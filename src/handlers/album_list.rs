@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn on_left_press() {
-        let mut app = App::new();
+        let mut app = App::default();
         app.set_current_route_state(
             Some(ActiveBlock::AlbumTracks),
             Some(ActiveBlock::AlbumTracks),
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn on_esc() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Esc, &mut app);
 

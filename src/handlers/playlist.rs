@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -70,20 +71,12 @@ pub fn handler(key: Key, app: &mut App) {
                     playlists.items.get(selected_playlist_index.to_owned())
                 {
                     let playlist_id = selected_playlist.id.to_owned();
-                    app.get_playlist_tracks(playlist_id);
+                    app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
                 }
             };
         }
         Key::Char('D') => {
-            app.user_unfollow_playlists();
-            if let Some(spotify) = &app.spotify {
-                let playlists = spotify.current_user_playlists(app.large_search_limit, None);
-
-                match playlists {
-                    Ok(p) => app.playlists = Some(p),
-                    Err(e) => app.handle_error(e),
-                };
-            }
+            app.user_unfollow_playlist();
         }
         _ => {}
     }

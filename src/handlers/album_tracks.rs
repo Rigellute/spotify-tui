@@ -2,6 +2,7 @@ use super::common_key_events;
 use crate::{
     app::{AlbumTableContext, App, RecommendationsContext},
     event::Key,
+    network::IoEvent,
 };
 
 pub fn handler(key: Key, app: &mut App) {
@@ -54,20 +55,20 @@ pub fn handler(key: Key, app: &mut App) {
         Key::Enter => match app.album_table_context {
             AlbumTableContext::Full => {
                 if let Some(selected_album) = app.selected_album_full.clone() {
-                    app.start_playback(
+                    app.dispatch(IoEvent::StartPlayback(
                         Some(selected_album.album.uri),
                         None,
                         Some(app.saved_album_tracks_index),
-                    );
+                    ));
                 };
             }
             AlbumTableContext::Simplified => {
                 if let Some(selected_album_simplified) = &app.selected_album_simplified.clone() {
-                    app.start_playback(
+                    app.dispatch(IoEvent::StartPlayback(
                         selected_album_simplified.album.uri.clone(),
                         None,
                         Some(selected_album_simplified.selected_index),
-                    );
+                    ));
                 };
             }
         },
@@ -148,7 +149,7 @@ fn handle_recommended_tracks(app: &mut App) {
                         if let Some(id) = &track.id {
                             app.recommendations_context = Some(RecommendationsContext::Song);
                             app.recommendations_seed = track.name.clone();
-                            app.get_recommendations_for_trackid(&id);
+                            app.get_recommendations_for_track_id(id.to_string());
                         }
                     }
                 }
@@ -164,7 +165,7 @@ fn handle_recommended_tracks(app: &mut App) {
                     if let Some(id) = &track.id {
                         app.recommendations_context = Some(RecommendationsContext::Song);
                         app.recommendations_seed = track.name.clone();
-                        app.get_recommendations_for_trackid(&id);
+                        app.get_recommendations_for_track_id(id.to_string());
                     }
                 }
             };
@@ -183,7 +184,7 @@ fn handle_save_event(app: &mut App) {
                     .get(app.saved_album_tracks_index)
                 {
                     if let Some(track_id) = &selected_track.id {
-                        app.toggle_save_track(track_id.clone());
+                        app.dispatch(IoEvent::ToggleSaveTrack(track_id.to_string()));
                     };
                 };
             };
@@ -196,7 +197,7 @@ fn handle_save_event(app: &mut App) {
                     .get(selected_album_simplified.selected_index)
                 {
                     if let Some(track_id) = &selected_track.id {
-                        app.toggle_save_track(track_id.clone());
+                        app.dispatch(IoEvent::ToggleSaveTrack(track_id.to_string()));
                     };
                 };
             };
@@ -211,7 +212,7 @@ mod tests {
 
     #[test]
     fn on_left_press() {
-        let mut app = App::new();
+        let mut app = App::default();
         app.set_current_route_state(
             Some(ActiveBlock::AlbumTracks),
             Some(ActiveBlock::AlbumTracks),
@@ -225,7 +226,7 @@ mod tests {
 
     #[test]
     fn on_esc() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Esc, &mut app);
 

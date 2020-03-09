@@ -1,6 +1,6 @@
 use super::super::app::{ActiveBlock, App, ArtistBlock, SearchResultBlock};
 use crate::user_config::Theme;
-use rspotify::spotify::model::artist::SimplifiedArtist;
+use rspotify::model::artist::SimplifiedArtist;
 use tui::style::Style;
 
 pub const SMALL_TERMINAL_HEIGHT: u16 = 45;

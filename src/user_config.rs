@@ -165,6 +165,7 @@ pub struct KeyBindingsString {
     audio_analysis: Option<String>,
 }
 
+#[derive(Clone)]
 pub struct KeyBindings {
     pub back: Key,
     pub jump_to_album: Key,
@@ -194,6 +195,7 @@ pub struct BehaviorConfigString {
     pub tick_rate_milliseconds: Option<u64>,
 }
 
+#[derive(Clone)]
 pub struct BehaviorConfig {
     pub seek_milliseconds: u32,
     pub volume_increment: u8,
@@ -207,6 +209,7 @@ pub struct UserConfigString {
     theme: Option<UserTheme>,
 }
 
+#[derive(Clone)]
 pub struct UserConfig {
     pub keys: KeyBindings,
     pub theme: Theme,

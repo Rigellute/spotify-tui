@@ -1,5 +1,5 @@
 use super::{super::app::App, common_key_events};
-use crate::{app::RecommendationsContext, event::Key};
+use crate::{app::RecommendationsContext, event::Key, network::IoEvent};
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -48,7 +48,7 @@ pub fn handler(key: Key, app: &mut App) {
                     recently_played_result.items.get(app.recently_played.index)
                 {
                     if let Some(track_id) = &selected_track.track.id {
-                        app.toggle_save_track(track_id.clone());
+                        app.dispatch(IoEvent::ToggleSaveTrack(track_id.to_string()));
                     };
                 };
             };
@@ -61,7 +61,11 @@ pub fn handler(key: Key, app: &mut App) {
                     .map(|item| item.track.uri.to_owned())
                     .collect();
 
-                app.start_playback(None, Some(track_uris), Some(app.recently_played.index));
+                app.dispatch(IoEvent::StartPlayback(
+                    None,
+                    Some(track_uris),
+                    Some(app.recently_played.index),
+                ));
             };
         }
         Key::Char('r') => {
@@ -73,7 +77,7 @@ pub fn handler(key: Key, app: &mut App) {
                     if let Some(id) = &item.track.id {
                         app.recommendations_context = Some(RecommendationsContext::Song);
                         app.recommendations_seed = item.track.name.clone();
-                        app.get_recommendations_for_trackid(&id);
+                        app.get_recommendations_for_track_id(id.to_string());
                     }
                 }
             }
@@ -88,7 +92,7 @@ mod tests {
 
     #[test]
     fn on_left_press() {
-        let mut app = App::new();
+        let mut app = App::default();
         app.set_current_route_state(
             Some(ActiveBlock::AlbumTracks),
             Some(ActiveBlock::AlbumTracks),
@@ -102,7 +106,7 @@ mod tests {
 
     #[test]
     fn on_esc() {
-        let mut app = App::new();
+        let mut app = App::default();
 
         handler(Key::Esc, &mut app);
 

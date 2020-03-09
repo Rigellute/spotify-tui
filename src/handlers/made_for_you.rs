@@ -3,6 +3,7 @@ use super::{
     common_key_events,
 };
 use crate::event::Key;
+use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
     match key {
@@ -57,7 +58,10 @@ pub fn handler(key: Key, app: &mut App) {
             {
                 app.made_for_you_offset = 0;
                 let playlist_id = selected_playlist.id.to_owned();
-                app.get_made_for_you_playlist_tracks(playlist_id);
+                app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
+                    playlist_id,
+                    app.made_for_you_offset,
+                ));
             }
         }
         _ => {}
