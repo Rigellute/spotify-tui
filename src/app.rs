@@ -671,12 +671,27 @@ impl App {
     }
   }
 
-  pub fn current_user_saved_album_delete(&mut self) {
-    if let Some(albums) = self.library.saved_albums.get_results(None) {
-      if let Some(selected_album) = albums.items.get(self.album_list_index) {
-        let album_id = selected_album.album.id.clone();
-        self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
+  pub fn current_user_saved_album_delete(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(albums) = &self.search_results.albums {
+          if let Some(selected_index) = self.search_results.selected_album_index {
+            let selected_album = &albums.albums.items[selected_index];
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
+            }
+          }
+        }
       }
+      ActiveBlock::AlbumList => {
+        if let Some(albums) = self.library.saved_albums.get_results(None) {
+          if let Some(selected_album) = albums.items.get(self.album_list_index) {
+            let album_id = selected_album.album.id.clone();
+            self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
+          }
+        }
+      }
+      _ => (),
     }
   }
 
@@ -691,13 +706,27 @@ impl App {
     }
   }
 
-  pub fn user_unfollow_artists(&mut self) {
-    if let Some(artists) = self.library.saved_artists.get_results(None) {
-      if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
-        let artist_id = selected_artist.id.clone();
-        self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+  pub fn user_unfollow_artists(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(artists) = &self.search_results.artists {
+          if let Some(selected_index) = self.search_results.selected_artists_index {
+            let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+            let artist_id = selected_artist.id.clone();
+            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+          }
+        }
       }
-    }
+      ActiveBlock::AlbumList => {
+        if let Some(artists) = self.library.saved_artists.get_results(None) {
+          if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
+            let artist_id = selected_artist.id.clone();
+            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+          }
+        }
+      }
+      _ => (),
+    };
   }
 
   pub fn user_follow_artists(&mut self) {

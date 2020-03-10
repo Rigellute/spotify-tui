@@ -437,6 +437,17 @@ pub fn handler(key: Key, app: &mut App) {
       }
       SearchResultBlock::Empty => {}
     },
+    Key::Char('D') => match app.search_results.selected_block {
+      SearchResultBlock::AlbumSearch => {
+        app.current_user_saved_album_delete(ActiveBlock::SearchResultBlock)
+      }
+      SearchResultBlock::SongSearch => {}
+      SearchResultBlock::ArtistSearch => app.user_unfollow_artists(ActiveBlock::SearchResultBlock),
+      SearchResultBlock::PlaylistSearch => {
+        app.user_unfollow_playlist();
+      }
+      SearchResultBlock::Empty => {}
+    },
     Key::Char('r') => handle_recommended_tracks(app),
     // Add `s` to "see more" on each option
     _ => {}

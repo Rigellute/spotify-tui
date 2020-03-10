@@ -951,6 +951,8 @@ impl<'a> Network<'a> {
     {
       Ok(_) => {
         self.get_current_user_saved_albums(None).await;
+        let mut app = self.app.lock().await;
+        app.saved_album_ids_set.remove(&album_id.to_owned());
       }
       Err(e) => {
         self.handle_error(e).await;
@@ -959,19 +961,23 @@ impl<'a> Network<'a> {
   }
 
   async fn current_user_saved_album_add(&mut self, artist_id: String) {
-    if let Err(e) = self
-      .spotify
-      .current_user_saved_albums_add(&[artist_id.to_owned()])
-      .await
-    {
-      self.handle_error(e).await;
-    };
+    match self.spotify.current_user_saved_albums_add(&[artist_id.to_owned()]).await {
+        Ok(_) => {
+            let mut app = self.app.lock().await;
+            app.saved_album_ids_set.insert(artist_id.to_owned());
+        }
+        Err(e) => self.handle_error(e).await,
+    }
   }
 
   async fn user_unfollow_artists(&mut self, artist_ids: Vec<String>) {
     match self.spotify.user_unfollow_artists(&artist_ids).await {
       Ok(_) => {
         self.get_followed_artists(None).await;
+        let mut app = self.app.lock().await;
+        artist_ids.iter().for_each(|id| {
+          app.followed_artist_ids_set.remove(&id.to_owned());
+        });
       }
       Err(e) => {
         self.handle_error(e).await;
@@ -983,6 +989,10 @@ impl<'a> Network<'a> {
     match self.spotify.user_follow_artists(&artist_ids).await {
       Ok(_) => {
         self.get_followed_artists(None).await;
+        let mut app = self.app.lock().await;
+        artist_ids.iter().for_each(|id| {
+          app.followed_artist_ids_set.insert(id.to_owned());
+        });
       }
       Err(e) => {
         self.handle_error(e).await;
