@@ -314,7 +314,7 @@ where
         .items
         .iter()
         // TODO: reuse the function formatting this text for `playing` block
-        .map(|item| item.name.to_owned() + " - " + &create_artist_string(&item.artists))
+        .map(|item| item.name.to_owned())
         .collect(),
       None => vec![],
     };
@@ -334,7 +334,14 @@ where
         .artists
         .items
         .iter()
-        .map(|item| item.name.to_owned())
+        .map(|item| {
+          let mut artist = String::new();
+          if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
+            artist.push_str("♥  ");
+          }
+          artist.push_str(&item.name.to_owned());
+          artist
+        })
         .collect(),
       None => vec![],
     };
@@ -362,11 +369,18 @@ where
         .items
         .iter()
         .map(|item| {
-          format!(
+          let mut album_artist = String::new();
+          if let Some(album_id) = &item.id {
+            if app.saved_album_ids_set.contains(&album_id.to_owned()) {
+              album_artist.push_str("♥  ");
+            }
+          }
+          album_artist.push_str(&format!(
             "{} - {}",
             item.name.to_owned(),
             create_artist_string(&item.artists)
-          )
+          ));
+          album_artist
         })
         .collect(),
       None => vec![],
