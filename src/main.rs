@@ -329,7 +329,8 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), 
       app.dispatch(IoEvent::GetPlaylists);
       app.dispatch(IoEvent::GetUser);
       app.dispatch(IoEvent::GetCurrentPlayback);
-
+      app.dispatch(IoEvent::GetCurrentUserSavedAllAlbums(None));
+      app.dispatch(IoEvent::GetFollowedAllArtists(None));
       app.help_docs_size = ui::help::get_help_docs().len() as u32;
 
       is_first_render = false;

@@ -54,6 +54,7 @@ pub enum IoEvent {
     Option<Country>,
   ),
   GetCurrentUserSavedAlbums(Option<u32>),
+  GetCurrentUserSavedAllAlbums(Option<u32>),
   CurrentUserSavedAlbumDelete(String),
   CurrentUserSavedAlbumAdd(String),
   UserUnfollowArtists(Vec<String>),
@@ -67,6 +68,7 @@ pub enum IoEvent {
   GetRecommendationsForTrackId(String, Option<Country>),
   GetRecentlyPlayed,
   GetFollowedArtists(Option<String>),
+  GetFollowedAllArtists(Option<String>),
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
@@ -192,6 +194,9 @@ impl<'a> Network<'a> {
       IoEvent::GetCurrentUserSavedAlbums(offset) => {
         self.get_current_user_saved_albums(offset).await;
       }
+      IoEvent::GetCurrentUserSavedAllAlbums(offset) => {
+        self.get_current_user_saved_all_albums(offset).await;
+      }
       IoEvent::CurrentUserSavedAlbumDelete(album_id) => {
         self.current_user_saved_album_delete(album_id).await;
       }
@@ -231,6 +236,9 @@ impl<'a> Network<'a> {
       }
       IoEvent::GetFollowedArtists(after) => {
         self.get_followed_artists(after).await;
+      }
+      IoEvent::GetFollowedAllArtists(after) => {
+        self.get_followed_all_artists(after).await;
       }
       IoEvent::GetAlbum(album_id) => {
         self.get_album(album_id).await;
@@ -853,6 +861,37 @@ impl<'a> Network<'a> {
     };
   }
 
+  async fn get_followed_all_artists(&mut self, after: Option<String>) {
+    let mut after = after;
+    loop {
+      match self
+        .spotify
+        .current_user_followed_artists(50, after.clone())
+        .await
+      {
+        Ok(saved_artists) => {
+          // not to show a blank page
+          if !saved_artists.artists.items.is_empty() {
+            let mut app = self.app.lock().await;
+            saved_artists.artists.items.iter().for_each(|item| {
+                app.followed_artist_ids_set.insert(item.id.to_owned());
+            });
+            if let Some(artist) = saved_artists.artists.items.last() {
+                after = Some(artist.id.to_owned());
+            } else {
+                break;
+            }
+          } else {
+              break;
+          }
+        }
+        Err(e) => {
+          self.handle_error(e).await;
+        }
+      };
+    }
+  }
+
   async fn get_current_user_saved_albums(&mut self, offset: Option<u32>) {
     match self
       .spotify
@@ -871,6 +910,34 @@ impl<'a> Network<'a> {
       }
     };
   }
+
+  async fn get_current_user_saved_all_albums(&mut self, offset: Option<u32>) {
+    let mut offset = offset;
+    loop {
+      match self
+        .spotify
+        .current_user_saved_albums(50, offset)
+        .await
+      {
+        Ok(saved_albums) => {
+          // not to show a blank page
+          if !saved_albums.items.is_empty() {
+            let mut app = self.app.lock().await;
+            saved_albums.items.iter().for_each(|item| {
+                app.saved_album_ids_set.insert(item.album.id.to_owned());
+            });
+            offset = Some(offset.unwrap_or(1) + 50);
+          } else {
+              break;
+          }
+        }
+        Err(e) => {
+          self.handle_error(e).await;
+        }
+      };
+    }
+  }
+
 
   pub async fn current_user_saved_album_delete(&mut self, album_id: String) {
     match self
