@@ -335,6 +335,8 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), 
       is_first_render = false;
     }
   }
+
+  terminal.show_cursor()?;
   close_application()?;
 
   Ok(())
