@@ -282,6 +282,7 @@ pub struct App {
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
+  pub spotify_token_expiry: Instant,
 }
 
 impl Default for App {
@@ -352,15 +353,21 @@ impl Default for App {
       is_loading: false,
       io_tx: None,
       is_fetching_current_playback: false,
+      spotify_token_expiry: Instant::now(),
     }
   }
 }
 
 impl App {
-  pub fn new(io_tx: Sender<IoEvent>, user_config: UserConfig) -> App {
+  pub fn new(
+    io_tx: Sender<IoEvent>,
+    user_config: UserConfig,
+    spotify_token_expiry: Instant,
+  ) -> App {
     App {
       io_tx: Some(io_tx),
       user_config,
+      spotify_token_expiry,
       ..App::default()
     }
   }

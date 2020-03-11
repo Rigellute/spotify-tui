@@ -93,7 +93,6 @@ pub fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
 pub struct Network<'a> {
   oauth: SpotifyOAuth,
   spotify: Spotify,
-  spotify_token_expiry: Instant,
   large_search_limit: u32,
   small_search_limit: u32,
   client_config: ClientConfig,
@@ -104,14 +103,12 @@ impl<'a> Network<'a> {
   pub fn new(
     oauth: SpotifyOAuth,
     spotify: Spotify,
-    spotify_token_expiry: Instant,
     client_config: ClientConfig,
     app: &'a Arc<Mutex<App>>,
   ) -> Self {
     Network {
       oauth,
       spotify,
-      spotify_token_expiry,
       large_search_limit: 20,
       small_search_limit: 4,
       client_config,
@@ -1092,7 +1089,8 @@ impl<'a> Network<'a> {
     if let Some(new_token_info) = get_token(&mut self.oauth).await {
       let (new_spotify, new_token_expiry) = get_spotify(new_token_info);
       self.spotify = new_spotify;
-      self.spotify_token_expiry = new_token_expiry;
+      let mut app = self.app.lock().await;
+      app.spotify_token_expiry = new_token_expiry;
     } else {
       println!("\nFailed to refresh authentication token");
       // TODO panic!

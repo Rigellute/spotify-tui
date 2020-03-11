@@ -23,11 +23,10 @@ use crossterm::{
   terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
   ExecutableCommand,
 };
-use network::{IoEvent, Network};
+use network::{get_spotify, IoEvent, Network};
 use redirect_uri::redirect_uri_web_server;
 use rspotify::{
-  client::Spotify,
-  oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
+  oauth2::{SpotifyOAuth, TokenInfo},
   util::{process_token, request_token},
 };
 use std::{
@@ -35,7 +34,7 @@ use std::{
   io::{self, stdout, Write},
   panic::{self, PanicInfo},
   sync::Arc,
-  time::{Duration, Instant},
+  time::Instant,
 };
 use tokio::sync::Mutex;
 use tui::{
@@ -60,22 +59,6 @@ const SCOPES: [&str; 13] = [
   "user-read-recently-played",
 ];
 
-fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
-  let token_expiry = Instant::now()
-        + Duration::from_secs(token_info.expires_in.into())
-        // Set 10 seconds early
-        - Duration::from_secs(10);
-
-  let client_credential = SpotifyClientCredentials::default()
-    .token_info(token_info)
-    .build();
-
-  let spotify = Spotify::default()
-    .client_credentials_manager(client_credential)
-    .build();
-
-  (spotify, token_expiry)
-}
 /// get token automatically with local webserver
 pub async fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Option<TokenInfo> {
   match spotify_oauth.get_cached_token().await {
@@ -184,18 +167,23 @@ async fn main() -> Result<(), failure::Error> {
     Some(token_info) => {
       let (sync_io_tx, sync_io_rx) = std::sync::mpsc::channel::<IoEvent>();
 
-      // Initialise app state
-      let app = Arc::new(Mutex::new(App::new(sync_io_tx, user_config.clone())));
       let (spotify, token_expiry) = get_spotify(token_info);
+
+      // Initialise app state
+      let app = Arc::new(Mutex::new(App::new(
+        sync_io_tx,
+        user_config.clone(),
+        token_expiry,
+      )));
 
       let cloned_app = Arc::clone(&app);
       std::thread::spawn(move || {
-        let mut network = Network::new(oauth, spotify, token_expiry, client_config, &app);
+        let mut network = Network::new(oauth, spotify, client_config, &app);
         start_tokio(sync_io_rx, &mut network);
       });
 
       // The UI must run in the "main" thread
-      start_ui(user_config, &cloned_app, token_expiry).await?;
+      start_ui(user_config, &cloned_app).await?;
     }
     None => println!("\nSpotify auth failed"),
   }
@@ -210,11 +198,7 @@ async fn start_tokio<'a>(io_rx: std::sync::mpsc::Receiver<IoEvent>, network: &mu
   }
 }
 
-async fn start_ui(
-  user_config: UserConfig,
-  app: &Arc<Mutex<App>>,
-  token_expiry: Instant,
-) -> Result<(), failure::Error> {
+async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), failure::Error> {
   // Terminal initialization
   let mut stdout = stdout();
   execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -301,7 +285,7 @@ async fn start_ui(
     ))?;
 
     // Handle authentication refresh
-    if Instant::now() > token_expiry {
+    if Instant::now() > app.spotify_token_expiry {
       app.dispatch(IoEvent::RefreshAuthentication);
     }
 
