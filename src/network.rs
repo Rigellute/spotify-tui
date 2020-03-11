@@ -501,10 +501,9 @@ impl<'a> Network<'a> {
 
     match result {
       Ok(()) => {
-        self.get_current_playback().await;
-
         let mut app = self.app.lock().await;
         app.song_progress_ms = 0;
+        app.dispatch(IoEvent::GetCurrentPlayback);
       }
       Err(e) => {
         self.handle_error(e).await;
