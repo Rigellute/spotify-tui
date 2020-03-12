@@ -64,8 +64,25 @@ pub fn handler(key: Key, app: &mut App) {
       }
 
       app.dispatch(IoEvent::GetSearchResults(input_str, user_country));
-      app.dispatch(IoEvent::UserArtistFollowCheck);
-      app.dispatch(IoEvent::CurrentUserSavedAlbumsContains);
+      if let Some(artists) = &app.search_results.artists {
+        let artist_ids = artists
+          .artists
+          .items
+          .iter()
+          .map(|item| item.id.to_owned())
+          .collect();
+        app.dispatch(IoEvent::UserArtistFollowCheck(artist_ids));
+      }
+
+      if let Some(albums) = &app.search_results.albums {
+        let mut album_ids: Vec<String> = Vec::new();
+        albums.albums.items.iter().for_each(|item| {
+          if let Some(id) = &item.id {
+            album_ids.push(id.to_owned());
+          }
+        });
+        app.dispatch(IoEvent::CurrentUserSavedAlbumsContains(album_ids));
+      }
 
       // On searching for a track, clear the playlist selection
       app.selected_playlist_index = Some(0);
