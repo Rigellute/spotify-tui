@@ -64,6 +64,8 @@ pub fn handler(key: Key, app: &mut App) {
       }
 
       app.dispatch(IoEvent::GetSearchResults(input_str, user_country));
+      app.dispatch(IoEvent::UserArtistFollowCheck);
+      app.dispatch(IoEvent::CurrentUserSavedAlbumsContains);
 
       // On searching for a track, clear the playlist selection
       app.selected_playlist_index = Some(0);
