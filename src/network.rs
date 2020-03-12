@@ -54,7 +54,7 @@ pub enum IoEvent {
     Option<Country>,
   ),
   GetCurrentUserSavedAlbums(Option<u32>),
-  GetCurrentUserSavedAllAlbums(Option<u32>),
+  CurrentUserSavedAlbumsContains,
   CurrentUserSavedAlbumDelete(String),
   CurrentUserSavedAlbumAdd(String),
   UserUnfollowArtists(Vec<String>),
@@ -68,7 +68,7 @@ pub enum IoEvent {
   GetRecommendationsForTrackId(String, Option<Country>),
   GetRecentlyPlayed,
   GetFollowedArtists(Option<String>),
-  GetFollowedAllArtists(Option<String>),
+  UserArtistFollowCheck,
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
@@ -197,8 +197,8 @@ impl<'a> Network<'a> {
       IoEvent::GetCurrentUserSavedAlbums(offset) => {
         self.get_current_user_saved_albums(offset).await;
       }
-      IoEvent::GetCurrentUserSavedAllAlbums(offset) => {
-        self.get_current_user_saved_all_albums(offset).await;
+      IoEvent::CurrentUserSavedAlbumsContains => {
+        self.current_user_saved_albums_contains().await;
       }
       IoEvent::CurrentUserSavedAlbumDelete(album_id) => {
         self.current_user_saved_album_delete(album_id).await;
@@ -240,8 +240,8 @@ impl<'a> Network<'a> {
       IoEvent::GetFollowedArtists(after) => {
         self.get_followed_artists(after).await;
       }
-      IoEvent::GetFollowedAllArtists(after) => {
-        self.get_followed_all_artists(after).await;
+      IoEvent::UserArtistFollowCheck => {
+        self.user_artist_check_follow().await;
       }
       IoEvent::GetAlbum(album_id) => {
         self.get_album(album_id).await;
@@ -865,34 +865,24 @@ impl<'a> Network<'a> {
     };
   }
 
-  async fn get_followed_all_artists(&mut self, after: Option<String>) {
-    let mut after = after;
-    loop {
-      match self
-        .spotify
-        .current_user_followed_artists(50, after.clone())
-        .await
-      {
-        Ok(saved_artists) => {
-          // not to show a blank page
-          if !saved_artists.artists.items.is_empty() {
-            let mut app = self.app.lock().await;
-            saved_artists.artists.items.iter().for_each(|item| {
-                app.followed_artist_ids_set.insert(item.id.to_owned());
-            });
-            if let Some(artist) = saved_artists.artists.items.last() {
-                after = Some(artist.id.to_owned());
-            } else {
-                break;
-            }
+  async fn user_artist_check_follow(&mut self) {
+    let mut app = self.app.lock().await;
+    if let Some(artists) = &app.search_results.artists {
+      let artist_ids: Vec<String> = artists
+        .artists
+        .items
+        .iter()
+        .map(|item| item.id.to_owned())
+        .collect();
+      if let Ok(are_follwed) = self.spotify.user_artist_check_follow(&artist_ids).await {
+        artist_ids.iter().enumerate().for_each(|(i, id)| {
+          if are_follwed[i] {
+            app.followed_artist_ids_set.insert(id.to_owned());
           } else {
-              break;
+            app.followed_artist_ids_set.remove(id);
           }
-        }
-        Err(e) => {
-          self.handle_error(e).await;
-        }
-      };
+        });
+      }
     }
   }
 
@@ -915,33 +905,30 @@ impl<'a> Network<'a> {
     };
   }
 
-  async fn get_current_user_saved_all_albums(&mut self, offset: Option<u32>) {
-    let mut offset = offset;
-    loop {
-      match self
+  async fn current_user_saved_albums_contains(&mut self) {
+    let mut app = self.app.lock().await;
+    if let Some(albums) = &app.search_results.albums {
+      let mut album_ids: Vec<String> = Vec::new();
+      albums.albums.items.iter().for_each(|item| {
+        if let Some(id) = &item.id {
+          album_ids.push(id.to_owned());
+        }
+      });
+      if let Ok(are_follwed) = self
         .spotify
-        .current_user_saved_albums(50, offset)
+        .current_user_saved_albums_contains(&album_ids)
         .await
       {
-        Ok(saved_albums) => {
-          // not to show a blank page
-          if !saved_albums.items.is_empty() {
-            let mut app = self.app.lock().await;
-            saved_albums.items.iter().for_each(|item| {
-                app.saved_album_ids_set.insert(item.album.id.to_owned());
-            });
-            offset = Some(offset.unwrap_or(1) + 50);
+        album_ids.iter().enumerate().for_each(|(i, id)| {
+          if are_follwed[i] {
+            app.saved_album_ids_set.insert(id.to_owned());
           } else {
-              break;
+            app.saved_album_ids_set.remove(id);
           }
-        }
-        Err(e) => {
-          self.handle_error(e).await;
-        }
-      };
+        });
+      }
     }
   }
-
 
   pub async fn current_user_saved_album_delete(&mut self, album_id: String) {
     match self
@@ -961,12 +948,16 @@ impl<'a> Network<'a> {
   }
 
   async fn current_user_saved_album_add(&mut self, artist_id: String) {
-    match self.spotify.current_user_saved_albums_add(&[artist_id.to_owned()]).await {
-        Ok(_) => {
-            let mut app = self.app.lock().await;
-            app.saved_album_ids_set.insert(artist_id.to_owned());
-        }
-        Err(e) => self.handle_error(e).await,
+    match self
+      .spotify
+      .current_user_saved_albums_add(&[artist_id.to_owned()])
+      .await
+    {
+      Ok(_) => {
+        let mut app = self.app.lock().await;
+        app.saved_album_ids_set.insert(artist_id.to_owned());
+      }
+      Err(e) => self.handle_error(e).await,
     }
   }
 
