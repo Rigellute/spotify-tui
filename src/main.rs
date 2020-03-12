@@ -10,6 +10,7 @@ mod user_config;
 
 use crate::app::RouteId;
 use crate::event::Key;
+use anyhow::Result;
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
@@ -79,7 +80,7 @@ pub async fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Opti
   }
 }
 
-fn close_application() -> Result<(), failure::Error> {
+fn close_application() -> Result<()> {
   disable_raw_mode()?;
   let mut stdout = io::stdout();
   execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
@@ -115,7 +116,7 @@ fn panic_hook(info: &PanicInfo<'_>) {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), failure::Error> {
+async fn main() -> Result<()> {
   panic::set_hook(Box::new(|info| {
     panic_hook(info);
   }));
@@ -198,7 +199,7 @@ async fn start_tokio<'a>(io_rx: std::sync::mpsc::Receiver<IoEvent>, network: &mu
   }
 }
 
-async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), failure::Error> {
+async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> {
   // Terminal initialization
   let mut stdout = stdout();
   execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;

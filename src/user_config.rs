@@ -1,6 +1,6 @@
 use crate::event::Key;
+use anyhow::{anyhow, Result};
 use dirs;
-use failure::err_msg;
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
@@ -67,7 +67,7 @@ impl Default for Theme {
   }
 }
 
-fn parse_key(key: String) -> Result<Key, failure::Error> {
+fn parse_key(key: String) -> Result<Key> {
   fn get_single_char(string: &str) -> char {
     match string.chars().next() {
       Some(c) => c,
@@ -81,7 +81,7 @@ fn parse_key(key: String) -> Result<Key, failure::Error> {
       let sections: Vec<&str> = key.split('-').collect();
 
       if sections.len() > 2 {
-        return Err(failure::format_err!(
+        return Err(anyhow!(
           "Shortcut can only have 2 keys, \"{}\" has {}",
           key,
           sections.len()
@@ -101,16 +101,13 @@ fn parse_key(key: String) -> Result<Key, failure::Error> {
         "pageup" => Ok(Key::PageUp),
         "pagedown" => Ok(Key::PageDown),
         "space" => Ok(Key::Char(' ')),
-        _ => Err(failure::format_err!(
-          "The key \"{}\" is unknown.",
-          sections[0]
-        )),
+        _ => Err(anyhow!("The key \"{}\" is unknown.", sections[0])),
       }
     }
   }
 }
 
-fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
+fn check_reserved_keys(key: Key) -> Result<()> {
   let reserved = [
     Key::Char('h'),
     Key::Char('j'),
@@ -129,7 +126,7 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
   for item in reserved.iter() {
     if key == *item {
       // TODO: Add pretty print for key
-      return Err(failure::format_err!(
+      return Err(anyhow!(
         "The key {:?} is reserved and cannot be remapped",
         key
       ));
@@ -252,7 +249,7 @@ impl UserConfig {
     }
   }
 
-  pub fn get_or_build_paths(&self) -> Result<UserConfigPaths, failure::Error> {
+  pub fn get_or_build_paths(&self) -> Result<UserConfigPaths> {
     match dirs::home_dir() {
       Some(home) => {
         let path = Path::new(&home);
@@ -275,11 +272,11 @@ impl UserConfig {
 
         Ok(paths)
       }
-      None => Err(err_msg("No $HOME directory found for client config")),
+      None => Err(anyhow!("No $HOME directory found for client config")),
     }
   }
 
-  pub fn load_keybindings(&mut self, keybindings: KeyBindingsString) -> Result<(), failure::Error> {
+  pub fn load_keybindings(&mut self, keybindings: KeyBindingsString) -> Result<()> {
     macro_rules! to_keys {
       ($name: ident) => {
         if let Some(key_string) = keybindings.$name {
@@ -313,7 +310,7 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn load_theme(&mut self, theme: UserTheme) -> Result<(), failure::Error> {
+  pub fn load_theme(&mut self, theme: UserTheme) -> Result<()> {
     macro_rules! to_theme_item {
       ($name: ident) => {
         if let Some(theme_item) = theme.$name {
@@ -337,17 +334,14 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn load_behaviorconfig(
-    &mut self,
-    behavior_config: BehaviorConfigString,
-  ) -> Result<(), failure::Error> {
+  pub fn load_behaviorconfig(&mut self, behavior_config: BehaviorConfigString) -> Result<()> {
     if let Some(behavior_string) = behavior_config.seek_milliseconds {
       self.behavior.seek_milliseconds = behavior_string;
     }
 
     if let Some(behavior_string) = behavior_config.volume_increment {
       if behavior_string > 100 {
-        return Err(failure::format_err!(
+        return Err(anyhow!(
           "Volume increment must be between 0 and 100, is {}",
           behavior_string,
         ));
@@ -357,7 +351,7 @@ impl UserConfig {
 
     if let Some(tick_rate) = behavior_config.tick_rate_milliseconds {
       if tick_rate >= 1000 {
-        return Err(err_msg("Tick rate must be below 1000"));
+        return Err(anyhow!("Tick rate must be below 1000"));
       } else {
         self.behavior.tick_rate_milliseconds = tick_rate;
       }
@@ -366,7 +360,7 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn load_config(&mut self) -> Result<(), failure::Error> {
+  pub fn load_config(&mut self) -> Result<()> {
     let paths = self.get_or_build_paths()?;
     if paths.config_file_path.exists() {
       let config_string = fs::read_to_string(&paths.config_file_path)?;
@@ -395,7 +389,7 @@ impl UserConfig {
   }
 }
 
-fn parse_theme_item(theme_item: &str) -> Result<Color, failure::Error> {
+fn parse_theme_item(theme_item: &str) -> Result<Color> {
   let color = match theme_item {
     "Reset" => Color::Reset,
     "Black" => Color::Black,

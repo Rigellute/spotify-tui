@@ -1,6 +1,6 @@
 use super::banner::BANNER;
+use anyhow::{anyhow, Result};
 use dirs;
-use failure::err_msg;
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
@@ -46,7 +46,7 @@ impl ClientConfig {
     self.port.unwrap_or(DEFAULT_PORT)
   }
 
-  pub fn get_or_build_paths(&self) -> Result<ConfigPaths, failure::Error> {
+  pub fn get_or_build_paths(&self) -> Result<ConfigPaths> {
     match dirs::home_dir() {
       Some(home) => {
         let path = Path::new(&home);
@@ -71,11 +71,11 @@ impl ClientConfig {
 
         Ok(paths)
       }
-      None => Err(err_msg("No $HOME directory found for client config")),
+      None => Err(anyhow!("No $HOME directory found for client config")),
     }
   }
 
-  pub fn set_device_id(&mut self, device_id: String) -> Result<(), failure::Error> {
+  pub fn set_device_id(&mut self, device_id: String) -> Result<()> {
     let paths = self.get_or_build_paths()?;
     let config_string = fs::read_to_string(&paths.config_file_path)?;
     let mut config_yml: ClientConfig = serde_yaml::from_str(&config_string)?;
@@ -89,7 +89,7 @@ impl ClientConfig {
     Ok(())
   }
 
-  pub fn load_config(&mut self) -> Result<(), failure::Error> {
+  pub fn load_config(&mut self) -> Result<()> {
     let paths = self.get_or_build_paths()?;
     if paths.config_file_path.exists() {
       let config_string = fs::read_to_string(&paths.config_file_path)?;

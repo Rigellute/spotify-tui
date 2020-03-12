@@ -1,6 +1,6 @@
 use super::user_config::UserConfig;
 use crate::network::IoEvent;
-use failure::format_err;
+use anyhow::anyhow;
 use rspotify::{
   model::{
     album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
@@ -498,7 +498,7 @@ impl App {
     }
   }
 
-  pub fn handle_error(&mut self, e: failure::Error) {
+  pub fn handle_error(&mut self, e: anyhow::Error) {
     self.push_navigation_stack(RouteId::Error, ActiveBlock::Error);
     self.api_error = e.to_string();
   }
@@ -576,7 +576,7 @@ impl App {
     }) = &self.current_playback_context
     {
       if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/track/{}", id)) {
-        self.handle_error(format_err!("failed to set clipboard content: {}", e));
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
       }
     }
   }
@@ -597,7 +597,7 @@ impl App {
     }) = &self.current_playback_context
     {
       if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/album/{}", id)) {
-        self.handle_error(format_err!("failed to set clipboard content: {}", e));
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
       }
     }
   }
