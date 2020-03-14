@@ -162,10 +162,7 @@ fn handle_recommend_event_on_selected_block(app: &mut App) {
       ArtistBlock::TopTracks => {
         let selected_index = artist.selected_top_track_index;
         if let Some(track) = artist.top_tracks.get(selected_index) {
-          let track_id_list: Option<Vec<String>> = match &track.id {
-            Some(id) => Some(vec![id.to_string()]),
-            None => None,
-          };
+          let track_id_list: Option<Vec<String>> = track.id.as_ref().map(|id| vec![id.to_string()]);
           app.recommendations_context = Some(RecommendationsContext::Song);
           app.recommendations_seed = track.name.clone();
           app.get_recommendations_for_seed(None, track_id_list, Some(track.clone()));

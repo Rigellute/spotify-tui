@@ -289,19 +289,19 @@ impl<'a> Network<'a> {
 
   async fn get_current_playback(&mut self) {
     let context = self.spotify.current_playback(None).await;
-    if let Ok(ctx) = context {
-      if let Some(c) = ctx {
-        let mut app = self.app.lock().await;
-        app.current_playback_context = Some(c.clone());
-        app.instant_since_last_current_playback_poll = Instant::now();
 
-        if let Some(track_id) = &c.item.and_then(|track| track.id) {
-          app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![
-            track_id.to_owned()
-          ]));
-        };
-      };
+    if let Ok(Some(c)) = context {
+      let mut app = self.app.lock().await;
+      app.current_playback_context = Some(c.clone());
+      app.instant_since_last_current_playback_poll = Instant::now();
+
+      if let Some(track_id) = &c.item.and_then(|track| track.id) {
+        app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![
+          track_id.to_owned()
+        ]));
+      }
     }
+
     let mut app = self.app.lock().await;
     app.is_fetching_current_playback = false;
   }
@@ -676,14 +676,16 @@ impl<'a> Network<'a> {
       Some(self.large_search_limit),
       Some(0),
     );
-    let mut artist_name = String::from("");
-    if input_artist_name == "" {
-      if let Ok(full_artist) = self.spotify.artist(&artist_id).await {
-        artist_name = full_artist.name;
-      }
+    let artist_name = if input_artist_name == "" {
+      self
+        .spotify
+        .artist(&artist_id)
+        .await
+        .map(|full_artist| full_artist.name)
+        .unwrap_or_default()
     } else {
-      artist_name = input_artist_name;
-    }
+      input_artist_name
+    };
     let top_tracks = self.spotify.artist_top_tracks(&artist_id, country);
     let related_artist = self.spotify.artist_related_artists(&artist_id);
 

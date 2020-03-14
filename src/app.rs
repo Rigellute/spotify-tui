@@ -58,17 +58,11 @@ impl<T> ScrollableResultPages<T> {
   }
 
   pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
-    match at_index {
-      Some(index) => self.pages.get(index),
-      None => self.pages.get(self.index),
-    }
+    self.pages.get(at_index.unwrap_or(self.index))
   }
 
   pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
-    match at_index {
-      Some(index) => self.pages.get_mut(index),
-      None => self.pages.get_mut(self.index),
-    }
+    self.pages.get_mut(at_index.unwrap_or(self.index))
   }
 
   pub fn add_pages(&mut self, new_pages: T) {
@@ -408,41 +402,41 @@ impl App {
 
   pub fn update_on_tick(&mut self) {
     self.poll_current_playback();
-    if let Some(current_playback_context) = &self.current_playback_context {
-      if let (Some(track), Some(progress_ms)) = (
-        &current_playback_context.item,
-        current_playback_context.progress_ms,
-      ) {
-        if current_playback_context.is_playing {
-          let elapsed = self
-            .instant_since_last_current_playback_poll
-            .elapsed()
-            .as_millis()
-            + u128::from(progress_ms);
+    if let Some(FullPlayingContext {
+      item: Some(ref track),
+      progress_ms: Some(progress_ms),
+      is_playing: true,
+      ..
+    }) = self.current_playback_context
+    {
+      let elapsed = self
+        .instant_since_last_current_playback_poll
+        .elapsed()
+        .as_millis()
+        + u128::from(progress_ms);
 
-          if elapsed < u128::from(track.duration_ms) {
-            self.song_progress_ms = elapsed;
-          } else {
-            self.song_progress_ms = track.duration_ms.into();
-          }
-        }
+      if elapsed < u128::from(track.duration_ms) {
+        self.song_progress_ms = elapsed;
+      } else {
+        self.song_progress_ms = track.duration_ms.into();
       }
     }
   }
 
   pub fn seek_forwards(&mut self) {
-    if let Some(current_playback_context) = &self.current_playback_context {
-      if let Some(track) = &current_playback_context.item {
-        if track.duration_ms - self.song_progress_ms as u32
-          > self.user_config.behavior.seek_milliseconds
-        {
-          self.dispatch(IoEvent::Seek(
-            self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds,
-          ));
-        } else {
-          self.dispatch(IoEvent::NextTrack);
-        }
-      }
+    if let Some(FullPlayingContext {
+      item: Some(track), ..
+    }) = &self.current_playback_context
+    {
+      let event = if track.duration_ms - self.song_progress_ms as u32
+        > self.user_config.behavior.seek_milliseconds
+      {
+        IoEvent::Seek(self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds)
+      } else {
+        IoEvent::NextTrack
+      };
+
+      self.dispatch(event)
     }
   }
 
@@ -510,13 +504,14 @@ impl App {
   }
 
   pub fn toggle_playback(&mut self) {
-    if let Some(current_playback_context) = &self.current_playback_context {
-      if current_playback_context.is_playing {
-        self.dispatch(IoEvent::PausePlayback);
-      } else {
-        // When no offset or uris are passed, spotify will resume current playback
-        self.dispatch(IoEvent::StartPlayback(None, None, None));
-      }
+    if let Some(FullPlayingContext {
+      is_playing: true, ..
+    }) = &self.current_playback_context
+    {
+      self.dispatch(IoEvent::PausePlayback);
+    } else {
+      // When no offset or uris are passed, spotify will resume current playback
+      self.dispatch(IoEvent::StartPlayback(None, None, None));
     }
   }
 
@@ -547,10 +542,8 @@ impl App {
   }
 
   pub fn get_current_route(&self) -> &Route {
-    match self.navigation_stack.last() {
-      Some(route) => route,
-      None => &DEFAULT_ROUTE, // if for some reason there is no route return the default
-    }
+    // if for some reason there is no route return the default
+    self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE)
   }
 
   fn get_current_route_mut(&mut self) -> &mut Route {
@@ -705,12 +698,15 @@ impl App {
   }
 
   pub fn current_user_saved_album_add(&mut self) {
-    if let Some(albums) = &self.search_results.albums {
-      if let Some(selected_index) = self.search_results.selected_album_index {
-        let selected_album = &albums.albums.items[selected_index];
-        if let Some(album_id) = selected_album.id.clone() {
-          self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
-        }
+    if let SearchResult {
+      albums: Some(ref albums),
+      selected_album_index: Some(selected_index),
+      ..
+    } = self.search_results
+    {
+      let selected_album = &albums.albums.items[selected_index];
+      if let Some(album_id) = selected_album.id.clone() {
+        self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
       }
     }
   }
@@ -739,20 +735,25 @@ impl App {
   }
 
   pub fn user_follow_artists(&mut self) {
-    if let Some(artists) = &self.search_results.artists {
-      if let Some(selected_index) = self.search_results.selected_artists_index {
-        let selected_artist: &FullArtist = &artists.artists.items[selected_index];
-        let artist_id = selected_artist.id.clone();
-        self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
-      }
+    if let SearchResult {
+      artists: Some(ref artists),
+      selected_artists_index: Some(selected_index),
+      ..
+    } = self.search_results
+    {
+      let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+      let artist_id = selected_artist.id.clone();
+      self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
     }
   }
 
   pub fn user_follow_playlist(&mut self) {
-    if let (Some(playlists), Some(selected_index)) = (
-      &self.search_results.playlists,
-      self.search_results.selected_playlists_index,
-    ) {
+    if let SearchResult {
+      playlists: Some(ref playlists),
+      selected_playlists_index: Some(selected_index),
+      ..
+    } = self.search_results
+    {
       let selected_playlist: &SimplifiedPlaylist = &playlists.playlists.items[selected_index];
       let selected_id = selected_playlist.id.clone();
       let selected_public = selected_playlist.public;
@@ -802,12 +803,13 @@ impl App {
   }
 
   pub fn get_audio_analysis(&mut self) {
-    if let Some(context) = &self.current_playback_context {
-      if let Some(track) = &context.item {
-        let uri = track.uri.clone();
-
-        self.dispatch(IoEvent::GetAudioAnalysis(uri));
-      }
+    if let Some(FullPlayingContext {
+      item: Some(ref track),
+      ..
+    }) = self.current_playback_context
+    {
+      let uri = track.uri.clone();
+      self.dispatch(IoEvent::GetAudioAnalysis(uri));
     }
   }
 
