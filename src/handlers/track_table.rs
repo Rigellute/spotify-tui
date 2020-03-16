@@ -182,7 +182,21 @@ fn play_random_song(app: &mut App) {
         }
       }
       TrackTableContext::RecommendedTracks => {}
-      TrackTableContext::SavedTracks => {}
+      TrackTableContext::SavedTracks => {
+        if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
+          let track_uris: Vec<String> = saved_tracks
+            .items
+            .iter()
+            .map(|item| item.track.uri.to_owned())
+            .collect();
+          let rand_idx = thread_rng().gen_range(0, track_uris.len());
+          app.dispatch(IoEvent::StartPlayback(
+            None,
+            Some(track_uris),
+            Some(rand_idx),
+          ))
+        }
+      }
       TrackTableContext::AlbumSearch => {}
       TrackTableContext::PlaylistSearch => {}
       TrackTableContext::MadeForYou => {}
