@@ -227,9 +227,28 @@ fn play_random_song(app: &mut App) {
             Some(thread_rng().gen_range(0, num_tracks)),
           ))
         }
-        // let rand_playlist_idx = thread_rng().gen_range(0, )
       }
-      TrackTableContext::MadeForYou => {}
+      TrackTableContext::MadeForYou => {
+        let (context_uri, track_json) = match app
+          .library
+          .made_for_you_playlists
+          .get_results(Some(0))
+          .unwrap()
+          .items
+          .get(app.made_for_you_index)
+          .unwrap()
+        {
+          playlist => (Some(playlist.uri.to_owned()), playlist.tracks.get("total")),
+        };
+        if let Some(val) = track_json{
+          let num_tracks:usize = from_value(val.clone()).unwrap();
+          app.dispatch(IoEvent::StartPlayback(
+            context_uri,
+            None,
+            Some(thread_rng().gen_range(0, num_tracks))
+          ))
+        }
+      }
     },
     None => {}
   };
