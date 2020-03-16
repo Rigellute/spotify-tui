@@ -28,6 +28,7 @@ clipboard = "0.5.0"
 crossterm =  "0.16"
 tokio = { version = "0.2", features = ["full"] }
 proc-macro2 = "1.0.9"
+rand="0.7.3"
 
 [[bin]]
 bench = false
