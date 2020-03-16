@@ -198,7 +198,37 @@ fn play_random_song(app: &mut App) {
         }
       }
       TrackTableContext::AlbumSearch => {}
-      TrackTableContext::PlaylistSearch => {}
+      TrackTableContext::PlaylistSearch => {
+        let (context_uri, playlist_track_json) = match (
+          &app.search_results.selected_playlists_index,
+          &app.search_results.playlists,
+        ) {
+          (Some(selected_playlist_index), Some(playlist_result)) => {
+            if let Some(selected_playlist) = playlist_result
+              .playlists
+              .items
+              .get(selected_playlist_index.to_owned())
+            {
+              (
+                Some(selected_playlist.uri.to_owned()),
+                selected_playlist.tracks.get("total"),
+              )
+            } else {
+              (None, None)
+            }
+          }
+          _ => (None, None),
+        };
+        if let Some(val) = playlist_track_json {
+          let num_tracks: usize = from_value(val.clone()).unwrap();
+          app.dispatch(IoEvent::StartPlayback(
+            context_uri,
+            None,
+            Some(thread_rng().gen_range(0, num_tracks)),
+          ))
+        }
+        // let rand_playlist_idx = thread_rng().gen_range(0, )
+      }
       TrackTableContext::MadeForYou => {}
     },
     None => {}
