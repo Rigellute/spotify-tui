@@ -69,7 +69,7 @@ impl Default for Theme {
 
 fn parse_key(key: String) -> Result<Key, failure::Error> {
   fn get_single_char(string: &str) -> char {
-    match string.chars().nth(0) {
+    match string.chars().next() {
       Some(c) => c,
       None => panic!(),
     }
