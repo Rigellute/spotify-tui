@@ -131,6 +131,7 @@ pub enum ActiveBlock {
   TrackTable,
   MadeForYou,
   Artists,
+  BasicView,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -139,6 +140,7 @@ pub enum RouteId {
   AlbumTracks,
   AlbumList,
   Artist,
+  BasicView,
   Error,
   Home,
   RecentlyPlayed,
