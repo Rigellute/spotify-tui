@@ -153,9 +153,9 @@ pub fn handler(key: Key, app: &mut App) {
 }
 
 fn play_random_song(app: &mut App) {
-  let TrackTable { context, .. } = &app.track_table;
-  match &context {
-    Some(context) => match context {
+  // let TrackTable { context, .. } = &app.track_table;
+  if let Some(context) = &app.track_table.context {
+    match context {
       TrackTableContext::MyPlaylists => {
         let (context_uri, track_json) = match (&app.selected_playlist_index, &app.playlists) {
           (Some(selected_playlist_index), Some(playlists)) => {
@@ -240,17 +240,16 @@ fn play_random_song(app: &mut App) {
         {
           playlist => (Some(playlist.uri.to_owned()), playlist.tracks.get("total")),
         };
-        if let Some(val) = track_json{
-          let num_tracks:usize = from_value(val.clone()).unwrap();
+        if let Some(val) = track_json {
+          let num_tracks: usize = from_value(val.clone()).unwrap();
           app.dispatch(IoEvent::StartPlayback(
             context_uri,
             None,
-            Some(thread_rng().gen_range(0, num_tracks))
+            Some(thread_rng().gen_range(0, num_tracks)),
           ))
         }
       }
-    },
-    None => {}
+    }
   };
 }
 
