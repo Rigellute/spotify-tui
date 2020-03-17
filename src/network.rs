@@ -430,6 +430,27 @@ impl<'a> Network<'a> {
     match try_join!(search_track, search_artist, search_album, search_playlist) {
       Ok((track_results, artist_results, album_results, playlist_results)) => {
         let mut app = self.app.lock().await;
+
+        let artist_ids = artist_results
+          .artists
+          .items
+          .iter()
+          .map(|item| item.id.to_owned())
+          .collect();
+
+        // Check if these artists are followed
+        app.dispatch(IoEvent::UserArtistFollowCheck(artist_ids));
+
+        let mut album_ids: Vec<String> = Vec::new();
+        album_results.albums.items.iter().for_each(|item| {
+          if let Some(id) = &item.id {
+            album_ids.push(id.to_owned());
+          }
+        });
+
+        // Check if these albums are saved
+        app.dispatch(IoEvent::CurrentUserSavedAlbumsContains(album_ids));
+
         app.search_results.tracks = Some(track_results);
         app.search_results.artists = Some(artist_results);
         app.search_results.albums = Some(album_results);
@@ -862,8 +883,8 @@ impl<'a> Network<'a> {
   }
 
   async fn user_artist_check_follow(&mut self, artist_ids: Vec<String>) {
-    let mut app = self.app.lock().await;
     if let Ok(are_follwed) = self.spotify.user_artist_check_follow(&artist_ids).await {
+      let mut app = self.app.lock().await;
       artist_ids.iter().enumerate().for_each(|(i, id)| {
         if are_follwed[i] {
           app.followed_artist_ids_set.insert(id.to_owned());
@@ -894,12 +915,12 @@ impl<'a> Network<'a> {
   }
 
   async fn current_user_saved_albums_contains(&mut self, album_ids: Vec<String>) {
-    let mut app = self.app.lock().await;
     if let Ok(are_follwed) = self
       .spotify
       .current_user_saved_albums_contains(&album_ids)
       .await
     {
+      let mut app = self.app.lock().await;
       album_ids.iter().enumerate().for_each(|(i, id)| {
         if are_follwed[i] {
           app.saved_album_ids_set.insert(id.to_owned());
