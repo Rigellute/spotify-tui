@@ -308,13 +308,30 @@ where
       .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
       .split(chunks[0]);
 
+    let currently_playing_id = app
+      .current_playback_context
+      .clone()
+      .and_then(|context| context.item.and_then(|item| item.id))
+      .unwrap_or_else(|| "".to_string());
+
     let songs = match &app.search_results.tracks {
       Some(r) => r
         .tracks
         .items
         .iter()
-        // TODO: reuse the function formatting this text for `playing` block
-        .map(|item| item.name.to_owned())
+        .map(|item| {
+          let mut song_name = "".to_string();
+          let id = item.clone().id.unwrap_or_else(|| "".to_string());
+          if currently_playing_id == id {
+            song_name += "|> "
+          }
+          if app.liked_song_ids_set.contains(&id) {
+            song_name += "♥ ";
+          }
+
+          song_name += &item.name;
+          song_name
+        })
         .collect(),
       None => vec![],
     };
@@ -337,7 +354,7 @@ where
         .map(|item| {
           let mut artist = String::new();
           if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
-            artist.push_str("♥  ");
+            artist.push_str("♥ ");
           }
           artist.push_str(&item.name.to_owned());
           artist
