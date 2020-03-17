@@ -233,17 +233,17 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
       }
     }
     SearchResultBlock::SongSearch => {
-      if let Some(index) = &app.search_results.selected_tracks_index {
-        if let Some(result) = app.search_results.tracks.clone() {
-          if let Some(track) = result.tracks.items.get(index.to_owned()) {
-            app.dispatch(IoEvent::StartPlayback(
-              None,
-              Some(vec![track.uri.to_owned()]),
-              Some(0),
-            ));
-          };
-        };
-      };
+      let index = app.search_results.selected_tracks_index;
+      let tracks = app.search_results.tracks.clone();
+      let track_uris = tracks.map(|tracks| {
+        tracks
+          .tracks
+          .items
+          .into_iter()
+          .map(|track| track.uri)
+          .collect::<Vec<String>>()
+      });
+      app.dispatch(IoEvent::StartPlayback(None, track_uris, index));
     }
     SearchResultBlock::ArtistSearch => {
       if let Some(index) = &app.search_results.selected_artists_index {
@@ -434,6 +434,17 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::ArtistSearch => app.user_follow_artists(),
       SearchResultBlock::PlaylistSearch => {
         app.user_follow_playlist();
+      }
+      SearchResultBlock::Empty => {}
+    },
+    Key::Char('D') => match app.search_results.selected_block {
+      SearchResultBlock::AlbumSearch => {
+        app.current_user_saved_album_delete(ActiveBlock::SearchResultBlock)
+      }
+      SearchResultBlock::SongSearch => {}
+      SearchResultBlock::ArtistSearch => app.user_unfollow_artists(ActiveBlock::SearchResultBlock),
+      SearchResultBlock::PlaylistSearch => {
+        app.user_unfollow_playlist();
       }
       SearchResultBlock::Empty => {}
     },
