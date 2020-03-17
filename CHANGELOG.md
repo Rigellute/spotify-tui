@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Show currently playing track in song search menu and play through the searched tracks [#343](https://github.com/Rigellute/spotify-tui/pull/343)
+
 ## [0.16.0] - 2020-03-12
 
 ### Fixed
