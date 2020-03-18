@@ -4,6 +4,8 @@
 
 - Show if search results are like/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
 - Show currently playing track in song search menu and play through the searched tracks [#343](https://github.com/Rigellute/spotify-tui/pull/343)
+- Add a "basic view" that only shows the playbar [#344](https://github.com/Rigellute/spotify-tui/pull/344)
+- Show currently playing top track [#347](https://github.com/Rigellute/spotify-tui/pull/347)
 
 ## [0.16.0] - 2020-03-12
 
