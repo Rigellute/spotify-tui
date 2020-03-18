@@ -163,6 +163,7 @@ pub struct KeyBindingsString {
   copy_song_url: Option<String>,
   copy_album_url: Option<String>,
   audio_analysis: Option<String>,
+  basic_view: Option<String>,
 }
 
 #[derive(Clone)]
@@ -186,6 +187,7 @@ pub struct KeyBindings {
   pub copy_song_url: Key,
   pub copy_album_url: Key,
   pub audio_analysis: Key,
+  pub basic_view: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -240,6 +242,7 @@ impl UserConfig {
         copy_song_url: Key::Char('c'),
         copy_album_url: Key::Char('C'),
         audio_analysis: Key::Char('v'),
+        basic_view: Key::Char('B'),
       },
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
@@ -305,6 +308,7 @@ impl UserConfig {
     to_keys!(copy_song_url);
     to_keys!(copy_album_url);
     to_keys!(audio_analysis);
+    to_keys!(basic_view);
 
     Ok(())
   }

@@ -261,6 +261,9 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), 
       ActiveBlock::Analysis => {
         ui::audio_analysis::draw(&mut f, &app);
       }
+      ActiveBlock::BasicView => {
+        ui::draw_basic_view(&mut f, &app);
+      }
       _ => {
         ui::draw_main_layout(&mut f, &app);
       }
