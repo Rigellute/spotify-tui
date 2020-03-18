@@ -390,7 +390,7 @@ where
           let mut album_artist = String::new();
           if let Some(album_id) = &item.id {
             if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-              album_artist.push_str("♥  ");
+              album_artist.push_str("♥ ");
             }
           }
           album_artist.push_str(&format!(
@@ -1001,7 +1001,16 @@ where
     let top_tracks = artist
       .top_tracks
       .iter()
-      .map(|artist| artist.name.to_owned())
+      .map(|top_track| {
+        let mut name = String::new();
+        if let Some(context) = &app.current_playback_context {
+          if context.item.as_ref().and_then(|item| item.id.as_ref()) == top_track.id.as_ref() {
+            name.push_str("|> ");
+          }
+        };
+        name.push_str(&top_track.name);
+        name
+      })
       .collect::<Vec<String>>();
 
     draw_selectable_list(
