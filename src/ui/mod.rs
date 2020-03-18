@@ -230,6 +230,7 @@ where
     RouteId::Error => {} // This is handled as a "full screen" route in main.rs
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
     RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
+    RouteId::BasicView => {} // This is handled as a "full screen" route in main.rs
   };
 }
 
@@ -726,6 +727,26 @@ where
     app.track_table.selected_index,
     highlight_state,
   )
+}
+
+pub fn draw_basic_view<B>(f: &mut Frame<B>, app: &App)
+where
+  B: Backend,
+{
+  let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints(
+      [
+        Constraint::Percentage(44),
+        Constraint::Min(6),
+        Constraint::Percentage(44),
+      ]
+      .as_ref(),
+    )
+    .margin(4)
+    .split(f.size());
+
+  draw_playbar(f, app, chunks[1]);
 }
 
 pub fn draw_playbar<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
