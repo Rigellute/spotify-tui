@@ -153,7 +153,6 @@ pub fn handler(key: Key, app: &mut App) {
 }
 
 fn play_random_song(app: &mut App) {
-  // let TrackTable { context, .. } = &app.track_table;
   if let Some(context) = &app.track_table.context {
     match context {
       TrackTableContext::MyPlaylists => {
@@ -229,25 +228,25 @@ fn play_random_song(app: &mut App) {
         }
       }
       TrackTableContext::MadeForYou => {
-        let (context_uri, track_json) = match app
+        if let Some(playlist) = &app
           .library
           .made_for_you_playlists
           .get_results(Some(0))
-          .unwrap()
-          .items
-          .get(app.made_for_you_index)
-          .unwrap()
+          .and_then(|playlist| playlist.items.get(app.made_for_you_index))
         {
-          playlist => (Some(playlist.uri.to_owned()), playlist.tracks.get("total")),
+          if let Some(num_tracks) = &playlist
+            .tracks
+            .get("total")
+            .and_then(|total| -> Option<usize> { from_value(total.clone()).ok() })
+          {
+            let uri = Some(playlist.uri.clone());
+            app.dispatch(IoEvent::StartPlayback(
+              uri,
+              None,
+              Some(thread_rng().gen_range(0, num_tracks)),
+            ))
+          };
         };
-        if let Some(val) = track_json {
-          let num_tracks: usize = from_value(val.clone()).unwrap();
-          app.dispatch(IoEvent::StartPlayback(
-            context_uri,
-            None,
-            Some(thread_rng().gen_range(0, num_tracks)),
-          ))
-        }
       }
     }
   };
