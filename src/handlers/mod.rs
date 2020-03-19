@@ -3,6 +3,7 @@ mod album_tracks;
 mod analysis;
 mod artist;
 mod artists;
+mod basic_view;
 mod common_key_events;
 mod empty;
 mod error_screen;
@@ -84,6 +85,9 @@ pub fn handle_app(key: Key, app: &mut App) {
     _ if key == app.user_config.keys.audio_analysis => {
       app.get_audio_analysis();
     }
+    _ if key == app.user_config.keys.basic_view => {
+      app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
+    }
     _ => handle_block_events(key, app),
   }
 }
@@ -148,6 +152,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::PlayBar => {
       playbar::handler(key, app);
+    }
+    ActiveBlock::BasicView => {
+      basic_view::handler(key, app);
     }
   }
 }

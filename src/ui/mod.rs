@@ -230,6 +230,7 @@ where
     RouteId::Error => {} // This is handled as a "full screen" route in main.rs
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
     RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
+    RouteId::BasicView => {} // This is handled as a "full screen" route in main.rs
   };
 }
 
@@ -389,7 +390,7 @@ where
           let mut album_artist = String::new();
           if let Some(album_id) = &item.id {
             if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-              album_artist.push_str("♥  ");
+              album_artist.push_str("♥ ");
             }
           }
           album_artist.push_str(&format!(
@@ -728,6 +729,26 @@ where
   )
 }
 
+pub fn draw_basic_view<B>(f: &mut Frame<B>, app: &App)
+where
+  B: Backend,
+{
+  let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints(
+      [
+        Constraint::Percentage(44),
+        Constraint::Min(6),
+        Constraint::Percentage(44),
+      ]
+      .as_ref(),
+    )
+    .margin(4)
+    .split(f.size());
+
+  draw_playbar(f, app, chunks[1]);
+}
+
 pub fn draw_playbar<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
@@ -980,7 +1001,16 @@ where
     let top_tracks = artist
       .top_tracks
       .iter()
-      .map(|artist| artist.name.to_owned())
+      .map(|top_track| {
+        let mut name = String::new();
+        if let Some(context) = &app.current_playback_context {
+          if context.item.as_ref().and_then(|item| item.id.as_ref()) == top_track.id.as_ref() {
+            name.push_str("|> ");
+          }
+        };
+        name.push_str(&top_track.name);
+        name
+      })
       .collect::<Vec<String>>();
 
     draw_selectable_list(
