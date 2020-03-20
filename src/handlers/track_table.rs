@@ -4,6 +4,8 @@ use super::{
 };
 use crate::event::Key;
 use crate::network::IoEvent;
+use rand::{thread_rng, Rng};
+use serde_json::from_value;
 
 pub fn handler(key: Key, app: &mut App) {
   match key {
@@ -139,6 +141,7 @@ pub fn handler(key: Key, app: &mut App) {
         None => {}
       };
     }
+    Key::Char('S') => play_random_song(app),
     Key::Ctrl('e') => jump_to_end(app),
     Key::Ctrl('a') => jump_to_start(app),
     //recommended song radio
@@ -147,6 +150,106 @@ pub fn handler(key: Key, app: &mut App) {
     }
     _ => {}
   }
+}
+
+fn play_random_song(app: &mut App) {
+  if let Some(context) = &app.track_table.context {
+    match context {
+      TrackTableContext::MyPlaylists => {
+        let (context_uri, track_json) = match (&app.selected_playlist_index, &app.playlists) {
+          (Some(selected_playlist_index), Some(playlists)) => {
+            if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned())
+            {
+              (
+                Some(selected_playlist.uri.to_owned()),
+                selected_playlist.tracks.get("total"),
+              )
+            } else {
+              (None, None)
+            }
+          }
+          _ => (None, None),
+        };
+
+        if let Some(val) = track_json {
+          let num_tracks: usize = from_value(val.clone()).unwrap();
+          app.dispatch(IoEvent::StartPlayback(
+            context_uri,
+            None,
+            Some(thread_rng().gen_range(0, num_tracks)),
+          ));
+        }
+      }
+      TrackTableContext::RecommendedTracks => {}
+      TrackTableContext::SavedTracks => {
+        if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
+          let track_uris: Vec<String> = saved_tracks
+            .items
+            .iter()
+            .map(|item| item.track.uri.to_owned())
+            .collect();
+          let rand_idx = thread_rng().gen_range(0, track_uris.len());
+          app.dispatch(IoEvent::StartPlayback(
+            None,
+            Some(track_uris),
+            Some(rand_idx),
+          ))
+        }
+      }
+      TrackTableContext::AlbumSearch => {}
+      TrackTableContext::PlaylistSearch => {
+        let (context_uri, playlist_track_json) = match (
+          &app.search_results.selected_playlists_index,
+          &app.search_results.playlists,
+        ) {
+          (Some(selected_playlist_index), Some(playlist_result)) => {
+            if let Some(selected_playlist) = playlist_result
+              .playlists
+              .items
+              .get(selected_playlist_index.to_owned())
+            {
+              (
+                Some(selected_playlist.uri.to_owned()),
+                selected_playlist.tracks.get("total"),
+              )
+            } else {
+              (None, None)
+            }
+          }
+          _ => (None, None),
+        };
+        if let Some(val) = playlist_track_json {
+          let num_tracks: usize = from_value(val.clone()).unwrap();
+          app.dispatch(IoEvent::StartPlayback(
+            context_uri,
+            None,
+            Some(thread_rng().gen_range(0, num_tracks)),
+          ))
+        }
+      }
+      TrackTableContext::MadeForYou => {
+        if let Some(playlist) = &app
+          .library
+          .made_for_you_playlists
+          .get_results(Some(0))
+          .and_then(|playlist| playlist.items.get(app.made_for_you_index))
+        {
+          if let Some(num_tracks) = &playlist
+            .tracks
+            .get("total")
+            .and_then(|total| -> Option<usize> { from_value(total.clone()).ok() })
+          {
+            let uri = Some(playlist.uri.clone());
+            app.dispatch(IoEvent::StartPlayback(
+              uri,
+              None,
+              Some(thread_rng().gen_range(0, num_tracks)),
+            ))
+          };
+        };
+      }
+    }
+  };
 }
 
 fn handle_recommended_tracks(app: &mut App) {
