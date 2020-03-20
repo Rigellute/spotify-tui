@@ -46,6 +46,11 @@ pub fn handler(key: Key, app: &mut App) {
       let user_country = app.get_user_country();
       let input_str: String = app.input.iter().collect();
 
+      // Don't do anything if there is no input
+      if input_str.is_empty() {
+        return;
+      }
+
       let album_url_prefix = "https://open.spotify.com/album/";
 
       if input_str.starts_with(album_url_prefix) {
