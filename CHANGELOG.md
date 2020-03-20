@@ -7,6 +7,8 @@
 - Add a "basic view" that only shows the playbar [#344](https://github.com/Rigellute/spotify-tui/pull/344)
 - Show currently playing top track [#347](https://github.com/Rigellute/spotify-tui/pull/347)
 - Press shift-s to pick a random song on track-lists [#339](https://github.com/Rigellute/spotify-tui/pull/339)
+- Prevent search when there is no input [#351](https://github.com/Rigellute/spotify-tui/pull/351)
+
 ## [0.16.0] - 2020-03-12
 
 ### Fixed
