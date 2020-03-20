@@ -24,7 +24,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Void Linux](#void-linux)
     - [Cargo](#cargo)
       - [Note on Linux](#note-on-linux)
-    - Windows(#windows-10)
+    - [Windows](#windows-10)
       - [Scoop installer](#scoop-installer)
     - [Manual](#manual)
   - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
