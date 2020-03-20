@@ -113,6 +113,21 @@ In order to locate dependencies, the compilation also requires `pkg-config` to b
 
 If you are using the Windows Subsystem for Linux, you'll need to [install additional dependencies](#windows-subsystem-for-linux).
 
+### Windows 10
+
+#### Scoop installer 
+
+First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
+
+Then open powershell and run following two commands:
+
+```sh
+scoop bucket add scoop-bucket https://github.com/Rigellute/scoop-bucket
+scoop install spotify-tui
+```
+
+After that program is available as: `spt` or `spt.exe`
+
 ### Manual
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
