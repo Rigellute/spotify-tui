@@ -383,6 +383,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "littleli",
+      "name": "Aleš Najmann",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/544082?v=4",
+      "profile": "https://ales.rocks",
+      "contributions": [
+        "doc",
+        "platform"
+      ]
     }
   ],
   "contributorsPerLine": 7,
