@@ -35,7 +35,7 @@ pub enum IoEvent {
   SetTracksToTable(Vec<FullTrack>),
   GetMadeForYouPlaylistTracks(String, u32),
   GetPlaylistTracks(String, u32),
-  GetCurrentSavedTracks(Option<u32>, bool),
+  GetCurrentSavedTracks(Option<u32>),
   StartPlayback(Option<String>, Option<Vec<String>>, Option<usize>),
   UpdateSearchLimits(u32, u32),
   Seek(u32),
@@ -150,10 +150,8 @@ impl<'a> Network<'a> {
       IoEvent::GetPlaylistTracks(playlist_id, playlist_offset) => {
         self.get_playlist_tracks(playlist_id, playlist_offset).await;
       }
-      IoEvent::GetCurrentSavedTracks(offset, should_navigate) => {
-        self
-          .get_current_user_saved_tracks(offset, should_navigate)
-          .await;
+      IoEvent::GetCurrentSavedTracks(offset) => {
+        self.get_current_user_saved_tracks(offset).await;
       }
       IoEvent::StartPlayback(context_uri, uris, offset) => {
         self.start_playback(context_uri, uris, offset).await;
@@ -462,7 +460,7 @@ impl<'a> Network<'a> {
     };
   }
 
-  async fn get_current_user_saved_tracks(&mut self, offset: Option<u32>, should_navigate: bool) {
+  async fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
     match self
       .spotify
       .current_user_saved_tracks(self.large_search_limit, offset)
@@ -485,10 +483,6 @@ impl<'a> Network<'a> {
 
         app.library.saved_tracks.add_pages(saved_tracks);
         app.track_table.context = Some(TrackTableContext::SavedTracks);
-
-        if should_navigate {
-          app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
-        }
       }
       Err(e) => {
         self.handle_error(e).await;
@@ -1074,7 +1068,6 @@ impl<'a> Network<'a> {
       Ok(result) => {
         let mut app = self.app.lock().await;
         app.audio_analysis = Some(result);
-        app.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
       }
       Err(e) => {
         self.handle_error(e).await;
@@ -1119,7 +1112,6 @@ impl<'a> Network<'a> {
         let mut app = self.app.lock().await;
 
         app.recently_played.result = Some(result.clone());
-        app.push_navigation_stack(RouteId::RecentlyPlayed, ActiveBlock::RecentlyPlayed);
       }
       Err(e) => {
         self.handle_error(e).await;

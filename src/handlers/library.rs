@@ -43,10 +43,12 @@ pub fn handler(key: Key, app: &mut App) {
       // Recently Played,
       1 => {
         app.dispatch(IoEvent::GetRecentlyPlayed);
+        app.push_navigation_stack(RouteId::RecentlyPlayed, ActiveBlock::RecentlyPlayed);
       }
       // Liked Songs,
       2 => {
-        app.dispatch(IoEvent::GetCurrentSavedTracks(None, true));
+        app.dispatch(IoEvent::GetCurrentSavedTracks(None));
+        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
       }
       // Albums,
       3 => {
