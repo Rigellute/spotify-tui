@@ -393,6 +393,15 @@
         "doc",
         "platform"
       ]
+    },
+    {
+      "login": "jeremystucki",
+      "name": "Jeremy Stucki",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7629727?v=4",
+      "profile": "https://github.com/jeremystucki",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
