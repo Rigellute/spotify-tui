@@ -628,7 +628,7 @@ impl App {
       None => {
         if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
           let offset = Some(saved_tracks.offset + saved_tracks.limit);
-          self.dispatch(IoEvent::GetCurrentSavedTracks(offset, false));
+          self.dispatch(IoEvent::GetCurrentSavedTracks(offset));
         }
       }
     }
@@ -810,6 +810,7 @@ impl App {
     {
       let uri = track.uri.clone();
       self.dispatch(IoEvent::GetAudioAnalysis(uri));
+      self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
     }
   }
 
