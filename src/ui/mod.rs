@@ -331,6 +331,7 @@ where
           }
 
           song_name += &item.name;
+          song_name += &format!(" - {}", &create_artist_string(&item.artists));
           song_name
         })
         .collect(),
