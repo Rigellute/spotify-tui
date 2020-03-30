@@ -2,13 +2,18 @@
 
 ## [Unreleased]
 
-- Add artist name in songs block [#365](https://github.com/Rigellute/spotify-tui/pull/365)
+## [0.17.1] - 2020-03-30
+
+### Fixed
+
+- Artist name in songs block [#365](https://github.com/Rigellute/spotify-tui/pull/365) (fixes regression)
+- Add basic view key binding to help menu
 
 ## [0.17.0] - 2020-03-20
 
 ### Added
 
-- Show if search results are like/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
+- Show if search results are liked/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
 - Show currently playing track in song search menu and play through the searched tracks [#343](https://github.com/Rigellute/spotify-tui/pull/343)
 - Add a "basic view" that only shows the playbar. Press `B` to get there [#344](https://github.com/Rigellute/spotify-tui/pull/344)
 - Show currently playing top track [#347](https://github.com/Rigellute/spotify-tui/pull/347)
