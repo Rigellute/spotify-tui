@@ -3,6 +3,7 @@ use crate::app::{
   SelectedFullAlbum, TrackTableContext,
 };
 use crate::config::ClientConfig;
+use anyhow::anyhow;
 use rspotify::{
   client::Spotify,
   model::{
@@ -256,7 +257,7 @@ impl<'a> Network<'a> {
     app.is_loading = false;
   }
 
-  async fn handle_error(&mut self, e: failure::Error) {
+  async fn handle_error(&mut self, e: anyhow::Error) {
     let mut app = self.app.lock().await;
     app.handle_error(e);
   }
@@ -268,7 +269,7 @@ impl<'a> Network<'a> {
         app.user = Some(user);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -322,7 +323,7 @@ impl<'a> Network<'a> {
         }
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -455,7 +456,7 @@ impl<'a> Network<'a> {
         app.search_results.playlists = Some(playlist_results);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -485,7 +486,7 @@ impl<'a> Network<'a> {
         app.track_table.context = Some(TrackTableContext::SavedTracks);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -508,7 +509,7 @@ impl<'a> Network<'a> {
 
     let result = match &self.client_config.device_id {
       Some(device_id) => {
-        self
+        match self
           .spotify
           .start_playback(
             Some(device_id.to_string()),
@@ -518,8 +519,12 @@ impl<'a> Network<'a> {
             None,
           )
           .await
+        {
+          Ok(()) => Ok(()),
+          Err(e) => Err(anyhow!(e)),
+        }
       }
-      None => Err(failure::err_msg("No device_id selected")),
+      None => Err(anyhow!("No device_id selected")),
     };
 
     match result {
@@ -545,7 +550,7 @@ impl<'a> Network<'a> {
           self.get_current_playback().await;
         }
         Err(e) => {
-          self.handle_error(e).await;
+          self.handle_error(anyhow!(e)).await;
         }
       };
     }
@@ -561,7 +566,7 @@ impl<'a> Network<'a> {
         self.get_current_playback().await;
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -576,7 +581,7 @@ impl<'a> Network<'a> {
         self.get_current_playback().await;
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -596,7 +601,7 @@ impl<'a> Network<'a> {
         };
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -619,7 +624,7 @@ impl<'a> Network<'a> {
         };
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -634,7 +639,7 @@ impl<'a> Network<'a> {
         self.get_current_playback().await;
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -652,7 +657,7 @@ impl<'a> Network<'a> {
         };
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -726,7 +731,7 @@ impl<'a> Network<'a> {
           app.dispatch(IoEvent::CurrentUserSavedTracksContains(track_ids));
         }
         Err(e) => {
-          self.handle_error(e).await;
+          self.handle_error(anyhow!(e)).await;
         }
       }
     }
@@ -779,7 +784,7 @@ impl<'a> Network<'a> {
         }
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -835,7 +840,7 @@ impl<'a> Network<'a> {
               app.liked_song_ids_set.remove(&track_id);
             }
             Err(e) => {
-              self.handle_error(e).await;
+              self.handle_error(anyhow!(e)).await;
             }
           }
         } else {
@@ -850,13 +855,13 @@ impl<'a> Network<'a> {
               app.liked_song_ids_set.insert(track_id);
             }
             Err(e) => {
-              self.handle_error(e).await;
+              self.handle_error(anyhow!(e)).await;
             }
           }
         }
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -873,7 +878,7 @@ impl<'a> Network<'a> {
         app.library.saved_artists.add_pages(saved_artists.artists);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -905,7 +910,7 @@ impl<'a> Network<'a> {
         }
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -939,7 +944,7 @@ impl<'a> Network<'a> {
         app.saved_album_ids_set.remove(&album_id.to_owned());
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -954,7 +959,7 @@ impl<'a> Network<'a> {
         let mut app = self.app.lock().await;
         app.saved_album_ids_set.insert(artist_id.to_owned());
       }
-      Err(e) => self.handle_error(e).await,
+      Err(e) => self.handle_error(anyhow!(e)).await,
     }
   }
 
@@ -968,7 +973,7 @@ impl<'a> Network<'a> {
         });
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -983,7 +988,7 @@ impl<'a> Network<'a> {
         });
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1003,7 +1008,7 @@ impl<'a> Network<'a> {
         self.get_current_user_playlists().await;
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1018,7 +1023,7 @@ impl<'a> Network<'a> {
         self.get_current_user_playlists().await;
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1058,7 +1063,7 @@ impl<'a> Network<'a> {
         }
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1070,7 +1075,7 @@ impl<'a> Network<'a> {
         app.audio_analysis = Some(result);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1089,7 +1094,7 @@ impl<'a> Network<'a> {
         app.selected_playlist_index = Some(0);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     };
   }
@@ -1114,7 +1119,7 @@ impl<'a> Network<'a> {
         app.recently_played.result = Some(result.clone());
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1134,7 +1139,7 @@ impl<'a> Network<'a> {
         app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
       }
       Err(e) => {
-        self.handle_error(e).await;
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
