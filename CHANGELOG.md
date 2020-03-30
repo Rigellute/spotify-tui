@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add artist name in songs block [#365](https://github.com/Rigellute/spotify-tui/pull/365)
+
 ## [0.17.0] - 2020-03-20
 
 ### Added
