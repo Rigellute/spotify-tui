@@ -22,6 +22,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Snap](#snap)
     - [AUR](#aur)
     - [Void Linux](#void-linux)
+    - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
       - [Note on Linux](#note-on-linux)
     - [Windows](#windows-10)
@@ -87,6 +88,14 @@ Available on the official repositories. To install, run
 
 ```bash
 sudo xbps-install -Su spotify-tui
+```
+
+### Fedora/CentOS
+
+Available on the [Copr](https://copr.fedorainfracloud.org/coprs/atim/spotify-tui/) repositories. To install, run
+
+```bash
+sudo dnf copr enable atim/spotify-tui -y && sudo dnf install spotify-tui
 ```
 
 ### Cargo
