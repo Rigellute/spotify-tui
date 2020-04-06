@@ -14,5 +14,10 @@ The release is triggered by pushing a tag.
 
 ### Update `brew`
 
-1. Download the `sha` file, copy the `sha` into the tap repo formula and bump the version there too
-1. Push to the tap repo with the new `sha` and version
+1. `cd` to the [`tap` repo](https://github.com/Rigellute/homebrew-tap)
+1. Run script to update the Formula `sh scripts/spotify-tui.sh $VERSION`
+
+### Update `scoop` (Windows 10)
+
+1. `cd` to [the `scoop` repo](https://github.com/Rigellute/scoop-bucket)
+1. Run the script to update the manifest `sh scripts/spotify-tui.sh $VERSION`

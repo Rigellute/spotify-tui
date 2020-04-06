@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [0.17.1] - 2020-03-30
+
+### Fixed
+
+- Artist name in songs block [#365](https://github.com/Rigellute/spotify-tui/pull/365) (fixes regression)
+- Add basic view key binding to help menu
+
+## [0.17.0] - 2020-03-20
+
+### Added
+
+- Show if search results are liked/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
+- Show currently playing track in song search menu and play through the searched tracks [#343](https://github.com/Rigellute/spotify-tui/pull/343)
+- Add a "basic view" that only shows the playbar. Press `B` to get there [#344](https://github.com/Rigellute/spotify-tui/pull/344)
+- Show currently playing top track [#347](https://github.com/Rigellute/spotify-tui/pull/347)
+- Press shift-s (`S`) to pick a random song on track-lists [#339](https://github.com/Rigellute/spotify-tui/pull/339)
+
+### Fixed
+
+- Prevent search when there is no input [#351](https://github.com/Rigellute/spotify-tui/pull/351)
+
+## [0.16.0] - 2020-03-12
+
+### Fixed
+
+- Fix empty UI when pressing escape in the device and analysis views [#315](https://github.com/Rigellute/spotify-tui/pull/315)
+- Fix slow and frozen UI by implementing an asynchronous runtime for network events [#322](https://github.com/Rigellute/spotify-tui/pull/322). This fixes issues #24, #92, #207 and #218. Read more [here](https://keliris.dev/improving-spotify-tui/).
+
 ## [0.15.0] - 2020-02-24
 
 - Add experimental audio visualizer (press `v` to navigate to it). The feature uses the audio analysis data from Spotify and animates the pitch information.

@@ -7,9 +7,7 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-40-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-45-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A Spotify client for the terminal written in Rust.
@@ -24,8 +22,11 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Snap](#snap)
     - [AUR](#aur)
     - [Void Linux](#void-linux)
+    - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
       - [Note on Linux](#note-on-linux)
+    - [Windows](#windows-10)
+      - [Scoop installer](#scoop-installer)
     - [Manual](#manual)
   - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
   - [Usage](#usage)
@@ -89,6 +90,14 @@ Available on the official repositories. To install, run
 sudo xbps-install -Su spotify-tui
 ```
 
+### Fedora/CentOS
+
+Available on the [Copr](https://copr.fedorainfracloud.org/coprs/atim/spotify-tui/) repositories. To install, run
+
+```bash
+sudo dnf copr enable atim/spotify-tui -y && sudo dnf install spotify-tui
+```
+
 ### Cargo
 
 Use this option if your architecture is not supported by the pre-built binaries found on the [releases page](https://github.com/Rigellute/spotify-tui/releases).
@@ -114,6 +123,21 @@ For basic installation instructions, see [install OpenSSL](https://docs.rs/opens
 In order to locate dependencies, the compilation also requires `pkg-config` to be installed.
 
 If you are using the Windows Subsystem for Linux, you'll need to [install additional dependencies](#windows-subsystem-for-linux).
+
+### Windows 10
+
+#### Scoop installer 
+
+First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
+
+Then open powershell and run following two commands:
+
+```bash
+scoop bucket add scoop-bucket https://github.com/Rigellute/scoop-bucket
+scoop install spotify-tui
+```
+
+After that program is available as: `spt` or `spt.exe`
 
 ### Manual
 
@@ -308,12 +332,18 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/hurricanehrndz"><img src="https://avatars0.githubusercontent.com/u/5804237?v=4" width="100px;" alt=""/><br /><sub><b>Carlos Hernandez</b></sub></a><br /><a href="#platform-hurricanehrndz" title="Packaging/porting to new platform">📦</a></td>
     <td align="center"><a href="https://github.com/pedrohva"><img src="https://avatars3.githubusercontent.com/u/33297928?v=4" width="100px;" alt=""/><br /><sub><b>Pedro Alves</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=pedrohva" title="Code">💻</a></td>
     <td align="center"><a href="https://gitlab.com/jtagcat/"><img src="https://avatars1.githubusercontent.com/u/38327267?v=4" width="100px;" alt=""/><br /><sub><b>jtagcat</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jtagcat" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/BKitor"><img src="https://avatars0.githubusercontent.com/u/16880850?v=4" width="100px;" alt=""/><br /><sub><b>Benjamin Kitor</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=BKitor" title="Code">💻</a></td>
+    <td align="center"><a href="https://ales.rocks"><img src="https://avatars0.githubusercontent.com/u/544082?v=4" width="100px;" alt=""/><br /><sub><b>Aleš Najmann</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=littleli" title="Documentation">📖</a> <a href="#platform-littleli" title="Packaging/porting to new platform">📦</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/jeremystucki"><img src="https://avatars3.githubusercontent.com/u/7629727?v=4" width="100px;" alt=""/><br /><sub><b>Jeremy Stucki</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jeremystucki" title="Code">💻</a></td>
+    <td align="center"><a href="http://pt2121.github.io"><img src="https://avatars0.githubusercontent.com/u/616399?v=4" width="100px;" alt=""/><br /><sub><b>(´⌣`ʃƪ)</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=pt2121" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/tim77"><img src="https://avatars0.githubusercontent.com/u/5614476?v=4" width="100px;" alt=""/><br /><sub><b>Artem Polishchuk</b></sub></a><br /><a href="#platform-tim77" title="Packaging/porting to new platform">📦</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

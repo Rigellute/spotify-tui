@@ -374,6 +374,52 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "BKitor",
+      "name": "Benjamin Kitor",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/16880850?v=4",
+      "profile": "https://github.com/BKitor",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "littleli",
+      "name": "Aleš Najmann",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/544082?v=4",
+      "profile": "https://ales.rocks",
+      "contributions": [
+        "doc",
+        "platform"
+      ]
+    },
+    {
+      "login": "jeremystucki",
+      "name": "Jeremy Stucki",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7629727?v=4",
+      "profile": "https://github.com/jeremystucki",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "pt2121",
+      "name": "(´⌣`ʃƪ)",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/616399?v=4",
+      "profile": "http://pt2121.github.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "tim77",
+      "name": "Artem Polishchuk",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5614476?v=4",
+      "profile": "https://github.com/tim77",
+      "contributions": [
+        "platform"
+      ]
     }
   ],
   "contributorsPerLine": 7,
