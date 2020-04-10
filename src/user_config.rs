@@ -135,6 +135,7 @@ fn check_reserved_keys(key: Key) -> Result<()> {
   Ok(())
 }
 
+#[derive(Clone)]
 pub struct UserConfigPaths {
   pub config_file_path: PathBuf,
 }
@@ -213,6 +214,7 @@ pub struct UserConfig {
   pub keys: KeyBindings,
   pub theme: Theme,
   pub behavior: BehaviorConfig,
+  pub path_to_config: Option<UserConfigPaths>,
 }
 
 impl UserConfig {
@@ -246,10 +248,11 @@ impl UserConfig {
         volume_increment: 10,
         tick_rate_milliseconds: 250,
       },
+      path_to_config: None,
     }
   }
 
-  pub fn get_or_build_paths(&self) -> Result<UserConfigPaths> {
+  pub fn get_or_build_paths(&mut self) -> Result<()> {
     match dirs::home_dir() {
       Some(home) => {
         let path = Path::new(&home);
@@ -269,8 +272,8 @@ impl UserConfig {
         let paths = UserConfigPaths {
           config_file_path: config_file_path.to_path_buf(),
         };
-
-        Ok(paths)
+        self.path_to_config = Some(paths);
+        Ok(())
       }
       None => Err(anyhow!("No $HOME directory found for client config")),
     }
@@ -361,7 +364,13 @@ impl UserConfig {
   }
 
   pub fn load_config(&mut self) -> Result<()> {
-    let paths = self.get_or_build_paths()?;
+    let paths = match &self.path_to_config {
+      Some(path) => path,
+      None => {
+        self.get_or_build_paths()?;
+        self.path_to_config.as_ref().unwrap()
+      }
+    };
     if paths.config_file_path.exists() {
       let config_string = fs::read_to_string(&paths.config_file_path)?;
       // serde fails if file is empty
