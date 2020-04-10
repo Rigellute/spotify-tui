@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Fix crash when there're no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
+- Allow specifying alternative config file path [#391](https://github.com/Rigellute/spotify-tui/pull/391)
+
 ## [0.17.1] - 2020-03-30
 
 ### Fixed
