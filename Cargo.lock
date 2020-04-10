@@ -281,9 +281,9 @@ dependencies = [
 
 [[package]]
 name = "crossterm"
-version = "0.17.1"
+version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2aa8fc03593d557fb7897c88b0bae3cbae1e52c1ab7fbaa9033ef1af3a354eef"
+checksum = "ccdd8ef63a44e821956c6a276eca0faaa889d6a067dfcdbd5bfe85dce3a1d250"
 dependencies = [
  "bitflags",
  "crossterm_winapi 0.6.1",
@@ -1625,7 +1625,7 @@ dependencies = [
  "backtrace",
  "clap",
  "clipboard",
- "crossterm 0.17.1",
+ "crossterm 0.17.3",
  "dirs",
  "proc-macro2 1.0.10",
  "rand 0.7.3",
