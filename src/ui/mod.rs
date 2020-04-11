@@ -500,11 +500,16 @@ where
       TableHeaderItem {
         id: ColumnId::SongTitle,
         text: "Title",
-        width: get_percentage_width(layout_chunk.width, 0.80),
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 5,
+      },
+      TableHeaderItem {
+        text: "Artist",
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        ..Default::default()
       },
       TableHeaderItem {
         text: "Length",
-        width: get_percentage_width(layout_chunk.width, 0.15),
+        width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
         ..Default::default()
       },
     ],
@@ -529,6 +534,7 @@ where
               "".to_string(),
               item.track_number.to_string(),
               item.name.to_owned(),
+              create_artist_string(&item.artists),
               millis_to_minutes(u128::from(item.duration_ms)),
             ],
           })
