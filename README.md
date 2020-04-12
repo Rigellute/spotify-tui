@@ -143,7 +143,7 @@ After that program is available as: `spt` or `spt.exe`
 
 1. Download the latest [binary](https://github.com/Rigellute/spotify-tui/releases) for your OS.
 1. `cd` to the file you just downloaded and unzip
-1. `cd` to `spotify-ui` and run with `./spt`
+1. `cd` to `spotify-tui` and run with `./spt`
 
 ## Connecting to Spotify’s API
 
