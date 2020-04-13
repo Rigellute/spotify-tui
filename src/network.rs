@@ -358,7 +358,7 @@ impl<'a> Network<'a> {
           .items
           .clone()
           .into_iter()
-          .map(|item| item.track.unwrap())
+          .filter_map(|item| item.track)
           .collect::<Vec<FullTrack>>(),
       )
       .await;
