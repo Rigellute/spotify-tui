@@ -444,7 +444,7 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::SongSearch => {}
       SearchResultBlock::ArtistSearch => app.user_unfollow_artists(ActiveBlock::SearchResultBlock),
       SearchResultBlock::PlaylistSearch => {
-        app.user_unfollow_playlist();
+        app.user_unfollow_playlist_search_result();
       }
       SearchResultBlock::Empty => {}
     },
