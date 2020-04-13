@@ -429,6 +429,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "bwbuhse",
+      "name": "Ben Buhse",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/21225303?v=4",
+      "profile": "http://www.benbuhse.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
