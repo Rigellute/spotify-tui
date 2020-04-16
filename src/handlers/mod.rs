@@ -176,6 +176,9 @@ fn handle_escape(app: &mut App) {
     ActiveBlock::Error => {
       app.pop_navigation_stack();
     }
+    ActiveBlock::Dialog(_) => {
+      app.pop_navigation_stack();
+    }
     // These are global views that have no active/inactive distinction so do nothing
     ActiveBlock::SelectDevice | ActiveBlock::Analysis => {}
     _ => {

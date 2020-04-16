@@ -4,18 +4,15 @@ use crate::event::Key;
 pub fn handler(key: Key, app: &mut App) {
   match key {
     Key::Enter => {
-      app.pop_navigation_stack();
-
-      if app.confirm {
-        if let ActiveBlock::Dialog(d) = app.get_current_route().active_block {
-          match d {
-            DialogContext::Playlist => handle_playlist_dialog(app),
+      if let Some(route) = app.pop_navigation_stack() {
+        if app.confirm {
+          if let ActiveBlock::Dialog(d) = route.active_block {
+            match d {
+              DialogContext::Playlist => handle_playlist_dialog(app),
+            }
           }
         }
       }
-    }
-    Key::Esc => {
-      app.pop_navigation_stack();
     }
     Key::Char('q') => {
       app.pop_navigation_stack();

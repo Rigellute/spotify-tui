@@ -1340,12 +1340,12 @@ where
     if let Some(playlist) = app.dialog.as_ref() {
       let bounds = f.size();
       // maybe do this better
-      let w = std::cmp::min(bounds.width - 2, 45);
-      let h = 8;
-      let x = (bounds.width - w) / 2;
-      let y = bounds.height / 4;
+      let width = std::cmp::min(bounds.width - 2, 45);
+      let height = 8;
+      let left = (bounds.width - width) / 2;
+      let top = bounds.height / 4;
 
-      let rect = Rect::new(x, y, w, h);
+      let rect = Rect::new(left, top, width, height);
 
       // when upgrading to tui-rs 0.9.0
       // can replace this with the provided

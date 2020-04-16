@@ -1,6 +1,7 @@
 use super::{
   super::app::{
-    ActiveBlock, App, RecommendationsContext, RouteId, SearchResultBlock, TrackTableContext,
+    ActiveBlock, App, DialogContext, RecommendationsContext, RouteId, SearchResultBlock,
+    TrackTableContext,
   },
   common_key_events,
 };
@@ -444,7 +445,17 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::SongSearch => {}
       SearchResultBlock::ArtistSearch => app.user_unfollow_artists(ActiveBlock::SearchResultBlock),
       SearchResultBlock::PlaylistSearch => {
-        app.user_unfollow_playlist();
+        if let (Some(playlists), Some(selected_index)) =
+          (&app.playlists, app.selected_playlist_index)
+        {
+          let selected_playlist = &playlists.items[selected_index].name;
+          app.dialog = Some(selected_playlist.clone());
+          app.confirm = false;
+
+          let route = app.get_current_route().id.clone();
+          app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::Playlist));
+        }
+        // app.user_unfollow_playlist();
       }
       SearchResultBlock::Empty => {}
     },
