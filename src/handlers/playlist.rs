@@ -78,7 +78,7 @@ pub fn handler(key: Key, app: &mut App) {
         app.confirm = false;
 
         let route = app.get_current_route().id.clone();
-        app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::Playlist));
+        app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistWindow));
       }
     }
     _ => {}

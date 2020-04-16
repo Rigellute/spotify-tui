@@ -106,7 +106,8 @@ pub enum ArtistBlock {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum DialogContext {
-  Playlist,
+  PlaylistWindow,
+  PlaylistSearch,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]

@@ -8,7 +8,8 @@ pub fn handler(key: Key, app: &mut App) {
         if app.confirm {
           if let ActiveBlock::Dialog(d) = route.active_block {
             match d {
-              DialogContext::Playlist => handle_playlist_dialog(app),
+              DialogContext::PlaylistWindow => handle_playlist_dialog(app),
+              DialogContext::PlaylistSearch => handle_playlist_search_dialog(app),
             }
           }
         }
@@ -25,4 +26,8 @@ pub fn handler(key: Key, app: &mut App) {
 
 fn handle_playlist_dialog(app: &mut App) {
   app.user_unfollow_playlist()
+}
+
+fn handle_playlist_search_dialog(app: &mut App) {
+  app.user_unfollow_playlist_search_result()
 }
