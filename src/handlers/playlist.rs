@@ -1,5 +1,5 @@
 use super::{
-  super::app::{App, TrackTableContext},
+  super::app::{App, DialogContext, TrackTableContext},
   common_key_events,
 };
 use crate::app::ActiveBlock;
@@ -78,9 +78,8 @@ pub fn handler(key: Key, app: &mut App) {
         app.confirm = false;
 
         let route = app.get_current_route().id.clone();
-        app.push_navigation_stack(route, ActiveBlock::Dialog);
+        app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::Playlist));
       }
-      // app.user_unfollow_playlist();
     }
     _ => {}
   }

@@ -105,6 +105,11 @@ pub enum ArtistBlock {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DialogContext {
+  Playlist,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
   Analysis,
   PlayBar,
@@ -126,7 +131,7 @@ pub enum ActiveBlock {
   MadeForYou,
   Artists,
   BasicView,
-  Dialog,
+  Dialog(DialogContext),
 }
 
 #[derive(Clone, PartialEq, Debug)]

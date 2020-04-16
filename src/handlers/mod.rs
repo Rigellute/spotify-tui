@@ -157,7 +157,7 @@ fn handle_block_events(key: Key, app: &mut App) {
     ActiveBlock::BasicView => {
       basic_view::handler(key, app);
     }
-    ActiveBlock::Dialog => {
+    ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);
     }
   }

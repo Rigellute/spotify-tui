@@ -1336,12 +1336,12 @@ fn draw_dialog<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
 {
-  if app.get_current_route().active_block == ActiveBlock::Dialog {
+  if let ActiveBlock::Dialog(_) = app.get_current_route().active_block {
     if let Some(playlist) = app.dialog.as_ref() {
       let bounds = f.size();
+      // maybe do this better
       let w = std::cmp::min(bounds.width - 2, 45);
       let h = 8;
-
       let x = (bounds.width - w) / 2;
       let y = bounds.height / 4;
 

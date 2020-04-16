@@ -1,4 +1,4 @@
-use super::super::app::App;
+use super::super::app::{ActiveBlock, App, DialogContext};
 use crate::event::Key;
 
 pub fn handler(key: Key, app: &mut App) {
@@ -7,7 +7,11 @@ pub fn handler(key: Key, app: &mut App) {
       app.pop_navigation_stack();
 
       if app.confirm {
-        app.user_unfollow_playlist()
+        if let ActiveBlock::Dialog(d) = app.get_current_route().active_block {
+          match d {
+            DialogContext::Playlist => handle_playlist_dialog(app),
+          }
+        }
       }
     }
     Key::Esc => {
@@ -20,4 +24,8 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Left => app.confirm = !app.confirm,
     _ => {}
   }
+}
+
+fn handle_playlist_dialog(app: &mut App) {
+  app.user_unfollow_playlist()
 }
