@@ -1,4 +1,5 @@
 pub mod audio_analysis;
+pub mod clear;
 pub mod help;
 pub mod util;
 use super::{
@@ -12,7 +13,7 @@ use help::get_help_docs;
 use rspotify::senum::RepeatState;
 use tui::{
   backend::Backend,
-  layout::{Constraint, Direction, Layout, Rect},
+  layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
   widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
   Frame,
@@ -1335,6 +1336,70 @@ fn draw_dialog<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
 {
+  if app.get_current_route().active_block == ActiveBlock::Dialog {
+    if let Some(playlist) = app.dialog.as_ref() {
+      let bounds = f.size();
+      let w = std::cmp::min(bounds.width - 2, 45);
+      let h = 8;
+
+      let x = (bounds.width - w) / 2;
+      let y = bounds.height / 4;
+
+      let rect = Rect::new(x, y, w, h);
+
+      // when upgrading to tui-rs 0.9.0
+      // can replace this with the provided
+      // Clear widget
+      let mut cl = clear::Clear {};
+      cl.render(f, rect);
+      Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(app.user_config.theme.inactive))
+        .render(f, rect);
+
+      let vchunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(2)
+        .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
+        .split(rect);
+
+      // suggestion: possibly put this as part of
+      // app.dialog, but would have to introduce lifetime
+      let text = [
+        Text::raw("Are you sure you want to delete\nthe playlist: "),
+        Text::styled(playlist.as_str(), Style::default().modifier(Modifier::BOLD)),
+        Text::raw("?"),
+      ];
+
+      Paragraph::new(text.iter())
+        .alignment(Alignment::Center)
+        .render(f, vchunks[0]);
+
+      let hchunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .horizontal_margin(3)
+        .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
+        .split(vchunks[1]);
+
+      Paragraph::new([Text::raw("Ok")].iter())
+        .style(Style::default().fg(if app.confirm {
+          app.user_config.theme.hovered
+        } else {
+          app.user_config.theme.inactive
+        }))
+        .alignment(Alignment::Center)
+        .render(f, hchunks[0]);
+
+      Paragraph::new([Text::raw("Cancel")].iter())
+        .style(Style::default().fg(if app.confirm {
+          app.user_config.theme.inactive
+        } else {
+          app.user_config.theme.hovered
+        }))
+        .alignment(Alignment::Center)
+        .render(f, hchunks[1]);
+    }
+  }
 }
 
 fn draw_table<B>(
