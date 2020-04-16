@@ -2,6 +2,7 @@ use super::{
   super::app::{App, TrackTableContext},
   common_key_events,
 };
+use crate::app::ActiveBlock;
 use crate::event::Key;
 use crate::network::IoEvent;
 
@@ -70,7 +71,16 @@ pub fn handler(key: Key, app: &mut App) {
       };
     }
     Key::Char('D') => {
-      app.user_unfollow_playlist();
+      if let (Some(playlists), Some(selected_index)) = (&app.playlists, app.selected_playlist_index)
+      {
+        let selected_playlist = &playlists.items[selected_index].name;
+        app.dialog = Some(selected_playlist.clone());
+        app.confirm = false;
+
+        let route = app.get_current_route().id.clone();
+        app.push_navigation_stack(route, ActiveBlock::Dialog);
+      }
+      // app.user_unfollow_playlist();
     }
     _ => {}
   }

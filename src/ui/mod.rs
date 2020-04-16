@@ -178,6 +178,9 @@ where
 
   // Currently playing
   draw_playbar(f, app, parent_layout[2]);
+
+  // Possibly draw confirm dialog
+  draw_dialog(f, app);
 }
 
 pub fn draw_routes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1326,6 +1329,12 @@ fn draw_selectable_list<B, S>(
     .select(selected_index)
     .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD))
     .render(f, layout_chunk);
+}
+
+fn draw_dialog<B>(f: &mut Frame<B>, app: &App)
+where
+  B: Backend,
+{
 }
 
 fn draw_table<B>(

@@ -5,6 +5,7 @@ mod artist;
 mod artists;
 mod basic_view;
 mod common_key_events;
+mod dialog;
 mod empty;
 mod error_screen;
 mod help_menu;
@@ -155,6 +156,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::BasicView => {
       basic_view::handler(key, app);
+    }
+    ActiveBlock::Dialog => {
+      dialog::handler(key, app);
     }
   }
 }

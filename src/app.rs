@@ -126,6 +126,7 @@ pub enum ActiveBlock {
   MadeForYou,
   Artists,
   BasicView,
+  Dialog,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -281,6 +282,8 @@ pub struct App {
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: Instant,
+  pub dialog: Option<String>,
+  pub confirm: bool,
 }
 
 impl Default for App {
@@ -354,6 +357,8 @@ impl Default for App {
       io_tx: None,
       is_fetching_current_playback: false,
       spotify_token_expiry: Instant::now(),
+      dialog: None,
+      confirm: false,
     }
   }
 }
