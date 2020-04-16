@@ -455,7 +455,6 @@ pub fn handler(key: Key, app: &mut App) {
           let route = app.get_current_route().id.clone();
           app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::Playlist));
         }
-        // app.user_unfollow_playlist();
       }
       SearchResultBlock::Empty => {}
     },

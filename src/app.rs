@@ -787,6 +787,19 @@ impl App {
     }
   }
 
+  pub fn user_unfollow_playlist_search_result(&mut self) {
+    if let (Some(playlists), Some(selected_index), Some(user)) = (
+      &self.search_results.playlists,
+      self.search_results.selected_playlists_index,
+      &self.user,
+    ) {
+      let selected_playlist = &playlists.playlists.items[selected_index];
+      let selected_id = selected_playlist.id.clone();
+      let user_id = user.id.clone();
+      self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
+    }
+  }
+
   pub fn get_made_for_you(&mut self) {
     // TODO: replace searches when relevant endpoint is added
     const DISCOVER_WEEKLY: &str = "Discover Weekly";
