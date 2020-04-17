@@ -1,5 +1,4 @@
 pub mod audio_analysis;
-pub mod clear;
 pub mod help;
 pub mod util;
 use super::{
@@ -15,7 +14,7 @@ use tui::{
   backend::Backend,
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
-  widgets::{Block, Borders, Gauge, List, ListState, Paragraph, Row, Table, Text},
+  widgets::{Block, Borders, Clear, Gauge, List, ListState, Paragraph, Row, Table, Text},
   Frame,
 };
 use util::{
@@ -1342,15 +1341,13 @@ where
 
       let rect = Rect::new(left, top, width, height);
 
-      // when upgrading to tui-rs 0.9.0
-      // can replace this with the provided
-      // Clear widget
-      let mut cl = clear::Clear {};
-      cl.render(f, rect);
-      Block::default()
+      f.render_widget(Clear, rect);
+
+      let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(app.user_config.theme.inactive))
-        .render(f, rect);
+        .border_style(Style::default().fg(app.user_config.theme.inactive));
+
+      f.render_widget(block, rect);
 
       let vchunks = Layout::default()
         .direction(Direction::Vertical)
@@ -1366,9 +1363,9 @@ where
         Text::raw("?"),
       ];
 
-      Paragraph::new(text.iter())
-        .alignment(Alignment::Center)
-        .render(f, vchunks[0]);
+      let text = Paragraph::new(text.iter()).alignment(Alignment::Center);
+
+      f.render_widget(text, vchunks[0]);
 
       let hchunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -1376,23 +1373,27 @@ where
         .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
         .split(vchunks[1]);
 
-      Paragraph::new([Text::raw("Ok")].iter())
+      let ok_text = [Text::raw("Ok")];
+      let ok = Paragraph::new(ok_text.iter())
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.hovered
         } else {
           app.user_config.theme.inactive
         }))
-        .alignment(Alignment::Center)
-        .render(f, hchunks[0]);
+        .alignment(Alignment::Center);
 
-      Paragraph::new([Text::raw("Cancel")].iter())
+      f.render_widget(ok, hchunks[0]);
+
+      let cancel_text = [Text::raw("Cancel")];
+      let cancel = Paragraph::new(cancel_text.iter())
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.inactive
         } else {
           app.user_config.theme.hovered
         }))
-        .alignment(Alignment::Center)
-        .render(f, hchunks[1]);
+        .alignment(Alignment::Center);
+
+      f.render_widget(cancel, hchunks[1]);
     }
   }
 }
