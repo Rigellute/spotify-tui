@@ -438,6 +438,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "ilnaes",
+      "name": "Sean Li",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/20805499?v=4",
+      "profile": "https://github.com/ilnaes",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
