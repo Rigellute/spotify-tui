@@ -70,7 +70,7 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Enter => {
       if let (Some(devices), Some(index)) = (app.devices.clone(), app.selected_device_index) {
         if let Some(device) = &devices.devices.get(index) {
-          app.dispatch(IoEvent::SetDeviceIdInConfig(device.id.clone()));
+          app.dispatch(IoEvent::TransferPlaybackToDevice(device.id.clone()));
         }
       };
     }

@@ -75,7 +75,7 @@ pub enum IoEvent {
   SetArtistsToTable(Vec<FullArtist>),
   UserArtistFollowCheck(Vec<String>),
   GetAlbum(String),
-  SetDeviceIdInConfig(String),
+  TransferPlaybackToDevice(String),
   CurrentUserSavedTracksContains(Vec<String>),
   GetShowEpisodes(String),
   AddItemToQueue(String),
@@ -257,8 +257,8 @@ impl<'a> Network<'a> {
       IoEvent::GetAlbum(album_id) => {
         self.get_album(album_id).await;
       }
-      IoEvent::SetDeviceIdInConfig(device_id) => {
-        self.set_device_id_in_config(device_id).await;
+      IoEvent::TransferPlaybackToDevice(device_id) => {
+        self.transfert_playback_to_device(device_id).await;
       }
       IoEvent::Shuffle(shuffle_state) => {
         self.shuffle(shuffle_state).await;
@@ -1255,7 +1255,17 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn set_device_id_in_config(&mut self, device_id: String) {
+  async fn transfert_playback_to_device(&mut self, device_id: String) {
+    match self.spotify.transfer_playback(&device_id, true).await {
+      Ok(()) => {
+        self.get_current_playback().await;
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+        return;
+      }
+    };
+
     match self.client_config.set_device_id(device_id) {
       Ok(()) => {
         let mut app = self.app.lock().await;
