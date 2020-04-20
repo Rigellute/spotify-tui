@@ -34,6 +34,7 @@ use std::{
   cmp::{max, min},
   io::{self, stdout, Write},
   panic::{self, PanicInfo},
+  path::PathBuf,
   sync::Arc,
   time::Instant,
 };
@@ -42,7 +43,7 @@ use tui::{
   backend::{Backend, CrosstermBackend},
   Terminal,
 };
-use user_config::UserConfig;
+use user_config::{UserConfig, UserConfigPaths};
 
 const SCOPES: [&str; 13] = [
   "playlist-read-collaborative",
@@ -133,9 +134,19 @@ async fn main() -> Result<()> {
                                .long("tick-rate")
                                .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
                                .takes_value(true))
+         .arg(Arg::with_name("config")
+                               .short("c")
+                               .long("config")
+                               .help("Specify configuration file path.")
+                               .takes_value(true))
         .get_matches();
 
   let mut user_config = UserConfig::new();
+  if let Some(config_file_path) = matches.value_of("config") {
+    let config_file_path = PathBuf::from(config_file_path);
+    let path = UserConfigPaths { config_file_path };
+    user_config.path_to_config.replace(path);
+  }
   user_config.load_config()?;
 
   if let Some(tick_rate) = matches

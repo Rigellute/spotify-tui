@@ -12,3 +12,6 @@ spt*.txt
 .ci/lp-creds
 snapcraft-login
 secrets.tar
+
+*.swp
+tags

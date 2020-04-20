@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix crash when opening playlist [#398](https://github.com/Rigellute/spotify-tui/pull/398)
+- Fix crash when there're no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
+- Correctly handle playlist unfollowing [#399](https://github.com/Rigellute/spotify-tui/pull/399)
+
+### Added
+
+- Allow specifying alternative config file path [#391](https://github.com/Rigellute/spotify-tui/pull/391)
+- List artists names in the album view [#393](https://github.com/Rigellute/spotify-tui/pull/393)
+- Add confirmation modal for delete playlist action [#402](https://github.com/Rigellute/spotify-tui/pull/402)
+
 ## [0.17.1] - 2020-03-30
 
 ### Fixed

@@ -1,4 +1,5 @@
 pub mod audio_analysis;
+pub mod clear;
 pub mod help;
 pub mod util;
 use super::{
@@ -12,7 +13,7 @@ use help::get_help_docs;
 use rspotify::senum::RepeatState;
 use tui::{
   backend::Backend,
-  layout::{Constraint, Direction, Layout, Rect},
+  layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
   widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
   Frame,
@@ -178,6 +179,9 @@ where
 
   // Currently playing
   draw_playbar(f, app, parent_layout[2]);
+
+  // Possibly draw confirm dialog
+  draw_dialog(f, app);
 }
 
 pub fn draw_routes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -500,11 +504,16 @@ where
       TableHeaderItem {
         id: ColumnId::SongTitle,
         text: "Title",
-        width: get_percentage_width(layout_chunk.width, 0.80),
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 5,
+      },
+      TableHeaderItem {
+        text: "Artist",
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        ..Default::default()
       },
       TableHeaderItem {
         text: "Length",
-        width: get_percentage_width(layout_chunk.width, 0.15),
+        width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
         ..Default::default()
       },
     ],
@@ -529,6 +538,7 @@ where
               "".to_string(),
               item.track_number.to_string(),
               item.name.to_owned(),
+              create_artist_string(&item.artists),
               millis_to_minutes(u128::from(item.duration_ms)),
             ],
           })
@@ -1320,6 +1330,76 @@ fn draw_selectable_list<B, S>(
     .select(selected_index)
     .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD))
     .render(f, layout_chunk);
+}
+
+fn draw_dialog<B>(f: &mut Frame<B>, app: &App)
+where
+  B: Backend,
+{
+  if let ActiveBlock::Dialog(_) = app.get_current_route().active_block {
+    if let Some(playlist) = app.dialog.as_ref() {
+      let bounds = f.size();
+      // maybe do this better
+      let width = std::cmp::min(bounds.width - 2, 45);
+      let height = 8;
+      let left = (bounds.width - width) / 2;
+      let top = bounds.height / 4;
+
+      let rect = Rect::new(left, top, width, height);
+
+      // when upgrading to tui-rs 0.9.0
+      // can replace this with the provided
+      // Clear widget
+      let mut cl = clear::Clear {};
+      cl.render(f, rect);
+      Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(app.user_config.theme.inactive))
+        .render(f, rect);
+
+      let vchunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(2)
+        .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
+        .split(rect);
+
+      // suggestion: possibly put this as part of
+      // app.dialog, but would have to introduce lifetime
+      let text = [
+        Text::raw("Are you sure you want to delete\nthe playlist: "),
+        Text::styled(playlist.as_str(), Style::default().modifier(Modifier::BOLD)),
+        Text::raw("?"),
+      ];
+
+      Paragraph::new(text.iter())
+        .alignment(Alignment::Center)
+        .render(f, vchunks[0]);
+
+      let hchunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .horizontal_margin(3)
+        .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
+        .split(vchunks[1]);
+
+      Paragraph::new([Text::raw("Ok")].iter())
+        .style(Style::default().fg(if app.confirm {
+          app.user_config.theme.hovered
+        } else {
+          app.user_config.theme.inactive
+        }))
+        .alignment(Alignment::Center)
+        .render(f, hchunks[0]);
+
+      Paragraph::new([Text::raw("Cancel")].iter())
+        .style(Style::default().fg(if app.confirm {
+          app.user_config.theme.inactive
+        } else {
+          app.user_config.theme.hovered
+        }))
+        .alignment(Alignment::Center)
+        .render(f, hchunks[1]);
+    }
+  }
 }
 
 fn draw_table<B>(

@@ -105,6 +105,12 @@ pub enum ArtistBlock {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DialogContext {
+  PlaylistWindow,
+  PlaylistSearch,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
   Analysis,
   PlayBar,
@@ -126,6 +132,7 @@ pub enum ActiveBlock {
   MadeForYou,
   Artists,
   BasicView,
+  Dialog(DialogContext),
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -281,6 +288,8 @@ pub struct App {
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: Instant,
+  pub dialog: Option<String>,
+  pub confirm: bool,
 }
 
 impl Default for App {
@@ -354,6 +363,8 @@ impl Default for App {
       io_tx: None,
       is_fetching_current_playback: false,
       spotify_token_expiry: Instant::now(),
+      dialog: None,
+      confirm: false,
     }
   }
 }
@@ -771,6 +782,19 @@ impl App {
       (&self.playlists, self.selected_playlist_index, &self.user)
     {
       let selected_playlist = &playlists.items[selected_index];
+      let selected_id = selected_playlist.id.clone();
+      let user_id = user.id.clone();
+      self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
+    }
+  }
+
+  pub fn user_unfollow_playlist_search_result(&mut self) {
+    if let (Some(playlists), Some(selected_index), Some(user)) = (
+      &self.search_results.playlists,
+      self.search_results.selected_playlists_index,
+      &self.user,
+    ) {
+      let selected_playlist = &playlists.playlists.items[selected_index];
       let selected_id = selected_playlist.id.clone();
       let user_id = user.id.clone();
       self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
