@@ -1,5 +1,4 @@
 pub mod audio_analysis;
-pub mod clear;
 pub mod help;
 pub mod util;
 use super::{
@@ -15,7 +14,7 @@ use tui::{
   backend::Backend,
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
-  widgets::{Block, Borders, Gauge, Paragraph, Row, SelectableList, Table, Text, Widget},
+  widgets::{Block, Borders, Clear, Gauge, List, ListState, Paragraph, Row, Table, Text},
   Frame,
 };
 use util::{
@@ -90,7 +89,7 @@ where
     .iter()
     .map(|item| Row::StyledData(item.iter(), gray));
 
-  Table::new(header.iter(), rows)
+  let help_menu = Table::new(header.iter(), rows)
     .block(
       Block::default()
         .borders(Borders::ALL)
@@ -104,8 +103,8 @@ where
       Constraint::Length(50),
       Constraint::Length(40),
       Constraint::Length(20),
-    ])
-    .render(f, chunks[0]);
+    ]);
+  f.render_widget(help_menu, chunks[0]);
 }
 
 pub fn draw_input_and_help_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -125,15 +124,15 @@ where
   );
 
   let input_string: String = app.input.iter().collect();
-  Paragraph::new([Text::raw(&input_string)].iter())
-    .block(
-      Block::default()
-        .borders(Borders::ALL)
-        .title("Search")
-        .title_style(get_color(highlight_state, app.user_config.theme))
-        .border_style(get_color(highlight_state, app.user_config.theme)),
-    )
-    .render(f, chunks[0]);
+  let lines = [Text::raw(&input_string)];
+  let input = Paragraph::new(lines.iter()).block(
+    Block::default()
+      .borders(Borders::ALL)
+      .title("Search")
+      .title_style(get_color(highlight_state, app.user_config.theme))
+      .border_style(get_color(highlight_state, app.user_config.theme)),
+  );
+  f.render_widget(input, chunks[0]);
 
   let help_block_text = if app.is_loading {
     (app.user_config.theme.hint, "Loading...")
@@ -147,10 +146,11 @@ where
     .border_style(Style::default().fg(help_block_text.0))
     .title_style(Style::default().fg(help_block_text.0));
 
-  Paragraph::new([Text::raw(help_block_text.1)].iter())
+  let lines = [Text::raw(help_block_text.1)];
+  let help = Paragraph::new(lines.iter())
     .block(block)
-    .style(Style::default().fg(help_block_text.0))
-    .render(f, chunks[1]);
+    .style(Style::default().fg(help_block_text.0));
+  f.render_widget(help, chunks[1]);
 }
 
 pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
@@ -807,12 +807,12 @@ where
         current_route.hovered_block == ActiveBlock::PlayBar,
       );
 
-      Block::default()
+      let title_block = Block::default()
         .borders(Borders::ALL)
         .title(&title)
         .title_style(get_color(highlight_state, app.user_config.theme))
-        .border_style(get_color(highlight_state, app.user_config.theme))
-        .render(f, layout_chunk);
+        .border_style(get_color(highlight_state, app.user_config.theme));
+      f.render_widget(title_block, layout_chunk);
 
       let track_name = if app
         .liked_song_ids_set
@@ -823,25 +823,25 @@ where
         track_item.name.clone()
       };
 
-      Paragraph::new(
-        [Text::styled(
-          create_artist_string(&track_item.artists),
-          Style::default().fg(app.user_config.theme.text),
-        )]
-        .iter(),
-      )
-      .style(Style::default().fg(app.user_config.theme.text))
-      .block(
-        Block::default().title(&track_name).title_style(
-          Style::default()
-            .fg(app.user_config.theme.selected)
-            .modifier(Modifier::BOLD),
-        ),
-      )
-      .render(f, chunks[0]);
+      let lines = [Text::styled(
+        create_artist_string(&track_item.artists),
+        Style::default().fg(app.user_config.theme.text),
+      )];
+      let artist = Paragraph::new(lines.iter())
+        .style(Style::default().fg(app.user_config.theme.text))
+        .block(
+          Block::default().title(&track_name).title_style(
+            Style::default()
+              .fg(app.user_config.theme.selected)
+              .modifier(Modifier::BOLD),
+          ),
+        );
+      f.render_widget(artist, chunks[0]);
       let perc = get_track_progress_percentage(app.song_progress_ms, track_item.duration_ms);
 
-      Gauge::default()
+      let song_progress_label =
+        display_track_progress(app.song_progress_ms, track_item.duration_ms);
+      let song_progress = Gauge::default()
         .block(Block::default().title(""))
         .style(
           Style::default()
@@ -850,11 +850,8 @@ where
             .modifier(Modifier::ITALIC | Modifier::BOLD),
         )
         .percent(perc)
-        .label(&display_track_progress(
-          app.song_progress_ms,
-          track_item.duration_ms,
-        ))
-        .render(f, chunks[1]);
+        .label(&song_progress_label);
+      f.render_widget(song_progress, chunks[1]);
     }
   }
 }
@@ -892,7 +889,7 @@ Hint: a playback device must be either an official spotify client or a light wei
         ),
     ];
 
-  Paragraph::new(playing_text.iter())
+  let playing_paragraph = Paragraph::new(playing_text.iter())
     .wrap(true)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(
@@ -901,8 +898,8 @@ Hint: a playback device must be either an official spotify client or a light wei
         .title("Error")
         .title_style(Style::default().fg(app.user_config.theme.error_border))
         .border_style(Style::default().fg(app.user_config.theme.error_border)),
-    )
-    .render(f, chunks[0]);
+    );
+  f.render_widget(playing_paragraph, chunks[0]);
 }
 
 fn draw_home<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -921,12 +918,12 @@ where
     current_route.hovered_block == ActiveBlock::Home,
   );
 
-  Block::default()
+  let welcome = Block::default()
     .title("Welcome!")
     .borders(Borders::ALL)
     .title_style(get_color(highlight_state, app.user_config.theme))
-    .border_style(get_color(highlight_state, app.user_config.theme))
-    .render(f, layout_chunk);
+    .border_style(get_color(highlight_state, app.user_config.theme));
+  f.render_widget(welcome, layout_chunk);
 
   let changelog = include_str!("../../CHANGELOG.md").to_string();
 
@@ -949,18 +946,18 @@ where
     ];
 
   // Contains the banner
-  Paragraph::new(top_text.iter())
+  let top_text = Paragraph::new(top_text.iter())
     .style(Style::default().fg(app.user_config.theme.text))
-    .block(Block::default())
-    .render(f, chunks[0]);
+    .block(Block::default());
+  f.render_widget(top_text, chunks[0]);
 
   // CHANGELOG
-  Paragraph::new(bottom_text.iter())
+  let bottom_text = Paragraph::new(bottom_text.iter())
     .style(Style::default().fg(app.user_config.theme.text))
     .block(Block::default())
     .wrap(true)
-    .scroll(app.home_scroll)
-    .render(f, chunks[1]);
+    .scroll(app.home_scroll);
+  f.render_widget(bottom_text, chunks[1]);
 }
 
 fn draw_not_implemented_yet<B>(
@@ -985,11 +982,11 @@ fn draw_not_implemented_yet<B>(
 
   let text = vec![Text::raw("Not implemented yet!")];
 
-  Paragraph::new(text.iter())
+  let not_implemented = Paragraph::new(text.iter())
     .style(Style::default().fg(app.user_config.theme.text))
     .block(display_block)
-    .wrap(true)
-    .render(f, layout_chunk);
+    .wrap(true);
+  f.render_widget(not_implemented, layout_chunk);
 }
 
 fn draw_artist_albums<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1079,14 +1076,14 @@ where
     .margin(5)
     .split(f.size());
 
-  let device_instructions = vec![
-        "To play tracks, please select a device.",
-        "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select",
-        "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`.",
-        "You can change the playback device at any time by pressing `d`.",
+  let device_instructions = [
+        Text::raw("To play tracks, please select a device."),
+        Text::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select"),
+        Text::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`."),
+        Text::raw("You can change the playback device at any time by pressing `d`."),
     ];
 
-  Paragraph::new([Text::raw(device_instructions.join("\n"))].iter())
+  let instructions = Paragraph::new(device_instructions.iter())
     .style(Style::default().fg(app.user_config.theme.text))
     .wrap(true)
     .block(
@@ -1098,27 +1095,25 @@ where
             .fg(app.user_config.theme.active)
             .modifier(Modifier::BOLD),
         ),
-    )
-    .render(f, chunks[0]);
+    );
+  f.render_widget(instructions, chunks[0]);
 
-  let no_device_message = vec!["No devices found: Make sure a device is active".to_string()];
+  let no_device_message = vec![Text::raw("No devices found: Make sure a device is active")];
 
-  let items = match &app.devices {
+  let items: Box<dyn Iterator<Item = Text>> = match &app.devices {
     Some(items) => {
       if items.devices.is_empty() {
-        no_device_message
+        Box::new(no_device_message.into_iter())
       } else {
-        items
-          .devices
-          .iter()
-          .map(|device| device.name.to_owned())
-          .collect()
+        Box::new(items.devices.iter().map(|device| Text::raw(&device.name)))
       }
     }
-    None => no_device_message,
+    None => Box::new(no_device_message.into_iter()),
   };
 
-  SelectableList::default()
+  let mut state = ListState::default();
+  state.select(app.selected_device_index);
+  let list = List::new(items)
     .block(
       Block::default()
         .title("Devices")
@@ -1126,15 +1121,13 @@ where
         .title_style(Style::default().fg(app.user_config.theme.active))
         .border_style(Style::default().fg(app.user_config.theme.inactive)),
     )
-    .items(&items)
     .style(Style::default().fg(app.user_config.theme.text))
-    .select(app.selected_device_index)
     .highlight_style(
       Style::default()
         .fg(app.user_config.theme.active)
         .modifier(Modifier::BOLD),
-    )
-    .render(f, chunks[1]);
+    );
+  f.render_stateful_widget(list, chunks[1], &mut state);
 }
 
 pub fn draw_album_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1317,7 +1310,10 @@ fn draw_selectable_list<B, S>(
   B: Backend,
   S: std::convert::AsRef<str>,
 {
-  SelectableList::default()
+  let mut state = ListState::default();
+  state.select(selected_index);
+
+  let list = List::new(items.iter().map(|i| Text::raw(i.as_ref())))
     .block(
       Block::default()
         .title(title)
@@ -1325,11 +1321,9 @@ fn draw_selectable_list<B, S>(
         .title_style(get_color(highlight_state, app.user_config.theme))
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
-    .items(items)
     .style(Style::default().fg(app.user_config.theme.text))
-    .select(selected_index)
-    .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD))
-    .render(f, layout_chunk);
+    .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD));
+  f.render_stateful_widget(list, layout_chunk, &mut state);
 }
 
 fn draw_dialog<B>(f: &mut Frame<B>, app: &App)
@@ -1347,15 +1341,13 @@ where
 
       let rect = Rect::new(left, top, width, height);
 
-      // when upgrading to tui-rs 0.9.0
-      // can replace this with the provided
-      // Clear widget
-      let mut cl = clear::Clear {};
-      cl.render(f, rect);
-      Block::default()
+      f.render_widget(Clear, rect);
+
+      let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(app.user_config.theme.inactive))
-        .render(f, rect);
+        .border_style(Style::default().fg(app.user_config.theme.inactive));
+
+      f.render_widget(block, rect);
 
       let vchunks = Layout::default()
         .direction(Direction::Vertical)
@@ -1371,9 +1363,9 @@ where
         Text::raw("?"),
       ];
 
-      Paragraph::new(text.iter())
-        .alignment(Alignment::Center)
-        .render(f, vchunks[0]);
+      let text = Paragraph::new(text.iter()).alignment(Alignment::Center);
+
+      f.render_widget(text, vchunks[0]);
 
       let hchunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -1381,23 +1373,27 @@ where
         .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
         .split(vchunks[1]);
 
-      Paragraph::new([Text::raw("Ok")].iter())
+      let ok_text = [Text::raw("Ok")];
+      let ok = Paragraph::new(ok_text.iter())
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.hovered
         } else {
           app.user_config.theme.inactive
         }))
-        .alignment(Alignment::Center)
-        .render(f, hchunks[0]);
+        .alignment(Alignment::Center);
 
-      Paragraph::new([Text::raw("Cancel")].iter())
+      f.render_widget(ok, hchunks[0]);
+
+      let cancel_text = [Text::raw("Cancel")];
+      let cancel = Paragraph::new(cancel_text.iter())
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.inactive
         } else {
           app.user_config.theme.hovered
         }))
-        .alignment(Alignment::Center)
-        .render(f, hchunks[1]);
+        .alignment(Alignment::Center);
+
+      f.render_widget(cancel, hchunks[1]);
     }
   }
 }
@@ -1480,7 +1476,7 @@ fn draw_table<B>(
     .map(|h| Constraint::Length(h.width))
     .collect::<Vec<tui::layout::Constraint>>();
 
-  Table::new(header.items.iter().map(|h| h.text), rows)
+  let table = Table::new(header.items.iter().map(|h| h.text), rows)
     .block(
       Block::default()
         .borders(Borders::ALL)
@@ -1490,6 +1486,6 @@ fn draw_table<B>(
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
-    .widths(&widths)
-    .render(f, layout_chunk);
+    .widths(&widths);
+  f.render_widget(table, layout_chunk);
 }
