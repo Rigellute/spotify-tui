@@ -2,10 +2,12 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2020-04-21
+
 ### Fixed
 
 - Fix crash when opening playlist [#398](https://github.com/Rigellute/spotify-tui/pull/398)
-- Fix crash when there're no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
+- Fix crash when there are no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
 - Correctly handle playlist unfollowing [#399](https://github.com/Rigellute/spotify-tui/pull/399)
 
 ### Added
