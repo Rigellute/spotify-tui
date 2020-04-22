@@ -949,15 +949,15 @@ impl<'a> Network<'a> {
     };
   }
 
-  async fn current_user_saved_album_add(&mut self, artist_id: String) {
+  async fn current_user_saved_album_add(&mut self, album_id: String) {
     match self
       .spotify
-      .current_user_saved_albums_add(&[artist_id.to_owned()])
+      .current_user_saved_albums_add(&[album_id.to_owned()])
       .await
     {
       Ok(_) => {
         let mut app = self.app.lock().await;
-        app.saved_album_ids_set.insert(artist_id.to_owned());
+        app.saved_album_ids_set.insert(album_id.to_owned());
       }
       Err(e) => self.handle_error(anyhow!(e)).await,
     }
