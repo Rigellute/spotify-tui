@@ -447,6 +447,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "TimotheeGerber",
+      "name": "TimotheeGerber",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/37541513?v=4",
+      "profile": "https://github.com/TimotheeGerber",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
