@@ -1,6 +1,5 @@
 use super::banner::BANNER;
 use anyhow::{anyhow, Result};
-use dirs;
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
