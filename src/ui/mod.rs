@@ -1077,9 +1077,9 @@ where
     .split(f.size());
 
   let device_instructions = [
-        Text::raw("To play tracks, please select a device."),
-        Text::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select"),
-        Text::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`."),
+        Text::raw("To play tracks, please select a device. "),
+        Text::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. "),
+        Text::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. "),
         Text::raw("You can change the playback device at any time by pressing `d`."),
     ];
 
