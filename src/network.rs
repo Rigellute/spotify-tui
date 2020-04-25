@@ -21,7 +21,7 @@ use rspotify::{
 use serde_json::{map::Map, Value};
 use std::{
   sync::Arc,
-  time::{Duration, Instant},
+  time::{Duration, Instant, SystemTime},
 };
 use tokio::sync::Mutex;
 use tokio::try_join;
@@ -75,11 +75,17 @@ pub enum IoEvent {
   CurrentUserSavedTracksContains(Vec<String>),
 }
 
-pub fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
-  let token_expiry = Instant::now()
-        + Duration::from_secs(token_info.expires_in.into())
+pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
+  let token_expiry = {
+    if let Some(expires_at) = token_info.expires_at {
+      SystemTime::UNIX_EPOCH
+        + Duration::from_secs(expires_at as u64)
         // Set 10 seconds early
-        - Duration::from_secs(10);
+        - Duration::from_secs(10)
+    } else {
+      SystemTime::now()
+    }
+  };
 
   let client_credential = SpotifyClientCredentials::default()
     .token_info(token_info)
