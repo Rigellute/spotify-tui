@@ -22,7 +22,7 @@ use std::sync::mpsc::Sender;
 use std::{
   cmp::{max, min},
   collections::HashSet,
-  time::Instant,
+  time::{Instant, SystemTime},
 };
 use tui::layout::Rect;
 
@@ -287,7 +287,7 @@ pub struct App {
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
-  pub spotify_token_expiry: Instant,
+  pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
 }
@@ -362,7 +362,7 @@ impl Default for App {
       is_loading: false,
       io_tx: None,
       is_fetching_current_playback: false,
-      spotify_token_expiry: Instant::now(),
+      spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
     }
@@ -373,7 +373,7 @@ impl App {
   pub fn new(
     io_tx: Sender<IoEvent>,
     user_config: UserConfig,
-    spotify_token_expiry: Instant,
+    spotify_token_expiry: SystemTime,
   ) -> App {
     App {
       io_tx: Some(io_tx),

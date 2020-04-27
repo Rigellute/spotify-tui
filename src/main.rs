@@ -36,7 +36,7 @@ use std::{
   panic::{self, PanicInfo},
   path::PathBuf,
   sync::Arc,
-  time::Instant,
+  time::SystemTime,
 };
 use tokio::sync::Mutex;
 use tui::{
@@ -300,7 +300,7 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
     ))?;
 
     // Handle authentication refresh
-    if Instant::now() > app.spotify_token_expiry {
+    if SystemTime::now() > app.spotify_token_expiry {
       app.dispatch(IoEvent::RefreshAuthentication);
     }
 
