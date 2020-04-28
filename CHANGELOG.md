@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix re-authentication [#415](https://github.com/Rigellute/spotify-tui/pull/415)
+
 ## [0.18.0] - 2020-04-21
 
 ### Fixed
