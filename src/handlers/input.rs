@@ -10,6 +10,11 @@ use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 pub fn handler(key: Key, app: &mut App) {
   match key {
     Key::Ctrl('u') => {
+      app.input.drain(..app.input_idx);
+      app.input_idx = 0;
+      app.input_cursor_position = 0;
+    }
+    Key::Ctrl('l') => {
       app.input = vec![];
       app.input_idx = 0;
       app.input_cursor_position = 0;
@@ -118,14 +123,29 @@ mod tests {
   }
 
   #[test]
-  fn test_input_handler_clear_input_on_ctrl_u() {
+  fn test_input_handler_clear_input_on_ctrl_l() {
+    let mut app = App::default();
+
+    app.input = str_to_vec_char("My text");
+
+    handler(Key::Ctrl('l'), &mut app);
+
+    assert_eq!(app.input, str_to_vec_char(""));
+  }
+
+  #[test]
+  fn test_input_handler_ctrl_u() {
     let mut app = App::default();
 
     app.input = str_to_vec_char("My text");
 
     handler(Key::Ctrl('u'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My text"));
 
-    assert_eq!(app.input, str_to_vec_char(""));
+    app.input_cursor_position = 3;
+    app.input_idx = 3;
+    handler(Key::Ctrl('u'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("text"));
   }
 
   #[test]
