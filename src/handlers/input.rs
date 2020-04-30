@@ -9,6 +9,9 @@ use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 // Handle event when the search input block is active
 pub fn handler(key: Key, app: &mut App) {
   match key {
+    Key::Ctrl('k') => {
+      app.input.drain(app.input_idx..app.input.len());
+    }
     Key::Ctrl('u') => {
       app.input.drain(..app.input_idx);
       app.input_idx = 0;
@@ -146,6 +149,25 @@ mod tests {
     app.input_idx = 3;
     handler(Key::Ctrl('u'), &mut app);
     assert_eq!(app.input, str_to_vec_char("text"));
+  }
+
+  #[test]
+  fn test_input_handler_ctrl_k() {
+    let mut app = App::default();
+
+    app.input = str_to_vec_char("My text");
+
+    handler(Key::Ctrl('k'), &mut app);
+    assert_eq!(app.input, str_to_vec_char(""));
+
+    app.input = str_to_vec_char("My text");
+    app.input_cursor_position = 2;
+    app.input_idx = 2;
+    handler(Key::Ctrl('k'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My"));
+
+    handler(Key::Ctrl('k'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My"));
   }
 
   #[test]
