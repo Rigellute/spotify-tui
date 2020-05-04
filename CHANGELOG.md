@@ -1,8 +1,15 @@
 # Changelog
 
-## [Unreleased]
+## [0.19.0] - 2020-05-04
+
+### Fixed
 
 - Fix re-authentication [#415](https://github.com/Rigellute/spotify-tui/pull/415)
+- Fix audio analysis feature [#435](https://github.com/Rigellute/spotify-tui/pull/435)
+
+### Added
+
+- Add more readline shortcuts to the search input [#425](https://github.com/Rigellute/spotify-tui/pull/425)
 
 ## [0.18.0] - 2020-04-21
 
