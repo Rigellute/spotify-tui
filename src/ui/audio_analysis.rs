@@ -69,28 +69,30 @@ where
     let segment = analysis
       .segments
       .iter()
-      .find(|segment| segment.start >= progress_seconds);
+      .find(|segment| segment.start.unwrap_or(0.0) >= progress_seconds);
     let section = analysis
       .sections
       .iter()
-      .find(|section| section.start >= progress_seconds);
+      .find(|section| section.start.unwrap_or(0.0) >= progress_seconds);
 
     if let (Some(segment), Some(section)) = (segment, section) {
       let texts = [
         Text::raw(format!(
           "Tempo: {} (confidence {:.0}%)\n",
-          section.tempo,
-          section.tempo_confidence * 100.0
+          section.tempo.unwrap_or(0.0),
+          section.tempo_confidence.unwrap_or(0.0) * 100.0
         )),
         Text::raw(format!(
           "Key: {} (confidence {:.0}%)\n",
-          PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
-          section.key_confidence * 100.0
+          PITCHES
+            .get(section.key.unwrap_or(0) as usize)
+            .unwrap_or(&PITCHES[0]),
+          section.key_confidence.unwrap_or(0.0) * 100.0
         )),
         Text::raw(format!(
           "Time Signature: {}/4 (confidence {:.0}%)\n",
-          section.time_signature,
-          section.time_signature_confidence * 100.0
+          section.time_signature.unwrap_or(0),
+          section.time_signature_confidence.unwrap_or(0.0) * 100.0
         )),
       ];
       let p = Paragraph::new(texts.iter())
@@ -99,7 +101,9 @@ where
       f.render_widget(p, chunks[0]);
 
       let data: Vec<(&str, u64)> = segment
+        .clone()
         .pitches
+        .unwrap_or_default()
         .iter()
         .enumerate()
         .map(|(index, pitch)| {
