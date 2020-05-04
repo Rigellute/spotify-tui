@@ -63,7 +63,6 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "Selected block",
     ],
     vec!["Play all tracks for artist", "e", "Library -> Artists"],
-    vec!["Delete entire input", "<Ctrl+u>", "Search input"],
     vec!["Search with input text", "<Enter>", "Search input"],
     vec![
       "Move cursor one space left",
@@ -75,6 +74,18 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "<Right Arrow Key>",
       "Search input",
     ],
+    vec!["Delete entire input", "<Ctrl+l>", "Search input"],
+    vec![
+      "Delete text from cursor to start of input",
+      "<Ctrl+u>",
+      "Search input",
+    ],
+    vec![
+      "Delete text from cursor to end of input",
+      "<Ctrl+k>",
+      "Search input",
+    ],
+    vec!["Delete previous word", "<Ctrl+w>", "Search input"],
     vec!["Jump to start of input", "<Ctrl+a>", "Search input"],
     vec!["Jump to end of input", "<Ctrl+e>", "Search input"],
     vec![
