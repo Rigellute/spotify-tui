@@ -1,5 +1,13 @@
 pub fn get_help_docs() -> Vec<Vec<&'static str>> {
   vec![
+    vec!["Scroll down to next result page", "<Ctrl+d>", "Pagination"],
+    vec![
+      "Scroll up to previous result page",
+      "<Ctrl+u>",
+      "Pagination",
+    ],
+    vec!["Jump to start of playlist", "<Ctrl+a>", "Pagination"],
+    vec!["Jump to end of playlist", "<Ctrl+e>", "Pagination"],
     vec!["Jump to currently playing album", "a", "General"],
     vec![
       "Jump to currently playing artist's album list",
@@ -93,14 +101,6 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "<Esc>",
       "Search input",
     ],
-    vec!["Scroll down to next result page", "<Ctrl+d>", "Pagination"],
-    vec![
-      "Scroll up to previous result page",
-      "<Ctrl+u>",
-      "Pagination",
-    ],
-    vec!["Jump to start of playlist", "<Ctrl+a>", "Pagination"],
-    vec!["Jump to end of playlist", "<Ctrl+e>", "Pagination"],
     vec!["Delete saved album", "D", "Library -> Albums"],
     vec!["Delete saved playist", "D", "Playlist"],
     vec!["Follow an artists/playlist", "w", "Search result"],
