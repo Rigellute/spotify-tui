@@ -206,6 +206,8 @@ behavior:
   volume_increment: 10
   # The lower the number the higher the "frames per second". You can decrease this number so that the audio visualisation is smoother but this can be expensive!
   tick_rate_milliseconds: 250
+  # controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
+  show_loading_indicator: true
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
