@@ -4,6 +4,7 @@
 
 - Move pagination instructions to top of help menu [#442](https://github.com/Rigellute/spotify-tui/pull/442)
 - Add user configuration toggle for the loading indicator [#447](https://github.com/Rigellute/spotify-tui/pull/447)
+- Add support for saving an album and following an artist in artist view [#445](https://github.com/Rigellute/spotify-tui/pull/445)
 
 ## [0.19.0] - 2020-05-04
 
