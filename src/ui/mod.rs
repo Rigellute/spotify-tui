@@ -134,7 +134,8 @@ where
   );
   f.render_widget(input, chunks[0]);
 
-  let help_block_text = if app.is_loading {
+  let show_loading = app.is_loading && app.user_config.behavior.show_loading_indicator;
+  let help_block_text = if show_loading {
     (app.user_config.theme.hint, "Loading...")
   } else {
     (app.user_config.theme.inactive, "Type ?")
