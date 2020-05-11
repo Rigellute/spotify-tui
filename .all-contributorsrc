@@ -474,6 +474,15 @@
       "profile": "https://github.com/sheelc",
       "contributions": [
         "code"
+       ],
+    },
+    {
+      "login": "mhellwig",
+      "name": "Michael Hellwig",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/414112?v=4",
+      "profile": "http://fnanp.in-ulm.de/microblog/",
+      "contributions": [
+        "doc"
       ]
     }
   ],
