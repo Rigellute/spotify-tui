@@ -1036,7 +1036,20 @@ where
       .albums
       .items
       .iter()
-      .map(|item| item.name.to_owned())
+      .map(|item| {
+        let mut album_artist = String::new();
+        if let Some(album_id) = &item.id {
+          if app.saved_album_ids_set.contains(&album_id.to_owned()) {
+            album_artist.push_str("♥ ");
+          }
+        }
+        album_artist.push_str(&format!(
+          "{} - {}",
+          item.name.to_owned(),
+          create_artist_string(&item.artists)
+        ));
+        album_artist
+      })
       .collect::<Vec<String>>();
 
     draw_selectable_list(
@@ -1052,7 +1065,14 @@ where
     let related_artists = artist
       .related_artists
       .iter()
-      .map(|artist| artist.name.to_owned())
+      .map(|item| {
+        let mut artist = String::new();
+        if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
+          artist.push_str("♥ ");
+        }
+        artist.push_str(&item.name.to_owned());
+        artist
+      })
       .collect::<Vec<String>>();
 
     draw_selectable_list(
