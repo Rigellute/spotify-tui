@@ -28,7 +28,7 @@ crossterm = "0.17"
 tokio = { version = "0.2", features = ["full"] }
 proc-macro2 = "1.0.12"
 rand = "0.7.3"
-anyhow = "1.0.28"
+anyhow = "1.0.29"
 
 [[bin]]
 bench = false
