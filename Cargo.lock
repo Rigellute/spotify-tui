@@ -1620,7 +1620,6 @@ dependencies = [
  "clipboard",
  "crossterm",
  "dirs",
- "proc-macro2 1.0.12",
  "rand 0.7.3",
  "rspotify",
  "serde",
