@@ -6,6 +6,7 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "A",
       "General",
     ],
+    vec!["Jump to current play context", "o", "General"],
     vec!["Increase volume by 10%", "+", "General"],
     vec!["Decrease volume by 10%", "-", "General"],
     vec!["Skip to next track", "n", "General"],
