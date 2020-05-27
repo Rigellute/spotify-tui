@@ -329,7 +329,7 @@ where
           let mut song_name = "".to_string();
           let id = item.clone().id.unwrap_or_else(|| "".to_string());
           if currently_playing_id == id {
-            song_name += "|> "
+            song_name += "▶ "
           }
           if app.liked_song_ids_set.contains(&id) {
             song_name += "♥ ";
@@ -1014,7 +1014,7 @@ where
         let mut name = String::new();
         if let Some(context) = &app.current_playback_context {
           if context.item.as_ref().and_then(|item| item.id.as_ref()) == top_track.id.as_ref() {
-            name.push_str("|> ");
+            name.push_str("▶ ");
           }
         };
         name.push_str(&top_track.name);
@@ -1464,7 +1464,7 @@ fn draw_table<B>(
             track_playing_index.and_then(|idx| idx.checked_sub(offset))
           {
             if i == track_playing_offset_index {
-              formatted_row[title_idx] = format!("|> {}", &formatted_row[title_idx]);
+              formatted_row[title_idx] = format!("▶ {}", &formatted_row[title_idx]);
               style = Style::default()
                 .fg(app.user_config.theme.active)
                 .modifier(Modifier::BOLD);
