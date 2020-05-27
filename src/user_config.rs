@@ -144,6 +144,7 @@ pub struct KeyBindingsString {
   back: Option<String>,
   jump_to_album: Option<String>,
   jump_to_artist_album: Option<String>,
+  jump_to_context: Option<String>,
   manage_devices: Option<String>,
   decrease_volume: Option<String>,
   increase_volume: Option<String>,
@@ -293,6 +294,7 @@ impl UserConfig {
     to_keys!(back);
     to_keys!(jump_to_album);
     to_keys!(jump_to_artist_album);
+    to_keys!(jump_to_context);
     to_keys!(manage_devices);
     to_keys!(decrease_volume);
     to_keys!(increase_volume);
