@@ -2,11 +2,18 @@
 
 ## [Unreleased]
 
+## [0.20.0] - 2020-05-28
+
+### Fixed
+
 - Move pagination instructions to top of help menu [#442](https://github.com/Rigellute/spotify-tui/pull/442)
+
+### Added
+
 - Add user configuration toggle for the loading indicator [#447](https://github.com/Rigellute/spotify-tui/pull/447)
 - Add support for saving an album and following an artist in artist view [#445](https://github.com/Rigellute/spotify-tui/pull/445)
 - Use the `▶` glyph to indicate the currently playing song [#472](https://github.com/Rigellute/spotify-tui/pull/472)
-- Jump to play context (if available) [#474](https://github.com/Rigellute/spotify-tui/pull/474)
+- Jump to play context (if available) - default binding is `o` [#474](https://github.com/Rigellute/spotify-tui/pull/474)
 
 ## [0.19.0] - 2020-05-04
 
