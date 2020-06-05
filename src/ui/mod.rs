@@ -826,10 +826,11 @@ where
 
       let lines = [Text::styled(
         create_artist_string(&track_item.artists),
-        Style::default().fg(app.user_config.theme.text),
+        Style::default().fg(app.user_config.theme.playbar_text),
       )];
+
       let artist = Paragraph::new(lines.iter())
-        .style(Style::default().fg(app.user_config.theme.text))
+        .style(Style::default().fg(app.user_config.theme.playbar_text))
         .block(
           Block::default().title(&track_name).title_style(
             Style::default()
