@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix typo in help menu [#485](https://github.com/Rigellute/spotify-tui/pull/485)
+
 ## [0.20.0] - 2020-05-28
 
 ### Fixed
