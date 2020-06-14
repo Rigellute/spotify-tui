@@ -188,18 +188,18 @@ The following is a sample config.yml file:
 
 # The theme colours can be an rgb string of the form "255, 255, 255" or a string that references the colours from your terminal theme: Reset, Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, LightRed, LightGreen, LightYellow, LightBlue, LightMagenta, LightCyan, White.
 theme:
-  active: Cyan
-  banner: LightCyan
-  error_border: Red
-  error_text: LightRed
-  hint: Yellow
-  hovered: Magenta
-  inactive: Gray
-  playbar_background: Black
-  playbar_progress: LightCyan
-  playbar_text: White
-  selected: LightCyan
-  text: "255, 255, 255"
+  active: Cyan # current playing song in list
+  banner: LightCyan # the "spotify-tui" banner on launch
+  error_border: Red # error dialog border
+  error_text: LightRed # error message text (e.g. "Spotify API reported error 404")
+  hint: Yellow # hint text in errors
+  hovered: Magenta # hovered pane border
+  inactive: Gray # borders of inactive panes
+  playbar_background: Black # background of progress bar
+  playbar_progress: LightCyan # filled-in part of the progress bar
+  playbar_text: White # artist name in player pane
+  selected: LightCyan # a) selected pane border, b) hovered item in list, & c) track title in player
+  text: "255, 255, 255" # text in panes
 
 behavior:
   seek_milliseconds: 5000
