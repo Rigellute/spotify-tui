@@ -7,7 +7,7 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-55-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-56-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A Spotify client for the terminal written in Rust.
@@ -188,18 +188,18 @@ The following is a sample config.yml file:
 
 # The theme colours can be an rgb string of the form "255, 255, 255" or a string that references the colours from your terminal theme: Reset, Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, LightRed, LightGreen, LightYellow, LightBlue, LightMagenta, LightCyan, White.
 theme:
-  active: Cyan
-  banner: LightCyan
-  error_border: Red
-  error_text: LightRed
-  hint: Yellow
-  hovered: Magenta
-  inactive: Gray
-  playbar_background: Black
-  playbar_progress: LightCyan
-  playbar_text: White
-  selected: LightCyan
-  text: "255, 255, 255"
+  active: Cyan # current playing song in list
+  banner: LightCyan # the "spotify-tui" banner on launch
+  error_border: Red # error dialog border
+  error_text: LightRed # error message text (e.g. "Spotify API reported error 404")
+  hint: Yellow # hint text in errors
+  hovered: Magenta # hovered pane border
+  inactive: Gray # borders of inactive panes
+  playbar_background: Black # background of progress bar
+  playbar_progress: LightCyan # filled-in part of the progress bar
+  playbar_text: White # artist name in player pane
+  selected: LightCyan # a) selected pane border, b) hovered item in list, & c) track title in player
+  text: "255, 255, 255" # text in panes
 
 behavior:
   seek_milliseconds: 5000
@@ -353,6 +353,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/oliver-daniel"><img src="https://avatars2.githubusercontent.com/u/17235417?v=4" width="100px;" alt=""/><br /><sub><b>Oliver Daniel</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=oliver-daniel" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/Drewsapple"><img src="https://avatars2.githubusercontent.com/u/4532572?v=4" width="100px;" alt=""/><br /><sub><b>Drew Fisher</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=Drewsapple" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/ncoder-1"><img src="https://avatars0.githubusercontent.com/u/7622286?v=4" width="100px;" alt=""/><br /><sub><b>ncoder-1</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=ncoder-1" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://macguire.me"><img src="https://avatars3.githubusercontent.com/u/18323154?v=4" width="100px;" alt=""/><br /><sub><b>Macguire Rintoul</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=macguirerintoul" title="Documentation">📖</a></td>
   </tr>
 </table>
 
