@@ -21,7 +21,7 @@ use rspotify::{
 use serde_json::{map::Map, Value};
 use std::{
   sync::Arc,
-  time::{Duration, Instant},
+  time::{Duration, Instant, SystemTime},
 };
 use tokio::sync::Mutex;
 use tokio::try_join;
@@ -75,11 +75,17 @@ pub enum IoEvent {
   CurrentUserSavedTracksContains(Vec<String>),
 }
 
-pub fn get_spotify(token_info: TokenInfo) -> (Spotify, Instant) {
-  let token_expiry = Instant::now()
-        + Duration::from_secs(token_info.expires_in.into())
+pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
+  let token_expiry = {
+    if let Some(expires_at) = token_info.expires_at {
+      SystemTime::UNIX_EPOCH
+        + Duration::from_secs(expires_at as u64)
         // Set 10 seconds early
-        - Duration::from_secs(10);
+        - Duration::from_secs(10)
+    } else {
+      SystemTime::now()
+    }
+  };
 
   let client_credential = SpotifyClientCredentials::default()
     .token_info(token_info)
@@ -949,15 +955,15 @@ impl<'a> Network<'a> {
     };
   }
 
-  async fn current_user_saved_album_add(&mut self, artist_id: String) {
+  async fn current_user_saved_album_add(&mut self, album_id: String) {
     match self
       .spotify
-      .current_user_saved_albums_add(&[artist_id.to_owned()])
+      .current_user_saved_albums_add(&[album_id.to_owned()])
       .await
     {
       Ok(_) => {
         let mut app = self.app.lock().await;
-        app.saved_album_ids_set.insert(artist_id.to_owned());
+        app.saved_album_ids_set.insert(album_id.to_owned());
       }
       Err(e) => self.handle_error(anyhow!(e)).await,
     }

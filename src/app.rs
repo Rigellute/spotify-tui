@@ -22,7 +22,7 @@ use std::sync::mpsc::Sender;
 use std::{
   cmp::{max, min},
   collections::HashSet,
-  time::Instant,
+  time::{Instant, SystemTime},
 };
 use tui::layout::Rect;
 
@@ -287,7 +287,7 @@ pub struct App {
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
-  pub spotify_token_expiry: Instant,
+  pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
 }
@@ -362,7 +362,7 @@ impl Default for App {
       is_loading: false,
       io_tx: None,
       is_fetching_current_playback: false,
-      spotify_token_expiry: Instant::now(),
+      spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
     }
@@ -373,7 +373,7 @@ impl App {
   pub fn new(
     io_tx: Sender<IoEvent>,
     user_config: UserConfig,
-    spotify_token_expiry: Instant,
+    spotify_token_expiry: SystemTime,
   ) -> App {
     App {
       io_tx: Some(io_tx),
@@ -704,21 +704,41 @@ impl App {
           }
         }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          if let Some(selected_album) = artist.albums.items.get(artist.selected_album_index) {
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
+            }
+          }
+        }
+      }
       _ => (),
     }
   }
 
-  pub fn current_user_saved_album_add(&mut self) {
-    if let SearchResult {
-      albums: Some(ref albums),
-      selected_album_index: Some(selected_index),
-      ..
-    } = self.search_results
-    {
-      let selected_album = &albums.albums.items[selected_index];
-      if let Some(album_id) = selected_album.id.clone() {
-        self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+  pub fn current_user_saved_album_add(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(albums) = &self.search_results.albums {
+          if let Some(selected_index) = self.search_results.selected_album_index {
+            let selected_album = &albums.albums.items[selected_index];
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+            }
+          }
+        }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          if let Some(selected_album) = artist.albums.items.get(artist.selected_album_index) {
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+            }
+          }
+        }
+      }
+      _ => (),
     }
   }
 
@@ -741,20 +761,36 @@ impl App {
           }
         }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          let selected_artis = &artist.related_artists[artist.selected_related_artist_index];
+          let artist_id = selected_artis.id.clone();
+          self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+        }
+      }
       _ => (),
     };
   }
 
-  pub fn user_follow_artists(&mut self) {
-    if let SearchResult {
-      artists: Some(ref artists),
-      selected_artists_index: Some(selected_index),
-      ..
-    } = self.search_results
-    {
-      let selected_artist: &FullArtist = &artists.artists.items[selected_index];
-      let artist_id = selected_artist.id.clone();
-      self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
+  pub fn user_follow_artists(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(artists) = &self.search_results.artists {
+          if let Some(selected_index) = self.search_results.selected_artists_index {
+            let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+            let artist_id = selected_artist.id.clone();
+            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+          }
+        }
+      }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          let selected_artis = &artist.related_artists[artist.selected_related_artist_index];
+          let artist_id = selected_artis.id.clone();
+          self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
+        }
+      }
+      _ => (),
     }
   }
 

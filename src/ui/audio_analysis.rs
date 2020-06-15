@@ -4,7 +4,7 @@ use tui::{
   backend::Backend,
   layout::{Constraint, Direction, Layout},
   style::Style,
-  widgets::{BarChart, Block, Borders, Paragraph, Text, Widget},
+  widgets::{BarChart, Block, Borders, Paragraph, Text},
   Frame,
 };
 const PITCHES: [&str; 12] = [
@@ -76,31 +76,30 @@ where
       .find(|section| section.start >= progress_seconds);
 
     if let (Some(segment), Some(section)) = (segment, section) {
-      Paragraph::new(
-        [
-          Text::raw(format!(
-            "Tempo: {} (confidence {:.0}%)\n",
-            section.tempo,
-            section.tempo_confidence * 100.0
-          )),
-          Text::raw(format!(
-            "Key: {} (confidence {:.0}%)\n",
-            PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
-            section.key_confidence * 100.0
-          )),
-          Text::raw(format!(
-            "Time Signature: {}/4 (confidence {:.0}%)\n",
-            section.time_signature,
-            section.time_signature_confidence * 100.0
-          )),
-        ]
-        .iter(),
-      )
-      .block(analysis_block)
-      .style(Style::default().fg(app.user_config.theme.text))
-      .render(f, chunks[0]);
+      let texts = [
+        Text::raw(format!(
+          "Tempo: {} (confidence {:.0}%)\n",
+          section.tempo,
+          section.tempo_confidence * 100.0
+        )),
+        Text::raw(format!(
+          "Key: {} (confidence {:.0}%)\n",
+          PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
+          section.key_confidence * 100.0
+        )),
+        Text::raw(format!(
+          "Time Signature: {}/4 (confidence {:.0}%)\n",
+          section.time_signature,
+          section.time_signature_confidence * 100.0
+        )),
+      ];
+      let p = Paragraph::new(texts.iter())
+        .block(analysis_block)
+        .style(Style::default().fg(app.user_config.theme.text));
+      f.render_widget(p, chunks[0]);
 
       let data: Vec<(&str, u64)> = segment
+        .clone()
         .pitches
         .iter()
         .enumerate()
@@ -115,7 +114,7 @@ where
         })
         .collect();
 
-      BarChart::default()
+      let analysis_bar = BarChart::default()
         .block(bar_chart_block)
         .data(&data)
         .bar_width(width as u16)
@@ -124,14 +123,14 @@ where
           Style::default()
             .fg(app.user_config.theme.analysis_bar_text)
             .bg(app.user_config.theme.analysis_bar),
-        )
-        .render(f, chunks[1]);
+        );
+      f.render_widget(analysis_bar, chunks[1]);
     } else {
-      empty_analysis_block().render(f, chunks[0]);
-      empty_pitches_block().render(f, chunks[1]);
+      f.render_widget(empty_analysis_block(), chunks[0]);
+      f.render_widget(empty_pitches_block(), chunks[1]);
     };
   } else {
-    empty_analysis_block().render(f, chunks[0]);
-    empty_pitches_block().render(f, chunks[1]);
+    f.render_widget(empty_analysis_block(), chunks[0]);
+    f.render_widget(empty_pitches_block(), chunks[1]);
   }
 }

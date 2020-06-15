@@ -2,10 +2,38 @@
 
 ## [Unreleased]
 
+- Fix typo in help menu [#485](https://github.com/Rigellute/spotify-tui/pull/485)
+
+## [0.20.0] - 2020-05-28
+
+### Fixed
+
+- Move pagination instructions to top of help menu [#442](https://github.com/Rigellute/spotify-tui/pull/442)
+
+### Added
+
+- Add user configuration toggle for the loading indicator [#447](https://github.com/Rigellute/spotify-tui/pull/447)
+- Add support for saving an album and following an artist in artist view [#445](https://github.com/Rigellute/spotify-tui/pull/445)
+- Use the `▶` glyph to indicate the currently playing song [#472](https://github.com/Rigellute/spotify-tui/pull/472)
+- Jump to play context (if available) - default binding is `o` [#474](https://github.com/Rigellute/spotify-tui/pull/474)
+
+## [0.19.0] - 2020-05-04
+
+### Fixed
+
+- Fix re-authentication [#415](https://github.com/Rigellute/spotify-tui/pull/415)
+- Fix audio analysis feature [#435](https://github.com/Rigellute/spotify-tui/pull/435)
+
+### Added
+
+- Add more readline shortcuts to the search input [#425](https://github.com/Rigellute/spotify-tui/pull/425)
+
+## [0.18.0] - 2020-04-21
+
 ### Fixed
 
 - Fix crash when opening playlist [#398](https://github.com/Rigellute/spotify-tui/pull/398)
-- Fix crash when there're no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
+- Fix crash when there are no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
 - Correctly handle playlist unfollowing [#399](https://github.com/Rigellute/spotify-tui/pull/399)
 
 ### Added

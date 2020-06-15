@@ -9,10 +9,36 @@ use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 // Handle event when the search input block is active
 pub fn handler(key: Key, app: &mut App) {
   match key {
+    Key::Ctrl('k') => {
+      app.input.drain(app.input_idx..app.input.len());
+    }
     Key::Ctrl('u') => {
+      app.input.drain(..app.input_idx);
+      app.input_idx = 0;
+      app.input_cursor_position = 0;
+    }
+    Key::Ctrl('l') => {
       app.input = vec![];
       app.input_idx = 0;
       app.input_cursor_position = 0;
+    }
+    Key::Ctrl('w') => {
+      if app.input_cursor_position == 0 {
+        return;
+      }
+      let word_end = match app.input[..app.input_idx].iter().rposition(|&x| x != ' ') {
+        Some(index) => index + 1,
+        None => 0,
+      };
+      let word_start = match app.input[..word_end].iter().rposition(|&x| x == ' ') {
+        Some(index) => index + 1,
+        None => 0,
+      };
+      let deleted: String = app.input[word_start..app.input_idx].iter().collect();
+      let deleted_len: u16 = UnicodeWidthStr::width(deleted.as_str()).try_into().unwrap();
+      app.input.drain(word_start..app.input_idx);
+      app.input_idx = word_start;
+      app.input_cursor_position -= deleted_len;
     }
     Key::Ctrl('e') => {
       app.input_idx = app.input.len();
@@ -118,14 +144,87 @@ mod tests {
   }
 
   #[test]
-  fn test_input_handler_clear_input_on_ctrl_u() {
+  fn test_input_handler_clear_input_on_ctrl_l() {
+    let mut app = App::default();
+
+    app.input = str_to_vec_char("My text");
+
+    handler(Key::Ctrl('l'), &mut app);
+
+    assert_eq!(app.input, str_to_vec_char(""));
+  }
+
+  #[test]
+  fn test_input_handler_ctrl_u() {
     let mut app = App::default();
 
     app.input = str_to_vec_char("My text");
 
     handler(Key::Ctrl('u'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My text"));
 
+    app.input_cursor_position = 3;
+    app.input_idx = 3;
+    handler(Key::Ctrl('u'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("text"));
+  }
+
+  #[test]
+  fn test_input_handler_ctrl_k() {
+    let mut app = App::default();
+
+    app.input = str_to_vec_char("My text");
+
+    handler(Key::Ctrl('k'), &mut app);
     assert_eq!(app.input, str_to_vec_char(""));
+
+    app.input = str_to_vec_char("My text");
+    app.input_cursor_position = 2;
+    app.input_idx = 2;
+    handler(Key::Ctrl('k'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My"));
+
+    handler(Key::Ctrl('k'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My"));
+  }
+
+  #[test]
+  fn test_input_handler_ctrl_w() {
+    let mut app = App::default();
+
+    app.input = str_to_vec_char("My text");
+
+    handler(Key::Ctrl('w'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("My text"));
+
+    app.input_cursor_position = 3;
+    app.input_idx = 3;
+    handler(Key::Ctrl('w'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("text"));
+    assert_eq!(app.input_cursor_position, 0);
+    assert_eq!(app.input_idx, 0);
+
+    app.input = str_to_vec_char("    ");
+    app.input_cursor_position = 3;
+    app.input_idx = 3;
+    handler(Key::Ctrl('w'), &mut app);
+    assert_eq!(app.input, str_to_vec_char(" "));
+    assert_eq!(app.input_cursor_position, 0);
+    assert_eq!(app.input_idx, 0);
+    app.input_cursor_position = 1;
+    app.input_idx = 1;
+    handler(Key::Ctrl('w'), &mut app);
+    assert_eq!(app.input, str_to_vec_char(""));
+    assert_eq!(app.input_cursor_position, 0);
+    assert_eq!(app.input_idx, 0);
+
+    app.input = str_to_vec_char("Hello there  ");
+    app.input_cursor_position = 13;
+    app.input_idx = 13;
+    handler(Key::Ctrl('w'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("Hello "));
+    assert_eq!(app.input_cursor_position, 6);
+    assert_eq!(app.input_idx, 6);
   }
 
   #[test]

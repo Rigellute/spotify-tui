@@ -1,6 +1,5 @@
 use crate::event::Key;
 use anyhow::{anyhow, Result};
-use dirs;
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
@@ -145,6 +144,7 @@ pub struct KeyBindingsString {
   back: Option<String>,
   jump_to_album: Option<String>,
   jump_to_artist_album: Option<String>,
+  jump_to_context: Option<String>,
   manage_devices: Option<String>,
   decrease_volume: Option<String>,
   increase_volume: Option<String>,
@@ -169,6 +169,7 @@ pub struct KeyBindings {
   pub back: Key,
   pub jump_to_album: Key,
   pub jump_to_artist_album: Key,
+  pub jump_to_context: Key,
   pub manage_devices: Key,
   pub decrease_volume: Key,
   pub increase_volume: Key,
@@ -193,6 +194,7 @@ pub struct BehaviorConfigString {
   pub seek_milliseconds: Option<u32>,
   pub volume_increment: Option<u8>,
   pub tick_rate_milliseconds: Option<u64>,
+  pub show_loading_indicator: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -200,6 +202,7 @@ pub struct BehaviorConfig {
   pub seek_milliseconds: u32,
   pub volume_increment: u8,
   pub tick_rate_milliseconds: u64,
+  pub show_loading_indicator: bool,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -225,6 +228,7 @@ impl UserConfig {
         back: Key::Char('q'),
         jump_to_album: Key::Char('a'),
         jump_to_artist_album: Key::Char('A'),
+        jump_to_context: Key::Char('o'),
         manage_devices: Key::Char('d'),
         decrease_volume: Key::Char('-'),
         increase_volume: Key::Char('+'),
@@ -247,6 +251,7 @@ impl UserConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
         tick_rate_milliseconds: 250,
+        show_loading_indicator: true,
       },
       path_to_config: None,
     }
@@ -292,6 +297,7 @@ impl UserConfig {
     to_keys!(back);
     to_keys!(jump_to_album);
     to_keys!(jump_to_artist_album);
+    to_keys!(jump_to_context);
     to_keys!(manage_devices);
     to_keys!(decrease_volume);
     to_keys!(increase_volume);
@@ -358,6 +364,10 @@ impl UserConfig {
       } else {
         self.behavior.tick_rate_milliseconds = tick_rate;
       }
+    }
+
+    if let Some(loading_indicator) = behavior_config.show_loading_indicator {
+      self.behavior.show_loading_indicator = loading_indicator;
     }
 
     Ok(())
