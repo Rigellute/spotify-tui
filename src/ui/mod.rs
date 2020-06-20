@@ -113,7 +113,7 @@ where
 {
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
-    .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+    .constraints([Constraint::Percentage(65), Constraint::Percentage(35)].as_ref())
     .split(layout_chunk);
 
   let current_route = app.get_current_route();
@@ -161,25 +161,15 @@ where
   let margin = util::get_main_layout_margin(app);
   let parent_layout = Layout::default()
     .direction(Direction::Vertical)
-    .constraints(
-      [
-        Constraint::Length(3),
-        Constraint::Min(1),
-        Constraint::Length(6),
-      ]
-      .as_ref(),
-    )
+    .constraints([Constraint::Min(1), Constraint::Length(6)].as_ref())
     .margin(margin)
     .split(f.size());
 
-  // Search input and help
-  draw_input_and_help_box(f, app, parent_layout[0]);
-
   // Nested main block with potential routes
-  draw_routes(f, app, parent_layout[1]);
+  draw_routes(f, app, parent_layout[0]);
 
   // Currently playing
-  draw_playbar(f, app, parent_layout[2]);
+  draw_playbar(f, app, parent_layout[1]);
 
   // Possibly draw confirm dialog
   draw_dialog(f, app);
@@ -292,11 +282,20 @@ where
 {
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+    .constraints(
+      [
+        Constraint::Length(3),
+        Constraint::Percentage(30),
+        Constraint::Percentage(70),
+      ]
+      .as_ref(),
+    )
     .split(layout_chunk);
 
-  draw_library_block(f, app, chunks[0]);
-  draw_playlist_block(f, app, chunks[1]);
+  // Search input and help
+  draw_input_and_help_box(f, app, chunks[0]);
+  draw_library_block(f, app, chunks[1]);
+  draw_playlist_block(f, app, chunks[2]);
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
