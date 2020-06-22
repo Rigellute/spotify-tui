@@ -215,7 +215,7 @@ fn handle_save_album_event(app: &mut App) {
     AlbumTableContext::Simplified => {
       if let Some(selected_album_simplified) = app.selected_album_simplified.clone() {
         if let Some(album_id) = selected_album_simplified.album.id {
-         app.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+          app.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
         };
       };
     }
