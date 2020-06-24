@@ -195,6 +195,7 @@ pub struct BehaviorConfigString {
   pub volume_increment: Option<u8>,
   pub tick_rate_milliseconds: Option<u64>,
   pub show_loading_indicator: Option<bool>,
+  pub center_basic_view: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -203,6 +204,7 @@ pub struct BehaviorConfig {
   pub volume_increment: u8,
   pub tick_rate_milliseconds: u64,
   pub show_loading_indicator: bool,
+  pub center_basic_view: bool,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -252,6 +254,7 @@ impl UserConfig {
         volume_increment: 10,
         tick_rate_milliseconds: 250,
         show_loading_indicator: true,
+        center_basic_view: true,
       },
       path_to_config: None,
     }
@@ -368,6 +371,10 @@ impl UserConfig {
 
     if let Some(loading_indicator) = behavior_config.show_loading_indicator {
       self.behavior.show_loading_indicator = loading_indicator;
+    }
+
+    if let Some(centered_basic_view) = behavior_config.center_basic_view {
+        self.behavior.center_basic_view = centered_basic_view;
     }
 
     Ok(())
