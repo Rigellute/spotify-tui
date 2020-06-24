@@ -762,11 +762,7 @@ where
 
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints(
-      constraints
-      .as_ref(),
-    )
-    
+    .constraints(constraints.as_ref())
     .split(f.size());
 
   draw_playbar(f, app, chunks[bar_index]);

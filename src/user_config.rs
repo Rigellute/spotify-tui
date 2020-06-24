@@ -374,7 +374,7 @@ impl UserConfig {
     }
 
     if let Some(centered_basic_view) = behavior_config.center_basic_view {
-        self.behavior.center_basic_view = centered_basic_view;
+      self.behavior.center_basic_view = centered_basic_view;
     }
 
     Ok(())
