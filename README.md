@@ -208,6 +208,8 @@ behavior:
   tick_rate_milliseconds: 250
   # controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
   show_loading_indicator: true
+	# controls whether to center basic view vertically
+	center_basic_view: true
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
