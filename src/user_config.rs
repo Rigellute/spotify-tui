@@ -1,6 +1,5 @@
 use crate::event::Key;
-use dirs;
-use failure::err_msg;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
@@ -67,7 +66,7 @@ impl Default for Theme {
   }
 }
 
-fn parse_key(key: String) -> Result<Key, failure::Error> {
+fn parse_key(key: String) -> Result<Key> {
   fn get_single_char(string: &str) -> char {
     match string.chars().next() {
       Some(c) => c,
@@ -81,7 +80,7 @@ fn parse_key(key: String) -> Result<Key, failure::Error> {
       let sections: Vec<&str> = key.split('-').collect();
 
       if sections.len() > 2 {
-        return Err(failure::format_err!(
+        return Err(anyhow!(
           "Shortcut can only have 2 keys, \"{}\" has {}",
           key,
           sections.len()
@@ -101,16 +100,13 @@ fn parse_key(key: String) -> Result<Key, failure::Error> {
         "pageup" => Ok(Key::PageUp),
         "pagedown" => Ok(Key::PageDown),
         "space" => Ok(Key::Char(' ')),
-        _ => Err(failure::format_err!(
-          "The key \"{}\" is unknown.",
-          sections[0]
-        )),
+        _ => Err(anyhow!("The key \"{}\" is unknown.", sections[0])),
       }
     }
   }
 }
 
-fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
+fn check_reserved_keys(key: Key) -> Result<()> {
   let reserved = [
     Key::Char('h'),
     Key::Char('j'),
@@ -129,7 +125,7 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
   for item in reserved.iter() {
     if key == *item {
       // TODO: Add pretty print for key
-      return Err(failure::format_err!(
+      return Err(anyhow!(
         "The key {:?} is reserved and cannot be remapped",
         key
       ));
@@ -138,6 +134,7 @@ fn check_reserved_keys(key: Key) -> Result<(), failure::Error> {
   Ok(())
 }
 
+#[derive(Clone)]
 pub struct UserConfigPaths {
   pub config_file_path: PathBuf,
 }
@@ -147,6 +144,7 @@ pub struct KeyBindingsString {
   back: Option<String>,
   jump_to_album: Option<String>,
   jump_to_artist_album: Option<String>,
+  jump_to_context: Option<String>,
   manage_devices: Option<String>,
   decrease_volume: Option<String>,
   increase_volume: Option<String>,
@@ -171,6 +169,7 @@ pub struct KeyBindings {
   pub back: Key,
   pub jump_to_album: Key,
   pub jump_to_artist_album: Key,
+  pub jump_to_context: Key,
   pub manage_devices: Key,
   pub decrease_volume: Key,
   pub increase_volume: Key,
@@ -195,6 +194,7 @@ pub struct BehaviorConfigString {
   pub seek_milliseconds: Option<u32>,
   pub volume_increment: Option<u8>,
   pub tick_rate_milliseconds: Option<u64>,
+  pub show_loading_indicator: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -202,6 +202,7 @@ pub struct BehaviorConfig {
   pub seek_milliseconds: u32,
   pub volume_increment: u8,
   pub tick_rate_milliseconds: u64,
+  pub show_loading_indicator: bool,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -216,6 +217,7 @@ pub struct UserConfig {
   pub keys: KeyBindings,
   pub theme: Theme,
   pub behavior: BehaviorConfig,
+  pub path_to_config: Option<UserConfigPaths>,
 }
 
 impl UserConfig {
@@ -226,6 +228,7 @@ impl UserConfig {
         back: Key::Char('q'),
         jump_to_album: Key::Char('a'),
         jump_to_artist_album: Key::Char('A'),
+        jump_to_context: Key::Char('o'),
         manage_devices: Key::Char('d'),
         decrease_volume: Key::Char('-'),
         increase_volume: Key::Char('+'),
@@ -248,11 +251,13 @@ impl UserConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
         tick_rate_milliseconds: 250,
+        show_loading_indicator: true,
       },
+      path_to_config: None,
     }
   }
 
-  pub fn get_or_build_paths(&self) -> Result<UserConfigPaths, failure::Error> {
+  pub fn get_or_build_paths(&mut self) -> Result<()> {
     match dirs::home_dir() {
       Some(home) => {
         let path = Path::new(&home);
@@ -272,14 +277,14 @@ impl UserConfig {
         let paths = UserConfigPaths {
           config_file_path: config_file_path.to_path_buf(),
         };
-
-        Ok(paths)
+        self.path_to_config = Some(paths);
+        Ok(())
       }
-      None => Err(err_msg("No $HOME directory found for client config")),
+      None => Err(anyhow!("No $HOME directory found for client config")),
     }
   }
 
-  pub fn load_keybindings(&mut self, keybindings: KeyBindingsString) -> Result<(), failure::Error> {
+  pub fn load_keybindings(&mut self, keybindings: KeyBindingsString) -> Result<()> {
     macro_rules! to_keys {
       ($name: ident) => {
         if let Some(key_string) = keybindings.$name {
@@ -292,6 +297,7 @@ impl UserConfig {
     to_keys!(back);
     to_keys!(jump_to_album);
     to_keys!(jump_to_artist_album);
+    to_keys!(jump_to_context);
     to_keys!(manage_devices);
     to_keys!(decrease_volume);
     to_keys!(increase_volume);
@@ -313,7 +319,7 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn load_theme(&mut self, theme: UserTheme) -> Result<(), failure::Error> {
+  pub fn load_theme(&mut self, theme: UserTheme) -> Result<()> {
     macro_rules! to_theme_item {
       ($name: ident) => {
         if let Some(theme_item) = theme.$name {
@@ -337,17 +343,14 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn load_behaviorconfig(
-    &mut self,
-    behavior_config: BehaviorConfigString,
-  ) -> Result<(), failure::Error> {
+  pub fn load_behaviorconfig(&mut self, behavior_config: BehaviorConfigString) -> Result<()> {
     if let Some(behavior_string) = behavior_config.seek_milliseconds {
       self.behavior.seek_milliseconds = behavior_string;
     }
 
     if let Some(behavior_string) = behavior_config.volume_increment {
       if behavior_string > 100 {
-        return Err(failure::format_err!(
+        return Err(anyhow!(
           "Volume increment must be between 0 and 100, is {}",
           behavior_string,
         ));
@@ -357,17 +360,27 @@ impl UserConfig {
 
     if let Some(tick_rate) = behavior_config.tick_rate_milliseconds {
       if tick_rate >= 1000 {
-        return Err(err_msg("Tick rate must be below 1000"));
+        return Err(anyhow!("Tick rate must be below 1000"));
       } else {
         self.behavior.tick_rate_milliseconds = tick_rate;
       }
     }
 
+    if let Some(loading_indicator) = behavior_config.show_loading_indicator {
+      self.behavior.show_loading_indicator = loading_indicator;
+    }
+
     Ok(())
   }
 
-  pub fn load_config(&mut self) -> Result<(), failure::Error> {
-    let paths = self.get_or_build_paths()?;
+  pub fn load_config(&mut self) -> Result<()> {
+    let paths = match &self.path_to_config {
+      Some(path) => path,
+      None => {
+        self.get_or_build_paths()?;
+        self.path_to_config.as_ref().unwrap()
+      }
+    };
     if paths.config_file_path.exists() {
       let config_string = fs::read_to_string(&paths.config_file_path)?;
       // serde fails if file is empty
@@ -395,7 +408,7 @@ impl UserConfig {
   }
 }
 
-fn parse_theme_item(theme_item: &str) -> Result<Color, failure::Error> {
+fn parse_theme_item(theme_item: &str) -> Result<Color> {
   let color = match theme_item {
     "Reset" => Color::Reset,
     "Black" => Color::Black,

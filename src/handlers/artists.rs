@@ -42,9 +42,11 @@ pub fn handler(key: Key, app: &mut App) {
     }
     Key::Enter => {
       let artists = app.artists.to_owned();
-      let artist = &artists[app.artists_list_index];
-      app.get_artist(artist.id.clone(), artist.name.clone());
-      app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+      if !artists.is_empty() {
+        let artist = &artists[app.artists_list_index];
+        app.get_artist(artist.id.clone(), artist.name.clone());
+        app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+      }
     }
     Key::Char('D') => app.user_unfollow_artists(ActiveBlock::AlbumList),
     Key::Char('e') => {

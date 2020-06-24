@@ -1,6 +1,6 @@
 use super::user_config::UserConfig;
 use crate::network::IoEvent;
-use failure::format_err;
+use anyhow::anyhow;
 use rspotify::{
   model::{
     album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
@@ -22,7 +22,7 @@ use std::sync::mpsc::Sender;
 use std::{
   cmp::{max, min},
   collections::HashSet,
-  time::Instant,
+  time::{Instant, SystemTime},
 };
 use tui::layout::Rect;
 
@@ -105,6 +105,12 @@ pub enum ArtistBlock {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DialogContext {
+  PlaylistWindow,
+  PlaylistSearch,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
   Analysis,
   PlayBar,
@@ -126,6 +132,7 @@ pub enum ActiveBlock {
   MadeForYou,
   Artists,
   BasicView,
+  Dialog(DialogContext),
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -280,7 +287,9 @@ pub struct App {
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
-  pub spotify_token_expiry: Instant,
+  pub spotify_token_expiry: SystemTime,
+  pub dialog: Option<String>,
+  pub confirm: bool,
 }
 
 impl Default for App {
@@ -353,7 +362,9 @@ impl Default for App {
       is_loading: false,
       io_tx: None,
       is_fetching_current_playback: false,
-      spotify_token_expiry: Instant::now(),
+      spotify_token_expiry: SystemTime::now(),
+      dialog: None,
+      confirm: false,
     }
   }
 }
@@ -362,7 +373,7 @@ impl App {
   pub fn new(
     io_tx: Sender<IoEvent>,
     user_config: UserConfig,
-    spotify_token_expiry: Instant,
+    spotify_token_expiry: SystemTime,
   ) -> App {
     App {
       io_tx: Some(io_tx),
@@ -498,7 +509,7 @@ impl App {
     }
   }
 
-  pub fn handle_error(&mut self, e: failure::Error) {
+  pub fn handle_error(&mut self, e: anyhow::Error) {
     self.push_navigation_stack(RouteId::Error, ActiveBlock::Error);
     self.api_error = e.to_string();
   }
@@ -576,7 +587,7 @@ impl App {
     }) = &self.current_playback_context
     {
       if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/track/{}", id)) {
-        self.handle_error(format_err!("failed to set clipboard content: {}", e));
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
       }
     }
   }
@@ -597,7 +608,7 @@ impl App {
     }) = &self.current_playback_context
     {
       if let Err(e) = clipboard.set_contents(format!("https://open.spotify.com/album/{}", id)) {
-        self.handle_error(format_err!("failed to set clipboard content: {}", e));
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
       }
     }
   }
@@ -693,21 +704,41 @@ impl App {
           }
         }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          if let Some(selected_album) = artist.albums.items.get(artist.selected_album_index) {
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
+            }
+          }
+        }
+      }
       _ => (),
     }
   }
 
-  pub fn current_user_saved_album_add(&mut self) {
-    if let SearchResult {
-      albums: Some(ref albums),
-      selected_album_index: Some(selected_index),
-      ..
-    } = self.search_results
-    {
-      let selected_album = &albums.albums.items[selected_index];
-      if let Some(album_id) = selected_album.id.clone() {
-        self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+  pub fn current_user_saved_album_add(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(albums) = &self.search_results.albums {
+          if let Some(selected_index) = self.search_results.selected_album_index {
+            let selected_album = &albums.albums.items[selected_index];
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+            }
+          }
+        }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          if let Some(selected_album) = artist.albums.items.get(artist.selected_album_index) {
+            if let Some(album_id) = selected_album.id.clone() {
+              self.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
+            }
+          }
+        }
+      }
+      _ => (),
     }
   }
 
@@ -730,20 +761,36 @@ impl App {
           }
         }
       }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          let selected_artis = &artist.related_artists[artist.selected_related_artist_index];
+          let artist_id = selected_artis.id.clone();
+          self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+        }
+      }
       _ => (),
     };
   }
 
-  pub fn user_follow_artists(&mut self) {
-    if let SearchResult {
-      artists: Some(ref artists),
-      selected_artists_index: Some(selected_index),
-      ..
-    } = self.search_results
-    {
-      let selected_artist: &FullArtist = &artists.artists.items[selected_index];
-      let artist_id = selected_artist.id.clone();
-      self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
+  pub fn user_follow_artists(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(artists) = &self.search_results.artists {
+          if let Some(selected_index) = self.search_results.selected_artists_index {
+            let selected_artist: &FullArtist = &artists.artists.items[selected_index];
+            let artist_id = selected_artist.id.clone();
+            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+          }
+        }
+      }
+      ActiveBlock::ArtistBlock => {
+        if let Some(artist) = &self.artist {
+          let selected_artis = &artist.related_artists[artist.selected_related_artist_index];
+          let artist_id = selected_artis.id.clone();
+          self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
+        }
+      }
+      _ => (),
     }
   }
 
@@ -771,6 +818,19 @@ impl App {
       (&self.playlists, self.selected_playlist_index, &self.user)
     {
       let selected_playlist = &playlists.items[selected_index];
+      let selected_id = selected_playlist.id.clone();
+      let user_id = user.id.clone();
+      self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
+    }
+  }
+
+  pub fn user_unfollow_playlist_search_result(&mut self) {
+    if let (Some(playlists), Some(selected_index), Some(user)) = (
+      &self.search_results.playlists,
+      self.search_results.selected_playlists_index,
+      &self.user,
+    ) {
+      let selected_playlist = &playlists.playlists.items[selected_index];
       let selected_id = selected_playlist.id.clone();
       let user_id = user.id.clone();
       self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))

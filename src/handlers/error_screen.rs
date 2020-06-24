@@ -1,7 +1,3 @@
 use crate::{app::App, event::Key};
 
-pub fn handler(key: Key, _app: &mut App) {
-  match key {
-    _ => {}
-  };
-}
+pub fn handler(_key: Key, _app: &mut App) {}

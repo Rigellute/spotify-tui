@@ -5,6 +5,7 @@ mod artist;
 mod artists;
 mod basic_view;
 mod common_key_events;
+mod dialog;
 mod empty;
 mod error_screen;
 mod help_menu;
@@ -37,6 +38,9 @@ pub fn handle_app(key: Key, app: &mut App) {
     }
     _ if key == app.user_config.keys.jump_to_artist_album => {
       handle_jump_to_artist_album(app);
+    }
+    _ if key == app.user_config.keys.jump_to_context => {
+      handle_jump_to_context(app);
     }
     _ if key == app.user_config.keys.manage_devices => {
       app.dispatch(IoEvent::GetDevices);
@@ -156,6 +160,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     ActiveBlock::BasicView => {
       basic_view::handler(key, app);
     }
+    ActiveBlock::Dialog(_) => {
+      dialog::handler(key, app);
+    }
   }
 }
 
@@ -172,10 +179,28 @@ fn handle_escape(app: &mut App) {
     ActiveBlock::Error => {
       app.pop_navigation_stack();
     }
+    ActiveBlock::Dialog(_) => {
+      app.pop_navigation_stack();
+    }
     // These are global views that have no active/inactive distinction so do nothing
     ActiveBlock::SelectDevice | ActiveBlock::Analysis => {}
     _ => {
       app.set_current_route_state(Some(ActiveBlock::Empty), None);
+    }
+  }
+}
+
+fn handle_jump_to_context(app: &mut App) {
+  if let Some(current_playback_context) = &app.current_playback_context {
+    if let Some(play_context) = current_playback_context.context.clone() {
+      match play_context._type {
+        rspotify::senum::Type::Album => handle_jump_to_album(app),
+        rspotify::senum::Type::Artist => handle_jump_to_artist_album(app),
+        rspotify::senum::Type::Playlist => {
+          app.dispatch(IoEvent::GetPlaylistTracks(play_context.uri, 0))
+        }
+        _ => {}
+      }
     }
   }
 }

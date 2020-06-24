@@ -1,11 +1,20 @@
 pub fn get_help_docs() -> Vec<Vec<&'static str>> {
   vec![
+    vec!["Scroll down to next result page", "<Ctrl+d>", "Pagination"],
+    vec![
+      "Scroll up to previous result page",
+      "<Ctrl+u>",
+      "Pagination",
+    ],
+    vec!["Jump to start of playlist", "<Ctrl+a>", "Pagination"],
+    vec!["Jump to end of playlist", "<Ctrl+e>", "Pagination"],
     vec!["Jump to currently playing album", "a", "General"],
     vec![
       "Jump to currently playing artist's album list",
       "A",
       "General",
     ],
+    vec!["Jump to current play context", "o", "General"],
     vec!["Increase volume by 10%", "+", "General"],
     vec!["Decrease volume by 10%", "-", "General"],
     vec!["Skip to next track", "n", "General"],
@@ -63,7 +72,6 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "Selected block",
     ],
     vec!["Play all tracks for artist", "e", "Library -> Artists"],
-    vec!["Delete entire input", "<Ctrl+u>", "Search input"],
     vec!["Search with input text", "<Enter>", "Search input"],
     vec![
       "Move cursor one space left",
@@ -75,6 +83,18 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "<Right Arrow Key>",
       "Search input",
     ],
+    vec!["Delete entire input", "<Ctrl+l>", "Search input"],
+    vec![
+      "Delete text from cursor to start of input",
+      "<Ctrl+u>",
+      "Search input",
+    ],
+    vec![
+      "Delete text from cursor to end of input",
+      "<Ctrl+k>",
+      "Search input",
+    ],
+    vec!["Delete previous word", "<Ctrl+w>", "Search input"],
     vec!["Jump to start of input", "<Ctrl+a>", "Search input"],
     vec!["Jump to end of input", "<Ctrl+e>", "Search input"],
     vec![
@@ -82,16 +102,8 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "<Esc>",
       "Search input",
     ],
-    vec!["Scroll down to next result page", "<Ctrl+d>", "Pagination"],
-    vec![
-      "Scroll up to previous result page",
-      "<Ctrl+u>",
-      "Pagination",
-    ],
-    vec!["Jump to start of playlist", "<Ctrl+a>", "Pagination"],
-    vec!["Jump to end of playlist", "<Ctrl+e>", "Pagination"],
     vec!["Delete saved album", "D", "Library -> Albums"],
-    vec!["Delete saved playist", "D", "Playlist"],
+    vec!["Delete saved playlist", "D", "Playlist"],
     vec!["Follow an artists/playlist", "w", "Search result"],
     vec!["Play random song in playlist", "S", "Selected Playlist"],
   ]

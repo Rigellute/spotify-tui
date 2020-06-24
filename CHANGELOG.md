@@ -2,13 +2,60 @@
 
 ## [Unreleased]
 
+- Fix typo in help menu [#485](https://github.com/Rigellute/spotify-tui/pull/485)
+
+## [0.20.0] - 2020-05-28
+
+### Fixed
+
+- Move pagination instructions to top of help menu [#442](https://github.com/Rigellute/spotify-tui/pull/442)
+
+### Added
+
+- Add user configuration toggle for the loading indicator [#447](https://github.com/Rigellute/spotify-tui/pull/447)
+- Add support for saving an album and following an artist in artist view [#445](https://github.com/Rigellute/spotify-tui/pull/445)
+- Use the `▶` glyph to indicate the currently playing song [#472](https://github.com/Rigellute/spotify-tui/pull/472)
+- Jump to play context (if available) - default binding is `o` [#474](https://github.com/Rigellute/spotify-tui/pull/474)
+
+## [0.19.0] - 2020-05-04
+
+### Fixed
+
+- Fix re-authentication [#415](https://github.com/Rigellute/spotify-tui/pull/415)
+- Fix audio analysis feature [#435](https://github.com/Rigellute/spotify-tui/pull/435)
+
+### Added
+
+- Add more readline shortcuts to the search input [#425](https://github.com/Rigellute/spotify-tui/pull/425)
+
+## [0.18.0] - 2020-04-21
+
+### Fixed
+
+- Fix crash when opening playlist [#398](https://github.com/Rigellute/spotify-tui/pull/398)
+- Fix crash when there are no artists avaliable [#388](https://github.com/Rigellute/spotify-tui/pull/388)
+- Correctly handle playlist unfollowing [#399](https://github.com/Rigellute/spotify-tui/pull/399)
+
+### Added
+
+- Allow specifying alternative config file path [#391](https://github.com/Rigellute/spotify-tui/pull/391)
+- List artists names in the album view [#393](https://github.com/Rigellute/spotify-tui/pull/393)
+- Add confirmation modal for delete playlist action [#402](https://github.com/Rigellute/spotify-tui/pull/402)
+
+## [0.17.1] - 2020-03-30
+
+### Fixed
+
+- Artist name in songs block [#365](https://github.com/Rigellute/spotify-tui/pull/365) (fixes regression)
+- Add basic view key binding to help menu
+
 ## [0.17.0] - 2020-03-20
 
 ### Added
 
-- Show if search results are like/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
+- Show if search results are liked/followed [#342](https://github.com/Rigellute/spotify-tui/pull/342)
 - Show currently playing track in song search menu and play through the searched tracks [#343](https://github.com/Rigellute/spotify-tui/pull/343)
-- Add a "basic view" that only shows the playbar [#344](https://github.com/Rigellute/spotify-tui/pull/344)
+- Add a "basic view" that only shows the playbar. Press `B` to get there [#344](https://github.com/Rigellute/spotify-tui/pull/344)
 - Show currently playing top track [#347](https://github.com/Rigellute/spotify-tui/pull/347)
 - Press shift-s (`S`) to pick a random song on track-lists [#339](https://github.com/Rigellute/spotify-tui/pull/339)
 

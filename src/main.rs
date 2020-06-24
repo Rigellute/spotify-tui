@@ -10,6 +10,7 @@ mod user_config;
 
 use crate::app::RouteId;
 use crate::event::Key;
+use anyhow::Result;
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
@@ -33,15 +34,16 @@ use std::{
   cmp::{max, min},
   io::{self, stdout, Write},
   panic::{self, PanicInfo},
+  path::PathBuf,
   sync::Arc,
-  time::Instant,
+  time::SystemTime,
 };
 use tokio::sync::Mutex;
 use tui::{
   backend::{Backend, CrosstermBackend},
   Terminal,
 };
-use user_config::UserConfig;
+use user_config::{UserConfig, UserConfigPaths};
 
 const SCOPES: [&str; 13] = [
   "playlist-read-collaborative",
@@ -79,7 +81,7 @@ pub async fn get_token_auto(spotify_oauth: &mut SpotifyOAuth, port: u16) -> Opti
   }
 }
 
-fn close_application() -> Result<(), failure::Error> {
+fn close_application() -> Result<()> {
   disable_raw_mode()?;
   let mut stdout = io::stdout();
   execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
@@ -115,7 +117,7 @@ fn panic_hook(info: &PanicInfo<'_>) {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), failure::Error> {
+async fn main() -> Result<()> {
   panic::set_hook(Box::new(|info| {
     panic_hook(info);
   }));
@@ -132,9 +134,19 @@ async fn main() -> Result<(), failure::Error> {
                                .long("tick-rate")
                                .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
                                .takes_value(true))
+         .arg(Arg::with_name("config")
+                               .short("c")
+                               .long("config")
+                               .help("Specify configuration file path.")
+                               .takes_value(true))
         .get_matches();
 
   let mut user_config = UserConfig::new();
+  if let Some(config_file_path) = matches.value_of("config") {
+    let config_file_path = PathBuf::from(config_file_path);
+    let path = UserConfigPaths { config_file_path };
+    user_config.path_to_config.replace(path);
+  }
   user_config.load_config()?;
 
   if let Some(tick_rate) = matches
@@ -198,7 +210,7 @@ async fn start_tokio<'a>(io_rx: std::sync::mpsc::Receiver<IoEvent>, network: &mu
   }
 }
 
-async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), failure::Error> {
+async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> {
   // Terminal initialization
   let mut stdout = stdout();
   execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -288,7 +300,7 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<(), 
     ))?;
 
     // Handle authentication refresh
-    if Instant::now() > app.spotify_token_expiry {
+    if SystemTime::now() > app.spotify_token_expiry {
       app.dispatch(IoEvent::RefreshAuthentication);
     }
 

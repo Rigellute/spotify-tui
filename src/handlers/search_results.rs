@@ -1,6 +1,7 @@
 use super::{
   super::app::{
-    ActiveBlock, App, RecommendationsContext, RouteId, SearchResultBlock, TrackTableContext,
+    ActiveBlock, App, DialogContext, RecommendationsContext, RouteId, SearchResultBlock,
+    TrackTableContext,
   },
   common_key_events,
 };
@@ -429,9 +430,11 @@ pub fn handler(key: Key, app: &mut App) {
       _ => handle_enter_event_on_selected_block(app),
     },
     Key::Char('w') => match app.search_results.selected_block {
-      SearchResultBlock::AlbumSearch => app.current_user_saved_album_add(),
+      SearchResultBlock::AlbumSearch => {
+        app.current_user_saved_album_add(ActiveBlock::SearchResultBlock)
+      }
       SearchResultBlock::SongSearch => {}
-      SearchResultBlock::ArtistSearch => app.user_follow_artists(),
+      SearchResultBlock::ArtistSearch => app.user_follow_artists(ActiveBlock::SearchResultBlock),
       SearchResultBlock::PlaylistSearch => {
         app.user_follow_playlist();
       }
@@ -444,7 +447,17 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::SongSearch => {}
       SearchResultBlock::ArtistSearch => app.user_unfollow_artists(ActiveBlock::SearchResultBlock),
       SearchResultBlock::PlaylistSearch => {
-        app.user_unfollow_playlist();
+        if let (Some(playlists), Some(selected_index)) = (
+          &app.search_results.playlists,
+          app.search_results.selected_playlists_index,
+        ) {
+          let selected_playlist = &playlists.playlists.items[selected_index].name;
+          app.dialog = Some(selected_playlist.clone());
+          app.confirm = false;
+
+          let route = app.get_current_route().id.clone();
+          app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistSearch));
+        }
       }
       SearchResultBlock::Empty => {}
     },

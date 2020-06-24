@@ -1,5 +1,5 @@
 use super::common_key_events;
-use crate::app::{App, ArtistBlock, RecommendationsContext, TrackTableContext};
+use crate::app::{ActiveBlock, App, ArtistBlock, RecommendationsContext, TrackTableContext};
 use crate::event::Key;
 use crate::network::IoEvent;
 
@@ -296,6 +296,16 @@ pub fn handler(key: Key, app: &mut App) {
           handle_recommend_event_on_selected_block(app);
         }
       }
+      Key::Char('w') => match artist.artist_selected_block {
+        ArtistBlock::Albums => app.current_user_saved_album_add(ActiveBlock::ArtistBlock),
+        ArtistBlock::RelatedArtists => app.user_follow_artists(ActiveBlock::ArtistBlock),
+        _ => (),
+      },
+      Key::Char('D') => match artist.artist_selected_block {
+        ArtistBlock::Albums => app.current_user_saved_album_delete(ActiveBlock::ArtistBlock),
+        ArtistBlock::RelatedArtists => app.user_unfollow_artists(ActiveBlock::ArtistBlock),
+        _ => (),
+      },
       _ => {}
     };
   }
