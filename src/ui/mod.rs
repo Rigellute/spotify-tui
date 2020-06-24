@@ -745,20 +745,24 @@ pub fn draw_basic_view<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
 {
-  let mut constraints = [
-    Constraint::Length(6),
-    Constraint::Percentage(22),
-    Constraint::Percentage(22),
-  ];
-  let mut bar_index = 0;
-  if app.user_config.behavior.center_basic_view {
-    constraints = [
+  let constraints = if app.user_config.behavior.center_basic_view {
+    [
       Constraint::Percentage(44),
       Constraint::Min(6),
       Constraint::Percentage(44),
-    ];
-    bar_index = 1;
-  }
+    ]
+  } else {
+    [
+      Constraint::Length(6),
+      Constraint::Percentage(22),
+      Constraint::Percentage(22),
+    ]
+  };
+  let bar_index = if app.user_config.behavior.center_basic_view {
+    1
+  } else {
+    0
+  };
 
   let chunks = Layout::default()
     .direction(Direction::Vertical)
