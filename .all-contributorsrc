@@ -529,6 +529,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "ksk001100",
+      "name": "Keisuke Toyota",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/13160198?v=4",
+      "profile": "https://ksk.netlify.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
