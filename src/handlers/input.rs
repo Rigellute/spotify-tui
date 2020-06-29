@@ -51,14 +51,14 @@ pub fn handler(key: Key, app: &mut App) {
       app.input_idx = 0;
       app.input_cursor_position = 0;
     }
-    Key::Left => {
+    Key::Left | Key::Ctrl('b') => {
       if !app.input.is_empty() && app.input_idx > 0 {
         let last_c = app.input[app.input_idx - 1];
         app.input_idx -= 1;
         app.input_cursor_position -= compute_character_width(last_c);
       }
     }
-    Key::Right => {
+    Key::Right | Key::Ctrl('f') => {
       if app.input_idx < app.input.len() {
         let next_c = app.input[app.input_idx];
         app.input_idx += 1;
@@ -105,14 +105,14 @@ pub fn handler(key: Key, app: &mut App) {
       app.input_idx += 1;
       app.input_cursor_position += compute_character_width(c);
     }
-    Key::Backspace => {
+    Key::Backspace | Key::Ctrl('h') => {
       if !app.input.is_empty() && app.input_idx > 0 {
         let last_c = app.input.remove(app.input_idx - 1);
         app.input_idx -= 1;
         app.input_cursor_position -= compute_character_width(last_c);
       }
     }
-    Key::Delete => {
+    Key::Delete | Key::Ctrl('d') => {
       if !app.input.is_empty() && app.input_idx < app.input.len() {
         app.input.remove(app.input_idx);
       }
@@ -268,6 +268,12 @@ mod tests {
 
     handler(Key::Backspace, &mut app);
     assert_eq!(app.input, str_to_vec_char("M tex"));
+
+    app.input_idx = 1;
+    app.input_cursor_position = 1;
+
+    handler(Key::Ctrl('h'), &mut app);
+    assert_eq!(app.input, str_to_vec_char(" tex"));
   }
 
   #[test]
@@ -287,6 +293,13 @@ mod tests {
 
     handler(Key::Delete, &mut app);
     assert_eq!(app.input, str_to_vec_char("ラト"));
+
+    app.input = str_to_vec_char("Rust");
+    app.input_idx = 2;
+    app.input_cursor_position = 2;
+
+    handler(Key::Ctrl('d'), &mut app);
+    assert_eq!(app.input, str_to_vec_char("Rut"));
   }
 
   #[test]
@@ -304,6 +317,10 @@ mod tests {
     assert_eq!(app.input_cursor_position, input_len - 2);
     handler(Key::Left, &mut app);
     assert_eq!(app.input_cursor_position, input_len - 3);
+    handler(Key::Ctrl('b'), &mut app);
+    assert_eq!(app.input_cursor_position, input_len - 4);
+    handler(Key::Ctrl('b'), &mut app);
+    assert_eq!(app.input_cursor_position, input_len - 5);
 
     // Pretend to smash the left event to test the we have no out-of-bounds crash
     for _ in 0..20 {
