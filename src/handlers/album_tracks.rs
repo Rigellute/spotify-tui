@@ -52,6 +52,7 @@ pub fn handler(key: Key, app: &mut App) {
     k if common_key_events::middle_event(k) => handle_middle_event(app),
     k if common_key_events::low_event(k) => handle_low_event(app),
     Key::Char('s') => handle_save_event(app),
+    Key::Char('w') => handle_save_album_event(app),
     Key::Enter => match app.album_table_context {
       AlbumTableContext::Full => {
         if let Some(selected_album) = app.selected_album_full.clone() {
@@ -197,6 +198,24 @@ fn handle_save_event(app: &mut App) {
           if let Some(track_id) = &selected_track.id {
             app.dispatch(IoEvent::ToggleSaveTrack(track_id.to_string()));
           };
+        };
+      };
+    }
+  }
+}
+
+fn handle_save_album_event(app: &mut App) {
+  match app.album_table_context {
+    AlbumTableContext::Full => {
+      if let Some(selected_album) = app.selected_album_full.clone() {
+        let album_id = &selected_album.album.id;
+        app.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id.to_string()));
+      };
+    }
+    AlbumTableContext::Simplified => {
+      if let Some(selected_album_simplified) = app.selected_album_simplified.clone() {
+        if let Some(album_id) = selected_album_simplified.album.id {
+          app.dispatch(IoEvent::CurrentUserSavedAlbumAdd(album_id));
         };
       };
     }
