@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 - Fix typo in help menu [#485](https://github.com/Rigellute/spotify-tui/pull/485)
+- Add save album on album view [#506](https://github.com/Rigellute/spotify-tui/pull/506)
+- Add feature to like a song from basic view [#507](https://github.com/Rigellute/spotify-tui/pull/507)
+- Enable Unix and Linux shortcut keys in the input [#511](https://github.com/Rigellute/spotify-tui/pull/511)
 
 ## [0.20.0] - 2020-05-28
 
