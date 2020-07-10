@@ -257,7 +257,8 @@ fn handle_save_track_event(app: &mut App) {
   let (selected_index, tracks) = (&app.track_table.selected_index, &app.track_table.tracks);
   if let Some(track) = tracks.get(*selected_index) {
     if let Some(id) = &track.id {
-      app.dispatch(IoEvent::ToggleSaveTrack(id.to_string()));
+      let _id = id.to_string();
+      app.dispatch(IoEvent::ToggleSaveTrack(_id));
     };
   };
 }
