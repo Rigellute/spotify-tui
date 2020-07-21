@@ -1093,9 +1093,33 @@ impl<'a> Network<'a> {
       .await;
 
     match playlists {
-      Ok(p) => {
+      Ok(mut page) => {
+        let playlists_page_count = page.total / self.large_search_limit
+          + if page.total % self.large_search_limit > 0 {
+            1
+          } else {
+            0
+          };
+
+        let all_playlists = &mut page.items;
+
+        for i in 1..playlists_page_count {
+          let playlists = self
+            .spotify
+            .current_user_playlists(self.large_search_limit, self.large_search_limit * i)
+            .await;
+
+          match playlists {
+            Ok(p) => {
+              all_playlists.extend(p.items);
+            }
+            Err(e) => {
+              self.handle_error(anyhow!(e)).await;
+            }
+          }
+        }
         let mut app = self.app.lock().await;
-        app.playlists = Some(p);
+        app.playlists = Some(page);
         // Select the first playlist
         app.selected_playlist_index = Some(0);
       }
