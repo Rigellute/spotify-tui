@@ -272,15 +272,15 @@ dependencies = [
 
 [[package]]
 name = "crossterm"
-version = "0.17.5"
+version = "0.17.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9851d20b9809e561297ec3ca85d7cba3a57507fe8d01d07ba7b52469e1c89a11"
+checksum = "6f4919d60f26ae233e14233cc39746c8c8bb8cd7b05840ace83604917b51b6c7"
 dependencies = [
  "bitflags",
  "crossterm_winapi",
  "lazy_static",
  "libc",
- "mio",
+ "mio 0.7.0",
  "parking_lot",
  "signal-hook",
  "winapi 0.3.8",
@@ -891,13 +891,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e9971bc8349a361217a8f2a41f5d011274686bd4436465ba51730921039d7fb"
+dependencies = [
+ "lazy_static",
+ "libc",
+ "log",
+ "miow 0.3.3",
+ "ntapi",
+ "winapi 0.3.8",
+]
+
+[[package]]
 name = "mio-named-pipes"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5e374eff525ce1c5b7687c4cef63943e7686524a387933ad27ca7ec43779cb3"
 dependencies = [
  "log",
- "mio",
+ "mio 0.6.22",
  "miow 0.3.3",
  "winapi 0.3.8",
 ]
@@ -910,7 +924,7 @@ checksum = "afcb699eb26d4332647cc848492bbc15eafb26f08d0304550d5aa1f612e066f0"
 dependencies = [
  "iovec",
  "libc",
- "mio",
+ "mio 0.6.22",
 ]
 
 [[package]]
@@ -961,6 +975,15 @@ checksum = "2ba7c918ac76704fb42afcbbb43891e72731f3dcca3bef2a19786297baf14af7"
 dependencies = [
  "cfg-if",
  "libc",
+ "winapi 0.3.8",
+]
+
+[[package]]
+name = "ntapi"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a31937dea023539c72ddae0e3571deadc1414b300483fa7aaec176168cfa9d2"
+dependencies = [
  "winapi 0.3.8",
 ]
 
@@ -1601,7 +1624,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ff2db2112d6c761e12522c65f7768548bd6e8cd23d2a9dae162520626629bd6"
 dependencies = [
  "libc",
- "mio",
+ "mio 0.7.0",
  "signal-hook-registry",
 ]
 
@@ -1789,7 +1812,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "memchr",
- "mio",
+ "mio 0.6.22",
  "mio-named-pipes",
  "mio-uds",
  "num_cpus",
