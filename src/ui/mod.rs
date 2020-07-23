@@ -566,6 +566,7 @@ where
               "".to_string(),
               item.track_number.to_string(),
               item.name.to_owned(),
+              create_artist_string(&item.artists),
               millis_to_minutes(u128::from(item.duration_ms)),
             ],
           })
