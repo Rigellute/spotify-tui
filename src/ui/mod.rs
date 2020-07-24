@@ -1194,7 +1194,7 @@ where
       .map(|album_page| TableItem {
         id: album_page.album.id.to_owned(),
         format: vec![
-          album_page.album.name.to_owned(),
+          format!("♥ {}", &album_page.album.name),
           create_artist_string(&album_page.album.artists),
           album_page.album.release_date.to_owned(),
         ],
