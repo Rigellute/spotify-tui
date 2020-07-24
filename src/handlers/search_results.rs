@@ -14,7 +14,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
     SearchResultBlock::AlbumSearch => {
       if let Some(result) = &app.search_results.albums {
         let next_index = common_key_events::on_down_press_handler(
-          &result.albums.items,
+          &result.items,
           app.search_results.selected_album_index,
         );
         app.search_results.selected_album_index = Some(next_index);
@@ -23,7 +23,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
     SearchResultBlock::SongSearch => {
       if let Some(result) = &app.search_results.tracks {
         let next_index = common_key_events::on_down_press_handler(
-          &result.tracks.items,
+          &result.items,
           app.search_results.selected_tracks_index,
         );
         app.search_results.selected_tracks_index = Some(next_index);
@@ -32,7 +32,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
     SearchResultBlock::ArtistSearch => {
       if let Some(result) = &app.search_results.artists {
         let next_index = common_key_events::on_down_press_handler(
-          &result.artists.items,
+          &result.items,
           app.search_results.selected_artists_index,
         );
         app.search_results.selected_artists_index = Some(next_index);
@@ -41,7 +41,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
     SearchResultBlock::PlaylistSearch => {
       if let Some(result) = &app.search_results.playlists {
         let next_index = common_key_events::on_down_press_handler(
-          &result.playlists.items,
+          &result.items,
           app.search_results.selected_playlists_index,
         );
         app.search_results.selected_playlists_index = Some(next_index);
@@ -75,7 +75,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
     SearchResultBlock::AlbumSearch => {
       if let Some(result) = &app.search_results.albums {
         let next_index = common_key_events::on_up_press_handler(
-          &result.albums.items,
+          &result.items,
           app.search_results.selected_album_index,
         );
         app.search_results.selected_album_index = Some(next_index);
@@ -84,7 +84,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
     SearchResultBlock::SongSearch => {
       if let Some(result) = &app.search_results.tracks {
         let next_index = common_key_events::on_up_press_handler(
-          &result.tracks.items,
+          &result.items,
           app.search_results.selected_tracks_index,
         );
         app.search_results.selected_tracks_index = Some(next_index);
@@ -93,7 +93,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
     SearchResultBlock::ArtistSearch => {
       if let Some(result) = &app.search_results.artists {
         let next_index = common_key_events::on_up_press_handler(
-          &result.artists.items,
+          &result.items,
           app.search_results.selected_artists_index,
         );
         app.search_results.selected_artists_index = Some(next_index);
@@ -102,7 +102,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
     SearchResultBlock::PlaylistSearch => {
       if let Some(result) = &app.search_results.playlists {
         let next_index = common_key_events::on_up_press_handler(
-          &result.playlists.items,
+          &result.items,
           app.search_results.selected_playlists_index,
         );
         app.search_results.selected_playlists_index = Some(next_index);
@@ -164,25 +164,25 @@ fn handle_middle_press_on_selected_block(app: &mut App) {
   match app.search_results.selected_block {
     SearchResultBlock::AlbumSearch => {
       if let Some(result) = &app.search_results.albums {
-        let next_index = common_key_events::on_middle_press_handler(&result.albums.items);
+        let next_index = common_key_events::on_middle_press_handler(&result.items);
         app.search_results.selected_album_index = Some(next_index);
       }
     }
     SearchResultBlock::SongSearch => {
       if let Some(result) = &app.search_results.tracks {
-        let next_index = common_key_events::on_middle_press_handler(&result.tracks.items);
+        let next_index = common_key_events::on_middle_press_handler(&result.items);
         app.search_results.selected_tracks_index = Some(next_index);
       }
     }
     SearchResultBlock::ArtistSearch => {
       if let Some(result) = &app.search_results.artists {
-        let next_index = common_key_events::on_middle_press_handler(&result.artists.items);
+        let next_index = common_key_events::on_middle_press_handler(&result.items);
         app.search_results.selected_artists_index = Some(next_index);
       }
     }
     SearchResultBlock::PlaylistSearch => {
       if let Some(result) = &app.search_results.playlists {
-        let next_index = common_key_events::on_middle_press_handler(&result.playlists.items);
+        let next_index = common_key_events::on_middle_press_handler(&result.items);
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
@@ -194,25 +194,25 @@ fn handle_low_press_on_selected_block(app: &mut App) {
   match app.search_results.selected_block {
     SearchResultBlock::AlbumSearch => {
       if let Some(result) = &app.search_results.albums {
-        let next_index = common_key_events::on_low_press_handler(&result.albums.items);
+        let next_index = common_key_events::on_low_press_handler(&result.items);
         app.search_results.selected_album_index = Some(next_index);
       }
     }
     SearchResultBlock::SongSearch => {
       if let Some(result) = &app.search_results.tracks {
-        let next_index = common_key_events::on_low_press_handler(&result.tracks.items);
+        let next_index = common_key_events::on_low_press_handler(&result.items);
         app.search_results.selected_tracks_index = Some(next_index);
       }
     }
     SearchResultBlock::ArtistSearch => {
       if let Some(result) = &app.search_results.artists {
-        let next_index = common_key_events::on_low_press_handler(&result.artists.items);
+        let next_index = common_key_events::on_low_press_handler(&result.items);
         app.search_results.selected_artists_index = Some(next_index);
       }
     }
     SearchResultBlock::PlaylistSearch => {
       if let Some(result) = &app.search_results.playlists {
-        let next_index = common_key_events::on_low_press_handler(&result.playlists.items);
+        let next_index = common_key_events::on_low_press_handler(&result.items);
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
@@ -227,7 +227,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
         &app.search_results.selected_album_index,
         &app.search_results.albums,
       ) {
-        if let Some(album) = albums_result.albums.items.get(index.to_owned()).cloned() {
+        if let Some(album) = albums_result.items.get(index.to_owned()).cloned() {
           app.track_table.context = Some(TrackTableContext::AlbumSearch);
           app.dispatch(IoEvent::GetAlbumTracks(Box::new(album)));
         };
@@ -238,7 +238,6 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
       let tracks = app.search_results.tracks.clone();
       let track_uris = tracks.map(|tracks| {
         tracks
-          .tracks
           .items
           .into_iter()
           .map(|track| track.uri)
@@ -249,7 +248,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
     SearchResultBlock::ArtistSearch => {
       if let Some(index) = &app.search_results.selected_artists_index {
         if let Some(result) = app.search_results.artists.clone() {
-          if let Some(artist) = result.artists.items.get(index.to_owned()) {
+          if let Some(artist) = result.items.get(index.to_owned()) {
             app.get_artist(artist.id.clone(), artist.name.clone());
             app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
           };
@@ -261,7 +260,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
         app.search_results.selected_playlists_index,
         &app.search_results.playlists,
       ) {
-        if let Some(playlist) = playlists_result.playlists.items.get(index) {
+        if let Some(playlist) = playlists_result.items.get(index) {
           // Go to playlist tracks table
           app.track_table.context = Some(TrackTableContext::PlaylistSearch);
           let playlist_id = playlist.id.to_owned();
@@ -321,7 +320,7 @@ fn handle_recommended_tracks(app: &mut App) {
     SearchResultBlock::SongSearch => {
       if let Some(index) = &app.search_results.selected_tracks_index {
         if let Some(result) = app.search_results.tracks.clone() {
-          if let Some(track) = result.tracks.items.get(index.to_owned()) {
+          if let Some(track) = result.items.get(index.to_owned()) {
             let track_id_list: Option<Vec<String>> = match &track.id {
               Some(id) => Some(vec![id.to_string()]),
               None => None,
@@ -336,7 +335,7 @@ fn handle_recommended_tracks(app: &mut App) {
     SearchResultBlock::ArtistSearch => {
       if let Some(index) = &app.search_results.selected_artists_index {
         if let Some(result) = app.search_results.artists.clone() {
-          if let Some(artist) = result.artists.items.get(index.to_owned()) {
+          if let Some(artist) = result.items.get(index.to_owned()) {
             let artist_id_list: Option<Vec<String>> = Some(vec![artist.id.clone()]);
             app.recommendations_context = Some(RecommendationsContext::Artist);
             app.recommendations_seed = artist.name.clone();
@@ -451,7 +450,7 @@ pub fn handler(key: Key, app: &mut App) {
           &app.search_results.playlists,
           app.search_results.selected_playlists_index,
         ) {
-          let selected_playlist = &playlists.playlists.items[selected_index].name;
+          let selected_playlist = &playlists.items[selected_index].name;
           app.dialog = Some(selected_playlist.clone());
           app.confirm = false;
 
