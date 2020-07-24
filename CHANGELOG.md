@@ -6,6 +6,8 @@
 - Add save album on album view [#506](https://github.com/Rigellute/spotify-tui/pull/506)
 - Add feature to like a song from basic view [#507](https://github.com/Rigellute/spotify-tui/pull/507)
 - Enable Unix and Linux shortcut keys in the input [#511](https://github.com/Rigellute/spotify-tui/pull/511)
+- Add album artist field to full album view [#519](https://github.com/Rigellute/spotify-tui/pull/519)
+- Handle track saving in non-album contexts (eg. playlist/Made for you). [#525](https://github.com/Rigellute/spotify-tui/pull/525)
 
 ## [0.20.0] - 2020-05-28
 
