@@ -141,6 +141,7 @@ pub fn handler(key: Key, app: &mut App) {
         None => {}
       };
     }
+    Key::Char('s') => handle_save_track_event(app),
     Key::Char('S') => play_random_song(app),
     Key::Ctrl('e') => jump_to_end(app),
     Key::Ctrl('a') => jump_to_start(app),
@@ -249,6 +250,16 @@ fn play_random_song(app: &mut App) {
         };
       }
     }
+  };
+}
+
+fn handle_save_track_event(app: &mut App) {
+  let (selected_index, tracks) = (&app.track_table.selected_index, &app.track_table.tracks);
+  if let Some(track) = tracks.get(*selected_index) {
+    if let Some(id) = &track.id {
+      let id = id.to_string();
+      app.dispatch(IoEvent::ToggleSaveTrack(id));
+    };
   };
 }
 
