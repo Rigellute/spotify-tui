@@ -27,7 +27,7 @@ clipboard = "0.5.0"
 crossterm = "0.17"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.7.3"
-anyhow = "1.0.31"
+anyhow = "1.0.32"
 
 [[bin]]
 bench = false
