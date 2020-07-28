@@ -21,6 +21,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Homebrew](#homebrew)
     - [Snap](#snap)
     - [AUR](#aur)
+    - [Nix](#nix)
     - [Void Linux](#void-linux)
     - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
@@ -81,6 +82,14 @@ For those on Arch Linux you can find the package on AUR [here](https://aur.archl
 ```bash
 yay -S spotify-tui
 ```
+
+### Nix
+Available as the package `spotify-tui`. To install run:
+```bash
+nix-env -iA nixpkgs.spotify-tui
+```
+Where `nixpkgs` is the channel name in your configuration. For a more up-to-date installation, use the unstable channel.
+It is also possible to add the package to `environment.systemPackages` (for NixOS), or `home.packages` when using [home-manager](https://github.com/rycee/home-manager).
 
 ### Void Linux
 
