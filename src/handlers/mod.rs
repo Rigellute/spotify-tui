@@ -24,6 +24,7 @@ mod track_table;
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
 use crate::network::IoEvent;
+use rspotify::model::{context::CurrentlyPlaybackContext, PlayingItem};
 
 pub use input::handler as input_handler;
 
@@ -206,22 +207,38 @@ fn handle_jump_to_context(app: &mut App) {
 }
 
 fn handle_jump_to_album(app: &mut App) {
-  if let Some(current_playback_context) = &app.current_playback_context {
-    if let Some(full_track) = current_playback_context.item.clone() {
-      app.dispatch(IoEvent::GetAlbumTracks(Box::new(full_track.album)));
-    }
-  };
+  if let Some(CurrentlyPlaybackContext {
+    item: Some(item), ..
+  }) = app.current_playback_context.to_owned()
+  {
+    match item {
+      PlayingItem::Track(track) => {
+        app.dispatch(IoEvent::GetAlbumTracks(Box::new(track.album)));
+      }
+      PlayingItem::Episode(_episode) => {
+        // Do nothing for episode (yet!)
+      }
+    };
+  }
 }
 
 // NOTE: this only finds the first artist of the song and jumps to their albums
 fn handle_jump_to_artist_album(app: &mut App) {
-  if let Some(current_playback_context) = &app.current_playback_context {
-    if let Some(playing_item) = &current_playback_context.item.clone() {
-      if let Some(artist) = playing_item.artists.first() {
-        if let Some(artist_id) = artist.id.clone() {
-          app.get_artist(artist_id, artist.name.clone());
-          app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+  if let Some(CurrentlyPlaybackContext {
+    item: Some(item), ..
+  }) = app.current_playback_context.to_owned()
+  {
+    match item {
+      PlayingItem::Track(track) => {
+        if let Some(artist) = track.artists.first() {
+          if let Some(artist_id) = artist.id.clone() {
+            app.get_artist(artist_id, artist.name.clone());
+            app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+          }
         }
+      }
+      PlayingItem::Episode(_episode) => {
+        // Do nothing for episode (yet!)
       }
     }
   };
