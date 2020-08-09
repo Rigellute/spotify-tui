@@ -40,14 +40,14 @@ pub fn handler(key: Key, app: &mut App) {
       app.input_idx = word_start;
       app.input_cursor_position -= deleted_len;
     }
-    Key::Ctrl('e') => {
+    Key::End | Key::Ctrl('e') => {
       app.input_idx = app.input.len();
       let input_string: String = app.input.iter().collect();
       app.input_cursor_position = UnicodeWidthStr::width(input_string.as_str())
         .try_into()
         .unwrap();
     }
-    Key::Ctrl('a') => {
+    Key::Home | Key::Ctrl('a') => {
       app.input_idx = 0;
       app.input_cursor_position = 0;
     }
