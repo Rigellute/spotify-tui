@@ -556,6 +556,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "usrme",
+      "name": "usrme",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5902545?v=4",
+      "profile": "https://usrme.xyz",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
