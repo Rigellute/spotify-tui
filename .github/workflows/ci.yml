@@ -6,14 +6,19 @@ on:
 name: Continuous Integration
 
 jobs:
-  # Workaround for making Github Actions skip commits found here
-  # https://github.com/srz-zumix/ci-skip/blob/master/docs/github/WORKAROUND.md
-  # NOTE: this this only skips CI on `push` events, not from pull_request
+  # Workaround for making Github Actions skip based on commit message `[skip ci]`
+  # Source https://gist.github.com/ybiquitous/c80f15c18319c63cae8447a3be341267
   prepare:
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, '[skip ci]')"
+    if: |
+      !contains(format('{0} {1} {2}', github.event.head_commit.message, github.event.pull_request.title, github.event.pull_request.body), '[skip ci]')
     steps:
-      - run: echo "${{ github.event.head_commit.message }}"
+      - run: |
+          cat <<'MESSAGE'
+          github.event_name: ${{ toJson(github.event_name) }}
+          github.event:
+          ${{ toJson(github.event) }}
+          MESSAGE
 
   check:
     name: Check
