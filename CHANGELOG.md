@@ -4,6 +4,7 @@
 
 - Show ♥ next to album name in saved list [#540](https://github.com/Rigellute/spotify-tui/pull/540)
 - Add additional line of help to show that 'w' can be used to save/like an album [#548](https://github.com/Rigellute/spotify-tui/pull/548)
+- Add handling Home and End buttons in user input [#550](https://github.com/Rigellute/spotify-tui/pull/550)
 
 ## [0.21.0] - 2020-07-24
 
