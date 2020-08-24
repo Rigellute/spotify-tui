@@ -520,6 +520,33 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "RicardoHE97",
+      "name": "Ricardo Holguin",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/28399979?v=4",
+      "profile": "http://ricardohe97.github.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ksk001100",
+      "name": "Keisuke Toyota",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/13160198?v=4",
+      "profile": "https://ksk.netlify.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jackson15j",
+      "name": "Craig Astill",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/3226988?v=4",
+      "profile": "https://jackson15j.github.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
