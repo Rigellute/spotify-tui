@@ -9,6 +9,7 @@ use super::{
   banner::BANNER,
 };
 use help::get_help_docs;
+use rspotify::model::PlayingItem;
 use rspotify::senum::RepeatState;
 use tui::{
   backend::Backend,
@@ -317,12 +318,16 @@ where
     let currently_playing_id = app
       .current_playback_context
       .clone()
-      .and_then(|context| context.item.and_then(|item| item.id))
+      .and_then(|context| {
+        context.item.and_then(|item| match item {
+          PlayingItem::Track(track) => track.id,
+          PlayingItem::Episode(episode) => Some(episode.id),
+        })
+      })
       .unwrap_or_else(|| "".to_string());
 
     let songs = match &app.search_results.tracks {
-      Some(r) => r
-        .tracks
+      Some(tracks) => tracks
         .items
         .iter()
         .map(|item| {
@@ -354,8 +359,7 @@ where
     );
 
     let artists = match &app.search_results.artists {
-      Some(r) => r
-        .artists
+      Some(artists) => artists
         .items
         .iter()
         .map(|item| {
@@ -388,8 +392,7 @@ where
       .split(chunks[1]);
 
     let albums = match &app.search_results.albums {
-      Some(r) => r
-        .albums
+      Some(albums) => albums
         .items
         .iter()
         .map(|item| {
@@ -421,8 +424,7 @@ where
     );
 
     let playlists = match &app.search_results.playlists {
-      Some(r) => r
-        .playlists
+      Some(playlists) => playlists
         .items
         .iter()
         .map(|item| item.name.to_owned())
@@ -814,19 +816,35 @@ where
         .title(&title)
         .title_style(get_color(highlight_state, app.user_config.theme))
         .border_style(get_color(highlight_state, app.user_config.theme));
+
       f.render_widget(title_block, layout_chunk);
 
-      let track_name = if app
-        .liked_song_ids_set
-        .contains(&track_item.id.clone().unwrap_or_else(|| "".to_string()))
-      {
-        format!("♥ {}", &track_item.name)
+      let (item_id, name, duration_ms) = match track_item {
+        PlayingItem::Track(track) => (
+          track.id.to_owned().unwrap_or_else(|| "".to_string()),
+          track.name.to_owned(),
+          track.duration_ms,
+        ),
+        PlayingItem::Episode(episode) => (
+          episode.id.to_owned(),
+          episode.name.to_owned(),
+          episode.duration_ms,
+        ),
+      };
+
+      let track_name = if app.liked_song_ids_set.contains(&item_id) {
+        format!("♥ {}", name)
       } else {
-        track_item.name.clone()
+        name
+      };
+
+      let play_bar_text = match track_item {
+        PlayingItem::Track(track) => create_artist_string(&track.artists),
+        PlayingItem::Episode(episode) => format!("{} - {}", episode.name, episode.show.name),
       };
 
       let lines = [Text::styled(
-        create_artist_string(&track_item.artists),
+        play_bar_text,
         Style::default().fg(app.user_config.theme.playbar_text),
       )];
 
@@ -840,10 +858,9 @@ where
           ),
         );
       f.render_widget(artist, chunks[0]);
-      let perc = get_track_progress_percentage(app.song_progress_ms, track_item.duration_ms);
+      let perc = get_track_progress_percentage(app.song_progress_ms, duration_ms);
 
-      let song_progress_label =
-        display_track_progress(app.song_progress_ms, track_item.duration_ms);
+      let song_progress_label = display_track_progress(app.song_progress_ms, duration_ms);
       let song_progress = Gauge::default()
         .block(Block::default().title(""))
         .style(
@@ -1015,7 +1032,13 @@ where
       .map(|top_track| {
         let mut name = String::new();
         if let Some(context) = &app.current_playback_context {
-          if context.item.as_ref().and_then(|item| item.id.as_ref()) == top_track.id.as_ref() {
+          let track_id = match &context.item {
+            Some(PlayingItem::Track(track)) => track.id.to_owned(),
+            Some(PlayingItem::Episode(episode)) => Some(episode.id.to_owned()),
+            _ => None,
+          };
+
+          if track_id == top_track.id {
             name.push_str("▶ ");
           }
         };
@@ -1194,7 +1217,7 @@ where
       .map(|album_page| TableItem {
         id: album_page.album.id.to_owned(),
         format: vec![
-          album_page.album.name.to_owned(),
+          format!("♥ {}", &album_page.album.name),
           create_artist_string(&album_page.album.artists),
           album_page.album.release_date.to_owned(),
         ],
@@ -1434,13 +1457,14 @@ fn draw_table<B>(
 {
   let selected_style = get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD);
 
-  let track_playing_index = match &app.current_playback_context {
-    Some(ctx) => items.iter().position(|t| match &ctx.item {
-      Some(item) => Some(t.id.to_owned()) == item.id,
-      None => false,
-    }),
-    None => None,
-  };
+  let track_playing_index = app.current_playback_context.to_owned().and_then(|ctx| {
+    ctx.item.and_then(|item| match item {
+      PlayingItem::Track(track) => items
+        .iter()
+        .position(|item| track.id.to_owned().map(|id| id == item.id).unwrap_or(false)),
+      PlayingItem::Episode(_episode) => None,
+    })
+  });
 
   let (title, header) = table_layout;
 

@@ -547,6 +547,33 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "onielfa",
+      "name": "Onielfa",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/4358172?v=4",
+      "profile": "https://github.com/onielfa",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "usrme",
+      "name": "usrme",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5902545?v=4",
+      "profile": "https://usrme.xyz",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "murlakatamenka",
+      "name": "Sergey A.",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/7361274?v=4",
+      "profile": "https://github.com/murlakatamenka",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

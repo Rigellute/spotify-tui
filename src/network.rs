@@ -12,10 +12,12 @@ use rspotify::{
     page::Page,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
     recommend::Recommendations,
+    search::SearchResult,
     track::FullTrack,
+    PlayingItem,
   },
   oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
-  senum::{Country, RepeatState},
+  senum::{Country, RepeatState, SearchType},
   util::get_token,
 };
 use serde_json::{map::Map, Value};
@@ -293,18 +295,23 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_playback(&mut self) {
-    let context = self.spotify.current_playback(None).await;
+    let context = self.spotify.current_playback(None, None).await;
 
     if let Ok(Some(c)) = context {
       let mut app = self.app.lock().await;
       app.current_playback_context = Some(c.clone());
       app.instant_since_last_current_playback_poll = Instant::now();
 
-      if let Some(track_id) = &c.item.and_then(|track| track.id) {
-        app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![
-          track_id.to_owned()
-        ]));
-      }
+      if let Some(item) = c.item {
+        match item {
+          PlayingItem::Track(track) => {
+            if let Some(track_id) = track.id {
+              app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
+            };
+          }
+          PlayingItem::Episode(_episode) => {}
+        }
+      };
     }
 
     let mut app = self.app.lock().await;
@@ -413,45 +420,66 @@ impl<'a> Network<'a> {
   }
 
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
-    let search_track = self
-      .spotify
-      .search_track(&search_term, self.small_search_limit, 0, country);
+    let search_track = self.spotify.search(
+      &search_term,
+      SearchType::Track,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
 
-    let search_artist =
-      self
-        .spotify
-        .search_artist(&search_term, self.small_search_limit, 0, country);
+    let search_artist = self.spotify.search(
+      &search_term,
+      SearchType::Artist,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
 
-    let search_album = self
-      .spotify
-      .search_album(&search_term, self.small_search_limit, 0, country);
+    let search_album = self.spotify.search(
+      &search_term,
+      SearchType::Album,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
 
-    let search_playlist =
-      self
-        .spotify
-        .search_playlist(&search_term, self.small_search_limit, 0, country);
+    let search_playlist = self.spotify.search(
+      &search_term,
+      SearchType::Playlist,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
 
     // Run the futures concurrently
     match try_join!(search_track, search_artist, search_album, search_playlist) {
-      Ok((track_results, artist_results, album_results, playlist_results)) => {
+      Ok((
+        SearchResult::Tracks(track_results),
+        SearchResult::Artists(artist_results),
+        SearchResult::Albums(album_results),
+        SearchResult::Playlists(playlist_results),
+      )) => {
         let mut app = self.app.lock().await;
 
-        let artist_ids = artist_results
-          .artists
+        let artist_ids = album_results
           .items
           .iter()
-          .map(|item| item.id.to_owned())
+          .filter_map(|item| item.id.to_owned())
           .collect();
 
         // Check if these artists are followed
         app.dispatch(IoEvent::UserArtistFollowCheck(artist_ids));
 
-        let mut album_ids: Vec<String> = Vec::new();
-        album_results.albums.items.iter().for_each(|item| {
-          if let Some(id) = &item.id {
-            album_ids.push(id.to_owned());
-          }
-        });
+        let album_ids = album_results
+          .items
+          .iter()
+          .filter_map(|album| album.id.to_owned())
+          .collect();
 
         // Check if these albums are saved
         app.dispatch(IoEvent::CurrentUserSavedAlbumsContains(album_ids));
@@ -464,6 +492,7 @@ impl<'a> Network<'a> {
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
+      _ => {}
     };
   }
 
@@ -1039,12 +1068,18 @@ impl<'a> Network<'a> {
 
     match self
       .spotify
-      .search_playlist(&search_string, self.large_search_limit, 0, country)
+      .search(
+        &search_string,
+        SearchType::Playlist,
+        self.large_search_limit,
+        0,
+        country,
+        None,
+      )
       .await
     {
-      Ok(mut search_playlists) => {
+      Ok(SearchResult::Playlists(mut search_playlists)) => {
         let mut filtered_playlists = search_playlists
-          .playlists
           .items
           .iter()
           .filter(|playlist| playlist.owner.id == SPOTIFY_ID && playlist.name == search_string)
@@ -1061,16 +1096,17 @@ impl<'a> Network<'a> {
             .items
             .append(&mut filtered_playlists);
         } else {
-          search_playlists.playlists.items = filtered_playlists;
+          search_playlists.items = filtered_playlists;
           app
             .library
             .made_for_you_playlists
-            .add_pages(search_playlists.playlists);
+            .add_pages(search_playlists);
         }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
+      _ => {}
     }
   }
 

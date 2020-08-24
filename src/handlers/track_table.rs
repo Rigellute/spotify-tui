@@ -205,7 +205,6 @@ fn play_random_song(app: &mut App) {
         ) {
           (Some(selected_playlist_index), Some(playlist_result)) => {
             if let Some(selected_playlist) = playlist_result
-              .playlists
               .items
               .get(selected_playlist_index.to_owned())
             {
@@ -382,7 +381,6 @@ fn on_enter(app: &mut App) {
           ) {
             (Some(selected_playlist_index), Some(playlist_result)) => {
               if let Some(selected_playlist) = playlist_result
-                .playlists
                 .items
                 .get(selected_playlist_index.to_owned())
               {

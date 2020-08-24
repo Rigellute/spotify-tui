@@ -104,7 +104,8 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
     ],
     vec!["Delete saved album", "D", "Library -> Albums"],
     vec!["Delete saved playlist", "D", "Playlist"],
-    vec!["Follow an artists/playlist", "w", "Search result"],
+    vec!["Follow an artist/playlist", "w", "Search result"],
+    vec!["Save (like) album to library", "w", "Search result"],
     vec!["Play random song in playlist", "S", "Selected Playlist"],
   ]
 }
