@@ -7,8 +7,12 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-62-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+
+[![Follow Alexander Keliris (Rigellute)](https://img.shields.io/twitter/follow/AlexKeliris?label=Follow%20Alexander%20Keliris%20%28Rigellute%29&style=social)](https://twitter.com/intent/follow?screen_name=AlexKeliris)
 
 A Spotify client for the terminal written in Rust.
 
@@ -84,10 +88,13 @@ yay -S spotify-tui
 ```
 
 ### Nix
+
 Available as the package `spotify-tui`. To install run:
+
 ```bash
 nix-env -iA nixpkgs.spotify-tui
 ```
+
 Where `nixpkgs` is the channel name in your configuration. For a more up-to-date installation, use the unstable channel.
 It is also possible to add the package to `environment.systemPackages` (for NixOS), or `home.packages` when using [home-manager](https://github.com/rycee/home-manager).
 
@@ -135,7 +142,7 @@ If you are using the Windows Subsystem for Linux, you'll need to [install additi
 
 ### Windows 10
 
-#### Scoop installer 
+#### Scoop installer
 
 First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
 
@@ -376,6 +383,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
