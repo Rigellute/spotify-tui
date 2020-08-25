@@ -4,7 +4,8 @@ use tui::{
   backend::Backend,
   layout::{Constraint, Direction, Layout},
   style::Style,
-  widgets::{BarChart, Block, Borders, Paragraph, Text},
+  widgets::{BarChart, Block, Borders, Paragraph},
+  text::{Span, Spans},
   Frame,
 };
 const PITCHES: [&str; 12] = [
@@ -24,10 +25,9 @@ where
     .split(f.size());
 
   let analysis_block = Block::default()
-    .title("Analysis")
+    .title(Span::styled("Analysis", Style::default().fg(app.user_config.theme.inactive)))
     .borders(Borders::ALL)
-    .border_style(Style::default().fg(app.user_config.theme.inactive))
-    .title_style(Style::default().fg(app.user_config.theme.inactive));
+    .border_style(Style::default().fg(app.user_config.theme.inactive));
 
   let white = Style::default().fg(app.user_config.theme.text);
   let gray = Style::default().fg(app.user_config.theme.inactive);
@@ -38,19 +38,16 @@ where
   let bar_chart_block = Block::default()
     .borders(Borders::ALL)
     .style(white)
-    .title(bar_chart_title)
-    .title_style(gray)
+    .title(Span::styled(bar_chart_title, gray))
     .border_style(gray);
 
-  let analysis_text = [Text::raw("No analysis available")];
   let empty_analysis_block = || {
-    Paragraph::new(analysis_text.iter())
+    Paragraph::new("No analysis available")
       .block(analysis_block)
       .style(Style::default().fg(app.user_config.theme.text))
   };
-  let pitch_text = [Text::raw("No pitch information available")];
   let empty_pitches_block = || {
-    Paragraph::new(pitch_text.iter())
+    Paragraph::new("No pitch information available")
       .block(bar_chart_block)
       .style(Style::default().fg(app.user_config.theme.text))
   };
@@ -76,24 +73,26 @@ where
       .find(|section| section.start >= progress_seconds);
 
     if let (Some(segment), Some(section)) = (segment, section) {
-      let texts = [
-        Text::raw(format!(
-          "Tempo: {} (confidence {:.0}%)\n",
-          section.tempo,
-          section.tempo_confidence * 100.0
-        )),
-        Text::raw(format!(
-          "Key: {} (confidence {:.0}%)\n",
-          PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
-          section.key_confidence * 100.0
-        )),
-        Text::raw(format!(
-          "Time Signature: {}/4 (confidence {:.0}%)\n",
-          section.time_signature,
-          section.time_signature_confidence * 100.0
-        )),
+      let texts = vec![
+          Spans::from(vec![
+            Span::raw(format!(
+              "Tempo: {} (confidence {:.0}%)\n",
+              section.tempo,
+              section.tempo_confidence * 100.0
+            )),
+            Span::raw(format!(
+              "Key: {} (confidence {:.0}%)\n",
+              PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
+              section.key_confidence * 100.0
+            )),
+            Span::raw(format!(
+              "Time Signature: {}/4 (confidence {:.0}%)\n",
+              section.time_signature,
+              section.time_signature_confidence * 100.0
+            )),
+          ])
       ];
-      let p = Paragraph::new(texts.iter())
+      let p = Paragraph::new(texts)
         .block(analysis_block)
         .style(Style::default().fg(app.user_config.theme.text));
       f.render_widget(p, chunks[0]);

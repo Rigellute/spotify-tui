@@ -22,6 +22,7 @@ pub struct UserTheme {
   pub inactive: Option<String>,
   pub playbar_background: Option<String>,
   pub playbar_progress: Option<String>,
+  pub playbar_progress_text: Option<String>,
   pub playbar_text: Option<String>,
   pub selected: Option<String>,
   pub text: Option<String>,
@@ -40,6 +41,7 @@ pub struct Theme {
   pub inactive: Color,
   pub playbar_background: Color,
   pub playbar_progress: Color,
+  pub playbar_progress_text: Color,
   pub playbar_text: Color,
   pub selected: Color,
   pub text: Color,
@@ -59,6 +61,7 @@ impl Default for Theme {
       inactive: Color::Gray,
       playbar_background: Color::Black,
       playbar_progress: Color::LightCyan,
+      playbar_progress_text: Color::White,
       playbar_text: Color::White,
       selected: Color::LightCyan,
       text: Color::White,
@@ -337,6 +340,7 @@ impl UserConfig {
     to_theme_item!(inactive);
     to_theme_item!(playbar_background);
     to_theme_item!(playbar_progress);
+    to_theme_item!(playbar_progress_text);
     to_theme_item!(playbar_text);
     to_theme_item!(selected);
     to_theme_item!(text);

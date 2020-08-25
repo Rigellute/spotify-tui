@@ -15,7 +15,8 @@ use tui::{
   backend::Backend,
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
-  widgets::{Block, Borders, Clear, Gauge, List, ListState, Paragraph, Row, Table, Text},
+  widgets::{Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Row, Table, Wrap},
+  text::{Spans, Span},
   Frame,
 };
 use util::{
@@ -95,8 +96,7 @@ where
       Block::default()
         .borders(Borders::ALL)
         .style(white)
-        .title("Help (press <Esc> to go back)")
-        .title_style(gray)
+        .title(Span::styled("Help (press <Esc> to go back)", gray))
         .border_style(gray),
     )
     .style(Style::default().fg(app.user_config.theme.text))
@@ -125,12 +125,11 @@ where
   );
 
   let input_string: String = app.input.iter().collect();
-  let lines = [Text::raw(&input_string)];
-  let input = Paragraph::new(lines.iter()).block(
+  let lines = Spans::from(vec![Span::raw(&input_string)]);
+  let input = Paragraph::new(lines).block(
     Block::default()
       .borders(Borders::ALL)
-      .title("Search")
-      .title_style(get_color(highlight_state, app.user_config.theme))
+      .title(Span::styled("Search", get_color(highlight_state, app.user_config.theme)))
       .border_style(get_color(highlight_state, app.user_config.theme)),
   );
   f.render_widget(input, chunks[0]);
@@ -143,13 +142,12 @@ where
   };
 
   let block = Block::default()
-    .title("Help")
+    .title(Span::styled("Help", Style::default().fg(help_block_text.0)))
     .borders(Borders::ALL)
-    .border_style(Style::default().fg(help_block_text.0))
-    .title_style(Style::default().fg(help_block_text.0));
+    .border_style(Style::default().fg(help_block_text.0));
 
-  let lines = [Text::raw(help_block_text.1)];
-  let help = Paragraph::new(lines.iter())
+  let lines = Spans::from(vec![Span::raw(help_block_text.1)]);
+  let help = Paragraph::new(lines)
     .block(block)
     .style(Style::default().fg(help_block_text.0));
   f.render_widget(help, chunks[1]);
@@ -813,8 +811,7 @@ where
 
       let title_block = Block::default()
         .borders(Borders::ALL)
-        .title(&title)
-        .title_style(get_color(highlight_state, app.user_config.theme))
+        .title(Span::styled(&title, get_color(highlight_state, app.user_config.theme)))
         .border_style(get_color(highlight_state, app.user_config.theme));
 
       f.render_widget(title_block, layout_chunk);
@@ -843,19 +840,19 @@ where
         PlayingItem::Episode(episode) => format!("{} - {}", episode.name, episode.show.name),
       };
 
-      let lines = [Text::styled(
+      let lines = Spans::from(vec![Span::styled(
         play_bar_text,
         Style::default().fg(app.user_config.theme.playbar_text),
-      )];
+      )]);
 
-      let artist = Paragraph::new(lines.iter())
+      let artist = Paragraph::new(lines)
         .style(Style::default().fg(app.user_config.theme.playbar_text))
         .block(
-          Block::default().title(&track_name).title_style(
+          Block::default().title(Span::styled(&track_name, 
             Style::default()
               .fg(app.user_config.theme.selected)
-              .modifier(Modifier::BOLD),
-          ),
+              .add_modifier(Modifier::BOLD),
+          )),
         );
       f.render_widget(artist, chunks[0]);
       let perc = get_track_progress_percentage(app.song_progress_ms, duration_ms);
@@ -867,10 +864,10 @@ where
           Style::default()
             .fg(app.user_config.theme.playbar_progress)
             .bg(app.user_config.theme.playbar_background)
-            .modifier(Modifier::ITALIC | Modifier::BOLD),
+            .add_modifier(Modifier::ITALIC | Modifier::BOLD),
         )
         .percent(perc)
-        .label(&song_progress_label);
+        .label(Span::raw(&song_progress_label));
       f.render_widget(song_progress, chunks[1]);
     }
   }
@@ -886,10 +883,10 @@ where
     .margin(5)
     .split(f.size());
 
-  let playing_text = vec![
-        Text::raw("Api response: "),
-        Text::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
-        Text::styled(
+  let playing_text = Spans::from(vec![
+        Span::raw("Api response: "),
+        Span::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
+        Span::styled(
             "
 
 If you are trying to play a track, please check that
@@ -899,24 +896,23 @@ If you are trying to play a track, please check that
             ",
             Style::default().fg(app.user_config.theme.text),
         ),
-        Text::styled("
+        Span::styled("
 Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
         ",
         Style::default().fg(app.user_config.theme.hint)),
-        Text::styled(
+        Span::styled(
             "\nPress <Esc> to return",
             Style::default().fg(app.user_config.theme.inactive),
         ),
-    ];
+    ]);
 
-  let playing_paragraph = Paragraph::new(playing_text.iter())
-    .wrap(true)
+  let playing_paragraph = Paragraph::new(playing_text)
+    .wrap(Wrap { trim: true })
     .style(Style::default().fg(app.user_config.theme.text))
     .block(
       Block::default()
         .borders(Borders::ALL)
-        .title("Error")
-        .title_style(Style::default().fg(app.user_config.theme.error_border))
+        .title(Span::styled("Error", Style::default().fg(app.user_config.theme.error_border)))
         .border_style(Style::default().fg(app.user_config.theme.error_border)),
     );
   f.render_widget(playing_paragraph, chunks[0]);
@@ -939,9 +935,8 @@ where
   );
 
   let welcome = Block::default()
-    .title("Welcome!")
+    .title(Span::styled("Welcome!", get_color(highlight_state, app.user_config.theme)))
     .borders(Borders::ALL)
-    .title_style(get_color(highlight_state, app.user_config.theme))
     .border_style(get_color(highlight_state, app.user_config.theme));
   f.render_widget(welcome, layout_chunk);
 
@@ -955,28 +950,28 @@ where
     changelog.replace("\n## [Unreleased]\n", "")
   };
 
-  let top_text = vec![Text::styled(
+  let top_text = Spans::from(vec![Span::styled(
     BANNER,
     Style::default().fg(app.user_config.theme.banner),
-  )];
+  )]);
 
-  let bottom_text = vec![
-        Text::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
-        Text::raw(clean_changelog)
-    ];
+  let bottom_text = Spans::from(vec![
+        Span::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
+        Span::raw(clean_changelog)
+    ]);
 
   // Contains the banner
-  let top_text = Paragraph::new(top_text.iter())
+  let top_text = Paragraph::new(top_text)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(Block::default());
   f.render_widget(top_text, chunks[0]);
 
   // CHANGELOG
-  let bottom_text = Paragraph::new(bottom_text.iter())
+  let bottom_text = Paragraph::new(bottom_text)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(Block::default())
-    .wrap(true)
-    .scroll(app.home_scroll);
+    .wrap(Wrap { trim: true })
+    .scroll((app.home_scroll, 0));
   f.render_widget(bottom_text, chunks[1]);
 }
 
@@ -995,17 +990,16 @@ fn draw_not_implemented_yet<B>(
     current_route.hovered_block == block,
   );
   let display_block = Block::default()
-    .title(title)
+    .title(Span::styled(title, get_color(highlight_state, app.user_config.theme)))
     .borders(Borders::ALL)
-    .title_style(get_color(highlight_state, app.user_config.theme))
     .border_style(get_color(highlight_state, app.user_config.theme));
 
-  let text = vec![Text::raw("Not implemented yet!")];
+  let text = Spans::from(vec![Span::raw("Not implemented yet!")]);
 
-  let not_implemented = Paragraph::new(text.iter())
+  let not_implemented = Paragraph::new(text)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(display_block)
-    .wrap(true);
+    .wrap(Wrap { trim: true });
   f.render_widget(not_implemented, layout_chunk);
 }
 
@@ -1122,39 +1116,38 @@ where
     .margin(5)
     .split(f.size());
 
-  let device_instructions = [
-        Text::raw("To play tracks, please select a device. "),
-        Text::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. "),
-        Text::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. "),
-        Text::raw("You can change the playback device at any time by pressing `d`."),
-    ];
+  let device_instructions = Spans::from(vec![
+        Span::raw("To play tracks, please select a device. "),
+        Span::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. "),
+        Span::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. "),
+        Span::raw("You can change the playback device at any time by pressing `d`."),
+    ]);
 
-  let instructions = Paragraph::new(device_instructions.iter())
+  let instructions = Paragraph::new(device_instructions)
     .style(Style::default().fg(app.user_config.theme.text))
-    .wrap(true)
+    .wrap(Wrap { trim: true })
     .block(
       Block::default()
         .borders(Borders::NONE)
-        .title("Welcome to spotify-tui!")
-        .title_style(
+        .title(Span::styled("Welcome to spotify-tui!",
           Style::default()
             .fg(app.user_config.theme.active)
-            .modifier(Modifier::BOLD),
-        ),
-    );
+            .add_modifier(Modifier::BOLD)
+            )
+    ));
   f.render_widget(instructions, chunks[0]);
 
-  let no_device_message = vec![Text::raw("No devices found: Make sure a device is active")];
+  let no_device_message = Span::raw("No devices found: Make sure a device is active");
 
-  let items: Box<dyn Iterator<Item = Text>> = match &app.devices {
-    Some(items) => {
+  let items = match &app.devices {
+      Some(items) => {
       if items.devices.is_empty() {
-        Box::new(no_device_message.into_iter())
+          vec![ListItem::new(no_device_message)]
       } else {
-        Box::new(items.devices.iter().map(|device| Text::raw(&device.name)))
+        items.devices.iter().map(|device| ListItem::new(Span::from(device.name))).collect()
       }
     }
-    None => Box::new(no_device_message.into_iter()),
+    None => vec![ListItem::new(no_device_message)],
   };
 
   let mut state = ListState::default();
@@ -1162,16 +1155,15 @@ where
   let list = List::new(items)
     .block(
       Block::default()
-        .title("Devices")
+        .title(Span::styled("Devices", Style::default().fg(app.user_config.theme.active)))
         .borders(Borders::ALL)
-        .title_style(Style::default().fg(app.user_config.theme.active))
         .border_style(Style::default().fg(app.user_config.theme.inactive)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
     .highlight_style(
       Style::default()
         .fg(app.user_config.theme.active)
-        .modifier(Modifier::BOLD),
+        .add_modifier(Modifier::BOLD),
     );
   f.render_stateful_widget(list, chunks[1], &mut state);
 }
@@ -1359,16 +1351,22 @@ fn draw_selectable_list<B, S>(
   let mut state = ListState::default();
   state.select(selected_index);
 
-  let list = List::new(items.iter().map(|i| Text::raw(i.as_ref())))
+  let lst_items = vec![items.iter().map(|i| ListItem::new(Span::raw(i.as_ref())))];
+
+  let test1 = [items.into_iter().map(|i| ListItem::new(Span::raw(i.as_ref())))];
+  let test2 = [ListItem::new("hello")];
+  let test3 = items.iter().map(|i| ListItem::new("Hello")).collect()
+
+  //TODO
+  let list = List::new(test3)
     .block(
       Block::default()
-        .title(title)
+        .title(Span::styled(title, get_color(highlight_state, app.user_config.theme)))
         .borders(Borders::ALL)
-        .title_style(get_color(highlight_state, app.user_config.theme))
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
-    .highlight_style(get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD));
+    .highlight_style(get_color(highlight_state, app.user_config.theme).add_modifier(Modifier::BOLD));
   f.render_stateful_widget(list, layout_chunk, &mut state);
 }
 
@@ -1403,13 +1401,13 @@ where
 
       // suggestion: possibly put this as part of
       // app.dialog, but would have to introduce lifetime
-      let text = [
-        Text::raw("Are you sure you want to delete\nthe playlist: "),
-        Text::styled(playlist.as_str(), Style::default().modifier(Modifier::BOLD)),
-        Text::raw("?"),
-      ];
+      let text = Spans::from(vec![
+        Span::raw("Are you sure you want to delete\nthe playlist: "),
+        Span::styled(playlist.as_str(), Style::default().add_modifier(Modifier::BOLD)),
+        Span::raw("?"),
+      ]);
 
-      let text = Paragraph::new(text.iter()).alignment(Alignment::Center);
+      let text = Paragraph::new(text).alignment(Alignment::Center);
 
       f.render_widget(text, vchunks[0]);
 
@@ -1419,8 +1417,8 @@ where
         .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)].as_ref())
         .split(vchunks[1]);
 
-      let ok_text = [Text::raw("Ok")];
-      let ok = Paragraph::new(ok_text.iter())
+      let ok_text = Span::raw("Ok");
+      let ok = Paragraph::new(ok_text)
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.hovered
         } else {
@@ -1430,8 +1428,8 @@ where
 
       f.render_widget(ok, hchunks[0]);
 
-      let cancel_text = [Text::raw("Cancel")];
-      let cancel = Paragraph::new(cancel_text.iter())
+      let cancel_text = Span::raw("Cancel");
+      let cancel = Paragraph::new(cancel_text)
         .style(Style::default().fg(if app.confirm {
           app.user_config.theme.inactive
         } else {
@@ -1455,7 +1453,7 @@ fn draw_table<B>(
 ) where
   B: Backend,
 {
-  let selected_style = get_color(highlight_state, app.user_config.theme).modifier(Modifier::BOLD);
+  let selected_style = get_color(highlight_state, app.user_config.theme).add_modifier(Modifier::BOLD);
 
   let track_playing_index = app.current_playback_context.to_owned().and_then(|ctx| {
     ctx.item.and_then(|item| match item {
@@ -1493,7 +1491,7 @@ fn draw_table<B>(
               formatted_row[title_idx] = format!("▶ {}", &formatted_row[title_idx]);
               style = Style::default()
                 .fg(app.user_config.theme.active)
-                .modifier(Modifier::BOLD);
+                .add_modifier(Modifier::BOLD);
             }
           }
         }
@@ -1528,8 +1526,7 @@ fn draw_table<B>(
       Block::default()
         .borders(Borders::ALL)
         .style(Style::default().fg(app.user_config.theme.text))
-        .title(title)
-        .title_style(get_color(highlight_state, app.user_config.theme))
+        .title(Span::styled(title, get_color(highlight_state, app.user_config.theme)))
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
