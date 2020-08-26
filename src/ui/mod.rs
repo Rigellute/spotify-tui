@@ -16,7 +16,7 @@ use tui::{
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Modifier, Style},
   widgets::{Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Row, Table, Wrap},
-  text::{Spans, Span},
+  text::{Text, Spans, Span},
   Frame,
 };
 use util::{
@@ -840,10 +840,7 @@ where
         PlayingItem::Episode(episode) => format!("{} - {}", episode.name, episode.show.name),
       };
 
-      let lines = Spans::from(vec![Span::styled(
-        play_bar_text,
-        Style::default().fg(app.user_config.theme.playbar_text),
-      )]);
+      let lines = Text::from(Span::styled(play_bar_text, Style::default().fg(app.user_config.theme.playbar_text)));
 
       let artist = Paragraph::new(lines)
         .style(Style::default().fg(app.user_config.theme.playbar_text))
@@ -862,8 +859,8 @@ where
         .block(Block::default().title(""))
         .style(
           Style::default()
-            .fg(app.user_config.theme.playbar_progress)
-            .bg(app.user_config.theme.playbar_background)
+            .fg(app.user_config.theme.playbar_text)
+            .bg(app.user_config.theme.playbar_progress)
             .add_modifier(Modifier::ITALIC | Modifier::BOLD),
         )
         .percent(perc)
@@ -950,15 +947,12 @@ where
     changelog.replace("\n## [Unreleased]\n", "")
   };
 
-  let top_text = Spans::from(vec![Span::styled(
-    BANNER,
-    Style::default().fg(app.user_config.theme.banner),
-  )]);
+  // Banner text with correct styling
+  let mut top_text = Text::from(BANNER);
+  top_text.patch_style(Style::default().fg(app.user_config.theme.banner));
 
-  let bottom_text = Spans::from(vec![
-        Span::raw("\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n"),
-        Span::raw(clean_changelog)
-    ]);
+  let bottom_text_raw = format!("{}{}", "\nPlease report any bugs or missing features to https://github.com/Rigellute/spotify-tui\n\n", clean_changelog);
+  let bottom_text = Text::from(bottom_text_raw.as_str());
 
   // Contains the banner
   let top_text = Paragraph::new(top_text)
@@ -970,7 +964,7 @@ where
   let bottom_text = Paragraph::new(bottom_text)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(Block::default())
-    .wrap(Wrap { trim: true })
+    .wrap(Wrap { trim: false })
     .scroll((app.home_scroll, 0));
   f.render_widget(bottom_text, chunks[1]);
 }
