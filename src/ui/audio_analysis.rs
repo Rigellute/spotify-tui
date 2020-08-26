@@ -43,12 +43,12 @@ where
 
   let empty_analysis_block = || {
     Paragraph::new("No analysis available")
-      .block(analysis_block)
+      .block(analysis_block.clone())
       .style(Style::default().fg(app.user_config.theme.text))
   };
   let empty_pitches_block = || {
     Paragraph::new("No pitch information available")
-      .block(bar_chart_block)
+      .block(bar_chart_block.clone())
       .style(Style::default().fg(app.user_config.theme.text))
   };
 

@@ -1144,7 +1144,7 @@ where
       if items.devices.is_empty() {
           vec![ListItem::new(no_device_message)]
       } else {
-        items.devices.iter().map(|device| ListItem::new(Span::from(device.name))).collect()
+        items.devices.iter().map(|device| ListItem::new(Span::raw(&device.name))).collect()
       }
     }
     None => vec![ListItem::new(no_device_message)],
@@ -1351,14 +1351,10 @@ fn draw_selectable_list<B, S>(
   let mut state = ListState::default();
   state.select(selected_index);
 
-  let lst_items = vec![items.iter().map(|i| ListItem::new(Span::raw(i.as_ref())))];
-
-  let test1 = [items.into_iter().map(|i| ListItem::new(Span::raw(i.as_ref())))];
-  let test2 = [ListItem::new("hello")];
-  let test3 = items.iter().map(|i| ListItem::new("Hello")).collect()
+  let lst_items : Vec<ListItem<>> = items.iter().map(|i| ListItem::new(Span::raw(i.as_ref()))).collect();
 
   //TODO
-  let list = List::new(test3)
+  let list = List::new(lst_items)
     .block(
       Block::default()
         .title(Span::styled(title, get_color(highlight_state, app.user_config.theme)))
