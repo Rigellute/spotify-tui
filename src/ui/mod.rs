@@ -125,7 +125,7 @@ where
   );
 
   let input_string: String = app.input.iter().collect();
-  let lines = Spans::from(vec![Span::raw(&input_string)]);
+  let lines = Text::from((&input_string).as_str());
   let input = Paragraph::new(lines).block(
     Block::default()
       .borders(Borders::ALL)
@@ -146,7 +146,7 @@ where
     .borders(Borders::ALL)
     .border_style(Style::default().fg(help_block_text.0));
 
-  let lines = Spans::from(vec![Span::raw(help_block_text.1)]);
+  let lines = Text::from(help_block_text.1);
   let help = Paragraph::new(lines)
     .block(block)
     .style(Style::default().fg(help_block_text.0));
@@ -768,7 +768,7 @@ where
 {
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+    .constraints([Constraint::Percentage(50), Constraint::Percentage(25), Constraint::Percentage(25)].as_ref())
     .margin(1)
     .split(layout_chunk);
 
@@ -856,16 +856,16 @@ where
 
       let song_progress_label = display_track_progress(app.song_progress_ms, duration_ms);
       let song_progress = Gauge::default()
-        .block(Block::default().title(""))
-        .style(
-          Style::default()
-            .fg(app.user_config.theme.playbar_text)
-            .bg(app.user_config.theme.playbar_progress)
-            .add_modifier(Modifier::ITALIC | Modifier::BOLD),
-        )
-        .percent(perc)
-        .label(Span::raw(&song_progress_label));
-      f.render_widget(song_progress, chunks[1]);
+          .gauge_style(
+              Style::default()
+              .fg(app.user_config.theme.playbar_progress)
+              .bg(app.user_config.theme.playbar_background)
+              .add_modifier(Modifier::ITALIC | Modifier::BOLD))
+          .percent(perc)
+          .label(Span::styled(&song_progress_label, 
+                              Style::default()
+                              .fg(app.user_config.theme.playbar_progress_text)));
+      f.render_widget(song_progress, chunks[2]);
     }
   }
 }
@@ -988,7 +988,7 @@ fn draw_not_implemented_yet<B>(
     .borders(Borders::ALL)
     .border_style(get_color(highlight_state, app.user_config.theme));
 
-  let text = Spans::from(vec![Span::raw("Not implemented yet!")]);
+  let text = Text::from("Not implemented yet!");
 
   let not_implemented = Paragraph::new(text)
     .style(Style::default().fg(app.user_config.theme.text))
