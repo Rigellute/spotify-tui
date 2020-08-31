@@ -142,6 +142,10 @@ pub struct UserConfigPaths {
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct KeyBindingsString {
   back: Option<String>,
+  next_page: Option<String>,
+  previous_page: Option<String>,
+  jump_to_start: Option<String>,
+  jump_to_end: Option<String>,
   jump_to_album: Option<String>,
   jump_to_artist_album: Option<String>,
   jump_to_context: Option<String>,
@@ -167,6 +171,10 @@ pub struct KeyBindingsString {
 #[derive(Clone)]
 pub struct KeyBindings {
   pub back: Key,
+  pub next_page: Key,
+  pub previous_page: Key,
+  pub jump_to_start: Key,
+  pub jump_to_end: Key,
   pub jump_to_album: Key,
   pub jump_to_artist_album: Key,
   pub jump_to_context: Key,
@@ -226,6 +234,10 @@ impl UserConfig {
       theme: Default::default(),
       keys: KeyBindings {
         back: Key::Char('q'),
+        next_page: Key::Ctrl('d'),
+        previous_page: Key::Ctrl('u'),
+        jump_to_start: Key::Ctrl('a'),
+        jump_to_end: Key::Ctrl('e'),
         jump_to_album: Key::Char('a'),
         jump_to_artist_album: Key::Char('A'),
         jump_to_context: Key::Char('o'),
@@ -295,6 +307,10 @@ impl UserConfig {
     };
 
     to_keys!(back);
+    to_keys!(next_page);
+    to_keys!(previous_page);
+    to_keys!(jump_to_start);
+    to_keys!(jump_to_end);
     to_keys!(jump_to_album);
     to_keys!(jump_to_artist_album);
     to_keys!(jump_to_context);
