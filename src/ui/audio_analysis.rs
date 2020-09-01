@@ -76,23 +76,23 @@ where
       .find(|section| section.start >= progress_seconds);
 
     if let (Some(segment), Some(section)) = (segment, section) {
-      let texts = vec![Spans::from(vec![
-        Span::raw(format!(
-          "Tempo: {} (confidence {:.0}%)\n",
+      let texts = vec![
+        Spans::from(format!(
+          "Tempo: {} (confidence {:.0}%)",
           section.tempo,
           section.tempo_confidence * 100.0
         )),
-        Span::raw(format!(
-          "Key: {} (confidence {:.0}%)\n",
+        Spans::from(format!(
+          "Key: {} (confidence {:.0}%)",
           PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
           section.key_confidence * 100.0
         )),
-        Span::raw(format!(
-          "Time Signature: {}/4 (confidence {:.0}%)\n",
+        Spans::from(format!(
+          "Time Signature: {}/4 (confidence {:.0}%)",
           section.time_signature,
           section.time_signature_confidence * 100.0
         )),
-      ])];
+      ];
       let p = Paragraph::new(texts)
         .block(analysis_block)
         .style(Style::default().fg(app.user_config.theme.text));
@@ -118,7 +118,7 @@ where
         .block(bar_chart_block)
         .data(&data)
         .bar_width(width as u16)
-        .style(Style::default().fg(app.user_config.theme.analysis_bar))
+        .bar_style(Style::default().fg(app.user_config.theme.analysis_bar))
         .value_style(
           Style::default()
             .fg(app.user_config.theme.analysis_bar_text)
