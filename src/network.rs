@@ -75,6 +75,7 @@ pub enum IoEvent {
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
+  AddItemToQueue(String),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -258,6 +259,9 @@ impl<'a> Network<'a> {
       }
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
+      }
+      IoEvent::AddItemToQueue(item) => {
+        self.add_item_to_queue(item).await;
       }
     };
 
@@ -1207,6 +1211,19 @@ impl<'a> Network<'a> {
     } else {
       println!("\nFailed to refresh authentication token");
       // TODO panic!
+    }
+  }
+
+  async fn add_item_to_queue(&mut self, item: String) {
+    match self
+      .spotify
+      .add_item_to_queue(item, self.client_config.device_id.clone())
+      .await
+    {
+      Ok(()) => (),
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
     }
   }
 }

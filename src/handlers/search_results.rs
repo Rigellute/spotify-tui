@@ -220,6 +220,23 @@ fn handle_low_press_on_selected_block(app: &mut App) {
   }
 }
 
+fn handle_add_item_to_queue(app: &mut App) {
+  match &app.search_results.selected_block {
+    SearchResultBlock::SongSearch => {
+      if let (Some(index), Some(tracks)) = (app.search_results.selected_tracks_index, &app.search_results.tracks) {
+        if let Some(track) = tracks.items.get(index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        }
+      }
+    }
+    SearchResultBlock::ArtistSearch => {}
+    SearchResultBlock::PlaylistSearch => {}
+    SearchResultBlock::AlbumSearch => {}
+    SearchResultBlock::Empty => {}
+  };
+}
+
 fn handle_enter_event_on_selected_block(app: &mut App) {
   match &app.search_results.selected_block {
     SearchResultBlock::AlbumSearch => {
@@ -461,6 +478,9 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::Empty => {}
     },
     Key::Char('r') => handle_recommended_tracks(app),
+    _ if key == app.user_config.keys.add_item_to_queue => {
+      handle_add_item_to_queue(app)
+    }
     // Add `s` to "see more" on each option
     _ => {}
   }

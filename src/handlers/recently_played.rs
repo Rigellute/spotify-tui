@@ -78,6 +78,13 @@ pub fn handler(key: Key, app: &mut App) {
         }
       }
     }
+    _ if key == app.user_config.keys.add_item_to_queue => {
+      if let Some(recently_played_result) = &app.recently_played.result.clone() {
+        if let Some(history) = recently_played_result.items.get(app.recently_played.index) {
+          app.dispatch(IoEvent::AddItemToQueue(history.track.uri.clone()))
+        }
+      };
+    }
     _ => {}
   };
 }

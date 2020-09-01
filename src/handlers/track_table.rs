@@ -149,6 +149,9 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Char('r') => {
       handle_recommended_tracks(app);
     }
+    _ if key == app.user_config.keys.add_item_to_queue => {
+      on_queue(app)
+    }
     _ => {}
   }
 }
@@ -419,6 +422,59 @@ fn on_enter(app: &mut App) {
             None,
             Some(app.track_table.selected_index + app.made_for_you_offset as usize),
           ));
+        }
+      }
+    },
+    None => {}
+  };
+}
+
+fn on_queue(app: &mut App) {
+  let TrackTable {
+    context,
+    selected_index,
+    tracks,
+  } = &app.track_table;
+  match &context {
+    Some(context) => match context {
+      TrackTableContext::MyPlaylists => {
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        };
+      }
+      TrackTableContext::RecommendedTracks => {
+        if let Some(full_track) = app.recommended_tracks.get(app.track_table.selected_index) {
+          let uri = full_track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        }
+      }
+      TrackTableContext::SavedTracks => {
+        if let Some(page) = app.library.saved_tracks.get_results(None) {
+          if let Some(saved_track) = page.items.get(app.track_table.selected_index) {
+            let uri = saved_track.track.uri.clone();
+            app.dispatch(IoEvent::AddItemToQueue(uri));
+          }
+        }
+      }
+      TrackTableContext::AlbumSearch => {}
+      TrackTableContext::PlaylistSearch => {
+        let TrackTable {
+          selected_index,
+          tracks,
+          ..
+        } = &app.track_table;
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(
+            uri
+          ));
+        };
+      }
+      TrackTableContext::MadeForYou => {
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
         }
       }
     },
