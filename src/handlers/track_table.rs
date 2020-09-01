@@ -149,9 +149,7 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Char('r') => {
       handle_recommended_tracks(app);
     }
-    _ if key == app.user_config.keys.add_item_to_queue => {
-      on_queue(app)
-    }
+    _ if key == app.user_config.keys.add_item_to_queue => on_queue(app),
     _ => {}
   }
 }
@@ -466,9 +464,7 @@ fn on_queue(app: &mut App) {
         } = &app.track_table;
         if let Some(track) = tracks.get(*selected_index) {
           let uri = track.uri.clone();
-          app.dispatch(IoEvent::AddItemToQueue(
-            uri
-          ));
+          app.dispatch(IoEvent::AddItemToQueue(uri));
         };
       }
       TrackTableContext::MadeForYou => {
