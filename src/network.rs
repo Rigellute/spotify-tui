@@ -75,6 +75,7 @@ pub enum IoEvent {
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
+  GetShowEpisodes(String),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -259,6 +260,9 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
       }
+      IoEvent::GetShowEpisodes(show_id) => {
+        self.get_show_episodes(show_id).await;
+      }
     };
 
     let mut app = self.app.lock().await;
@@ -419,6 +423,10 @@ impl<'a> Network<'a> {
     }
   }
 
+  async fn get_show_episodes(&mut self, show_id: String) {
+    unimplemented!("{}", show_id);
+  }
+
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
     let search_track = self.spotify.search(
       &search_term,
@@ -456,13 +464,23 @@ impl<'a> Network<'a> {
       None,
     );
 
+    let search_show = self.spotify.search(
+      &search_term,
+      SearchType::Show,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
+
     // Run the futures concurrently
-    match try_join!(search_track, search_artist, search_album, search_playlist) {
+    match try_join!(search_track, search_artist, search_album, search_playlist, search_show) {
       Ok((
         SearchResult::Tracks(track_results),
         SearchResult::Artists(artist_results),
         SearchResult::Albums(album_results),
         SearchResult::Playlists(playlist_results),
+        SearchResult::Shows(show_results),
       )) => {
         let mut app = self.app.lock().await;
 

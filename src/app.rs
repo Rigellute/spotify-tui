@@ -12,6 +12,7 @@ use rspotify::{
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
+    show::{FullShow},
     user::PrivateUser,
     PlayingItem,
   },
@@ -93,6 +94,7 @@ pub enum SearchResultBlock {
   SongSearch,
   ArtistSearch,
   PlaylistSearch,
+  ShowSearch,
   Empty,
 }
 
@@ -167,6 +169,7 @@ pub enum TrackTableContext {
   MyPlaylists,
   AlbumSearch,
   PlaylistSearch,
+  ShowSearch,
   SavedTracks,
   RecommendedTracks,
   MadeForYou,
@@ -189,10 +192,12 @@ pub struct SearchResult {
   pub artists: Option<Page<FullArtist>>,
   pub playlists: Option<Page<SimplifiedPlaylist>>,
   pub tracks: Option<Page<FullTrack>>,
+  pub shows: Option<Page<FullShow>>,
   pub selected_album_index: Option<usize>,
   pub selected_artists_index: Option<usize>,
   pub selected_playlists_index: Option<usize>,
   pub selected_tracks_index: Option<usize>,
+  pub selected_shows_index: Option<usize>,
   pub hovered_block: SearchResultBlock,
   pub selected_block: SearchResultBlock,
 }
@@ -342,10 +347,12 @@ impl Default for App {
         albums: None,
         artists: None,
         playlists: None,
+        shows: None,
         selected_album_index: None,
         selected_artists_index: None,
         selected_playlists_index: None,
         selected_tracks_index: None,
+        selected_shows_index: None,
         tracks: None,
       },
       song_progress_ms: 0,
@@ -857,6 +864,14 @@ impl App {
       let user_id = user.id.clone();
       self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
     }
+  }
+
+  pub fn user_follow_show(&mut self) {
+    unimplemented!();
+  }
+
+  pub fn user_unfollow_show(&mut self) {
+    unimplemented!();
   }
 
   pub fn get_made_for_you(&mut self) {
