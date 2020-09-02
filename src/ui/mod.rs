@@ -306,7 +306,14 @@ where
 {
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+    .constraints(
+      [
+        Constraint::Percentage(35),
+        Constraint::Percentage(35),
+        Constraint::Percentage(25),
+      ]
+      .as_ref(),
+    )
     .split(layout_chunk);
 
   {
@@ -439,6 +446,31 @@ where
       &playlists,
       get_search_results_highlight_state(app, SearchResultBlock::PlaylistSearch),
       app.search_results.selected_playlists_index,
+    );
+  }
+
+  {
+    let podcasts_block = Layout::default()
+      .direction(Direction::Horizontal)
+      .constraints([Constraint::Percentage(100)].as_ref())
+      .split(chunks[2]);
+
+    let podcasts = match &app.search_results.shows {
+      Some(podcasts) => podcasts
+        .items
+        .iter()
+        .map(|item| format!("{:} - {}", item.name, item.publisher).to_owned())
+        .collect(),
+      None => vec![],
+    };
+    draw_selectable_list(
+      f,
+      app,
+      podcasts_block[0],
+      "Podcasts",
+      &podcasts,
+      get_search_results_highlight_state(app, SearchResultBlock::ShowSearch),
+      app.search_results.selected_shows_index,
     );
   }
 }

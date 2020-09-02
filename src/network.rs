@@ -506,6 +506,7 @@ impl<'a> Network<'a> {
         app.search_results.artists = Some(artist_results);
         app.search_results.albums = Some(album_results);
         app.search_results.playlists = Some(playlist_results);
+        app.search_results.shows = Some(show_results);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

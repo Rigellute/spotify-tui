@@ -63,7 +63,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
 fn handle_down_press_on_hovered_block(app: &mut App) {
   match app.search_results.hovered_block {
     SearchResultBlock::AlbumSearch => {
-      app.search_results.hovered_block = SearchResultBlock::SongSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::SongSearch => {
       app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
@@ -72,7 +72,7 @@ fn handle_down_press_on_hovered_block(app: &mut App) {
       app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
     }
     SearchResultBlock::PlaylistSearch => {
-      app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::ShowSearch => {
       app.search_results.hovered_block = SearchResultBlock::SongSearch;
@@ -139,16 +139,16 @@ fn handle_up_press_on_hovered_block(app: &mut App) {
       app.search_results.hovered_block = SearchResultBlock::SongSearch;
     }
     SearchResultBlock::SongSearch => {
-      app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::ArtistSearch => {
-      app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::PlaylistSearch => {
       app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
     }
     SearchResultBlock::ShowSearch => {
-      app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+      app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
     }
     SearchResultBlock::Empty => {}
   }
@@ -449,7 +449,7 @@ pub fn handler(key: Key, app: &mut App) {
           app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
         }
         SearchResultBlock::ShowSearch => {
-          app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+          common_key_events::handle_left_event(app);
         }
         SearchResultBlock::Empty => {}
       }
@@ -469,9 +469,7 @@ pub fn handler(key: Key, app: &mut App) {
         SearchResultBlock::PlaylistSearch => {
           app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
         }
-        SearchResultBlock::ShowSearch => {
-          app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
-        }
+        SearchResultBlock::ShowSearch => {}
         SearchResultBlock::Empty => {}
       }
     }
