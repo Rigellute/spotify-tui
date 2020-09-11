@@ -197,6 +197,7 @@ pub struct BehaviorConfigString {
   pub seek_milliseconds: Option<u32>,
   pub volume_increment: Option<u8>,
   pub tick_rate_milliseconds: Option<u64>,
+  pub enable_text_emphasis: Option<bool>,
   pub show_loading_indicator: Option<bool>,
 }
 
@@ -205,6 +206,7 @@ pub struct BehaviorConfig {
   pub seek_milliseconds: u32,
   pub volume_increment: u8,
   pub tick_rate_milliseconds: u64,
+  pub enable_text_emphasis: bool,
   pub show_loading_indicator: bool,
 }
 
@@ -254,6 +256,7 @@ impl UserConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
         tick_rate_milliseconds: 250,
+        enable_text_emphasis: true,
         show_loading_indicator: true,
       },
       path_to_config: None,
@@ -368,6 +371,10 @@ impl UserConfig {
       } else {
         self.behavior.tick_rate_milliseconds = tick_rate;
       }
+    }
+
+    if let Some(text_emphasis) = behavior_config.enable_text_emphasis {
+      self.behavior.enable_text_emphasis = text_emphasis;
     }
 
     if let Some(loading_indicator) = behavior_config.show_loading_indicator {

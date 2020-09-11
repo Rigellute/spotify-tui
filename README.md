@@ -222,6 +222,8 @@ behavior:
   volume_increment: 10
   # The lower the number the higher the "frames per second". You can decrease this number so that the audio visualisation is smoother but this can be expensive!
   tick_rate_milliseconds: 250
+  # Enable text emphasis (typically italic/bold text styling). Disabling this might be important if the terminal config is otherwise restricted and rendering text escapes interferes with the UI.
+  enable_text_emphasis: true
   # controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
   show_loading_indicator: true
 
