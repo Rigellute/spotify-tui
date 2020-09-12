@@ -12,7 +12,7 @@ use rspotify::{
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
-    show::{SimplifiedShow},
+    show::{SimplifiedShow, SimplifiedEpisode},
     user::PrivateUser,
     PlayingItem,
   },
@@ -153,6 +153,7 @@ pub enum RouteId {
   MadeForYou,
   Artists,
   Podcasts,
+  PodcastEpisodes,
   Recommendations,
 }
 
@@ -205,6 +206,13 @@ pub struct SearchResult {
 #[derive(Default)]
 pub struct TrackTable {
   pub tracks: Vec<FullTrack>,
+  pub selected_index: usize,
+  pub context: Option<TrackTableContext>,
+}
+
+#[derive(Default)]
+pub struct EpisodeTable {
+  pub episodes: Vec<SimplifiedEpisode>,
   pub selected_index: usize,
   pub context: Option<TrackTableContext>,
 }
@@ -280,6 +288,7 @@ pub struct App {
   pub small_search_limit: u32,
   pub song_progress_ms: u128,
   pub track_table: TrackTable,
+  pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
   pub album_list_index: usize,
   pub made_for_you_index: usize,
@@ -359,6 +368,7 @@ impl Default for App {
       selected_device_index: None,
       selected_playlist_index: None,
       track_table: Default::default(),
+      episode_table: Default::default(),
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
       clipboard_context: clipboard::ClipboardProvider::new().ok(),

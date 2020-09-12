@@ -424,7 +424,21 @@ impl<'a> Network<'a> {
   }
 
   async fn get_show_episodes(&mut self, show_id: String) {
-    unimplemented!("{}", show_id);
+    match self
+      .spotify
+      .get_shows_episodes(show_id, self.large_search_limit, 0, None)
+      .await
+    {
+      Ok(episodes) => {
+        let mut app = self.app.lock().await;
+        app.episode_table.episodes = episodes.items;
+
+        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::TrackTable);
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
   }
 
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
@@ -474,7 +488,13 @@ impl<'a> Network<'a> {
     );
 
     // Run the futures concurrently
-    match try_join!(search_track, search_artist, search_album, search_playlist, search_show) {
+    match try_join!(
+      search_track,
+      search_artist,
+      search_album,
+      search_playlist,
+      search_show
+    ) {
       Ok((
         SearchResult::Tracks(track_results),
         SearchResult::Artists(artist_results),

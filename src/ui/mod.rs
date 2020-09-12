@@ -31,6 +31,7 @@ pub enum TableId {
   Song,
   RecentlyPlayed,
   MadeForYou,
+  PodcastEpisodes,
 }
 
 #[derive(PartialEq)]
@@ -217,6 +218,9 @@ where
     }
     RouteId::AlbumList => {
       draw_album_list(f, app, chunks[1]);
+    }
+    RouteId::PodcastEpisodes => {
+      draw_show_episodes(f, app, chunks[1]);
     }
     RouteId::Home => {
       draw_home(f, app, chunks[1]);
@@ -523,6 +527,7 @@ pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
 {
+  println!("Trying to draw the episode table");
   let header = TableHeader {
     id: TableId::Album,
     items: vec![
@@ -1266,6 +1271,67 @@ where
       highlight_state,
     )
   };
+}
+
+pub fn draw_show_episodes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let header = TableHeader {
+    id: TableId::PodcastEpisodes,
+    items: vec![
+      TableHeaderItem {
+        text: "Name",
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        ..Default::default()
+      },
+      TableHeaderItem {
+        text: "Description",
+        width: get_percentage_width(layout_chunk.width, 2.5 / 5.0),
+        ..Default::default()
+      },
+      TableHeaderItem {
+        text: "Duration",
+        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0),
+        ..Default::default()
+      },
+    ],
+  };
+
+  let current_route = app.get_current_route();
+
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::TrackTable,
+    current_route.hovered_block == ActiveBlock::TrackTable,
+  );
+
+  // TODO: fix this
+  let selected_song_index = 0;
+
+  let items = app
+    .episode_table
+    .episodes
+    .iter()
+    .map(|episode| TableItem {
+      id: episode.id.to_owned(),
+      format: vec![
+        episode.name.to_owned(),
+        episode.description.to_owned(),
+        // TODO: fix this
+        "00:00".to_owned(),
+      ],
+    })
+    .collect::<Vec<TableItem>>();
+
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Episodes", &header),
+    &items,
+    selected_song_index,
+    highlight_state,
+  );
 }
 
 pub fn draw_made_for_you<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
