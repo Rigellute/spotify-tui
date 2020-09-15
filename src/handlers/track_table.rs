@@ -66,7 +66,6 @@ pub fn handler(key: Key, app: &mut App) {
           }
           TrackTableContext::AlbumSearch => {}
           TrackTableContext::PlaylistSearch => {}
-          TrackTableContext::ShowSearch => {}
           TrackTableContext::MadeForYou => {
             let (playlists, selected_playlist_index) =
               (&app.library.made_for_you_playlists, &app.made_for_you_index);
@@ -118,7 +117,6 @@ pub fn handler(key: Key, app: &mut App) {
           }
           TrackTableContext::AlbumSearch => {}
           TrackTableContext::PlaylistSearch => {}
-          TrackTableContext::ShowSearch => {}
           TrackTableContext::MadeForYou => {
             let (playlists, selected_playlist_index) = (
               &app
@@ -229,7 +227,6 @@ fn play_random_song(app: &mut App) {
           ))
         }
       }
-      TrackTableContext::ShowSearch => {}
       TrackTableContext::MadeForYou => {
         if let Some(playlist) = &app
           .library
@@ -306,7 +303,6 @@ fn jump_to_end(app: &mut App) {
       TrackTableContext::SavedTracks => {}
       TrackTableContext::AlbumSearch => {}
       TrackTableContext::PlaylistSearch => {}
-      TrackTableContext::ShowSearch => {}
       TrackTableContext::MadeForYou => {}
     },
     None => {}
@@ -403,7 +399,6 @@ fn on_enter(app: &mut App) {
           ));
         };
       }
-      TrackTableContext::ShowSearch => {}
       TrackTableContext::MadeForYou => {
         if let Some(_track) = tracks.get(*selected_index) {
           let context_uri = Some(
@@ -449,7 +444,6 @@ fn jump_to_start(app: &mut App) {
       TrackTableContext::SavedTracks => {}
       TrackTableContext::AlbumSearch => {}
       TrackTableContext::PlaylistSearch => {}
-      TrackTableContext::ShowSearch => {}
       TrackTableContext::MadeForYou => {}
     },
     None => {}

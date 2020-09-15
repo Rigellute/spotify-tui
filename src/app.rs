@@ -170,10 +170,16 @@ pub enum TrackTableContext {
   MyPlaylists,
   AlbumSearch,
   PlaylistSearch,
-  ShowSearch,
   SavedTracks,
   RecommendedTracks,
   MadeForYou,
+}
+
+// Is it possible to compose enums?
+#[derive(PartialEq, Debug)]
+pub enum EpisodeTableContext {
+  ShowSearch,
+  MyShows,
 }
 
 #[derive(Clone, PartialEq, Debug, Copy)]
@@ -214,7 +220,7 @@ pub struct TrackTable {
 pub struct EpisodeTable {
   pub episodes: Vec<SimplifiedEpisode>,
   pub selected_index: usize,
-  pub context: Option<TrackTableContext>,
+  pub context: Option<EpisodeTableContext>,
 }
 
 #[derive(Clone)]

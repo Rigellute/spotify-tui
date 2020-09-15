@@ -1305,9 +1305,6 @@ where
     current_route.hovered_block == ActiveBlock::TrackTable,
   );
 
-  // TODO: fix this
-  let selected_song_index = 0;
-
   let items = app
     .episode_table
     .episodes
@@ -1329,7 +1326,7 @@ where
     layout_chunk,
     ("Episodes", &header),
     &items,
-    selected_song_index,
+    app.episode_table.selected_index,
     highlight_state,
   );
 }

@@ -1,7 +1,7 @@
 use super::{
   super::app::{
     ActiveBlock, App, DialogContext, RecommendationsContext, RouteId, SearchResultBlock,
-    TrackTableContext,
+    TrackTableContext, EpisodeTableContext,
   },
   common_key_events,
 };
@@ -317,7 +317,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
       ) {
         if let Some(show) = shows_result.items.get(index) {
           // Go to show tracks table
-          app.track_table.context = Some(TrackTableContext::ShowSearch);
+          app.episode_table.context = Some(EpisodeTableContext::ShowSearch);
           let show_id = show.id.to_owned();
           app.dispatch(IoEvent::GetShowEpisodes(show_id));
         };
