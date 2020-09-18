@@ -180,7 +180,7 @@ pub enum TrackTableContext {
 #[derive(PartialEq, Debug)]
 pub enum EpisodeTableContext {
   ShowSearch,
-  MyShows,
+  SavedShows,
 }
 
 #[derive(Clone, PartialEq, Debug, Copy)]

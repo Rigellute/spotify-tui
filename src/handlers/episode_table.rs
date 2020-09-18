@@ -42,7 +42,7 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.episode_table.context {
         Some(context) => match context {
           EpisodeTableContext::ShowSearch => {}
-          EpisodeTableContext::MyShows => {}
+          EpisodeTableContext::SavedShows => {}
         },
         None => {}
       };
@@ -52,7 +52,7 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.episode_table.context {
         Some(context) => match context {
           EpisodeTableContext::ShowSearch => {}
-          EpisodeTableContext::MyShows => {}
+          EpisodeTableContext::SavedShows => {}
         },
         None => {}
       };
@@ -68,7 +68,7 @@ fn jump_to_end(app: &mut App) {
   match &app.episode_table.context {
     Some(context) => match context {
       EpisodeTableContext::ShowSearch => {}
-      EpisodeTableContext::MyShows => {}
+      EpisodeTableContext::SavedShows => {}
     },
     None => {}
   }
@@ -93,7 +93,7 @@ fn on_enter(app: &mut App) {
           Some(*selected_index),
         ));
       }
-      EpisodeTableContext::MyShows => {}
+      EpisodeTableContext::SavedShows => {}
     },
     None => {}
   }
@@ -103,7 +103,7 @@ fn jump_to_start(app: &mut App) {
   match &app.episode_table.context {
     Some(context) => match context {
       EpisodeTableContext::ShowSearch => {}
-      EpisodeTableContext::MyShows => {}
+      EpisodeTableContext::SavedShows => {}
     },
     None => {}
   }
