@@ -1,11 +1,9 @@
 use super::{
-  super::app::{App, RecommendationsContext, EpisodeTable, EpisodeTableContext},
+  super::app::{App, EpisodeTable, EpisodeTableContext},
   common_key_events,
 };
 use crate::event::Key;
 use crate::network::IoEvent;
-use rand::{thread_rng, Rng};
-use serde_json::from_value;
 
 pub fn handler(key: Key, app: &mut App) {
   match key {
@@ -43,8 +41,8 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Ctrl('d') => {
       match &app.episode_table.context {
         Some(context) => match context {
-          EpisodeTableContext::ShowSearch => {},
-          EpisodeTableContext::MyShows => {},
+          EpisodeTableContext::ShowSearch => {}
+          EpisodeTableContext::MyShows => {}
         },
         None => {}
       };
@@ -53,13 +51,13 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Ctrl('u') => {
       match &app.episode_table.context {
         Some(context) => match context {
-          EpisodeTableContext::ShowSearch => {},
-          EpisodeTableContext::MyShows => {},
+          EpisodeTableContext::ShowSearch => {}
+          EpisodeTableContext::MyShows => {}
         },
         None => {}
       };
     }
-    Key::Char('s') => {}, // TODO: handle saving the show
+    Key::Char('s') => {} // TODO: handle saving the show
     Key::Ctrl('e') => jump_to_end(app),
     Key::Ctrl('a') => jump_to_start(app),
     _ => {}
@@ -68,6 +66,7 @@ pub fn handler(key: Key, app: &mut App) {
 
 fn jump_to_end(app: &mut App) {
   match &app.episode_table.context {
+    Some(context) => match context {
       EpisodeTableContext::ShowSearch => {}
       EpisodeTableContext::MyShows => {}
     },
@@ -83,10 +82,21 @@ fn on_enter(app: &mut App) {
   } = &app.episode_table;
   match &context {
     Some(context) => match context {
-      EpisodeTableContext::ShowSearch => {}
+      EpisodeTableContext::ShowSearch => {
+        let episode_uris = episodes
+          .iter()
+          .map(|episode| episode.uri.to_owned())
+          .collect::<Vec<String>>();
+        app.dispatch(IoEvent::StartPlayback(
+          None,
+          Some(episode_uris),
+          Some(*selected_index),
+        ));
+      }
       EpisodeTableContext::MyShows => {}
+    },
     None => {}
-  };
+  }
 }
 
 fn jump_to_start(app: &mut App) {

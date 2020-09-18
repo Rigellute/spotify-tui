@@ -1301,8 +1301,8 @@ where
   let current_route = app.get_current_route();
 
   let highlight_state = (
-    current_route.active_block == ActiveBlock::TrackTable,
-    current_route.hovered_block == ActiveBlock::TrackTable,
+    current_route.active_block == ActiveBlock::EpisodeTable,
+    current_route.hovered_block == ActiveBlock::EpisodeTable,
   );
 
   let items = app

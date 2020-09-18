@@ -433,7 +433,7 @@ impl<'a> Network<'a> {
         let mut app = self.app.lock().await;
         app.episode_table.episodes = episodes.items;
 
-        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::TrackTable);
+        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

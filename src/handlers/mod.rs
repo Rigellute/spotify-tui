@@ -20,6 +20,7 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
+mod episode_table;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
@@ -115,6 +116,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::TrackTable => {
       track_table::handler(key, app);
+    }
+    ActiveBlock::EpisodeTable => {
+      episode_table::handler(key, app);
     }
     ActiveBlock::HelpMenu => {
       help_menu::handler(key, app);
