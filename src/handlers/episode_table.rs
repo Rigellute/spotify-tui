@@ -77,7 +77,7 @@ fn jump_to_end(app: &mut App) {
 fn on_enter(app: &mut App) {
   let EpisodeTable {
     context,
-    selected_index,
+    selected_index: _,
     episodes,
   } = &app.episode_table;
   match &context {
@@ -90,7 +90,7 @@ fn on_enter(app: &mut App) {
         app.dispatch(IoEvent::StartPlayback(
           None,
           Some(episode_uris),
-          Some(*selected_index),
+          Some(app.episode_table.selected_index),
         ));
       }
       EpisodeTableContext::SavedShows => {}
