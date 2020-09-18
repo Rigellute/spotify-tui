@@ -463,7 +463,7 @@ where
       Some(podcasts) => podcasts
         .items
         .iter()
-        .map(|item| format!("{:} - {}", item.name, item.publisher).to_owned())
+        .map(|item| format!("{:} - {}", item.name, item.publisher))
         .collect(),
       None => vec![],
     };
@@ -1314,8 +1314,7 @@ where
       format: vec![
         episode.name.to_owned(),
         episode.description.to_owned(),
-        // TODO: fix this
-        "00:00".to_owned(),
+        millis_to_minutes(u128::from(episode.duration_ms)),
       ],
     })
     .collect::<Vec<TableItem>>();

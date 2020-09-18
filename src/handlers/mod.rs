@@ -7,6 +7,7 @@ mod basic_view;
 mod common_key_events;
 mod dialog;
 mod empty;
+mod episode_table;
 mod error_screen;
 mod help_menu;
 mod home;
@@ -20,7 +21,6 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
-mod episode_table;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;

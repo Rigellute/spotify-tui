@@ -1,7 +1,7 @@
 use super::{
   super::app::{
-    ActiveBlock, App, DialogContext, RecommendationsContext, RouteId, SearchResultBlock,
-    TrackTableContext, EpisodeTableContext,
+    ActiveBlock, App, DialogContext, EpisodeTableContext, RecommendationsContext, RouteId,
+    SearchResultBlock, TrackTableContext,
   },
   common_key_events,
 };
