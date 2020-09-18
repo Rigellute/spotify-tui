@@ -37,7 +37,7 @@ pub enum TableId {
 #[derive(PartialEq)]
 pub enum ColumnId {
   None,
-  SongTitle,
+  Title,
   Liked,
 }
 
@@ -542,7 +542,7 @@ where
         ..Default::default()
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 5,
       },
@@ -647,7 +647,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 0.3),
       },
@@ -726,7 +726,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 0.3),
       },
@@ -1286,13 +1286,18 @@ where
         ..Default::default()
       },
       TableHeaderItem {
-        text: "Description",
-        width: get_percentage_width(layout_chunk.width, 2.5 / 5.0),
+        text: "Date",
+        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0),
         ..Default::default()
       },
       TableHeaderItem {
+        text: "Name",
+        width: get_percentage_width(layout_chunk.width, 3.5 / 5.0),
+        id: ColumnId::Title,
+      },
+      TableHeaderItem {
         text: "Duration",
-        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0),
+        width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
         ..Default::default()
       },
     ],
@@ -1384,7 +1389,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         // We need to subtract the fixed value of the previous column
         width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 2,
@@ -1556,7 +1561,7 @@ fn draw_table<B>(
       PlayingItem::Track(track) => items
         .iter()
         .position(|item| track.id.to_owned().map(|id| id == item.id).unwrap_or(false)),
-      PlayingItem::Episode(_episode) => None,
+      PlayingItem::Episode(episode) => items.iter().position(|item| episode.id == item.id),
     })
   });
 
@@ -1579,7 +1584,7 @@ fn draw_table<B>(
     match header.id {
       TableId::Song | TableId::RecentlyPlayed | TableId::Album => {
         // First check if the song should be highlighted because it is currently playing
-        if let Some(title_idx) = header.get_index(ColumnId::SongTitle) {
+        if let Some(title_idx) = header.get_index(ColumnId::Title) {
           if let Some(track_playing_offset_index) =
             track_playing_index.and_then(|idx| idx.checked_sub(offset))
           {
@@ -1596,6 +1601,20 @@ fn draw_table<B>(
         if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
           if app.liked_song_ids_set.contains(item.id.as_str()) {
             formatted_row[liked_idx] = " ♥".to_string();
+          }
+        }
+      }
+      TableId::PodcastEpisodes => {
+        if let Some(name_idx) = header.get_index(ColumnId::Title) {
+          if let Some(track_playing_offset_index) =
+            track_playing_index.and_then(|idx| idx.checked_sub(offset))
+          {
+            if i == track_playing_offset_index {
+              formatted_row[name_idx] = format!("▶ {}", &formatted_row[name_idx]);
+              style = Style::default()
+                .fg(app.user_config.theme.active)
+                .modifier(Modifier::BOLD);
+            }
           }
         }
       }
