@@ -1281,7 +1281,8 @@ where
   let header = TableHeader {
     id: TableId::PodcastEpisodes,
     items: vec![
-      TableHeaderItem { // Column to mark an episode as fully played
+      TableHeaderItem {
+        // Column to mark an episode as fully played
         text: "",
         width: 2,
         ..Default::default()
@@ -1321,14 +1322,21 @@ where
           fully_played,
           resume_position_ms,
         }) => (
-          if fully_played { " ✔".to_owned() } else { "".to_owned() },
+          if fully_played {
+            " ✔".to_owned()
+          } else {
+            "".to_owned()
+          },
           format!(
             "{} / {}",
             millis_to_minutes(u128::from(resume_position_ms)),
             millis_to_minutes(u128::from(episode.duration_ms))
           ),
         ),
-        None => ("".to_owned(), millis_to_minutes(u128::from(episode.duration_ms))),
+        None => (
+          "".to_owned(),
+          millis_to_minutes(u128::from(episode.duration_ms)),
+        ),
       };
       TableItem {
         id: episode.id.to_owned(),
