@@ -9,6 +9,7 @@ use super::{
   banner::BANNER,
 };
 use help::get_help_docs;
+use rspotify::model::show::ResumePoint;
 use rspotify::model::PlayingItem;
 use rspotify::senum::RepeatState;
 use tui::{
@@ -1280,14 +1281,14 @@ where
   let header = TableHeader {
     id: TableId::PodcastEpisodes,
     items: vec![
-      TableHeaderItem {
-        text: "Name",
-        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+      TableHeaderItem { // Column to mark an episode as fully played
+        text: "",
+        width: 2,
         ..Default::default()
       },
       TableHeaderItem {
         text: "Date",
-        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0),
+        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0) - 2,
         ..Default::default()
       },
       TableHeaderItem {
@@ -1314,13 +1315,30 @@ where
     .episode_table
     .episodes
     .iter()
-    .map(|episode| TableItem {
-      id: episode.id.to_owned(),
-      format: vec![
-        episode.name.to_owned(),
-        episode.description.to_owned(),
-        millis_to_minutes(u128::from(episode.duration_ms)),
-      ],
+    .map(|episode| {
+      let (played_str, time_str) = match episode.resume_point {
+        Some(ResumePoint {
+          fully_played,
+          resume_position_ms,
+        }) => (
+          if fully_played { " ✔".to_owned() } else { "".to_owned() },
+          format!(
+            "{} / {}",
+            millis_to_minutes(u128::from(resume_position_ms)),
+            millis_to_minutes(u128::from(episode.duration_ms))
+          ),
+        ),
+        None => ("".to_owned(), millis_to_minutes(u128::from(episode.duration_ms))),
+      };
+      TableItem {
+        id: episode.id.to_owned(),
+        format: vec![
+          played_str,
+          episode.release_date.to_owned(),
+          episode.name.to_owned(),
+          time_str,
+        ],
+      }
     })
     .collect::<Vec<TableItem>>();
 
