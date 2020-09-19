@@ -528,7 +528,6 @@ pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
 {
-  println!("Trying to draw the episode table");
   let header = TableHeader {
     id: TableId::Album,
     items: vec![
