@@ -1,5 +1,5 @@
 use super::{
-  super::app::{App, EpisodeTable, EpisodeTableContext},
+  super::app::{App, EpisodeTable},
   common_key_events,
 };
 use crate::event::Key;
@@ -38,25 +38,9 @@ pub fn handler(key: Key, app: &mut App) {
       on_enter(app);
     }
     // Scroll down
-    Key::Ctrl('d') => {
-      match &app.episode_table.context {
-        Some(context) => match context {
-          EpisodeTableContext::ShowSearch => {}
-          EpisodeTableContext::SavedShows => {}
-        },
-        None => {}
-      };
-    }
+    Key::Ctrl('d') => {}
     // Scroll up
-    Key::Ctrl('u') => {
-      match &app.episode_table.context {
-        Some(context) => match context {
-          EpisodeTableContext::ShowSearch => {}
-          EpisodeTableContext::SavedShows => {}
-        },
-        None => {}
-      };
-    }
+    Key::Ctrl('u') => {}
     Key::Char('s') => {} // TODO: handle saving the show
     Key::Ctrl('e') => jump_to_end(app),
     Key::Ctrl('a') => jump_to_start(app),
@@ -64,47 +48,22 @@ pub fn handler(key: Key, app: &mut App) {
   }
 }
 
-fn jump_to_end(app: &mut App) {
-  match &app.episode_table.context {
-    Some(context) => match context {
-      EpisodeTableContext::ShowSearch => {}
-      EpisodeTableContext::SavedShows => {}
-    },
-    None => {}
-  }
-}
+fn jump_to_end(app: &mut App) {}
 
 fn on_enter(app: &mut App) {
   let EpisodeTable {
-    context,
     selected_index: _,
     episodes,
   } = &app.episode_table;
-  match &context {
-    Some(context) => match context {
-      EpisodeTableContext::ShowSearch => {
-        let episode_uris = episodes
-          .iter()
-          .map(|episode| episode.uri.to_owned())
-          .collect::<Vec<String>>();
-        app.dispatch(IoEvent::StartPlayback(
-          None,
-          Some(episode_uris),
-          Some(app.episode_table.selected_index),
-        ));
-      }
-      EpisodeTableContext::SavedShows => {}
-    },
-    None => {}
-  }
+  let episode_uris = episodes
+    .iter()
+    .map(|episode| episode.uri.to_owned())
+    .collect::<Vec<String>>();
+  app.dispatch(IoEvent::StartPlayback(
+    None,
+    Some(episode_uris),
+    Some(app.episode_table.selected_index),
+  ));
 }
 
-fn jump_to_start(app: &mut App) {
-  match &app.episode_table.context {
-    Some(context) => match context {
-      EpisodeTableContext::ShowSearch => {}
-      EpisodeTableContext::SavedShows => {}
-    },
-    None => {}
-  }
-}
+fn jump_to_start(app: &mut App) {}
