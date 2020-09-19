@@ -891,9 +891,11 @@ impl App {
     {
       match item {
         PlayingItem::Track(track) => {
-          let uri = track.uri.clone();
-          self.dispatch(IoEvent::GetAudioAnalysis(uri));
-          self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
+          if self.get_current_route().id != RouteId::Analysis {
+            let uri = track.uri.clone();
+            self.dispatch(IoEvent::GetAudioAnalysis(uri));
+            self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
+          }
         }
         PlayingItem::Episode(_epidose) => {}
       }
