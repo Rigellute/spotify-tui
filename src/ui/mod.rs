@@ -1676,7 +1676,7 @@ fn draw_table<B>(
               formatted_row[name_idx] = format!("▶ {}", &formatted_row[name_idx]);
               style = Style::default()
                 .fg(app.user_config.theme.active)
-                .modifier(Modifier::BOLD);
+                .add_modifier(Modifier::BOLD);
             }
           }
         }
