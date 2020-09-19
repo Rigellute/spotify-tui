@@ -7,8 +7,12 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-59-orange.svg?style=flat-square)](#contributors-)
+
+[![All Contributors](https://img.shields.io/badge/all_contributors-62-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+
+[![Follow Alexander Keliris (Rigellute)](https://img.shields.io/twitter/follow/AlexKeliris?label=Follow%20Alexander%20Keliris%20%28Rigellute%29&style=social)](https://twitter.com/intent/follow?screen_name=AlexKeliris)
 
 A Spotify client for the terminal written in Rust.
 
@@ -21,6 +25,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Homebrew](#homebrew)
     - [Snap](#snap)
     - [AUR](#aur)
+    - [Nix](#nix)
     - [Void Linux](#void-linux)
     - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
@@ -82,6 +87,17 @@ For those on Arch Linux you can find the package on AUR [here](https://aur.archl
 yay -S spotify-tui
 ```
 
+### Nix
+
+Available as the package `spotify-tui`. To install run:
+
+```bash
+nix-env -iA nixpkgs.spotify-tui
+```
+
+Where `nixpkgs` is the channel name in your configuration. For a more up-to-date installation, use the unstable channel.
+It is also possible to add the package to `environment.systemPackages` (for NixOS), or `home.packages` when using [home-manager](https://github.com/rycee/home-manager).
+
 ### Void Linux
 
 Available on the official repositories. To install, run
@@ -126,7 +142,7 @@ If you are using the Windows Subsystem for Linux, you'll need to [install additi
 
 ### Windows 10
 
-#### Scoop installer 
+#### Scoop installer
 
 First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
 
@@ -359,11 +375,15 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://ricardohe97.github.io"><img src="https://avatars3.githubusercontent.com/u/28399979?v=4" width="100px;" alt=""/><br /><sub><b>Ricardo Holguin</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=RicardoHE97" title="Code">💻</a></td>
     <td align="center"><a href="https://ksk.netlify.com"><img src="https://avatars3.githubusercontent.com/u/13160198?v=4" width="100px;" alt=""/><br /><sub><b>Keisuke Toyota</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=ksk001100" title="Code">💻</a></td>
     <td align="center"><a href="https://jackson15j.github.io"><img src="https://avatars1.githubusercontent.com/u/3226988?v=4" width="100px;" alt=""/><br /><sub><b>Craig Astill</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=jackson15j" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/onielfa"><img src="https://avatars0.githubusercontent.com/u/4358172?v=4" width="100px;" alt=""/><br /><sub><b>Onielfa</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=onielfa" title="Code">💻</a></td>
+    <td align="center"><a href="https://usrme.xyz"><img src="https://avatars3.githubusercontent.com/u/5902545?v=4" width="100px;" alt=""/><br /><sub><b>usrme</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=usrme" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/murlakatamenka"><img src="https://avatars2.githubusercontent.com/u/7361274?v=4" width="100px;" alt=""/><br /><sub><b>Sergey A.</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=murlakatamenka" title="Code">💻</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
