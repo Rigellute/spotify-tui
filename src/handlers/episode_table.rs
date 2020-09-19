@@ -48,7 +48,10 @@ pub fn handler(key: Key, app: &mut App) {
   }
 }
 
-fn jump_to_end(app: &mut App) {}
+fn jump_to_end(app: &mut App) {
+    let last_idx = &app.episode_table.episodes.len() - 1;
+    app.episode_table.selected_index = last_idx;
+}
 
 fn on_enter(app: &mut App) {
   let EpisodeTable {
@@ -66,4 +69,6 @@ fn on_enter(app: &mut App) {
   ));
 }
 
-fn jump_to_start(app: &mut App) {}
+fn jump_to_start(app: &mut App) {
+    app.episode_table.selected_index = 0;
+}
