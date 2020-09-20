@@ -426,15 +426,15 @@ impl App {
         .as_millis()
         + u128::from(*progress_ms);
 
-      match item {
-        PlayingItem::Track(track) => {
-          if elapsed < u128::from(track.duration_ms) {
-            self.song_progress_ms = elapsed;
-          } else {
-            self.song_progress_ms = track.duration_ms.into();
-          }
-        }
-        PlayingItem::Episode(_episode) => {}
+      let duration_ms = match item {
+        PlayingItem::Track(track) => track.duration_ms,
+        PlayingItem::Episode(episode) => episode.duration_ms,
+      };
+
+      if elapsed < u128::from(duration_ms) {
+        self.song_progress_ms = elapsed;
+      } else {
+        self.song_progress_ms = duration_ms.into();
       }
     }
   }
@@ -444,22 +444,20 @@ impl App {
       item: Some(item), ..
     }) = &self.current_playback_context
     {
-      match item {
-        PlayingItem::Track(track) => {
-          let event = if track.duration_ms - self.song_progress_ms as u32
-            > self.user_config.behavior.seek_milliseconds
-          {
-            IoEvent::Seek(
-              self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds,
-            )
-          } else {
-            IoEvent::NextTrack
-          };
-
-          self.dispatch(event);
-        }
-        PlayingItem::Episode(_episode) => {}
+      let duration_ms = match item {
+        PlayingItem::Track(track) => track.duration_ms,
+        PlayingItem::Episode(episode) => episode.duration_ms,
       };
+
+      let event = if duration_ms - self.song_progress_ms as u32
+        > self.user_config.behavior.seek_milliseconds
+      {
+        IoEvent::Seek(self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds)
+      } else {
+        IoEvent::NextTrack
+      };
+
+      self.dispatch(event);
     }
   }
 
@@ -606,7 +604,14 @@ impl App {
             self.handle_error(anyhow!("failed to set clipboard content: {}", e));
           }
         }
-        PlayingItem::Episode(_episode) => {}
+        PlayingItem::Episode(episode) => {
+          if let Err(e) = clipboard.set_contents(format!(
+            "https://open.spotify.com/episode/{}",
+            episode.id.to_owned()
+          )) {
+            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
+          }
+        }
       }
     }
   }
@@ -630,7 +635,14 @@ impl App {
             self.handle_error(anyhow!("failed to set clipboard content: {}", e));
           }
         }
-        PlayingItem::Episode(_episode) => {}
+        PlayingItem::Episode(episode) => {
+          if let Err(e) = clipboard.set_contents(format!(
+            "https://open.spotify.com/show/{}",
+            episode.show.id.to_owned()
+          )) {
+            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
+          }
+        }
       }
     }
   }
@@ -895,7 +907,11 @@ impl App {
           self.dispatch(IoEvent::GetAudioAnalysis(uri));
           self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
         }
-        PlayingItem::Episode(_epidose) => {}
+        PlayingItem::Episode(_episode) => {
+          // No audio analysis available for podcast uris, so just default to the empty analysis
+          // view to avoid a 400 error code
+          self.push_navigation_stack(RouteId::Analysis, ActiveBlock::Analysis);
+        }
       }
     }
   }
