@@ -813,7 +813,7 @@ impl App {
           if let Some(selected_index) = self.search_results.selected_artists_index {
             let selected_artist: &FullArtist = &artists.items[selected_index];
             let artist_id = selected_artist.id.clone();
-            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
+            self.dispatch(IoEvent::UserFollowArtists(vec![artist_id]));
           }
         }
       }
