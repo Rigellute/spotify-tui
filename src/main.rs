@@ -344,7 +344,7 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
       app.dispatch(IoEvent::GetPlaylists);
       app.dispatch(IoEvent::GetUser);
       app.dispatch(IoEvent::GetCurrentPlayback);
-      app.help_docs_size = ui::help::get_help_docs().len() as u32;
+      app.help_docs_size = ui::help::get_help_docs(&app.user_config.keys).len() as u32;
 
       is_first_render = false;
     }

@@ -1,3 +1,4 @@
+use std::fmt;
 use crossterm::event;
 
 /// Represents an key.
@@ -92,6 +93,24 @@ impl Key {
       _ => panic!("unknown function key: F{}", n),
     }
   }
+}
+
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Key::Alt(' ') => write!(f, "<Alt+Space>", c),
+            Key::Ctrl(' ') => write!(f, "<Ctrl+Space>", c),
+            Key::Char(' ') => write!(f, "<Space>"),
+            Key::Alt(c) => write!(f, "<Alt+{}>", c),
+            Key::Ctrl(c) => write!(f, "<Ctrl+{}>", c),
+            Key::Char(c) => write!(f, "{}", c),
+            Key::Left
+                | Key::Right
+                | Key::Up
+                | Key::Down => write!(f, "<{:?} Arrow Key>", self),
+            _ => write!(f, "{:?}", self),
+        }
+    }
 }
 
 impl From<event::KeyEvent> for Key {

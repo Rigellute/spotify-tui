@@ -84,7 +84,7 @@ where
   let gray = Style::default().fg(app.user_config.theme.text);
   let header = ["Description", "Event", "Context"];
 
-  let help_docs = get_help_docs();
+  let help_docs = get_help_docs(&app.user_config.keys);
   let help_docs = &help_docs[app.help_menu_offset as usize..];
 
   let rows = help_docs
