@@ -1573,6 +1573,7 @@ fn draw_table<B>(
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
+    .header_style(Style::default().fg(app.user_config.theme.header))
     .widths(&widths);
   f.render_widget(table, layout_chunk);
 }
