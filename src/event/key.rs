@@ -98,8 +98,8 @@ impl Key {
 impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Key::Alt(' ') => write!(f, "<Alt+Space>", c),
-            Key::Ctrl(' ') => write!(f, "<Ctrl+Space>", c),
+            Key::Alt(' ') => write!(f, "<Alt+Space>"),
+            Key::Ctrl(' ') => write!(f, "<Ctrl+Space>"),
             Key::Char(' ') => write!(f, "<Space>"),
             Key::Alt(c) => write!(f, "<Alt+{}>", c),
             Key::Ctrl(c) => write!(f, "<Ctrl+{}>", c),
@@ -108,6 +108,16 @@ impl fmt::Display for Key {
                 | Key::Right
                 | Key::Up
                 | Key::Down => write!(f, "<{:?} Arrow Key>", self),
+            Key::Enter
+                | Key::Tab
+                | Key::Backspace
+                | Key::Esc
+                | Key::Ins
+                | Key::Delete
+                | Key::Home
+                | Key::End
+                | Key::PageUp
+                | Key::PageDown => write!(f, "<{:?}>", self),
             _ => write!(f, "{:?}", self),
         }
     }
