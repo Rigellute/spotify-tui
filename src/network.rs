@@ -17,7 +17,7 @@ use rspotify::{
     PlayingItem,
   },
   oauth2::{SpotifyClientCredentials, SpotifyOAuth, TokenInfo},
-  senum::{Country, RepeatState, SearchType},
+  senum::{AdditionalType, Country, RepeatState, SearchType},
   util::get_token,
 };
 use serde_json::{map::Map, Value};
@@ -299,7 +299,13 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_playback(&mut self) {
-    let context = self.spotify.current_playback(None, None).await;
+    let context = self
+      .spotify
+      .current_playback(
+        None,
+        Some(vec![AdditionalType::Episode, AdditionalType::Track]),
+      )
+      .await;
 
     if let Ok(Some(c)) = context {
       let mut app = self.app.lock().await;
@@ -313,7 +319,7 @@ impl<'a> Network<'a> {
               app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
             };
           }
-          PlayingItem::Episode(_episode) => {}
+          PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
         }
       };
     }
