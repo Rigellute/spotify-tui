@@ -7,6 +7,8 @@
 - Add handling Home and End buttons in user input [#550](https://github.com/Rigellute/spotify-tui/pull/550)
 - Add basic playbar support for podcasts [#563](https://github.com/Rigellute/spotify-tui/pull/563)
 - Fix to be able to follow an artist in search result view [#565](https://github.com/Rigellute/spotify-tui/pull/565)
+- Add 'enable_text_emphasis' behavior config option [#573](https://github.com/Rigellute/spotify-tui/pull/573)
+- Don't add analysis view to stack if already in it [#580](https://github.com/Rigellute/spotify-tui/pull/580)
 
 ## [0.21.0] - 2020-07-24
 
