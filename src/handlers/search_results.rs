@@ -278,6 +278,7 @@ fn handle_add_item_to_queue(app: &mut App) {
     SearchResultBlock::ArtistSearch => {}
     SearchResultBlock::PlaylistSearch => {}
     SearchResultBlock::AlbumSearch => {}
+    SearchResultBlock::ShowSearch => {}
     SearchResultBlock::Empty => {}
   };
 }
