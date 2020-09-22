@@ -41,6 +41,7 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Ctrl('d') => {}
     // Scroll up
     Key::Ctrl('u') => {}
+    Key::Char('S') => toggle_sort_by_date(app),
     Key::Char('s') => {} // TODO: handle saving the show
     Key::Ctrl('e') => jump_to_end(app),
     Key::Ctrl('a') => jump_to_start(app),
@@ -57,6 +58,7 @@ fn on_enter(app: &mut App) {
   let EpisodeTable {
     selected_index: _,
     episodes,
+    reversed: _,
   } = &app.episode_table;
   let episode_uris = episodes
     .iter()
@@ -71,4 +73,24 @@ fn on_enter(app: &mut App) {
 
 fn jump_to_start(app: &mut App) {
   app.episode_table.selected_index = 0;
+}
+
+fn toggle_sort_by_date(app: &mut App) {
+  let selected_id = app
+    .episode_table
+    .episodes
+    .get(app.episode_table.selected_index)
+    .map(|e| e.id.clone());
+  app.episode_table.episodes.reverse();
+  app.episode_table.reversed ^= true;
+  if let Some(id) = selected_id {
+    app.episode_table.selected_index = app
+      .episode_table
+      .episodes
+      .iter()
+      .position(|e| e.id == id)
+      .unwrap_or(0);
+  } else {
+    app.episode_table.selected_index = 0;
+  }
 }

@@ -215,6 +215,7 @@ pub struct TrackTable {
 pub struct EpisodeTable {
   pub episodes: Vec<SimplifiedEpisode>,
   pub selected_index: usize,
+  pub reversed: bool,
 }
 
 #[derive(Clone)]

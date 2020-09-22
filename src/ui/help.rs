@@ -107,5 +107,10 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
     vec!["Follow an artist/playlist", "w", "Search result"],
     vec!["Save (like) album to library", "w", "Search result"],
     vec!["Play random song in playlist", "S", "Selected Playlist"],
+    vec![
+      "Toggle sort order of podcast episodes",
+      "S",
+      "Selected Show",
+    ],
   ]
 }
