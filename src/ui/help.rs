@@ -112,5 +112,6 @@ pub fn get_help_docs() -> Vec<Vec<&'static str>> {
       "S",
       "Selected Show",
     ],
+    vec!["Add track to queue", "z", "Hovered over track"],
   ]
 }

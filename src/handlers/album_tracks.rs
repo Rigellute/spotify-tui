@@ -77,6 +77,31 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Char('r') => {
       handle_recommended_tracks(app);
     }
+    _ if key == app.user_config.keys.add_item_to_queue => match app.album_table_context {
+      AlbumTableContext::Full => {
+        if let Some(selected_album) = app.selected_album_full.clone() {
+          if let Some(track) = selected_album
+            .album
+            .tracks
+            .items
+            .get(app.saved_album_tracks_index)
+          {
+            app.dispatch(IoEvent::AddItemToQueue(track.uri.clone()));
+          }
+        };
+      }
+      AlbumTableContext::Simplified => {
+        if let Some(selected_album_simplified) = &app.selected_album_simplified.clone() {
+          if let Some(track) = selected_album_simplified
+            .tracks
+            .items
+            .get(selected_album_simplified.selected_index)
+          {
+            app.dispatch(IoEvent::AddItemToQueue(track.uri.clone()));
+          }
+        };
+      }
+    },
     _ => {}
   };
 }

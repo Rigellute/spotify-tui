@@ -909,12 +909,17 @@ where
       let perc = get_track_progress_percentage(app.song_progress_ms, duration_ms);
 
       let song_progress_label = display_track_progress(app.song_progress_ms, duration_ms);
+      let modifier = if app.user_config.behavior.enable_text_emphasis {
+        Modifier::ITALIC | Modifier::BOLD
+      } else {
+        Modifier::empty()
+      };
       let song_progress = Gauge::default()
         .gauge_style(
           Style::default()
             .fg(app.user_config.theme.playbar_progress)
             .bg(app.user_config.theme.playbar_background)
-            .add_modifier(Modifier::ITALIC | Modifier::BOLD),
+            .add_modifier(modifier),
         )
         .percent(perc)
         .label(Span::styled(
