@@ -438,6 +438,7 @@ impl<'a> Network<'a> {
       Ok(episodes) => {
         let mut app = self.app.lock().await;
         app.episode_table.episodes = episodes.items;
+        app.episode_table.reversed = false;
 
         app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
       }
