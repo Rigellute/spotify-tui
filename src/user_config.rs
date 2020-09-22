@@ -165,6 +165,7 @@ pub struct KeyBindingsString {
   copy_album_url: Option<String>,
   audio_analysis: Option<String>,
   basic_view: Option<String>,
+  add_item_to_queue: Option<String>,
 }
 
 #[derive(Clone)]
@@ -320,6 +321,7 @@ impl UserConfig {
     to_keys!(copy_album_url);
     to_keys!(audio_analysis);
     to_keys!(basic_view);
+    to_keys!(add_item_to_queue);
 
     Ok(())
   }
