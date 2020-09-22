@@ -165,6 +165,7 @@ pub struct KeyBindingsString {
   copy_album_url: Option<String>,
   audio_analysis: Option<String>,
   basic_view: Option<String>,
+  add_item_to_queue: Option<String>,
 }
 
 #[derive(Clone)]
@@ -190,6 +191,7 @@ pub struct KeyBindings {
   pub copy_album_url: Key,
   pub audio_analysis: Key,
   pub basic_view: Key,
+  pub add_item_to_queue: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -251,6 +253,7 @@ impl UserConfig {
         copy_album_url: Key::Char('C'),
         audio_analysis: Key::Char('v'),
         basic_view: Key::Char('B'),
+        add_item_to_queue: Key::Char('z'),
       },
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
@@ -321,6 +324,7 @@ impl UserConfig {
     to_keys!(copy_album_url);
     to_keys!(audio_analysis);
     to_keys!(basic_view);
+    to_keys!(add_item_to_queue);
 
     Ok(())
   }
