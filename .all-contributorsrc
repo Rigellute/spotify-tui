@@ -583,6 +583,25 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "kepae",
+      "name": "kepae",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4238598?v=4",
+      "profile": "https://github.com/kepae",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "ericonr",
+      "name": "Érico Nogueira Rolim",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/34201958?v=4",
+      "profile": "https://github.com/ericonr",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
