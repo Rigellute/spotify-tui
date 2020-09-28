@@ -54,7 +54,7 @@ The binary executable is `spt`.
 For both macOS and Linux
 
 ```bash
-brew install Rigellute/tap/spotify-tui
+brew install spotify-tui
 ```
 
 To update, run
