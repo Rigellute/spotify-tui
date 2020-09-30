@@ -10,6 +10,7 @@
 - Fix to be able to follow an artist in search result view [#565](https://github.com/Rigellute/spotify-tui/pull/565)
 - Add 'enable_text_emphasis' behavior config option [#573](https://github.com/Rigellute/spotify-tui/pull/573)
 - Don't add analysis view to stack if already in it [#580](https://github.com/Rigellute/spotify-tui/pull/580)
+- Add next/prev page, jump to start/end to user config [#566](https://github.com/Rigellute/spotify-tui/pull/566)
 
 ## [0.21.0] - 2020-07-24
 
