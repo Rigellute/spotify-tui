@@ -51,8 +51,8 @@ pub fn handler(key: Key, app: &mut App) {
         };
       }
     }
-    Key::Ctrl('d') => app.get_current_user_saved_albums_next(),
-    Key::Ctrl('u') => app.get_current_user_saved_albums_previous(),
+    k if k == app.user_config.keys.next_page => app.get_current_user_saved_albums_next(),
+    k if k == app.user_config.keys.previous_page => app.get_current_user_saved_albums_previous(),
     Key::Char('D') => app.current_user_saved_album_delete(ActiveBlock::AlbumList),
     _ => {}
   };
