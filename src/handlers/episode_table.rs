@@ -38,9 +38,9 @@ pub fn handler(key: Key, app: &mut App) {
       on_enter(app);
     }
     // Scroll down
-    Key::Ctrl('d') => {}
+    k if k == app.user_config.keys.next_page => {}
     // Scroll up
-    Key::Ctrl('u') => {}
+    k if k == app.user_config.keys.previous_page => {}
     Key::Char('S') => toggle_sort_by_date(app),
     Key::Char('s') => {} // TODO: handle saving the show
     Key::Ctrl('e') => jump_to_end(app),
