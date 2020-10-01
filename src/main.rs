@@ -45,7 +45,7 @@ use tui::{
 };
 use user_config::{UserConfig, UserConfigPaths};
 
-const SCOPES: [&str; 13] = [
+const SCOPES: [&str; 14] = [
   "playlist-read-collaborative",
   "playlist-read-private",
   "playlist-modify-private",
@@ -57,6 +57,7 @@ const SCOPES: [&str; 13] = [
   "user-modify-playback-state",
   "user-read-currently-playing",
   "user-read-playback-state",
+  "user-read-playback-position",
   "user-read-private",
   "user-read-recently-played",
 ];
