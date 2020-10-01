@@ -43,6 +43,83 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
+trait PageAdapter<T: Clone> {
+  fn next(&self) -> Option<String>;
+
+  fn items(&self) -> &[T];
+}
+
+impl<T: Clone> PageAdapter<T> for Page<T> {
+  fn next(&self) -> Option<String> {
+    self.next.clone()
+  }
+
+  fn items(&self) -> &[T] {
+    &self.items
+  }
+}
+
+impl<T: Clone> PageAdapter<T> for CursorBasedPage<T> {
+  fn next(&self) -> Option<String> {
+    self.cursors.after.clone()
+  }
+
+  fn items(&self) -> &[T] {
+    &self.items
+  }
+}
+
+pub trait Pageable {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent>;
+}
+
+type SavedArtist = FullArtist;
+
+impl Pageable for SavedTrack {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
+    if let Some(_next_uri) = next {
+      Some(IoEvent::GetCurrentSavedTracks(Some(offset)))
+    } else {
+      None
+    }
+  }
+}
+
+impl Pageable for SavedArtist {
+  fn get_dispatch(after: Option<String>, _offset: u32) -> Option<IoEvent> {
+    if let Some(after) = after {
+      Some(IoEvent::GetFollowedArtists(Some(after)))
+    } else {
+      None
+    }
+  }
+}
+
+pub struct NewScrollableResultPages<T> {
+  pub items: Vec<T>,
+  next: Option<String>,
+}
+
+impl<T: Pageable + Clone> NewScrollableResultPages<T> {
+  fn new() -> Self {
+    NewScrollableResultPages {
+      items: vec![],
+      next: None,
+    }
+  }
+
+  fn dispatch(&self, app: &mut App) {
+    if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
+      app.dispatch(event);
+    }
+  }
+
+  fn add_page(&mut self, page: &dyn PageAdapter<T>) {
+    self.items.extend_from_slice(page.items());
+    self.next = page.next().clone();
+  }
+}
+
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
   index: usize,
