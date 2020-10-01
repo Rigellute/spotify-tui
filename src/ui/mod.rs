@@ -9,6 +9,7 @@ use super::{
   banner::BANNER,
 };
 use help::get_help_docs;
+use rspotify::model::show::ResumePoint;
 use rspotify::model::PlayingItem;
 use rspotify::senum::RepeatState;
 use tui::{
@@ -32,12 +33,13 @@ pub enum TableId {
   Song,
   RecentlyPlayed,
   MadeForYou,
+  PodcastEpisodes,
 }
 
 #[derive(PartialEq)]
 pub enum ColumnId {
   None,
-  SongTitle,
+  Title,
   Liked,
 }
 
@@ -219,6 +221,9 @@ where
     RouteId::AlbumList => {
       draw_album_list(f, app, chunks[1]);
     }
+    RouteId::PodcastEpisodes => {
+      draw_show_episodes(f, app, chunks[1]);
+    }
     RouteId::Home => {
       draw_home(f, app, chunks[1]);
     }
@@ -307,7 +312,14 @@ where
 {
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+    .constraints(
+      [
+        Constraint::Percentage(35),
+        Constraint::Percentage(35),
+        Constraint::Percentage(25),
+      ]
+      .as_ref(),
+    )
     .split(layout_chunk);
 
   {
@@ -442,6 +454,31 @@ where
       app.search_results.selected_playlists_index,
     );
   }
+
+  {
+    let podcasts_block = Layout::default()
+      .direction(Direction::Horizontal)
+      .constraints([Constraint::Percentage(100)].as_ref())
+      .split(chunks[2]);
+
+    let podcasts = match &app.search_results.shows {
+      Some(podcasts) => podcasts
+        .items
+        .iter()
+        .map(|item| format!("{:} - {}", item.name, item.publisher))
+        .collect(),
+      None => vec![],
+    };
+    draw_selectable_list(
+      f,
+      app,
+      podcasts_block[0],
+      "Podcasts",
+      &podcasts,
+      get_search_results_highlight_state(app, SearchResultBlock::ShowSearch),
+      app.search_results.selected_shows_index,
+    );
+  }
 }
 
 struct AlbumUI {
@@ -506,7 +543,7 @@ where
         ..Default::default()
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 5,
       },
@@ -611,7 +648,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 0.3),
       },
@@ -690,7 +727,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         width: get_percentage_width(layout_chunk.width, 0.3),
       },
@@ -1265,6 +1302,93 @@ where
   };
 }
 
+pub fn draw_show_episodes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let header = TableHeader {
+    id: TableId::PodcastEpisodes,
+    items: vec![
+      TableHeaderItem {
+        // Column to mark an episode as fully played
+        text: "",
+        width: 2,
+        ..Default::default()
+      },
+      TableHeaderItem {
+        text: "Date",
+        width: get_percentage_width(layout_chunk.width, 0.5 / 5.0) - 2,
+        ..Default::default()
+      },
+      TableHeaderItem {
+        text: "Name",
+        width: get_percentage_width(layout_chunk.width, 3.5 / 5.0),
+        id: ColumnId::Title,
+      },
+      TableHeaderItem {
+        text: "Duration",
+        width: get_percentage_width(layout_chunk.width, 1.0 / 5.0),
+        ..Default::default()
+      },
+    ],
+  };
+
+  let current_route = app.get_current_route();
+
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::EpisodeTable,
+    current_route.hovered_block == ActiveBlock::EpisodeTable,
+  );
+
+  let items = app
+    .episode_table
+    .episodes
+    .iter()
+    .map(|episode| {
+      let (played_str, time_str) = match episode.resume_point {
+        Some(ResumePoint {
+          fully_played,
+          resume_position_ms,
+        }) => (
+          if fully_played {
+            " ✔".to_owned()
+          } else {
+            "".to_owned()
+          },
+          format!(
+            "{} / {}",
+            millis_to_minutes(u128::from(resume_position_ms)),
+            millis_to_minutes(u128::from(episode.duration_ms))
+          ),
+        ),
+        None => (
+          "".to_owned(),
+          millis_to_minutes(u128::from(episode.duration_ms)),
+        ),
+      };
+      TableItem {
+        id: episode.id.to_owned(),
+        format: vec![
+          played_str,
+          episode.release_date.to_owned(),
+          episode.name.to_owned(),
+          time_str,
+        ],
+      }
+    })
+    .collect::<Vec<TableItem>>();
+
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Episodes", &header),
+    &items,
+    app.episode_table.selected_index,
+    highlight_state,
+  );
+}
+
 pub fn draw_made_for_you<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
@@ -1319,7 +1443,7 @@ where
         width: 2,
       },
       TableHeaderItem {
-        id: ColumnId::SongTitle,
+        id: ColumnId::Title,
         text: "Title",
         // We need to subtract the fixed value of the previous column
         width: get_percentage_width(layout_chunk.width, 2.0 / 5.0) - 2,
@@ -1505,7 +1629,7 @@ fn draw_table<B>(
       PlayingItem::Track(track) => items
         .iter()
         .position(|item| track.id.to_owned().map(|id| id == item.id).unwrap_or(false)),
-      PlayingItem::Episode(_episode) => None,
+      PlayingItem::Episode(episode) => items.iter().position(|item| episode.id == item.id),
     })
   });
 
@@ -1528,7 +1652,7 @@ fn draw_table<B>(
     match header.id {
       TableId::Song | TableId::RecentlyPlayed | TableId::Album => {
         // First check if the song should be highlighted because it is currently playing
-        if let Some(title_idx) = header.get_index(ColumnId::SongTitle) {
+        if let Some(title_idx) = header.get_index(ColumnId::Title) {
           if let Some(track_playing_offset_index) =
             track_playing_index.and_then(|idx| idx.checked_sub(offset))
           {
@@ -1545,6 +1669,20 @@ fn draw_table<B>(
         if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
           if app.liked_song_ids_set.contains(item.id.as_str()) {
             formatted_row[liked_idx] = " ♥".to_string();
+          }
+        }
+      }
+      TableId::PodcastEpisodes => {
+        if let Some(name_idx) = header.get_index(ColumnId::Title) {
+          if let Some(track_playing_offset_index) =
+            track_playing_index.and_then(|idx| idx.checked_sub(offset))
+          {
+            if i == track_playing_offset_index {
+              formatted_row[name_idx] = format!("▶ {}", &formatted_row[name_idx]);
+              style = Style::default()
+                .fg(app.user_config.theme.active)
+                .add_modifier(Modifier::BOLD);
+            }
           }
         }
       }

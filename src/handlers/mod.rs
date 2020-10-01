@@ -7,6 +7,7 @@ mod basic_view;
 mod common_key_events;
 mod dialog;
 mod empty;
+mod episode_table;
 mod error_screen;
 mod help_menu;
 mod home;
@@ -115,6 +116,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::TrackTable => {
       track_table::handler(key, app);
+    }
+    ActiveBlock::EpisodeTable => {
+      episode_table::handler(key, app);
     }
     ActiveBlock::HelpMenu => {
       help_menu::handler(key, app);

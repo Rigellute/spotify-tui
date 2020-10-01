@@ -11,6 +11,7 @@ use rspotify::{
     page::{CursorBasedPage, Page},
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
+    show::{SimplifiedEpisode, SimplifiedShow},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
     user::PrivateUser,
     PlayingItem,
@@ -170,6 +171,7 @@ pub enum SearchResultBlock {
   SongSearch,
   ArtistSearch,
   PlaylistSearch,
+  ShowSearch,
   Empty,
 }
 
@@ -202,6 +204,7 @@ pub enum ActiveBlock {
   Library,
   MyPlaylists,
   Podcasts,
+  EpisodeTable,
   RecentlyPlayed,
   SearchResultBlock,
   SelectDevice,
@@ -228,6 +231,7 @@ pub enum RouteId {
   MadeForYou,
   Artists,
   Podcasts,
+  PodcastEpisodes,
   Recommendations,
 }
 
@@ -249,6 +253,7 @@ pub enum TrackTableContext {
   MadeForYou,
 }
 
+// Is it possible to compose enums?
 #[derive(Clone, PartialEq, Debug, Copy)]
 pub enum AlbumTableContext {
   Simplified,
@@ -266,10 +271,12 @@ pub struct SearchResult {
   pub artists: Option<Page<FullArtist>>,
   pub playlists: Option<Page<SimplifiedPlaylist>>,
   pub tracks: Option<Page<FullTrack>>,
+  pub shows: Option<Page<SimplifiedShow>>,
   pub selected_album_index: Option<usize>,
   pub selected_artists_index: Option<usize>,
   pub selected_playlists_index: Option<usize>,
   pub selected_tracks_index: Option<usize>,
+  pub selected_shows_index: Option<usize>,
   pub hovered_block: SearchResultBlock,
   pub selected_block: SearchResultBlock,
 }
@@ -279,6 +286,13 @@ pub struct TrackTable {
   pub tracks: Vec<FullTrack>,
   pub selected_index: usize,
   pub context: Option<TrackTableContext>,
+}
+
+#[derive(Default)]
+pub struct EpisodeTable {
+  pub episodes: Vec<SimplifiedEpisode>,
+  pub selected_index: usize,
+  pub reversed: bool,
 }
 
 #[derive(Clone)]
@@ -352,6 +366,7 @@ pub struct App {
   pub small_search_limit: u32,
   pub song_progress_ms: u128,
   pub track_table: TrackTable,
+  pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
   pub album_list_index: usize,
   pub made_for_you_index: usize,
@@ -419,16 +434,19 @@ impl Default for App {
         albums: None,
         artists: None,
         playlists: None,
+        shows: None,
         selected_album_index: None,
         selected_artists_index: None,
         selected_playlists_index: None,
         selected_tracks_index: None,
+        selected_shows_index: None,
         tracks: None,
       },
       song_progress_ms: 0,
       selected_device_index: None,
       selected_playlist_index: None,
       track_table: Default::default(),
+      episode_table: Default::default(),
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
       clipboard_context: clipboard::ClipboardProvider::new().ok(),
@@ -946,6 +964,14 @@ impl App {
       let user_id = user.id.clone();
       self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
     }
+  }
+
+  pub fn user_follow_show(&mut self) {
+    unimplemented!();
+  }
+
+  pub fn user_unfollow_show(&mut self) {
+    unimplemented!();
   }
 
   pub fn get_made_for_you(&mut self) {

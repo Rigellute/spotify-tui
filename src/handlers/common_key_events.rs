@@ -119,6 +119,12 @@ pub fn handle_right_event(app: &mut App) {
       RouteId::AlbumList => {
         app.set_current_route_state(Some(ActiveBlock::AlbumList), Some(ActiveBlock::AlbumList));
       }
+      RouteId::PodcastEpisodes => {
+        app.set_current_route_state(
+          Some(ActiveBlock::EpisodeTable),
+          Some(ActiveBlock::EpisodeTable),
+        );
+      }
       RouteId::MadeForYou => {
         app.set_current_route_state(Some(ActiveBlock::MadeForYou), Some(ActiveBlock::MadeForYou));
       }

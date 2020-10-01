@@ -75,6 +75,7 @@ pub enum IoEvent {
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
+  GetShowEpisodes(String),
   AddItemToQueue(String),
 }
 
@@ -260,6 +261,9 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
       }
+      IoEvent::GetShowEpisodes(show_id) => {
+        self.get_show_episodes(show_id).await;
+      }
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
       }
@@ -429,6 +433,25 @@ impl<'a> Network<'a> {
     }
   }
 
+  async fn get_show_episodes(&mut self, show_id: String) {
+    match self
+      .spotify
+      .get_shows_episodes(show_id, self.large_search_limit, 0, None)
+      .await
+    {
+      Ok(episodes) => {
+        let mut app = self.app.lock().await;
+        app.episode_table.episodes = episodes.items;
+        app.episode_table.reversed = false;
+
+        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
     let search_track = self.spotify.search(
       &search_term,
@@ -466,13 +489,29 @@ impl<'a> Network<'a> {
       None,
     );
 
+    let search_show = self.spotify.search(
+      &search_term,
+      SearchType::Show,
+      self.small_search_limit,
+      0,
+      country,
+      None,
+    );
+
     // Run the futures concurrently
-    match try_join!(search_track, search_artist, search_album, search_playlist) {
+    match try_join!(
+      search_track,
+      search_artist,
+      search_album,
+      search_playlist,
+      search_show
+    ) {
       Ok((
         SearchResult::Tracks(track_results),
         SearchResult::Artists(artist_results),
         SearchResult::Albums(album_results),
         SearchResult::Playlists(playlist_results),
+        SearchResult::Shows(show_results),
       )) => {
         let mut app = self.app.lock().await;
 
@@ -498,6 +537,7 @@ impl<'a> Network<'a> {
         app.search_results.artists = Some(artist_results);
         app.search_results.albums = Some(album_results);
         app.search_results.playlists = Some(playlist_results);
+        app.search_results.shows = Some(show_results);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
