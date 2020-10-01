@@ -15,10 +15,10 @@ pub fn handler(key: Key, app: &mut App) {
         app.home_scroll -= SMALL_SCROLL;
       }
     }
-    Key::Ctrl('d') => {
+    k if k == app.user_config.keys.next_page => {
       app.home_scroll += LARGE_SCROLL;
     }
-    Key::Ctrl('u') => {
+    k if k == app.user_config.keys.previous_page => {
       if app.home_scroll > LARGE_SCROLL {
         app.home_scroll -= LARGE_SCROLL;
       } else {
