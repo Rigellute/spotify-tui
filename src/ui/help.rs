@@ -4,22 +4,22 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
   vec![
     vec![
       String::from("Scroll down to next result page"),
-      String::from("<Ctrl+d>"),
+      key_bindings.next_page.to_string(),
       String::from("Pagination"),
     ],
     vec![
       String::from("Scroll up to previous result page"),
-      String::from("<Ctrl+u>"),
+      key_bindings.previous_page.to_string(),
       String::from("Pagination"),
     ],
     vec![
       String::from("Jump to start of playlist"),
-      String::from("<Ctrl+a>"),
+      key_bindings.jump_to_start.to_string(),
       String::from("Pagination"),
     ],
     vec![
       String::from("Jump to end of playlist"),
-      String::from("<Ctrl+e>"),
+      key_bindings.jump_to_end.to_string(),
       String::from("Pagination"),
     ],
     vec![
@@ -264,7 +264,7 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
     ],
     vec![
         String::from("Add track to queue"),
-        String::from("z"),
+        key_bindings.add_item_to_queue.to_string(),
         String::from("Hovered over track"),
     ],
   ]
