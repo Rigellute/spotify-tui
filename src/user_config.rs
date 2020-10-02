@@ -145,6 +145,10 @@ pub struct UserConfigPaths {
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct KeyBindingsString {
   back: Option<String>,
+  next_page: Option<String>,
+  previous_page: Option<String>,
+  jump_to_start: Option<String>,
+  jump_to_end: Option<String>,
   jump_to_album: Option<String>,
   jump_to_artist_album: Option<String>,
   jump_to_context: Option<String>,
@@ -165,11 +169,16 @@ pub struct KeyBindingsString {
   copy_album_url: Option<String>,
   audio_analysis: Option<String>,
   basic_view: Option<String>,
+  add_item_to_queue: Option<String>,
 }
 
 #[derive(Clone)]
 pub struct KeyBindings {
   pub back: Key,
+  pub next_page: Key,
+  pub previous_page: Key,
+  pub jump_to_start: Key,
+  pub jump_to_end: Key,
   pub jump_to_album: Key,
   pub jump_to_artist_album: Key,
   pub jump_to_context: Key,
@@ -190,6 +199,7 @@ pub struct KeyBindings {
   pub copy_album_url: Key,
   pub audio_analysis: Key,
   pub basic_view: Key,
+  pub add_item_to_queue: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -197,6 +207,7 @@ pub struct BehaviorConfigString {
   pub seek_milliseconds: Option<u32>,
   pub volume_increment: Option<u8>,
   pub tick_rate_milliseconds: Option<u64>,
+  pub enable_text_emphasis: Option<bool>,
   pub show_loading_indicator: Option<bool>,
 }
 
@@ -205,6 +216,7 @@ pub struct BehaviorConfig {
   pub seek_milliseconds: u32,
   pub volume_increment: u8,
   pub tick_rate_milliseconds: u64,
+  pub enable_text_emphasis: bool,
   pub show_loading_indicator: bool,
 }
 
@@ -229,6 +241,10 @@ impl UserConfig {
       theme: Default::default(),
       keys: KeyBindings {
         back: Key::Char('q'),
+        next_page: Key::Ctrl('d'),
+        previous_page: Key::Ctrl('u'),
+        jump_to_start: Key::Ctrl('a'),
+        jump_to_end: Key::Ctrl('e'),
         jump_to_album: Key::Char('a'),
         jump_to_artist_album: Key::Char('A'),
         jump_to_context: Key::Char('o'),
@@ -249,11 +265,13 @@ impl UserConfig {
         copy_album_url: Key::Char('C'),
         audio_analysis: Key::Char('v'),
         basic_view: Key::Char('B'),
+        add_item_to_queue: Key::Char('z'),
       },
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
         tick_rate_milliseconds: 250,
+        enable_text_emphasis: true,
         show_loading_indicator: true,
       },
       path_to_config: None,
@@ -298,6 +316,10 @@ impl UserConfig {
     };
 
     to_keys!(back);
+    to_keys!(next_page);
+    to_keys!(previous_page);
+    to_keys!(jump_to_start);
+    to_keys!(jump_to_end);
     to_keys!(jump_to_album);
     to_keys!(jump_to_artist_album);
     to_keys!(jump_to_context);
@@ -318,6 +340,7 @@ impl UserConfig {
     to_keys!(copy_album_url);
     to_keys!(audio_analysis);
     to_keys!(basic_view);
+    to_keys!(add_item_to_queue);
 
     Ok(())
   }
@@ -368,6 +391,10 @@ impl UserConfig {
       } else {
         self.behavior.tick_rate_milliseconds = tick_rate;
       }
+    }
+
+    if let Some(text_emphasis) = behavior_config.enable_text_emphasis {
+      self.behavior.enable_text_emphasis = text_emphasis;
     }
 
     if let Some(loading_indicator) = behavior_config.show_loading_indicator {

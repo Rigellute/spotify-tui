@@ -263,7 +263,11 @@
       "avatar_url": "https://avatars1.githubusercontent.com/u/8843309?v=4",
       "profile": "https://github.com/sputnick1124",
       "contributions": [
-        "code"
+        "code",
+        "bug",
+        "maintenance",
+        "question",
+        "doc"
       ]
     },
     {
@@ -582,6 +586,52 @@
       "profile": "https://github.com/elcih17",
       "contributions": [
         "code"
+      ]
+    },
+    {
+      "login": "kepae",
+      "name": "kepae",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4238598?v=4",
+      "profile": "https://github.com/kepae",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "ericonr",
+      "name": "Érico Nogueira Rolim",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/34201958?v=4",
+      "profile": "https://github.com/ericonr",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "BeneCollyridam",
+      "name": "Alexander Meinhardt Scheurer",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/15802915?v=4",
+      "profile": "https://github.com/BeneCollyridam",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Toaster192",
+      "name": "Ondřej Kinšt",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/14369229?v=4",
+      "profile": "https://github.com/Toaster192",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Kryan90",
+      "name": "Kryan90",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/18740821?v=4",
+      "profile": "https://github.com/Kryan90",
+      "contributions": [
+        "doc"
       ]
     }
   ],

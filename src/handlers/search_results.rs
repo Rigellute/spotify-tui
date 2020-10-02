@@ -47,6 +47,15 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
+    SearchResultBlock::ShowSearch => {
+      if let Some(result) = &app.search_results.shows {
+        let next_index = common_key_events::on_down_press_handler(
+          &result.items,
+          app.search_results.selected_shows_index,
+        );
+        app.search_results.selected_shows_index = Some(next_index);
+      }
+    }
     SearchResultBlock::Empty => {}
   }
 }
@@ -54,7 +63,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
 fn handle_down_press_on_hovered_block(app: &mut App) {
   match app.search_results.hovered_block {
     SearchResultBlock::AlbumSearch => {
-      app.search_results.hovered_block = SearchResultBlock::SongSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::SongSearch => {
       app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
@@ -63,7 +72,10 @@ fn handle_down_press_on_hovered_block(app: &mut App) {
       app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
     }
     SearchResultBlock::PlaylistSearch => {
-      app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
+    }
+    SearchResultBlock::ShowSearch => {
+      app.search_results.hovered_block = SearchResultBlock::SongSearch;
     }
     SearchResultBlock::Empty => {}
   }
@@ -108,6 +120,15 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
+    SearchResultBlock::ShowSearch => {
+      if let Some(result) = &app.search_results.shows {
+        let next_index = common_key_events::on_up_press_handler(
+          &result.items,
+          app.search_results.selected_shows_index,
+        );
+        app.search_results.selected_shows_index = Some(next_index);
+      }
+    }
     SearchResultBlock::Empty => {}
   }
 }
@@ -118,13 +139,16 @@ fn handle_up_press_on_hovered_block(app: &mut App) {
       app.search_results.hovered_block = SearchResultBlock::SongSearch;
     }
     SearchResultBlock::SongSearch => {
-      app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::ArtistSearch => {
-      app.search_results.hovered_block = SearchResultBlock::PlaylistSearch;
+      app.search_results.hovered_block = SearchResultBlock::ShowSearch;
     }
     SearchResultBlock::PlaylistSearch => {
       app.search_results.hovered_block = SearchResultBlock::ArtistSearch;
+    }
+    SearchResultBlock::ShowSearch => {
+      app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
     }
     SearchResultBlock::Empty => {}
   }
@@ -154,6 +178,12 @@ fn handle_high_press_on_selected_block(app: &mut App) {
       if let Some(_result) = &app.search_results.playlists {
         let next_index = common_key_events::on_high_press_handler();
         app.search_results.selected_playlists_index = Some(next_index);
+      }
+    }
+    SearchResultBlock::ShowSearch => {
+      if let Some(_result) = &app.search_results.shows {
+        let next_index = common_key_events::on_high_press_handler();
+        app.search_results.selected_shows_index = Some(next_index);
       }
     }
     SearchResultBlock::Empty => {}
@@ -186,6 +216,12 @@ fn handle_middle_press_on_selected_block(app: &mut App) {
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
+    SearchResultBlock::ShowSearch => {
+      if let Some(result) = &app.search_results.shows {
+        let next_index = common_key_events::on_middle_press_handler(&result.items);
+        app.search_results.selected_shows_index = Some(next_index);
+      }
+    }
     SearchResultBlock::Empty => {}
   }
 }
@@ -216,8 +252,35 @@ fn handle_low_press_on_selected_block(app: &mut App) {
         app.search_results.selected_playlists_index = Some(next_index);
       }
     }
+    SearchResultBlock::ShowSearch => {
+      if let Some(result) = &app.search_results.shows {
+        let next_index = common_key_events::on_low_press_handler(&result.items);
+        app.search_results.selected_shows_index = Some(next_index);
+      }
+    }
     SearchResultBlock::Empty => {}
   }
+}
+
+fn handle_add_item_to_queue(app: &mut App) {
+  match &app.search_results.selected_block {
+    SearchResultBlock::SongSearch => {
+      if let (Some(index), Some(tracks)) = (
+        app.search_results.selected_tracks_index,
+        &app.search_results.tracks,
+      ) {
+        if let Some(track) = tracks.items.get(index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        }
+      }
+    }
+    SearchResultBlock::ArtistSearch => {}
+    SearchResultBlock::PlaylistSearch => {}
+    SearchResultBlock::AlbumSearch => {}
+    SearchResultBlock::ShowSearch => {}
+    SearchResultBlock::Empty => {}
+  };
 }
 
 fn handle_enter_event_on_selected_block(app: &mut App) {
@@ -268,6 +331,18 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
         };
       }
     }
+    SearchResultBlock::ShowSearch => {
+      if let (Some(index), Some(shows_result)) = (
+        app.search_results.selected_shows_index,
+        &app.search_results.shows,
+      ) {
+        if let Some(show) = shows_result.items.get(index) {
+          // Go to show tracks table
+          let show_id = show.id.to_owned();
+          app.dispatch(IoEvent::GetShowEpisodes(show_id));
+        };
+      }
+    }
     SearchResultBlock::Empty => {}
   };
 }
@@ -310,6 +385,15 @@ fn handle_enter_event_on_hovered_block(app: &mut App) {
       app.search_results.selected_playlists_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
     }
+    SearchResultBlock::ShowSearch => {
+      let next_index = match app.search_results.selected_shows_index {
+        Some(index) => index,
+        None => 0,
+      };
+
+      app.search_results.selected_shows_index = Some(next_index);
+      app.search_results.selected_block = SearchResultBlock::ShowSearch;
+    }
     SearchResultBlock::Empty => {}
   };
 }
@@ -345,6 +429,7 @@ fn handle_recommended_tracks(app: &mut App) {
       };
     }
     SearchResultBlock::PlaylistSearch => {}
+    SearchResultBlock::ShowSearch => {}
     SearchResultBlock::Empty => {}
   }
 }
@@ -383,6 +468,9 @@ pub fn handler(key: Key, app: &mut App) {
         SearchResultBlock::PlaylistSearch => {
           app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
         }
+        SearchResultBlock::ShowSearch => {
+          common_key_events::handle_left_event(app);
+        }
         SearchResultBlock::Empty => {}
       }
     }
@@ -401,6 +489,7 @@ pub fn handler(key: Key, app: &mut App) {
         SearchResultBlock::PlaylistSearch => {
           app.search_results.hovered_block = SearchResultBlock::AlbumSearch;
         }
+        SearchResultBlock::ShowSearch => {}
         SearchResultBlock::Empty => {}
       }
     }
@@ -437,6 +526,9 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::PlaylistSearch => {
         app.user_follow_playlist();
       }
+      SearchResultBlock::ShowSearch => {
+        app.user_follow_show();
+      }
       SearchResultBlock::Empty => {}
     },
     Key::Char('D') => match app.search_results.selected_block {
@@ -458,9 +550,11 @@ pub fn handler(key: Key, app: &mut App) {
           app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistSearch));
         }
       }
+      SearchResultBlock::ShowSearch => app.user_unfollow_show(),
       SearchResultBlock::Empty => {}
     },
     Key::Char('r') => handle_recommended_tracks(app),
+    _ if key == app.user_config.keys.add_item_to_queue => handle_add_item_to_queue(app),
     // Add `s` to "see more" on each option
     _ => {}
   }

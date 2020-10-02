@@ -257,5 +257,15 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
       String::from("S"),
       String::from("Selected Playlist"),
     ],
+    vec![
+        String::from("Toggle sort order of podcast episodes"),
+        String::from("S"),
+        String::from("Selected Show"),
+    ],
+    vec![
+        String::from("Add track to queue"),
+        String::from("z"),
+        String::from("Hovered over track"),
+    ],
   ]
 }

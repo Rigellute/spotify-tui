@@ -40,7 +40,7 @@ pub fn handler(key: Key, app: &mut App) {
       on_enter(app);
     }
     // Scroll down
-    Key::Ctrl('d') => {
+    k if k == app.user_config.keys.next_page => {
       match &app.track_table.context {
         Some(context) => match context {
           TrackTableContext::MyPlaylists => {
@@ -93,7 +93,7 @@ pub fn handler(key: Key, app: &mut App) {
       };
     }
     // Scroll up
-    Key::Ctrl('u') => {
+    k if k == app.user_config.keys.previous_page => {
       match &app.track_table.context {
         Some(context) => match context {
           TrackTableContext::MyPlaylists => {
@@ -143,12 +143,13 @@ pub fn handler(key: Key, app: &mut App) {
     }
     Key::Char('s') => handle_save_track_event(app),
     Key::Char('S') => play_random_song(app),
-    Key::Ctrl('e') => jump_to_end(app),
-    Key::Ctrl('a') => jump_to_start(app),
+    k if k == app.user_config.keys.jump_to_end => jump_to_end(app),
+    k if k == app.user_config.keys.jump_to_start => jump_to_start(app),
     //recommended song radio
     Key::Char('r') => {
       handle_recommended_tracks(app);
     }
+    _ if key == app.user_config.keys.add_item_to_queue => on_queue(app),
     _ => {}
   }
 }
@@ -419,6 +420,57 @@ fn on_enter(app: &mut App) {
             None,
             Some(app.track_table.selected_index + app.made_for_you_offset as usize),
           ));
+        }
+      }
+    },
+    None => {}
+  };
+}
+
+fn on_queue(app: &mut App) {
+  let TrackTable {
+    context,
+    selected_index,
+    tracks,
+  } = &app.track_table;
+  match &context {
+    Some(context) => match context {
+      TrackTableContext::MyPlaylists => {
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        };
+      }
+      TrackTableContext::RecommendedTracks => {
+        if let Some(full_track) = app.recommended_tracks.get(app.track_table.selected_index) {
+          let uri = full_track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        }
+      }
+      TrackTableContext::SavedTracks => {
+        if let Some(page) = app.library.saved_tracks.get_results(None) {
+          if let Some(saved_track) = page.items.get(app.track_table.selected_index) {
+            let uri = saved_track.track.uri.clone();
+            app.dispatch(IoEvent::AddItemToQueue(uri));
+          }
+        }
+      }
+      TrackTableContext::AlbumSearch => {}
+      TrackTableContext::PlaylistSearch => {
+        let TrackTable {
+          selected_index,
+          tracks,
+          ..
+        } = &app.track_table;
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
+        };
+      }
+      TrackTableContext::MadeForYou => {
+        if let Some(track) = tracks.get(*selected_index) {
+          let uri = track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
         }
       }
     },
