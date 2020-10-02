@@ -44,7 +44,7 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
-trait PageAdapter<T: Clone> {
+pub trait PageAdapter<T: Clone> {
   fn next(&self) -> Option<String>;
 
   fn items(&self) -> &[T];
@@ -96,26 +96,37 @@ impl Pageable for SavedArtist {
   }
 }
 
+impl Pageable for SimplifiedEpisode {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
+    if let Some(_next) = next {
+      Some(IoEvent::GetShowEpisodes(None, offset))
+    } else {
+      None
+    }
+  }
+}
+
+#[derive(Default)]
 pub struct NewScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
 }
 
 impl<T: Pageable + Clone> NewScrollableResultPages<T> {
-  fn new() -> Self {
+  pub fn new() -> Self {
     NewScrollableResultPages {
       items: vec![],
       next: None,
     }
   }
 
-  fn dispatch(&self, app: &mut App) {
+  pub fn dispatch(&self, app: &mut App) {
     if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
       app.dispatch(event);
     }
   }
 
-  fn add_page(&mut self, page: &dyn PageAdapter<T>) {
+  pub fn add_page(&mut self, page: &dyn PageAdapter<T>) {
     self.items.extend_from_slice(page.items());
     self.next = page.next().clone();
   }
@@ -290,7 +301,8 @@ pub struct TrackTable {
 
 #[derive(Default)]
 pub struct EpisodeTable {
-  pub episodes: Vec<SimplifiedEpisode>,
+  pub show_id: Option<String>,
+  pub episodes: Option<NewScrollableResultPages<SimplifiedEpisode>>,
   pub selected_index: usize,
   pub reversed: bool,
 }

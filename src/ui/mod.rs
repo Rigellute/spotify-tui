@@ -1343,6 +1343,9 @@ where
   let items = app
     .episode_table
     .episodes
+    .as_ref()
+    .unwrap()
+    .items
     .iter()
     .map(|episode| {
       let (played_str, time_str) = match episode.resume_point {

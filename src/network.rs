@@ -1,6 +1,6 @@
 use crate::app::{
-  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
-  SelectedFullAlbum, TrackTableContext,
+  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, NewScrollableResultPages, RouteId,
+  SelectedAlbum, SelectedFullAlbum, TrackTableContext,
 };
 use crate::config::ClientConfig;
 use anyhow::anyhow;
@@ -75,7 +75,7 @@ pub enum IoEvent {
   GetAlbum(String),
   SetDeviceIdInConfig(String),
   CurrentUserSavedTracksContains(Vec<String>),
-  GetShowEpisodes(String),
+  GetShowEpisodes(Option<String>, u32),
   AddItemToQueue(String),
 }
 
@@ -261,8 +261,8 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
       }
-      IoEvent::GetShowEpisodes(show_id) => {
-        self.get_show_episodes(show_id).await;
+      IoEvent::GetShowEpisodes(show_id, offset) => {
+        self.get_show_episodes(show_id, offset).await;
       }
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
@@ -433,21 +433,32 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_show_episodes(&mut self, show_id: String) {
-    match self
-      .spotify
-      .get_shows_episodes(show_id, self.large_search_limit, 0, None)
-      .await
-    {
-      Ok(episodes) => {
-        let mut app = self.app.lock().await;
-        app.episode_table.episodes = episodes.items;
-        app.episode_table.reversed = false;
+  async fn get_show_episodes(&mut self, show_id: Option<String>, offset: u32) {
+    let mut app = self.app.lock().await;
 
-        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
-      }
-      Err(e) => {
-        self.handle_error(anyhow!(e)).await;
+    if show_id.is_some() {
+      app.episode_table.show_id = show_id.clone();
+    }
+
+    if let Some(show_id) = app.episode_table.show_id.clone() {
+      match self
+        .spotify
+        .get_shows_episodes(show_id, self.large_search_limit, offset, None)
+        .await
+      {
+        Ok(episodes) => {
+          let current_episodes = app
+            .episode_table
+            .episodes
+            .get_or_insert(NewScrollableResultPages::new());
+          current_episodes.add_page(&episodes);
+          app.episode_table.reversed = false;
+
+          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+        }
+        Err(e) => {
+          self.handle_error(anyhow!(e)).await;
+        }
       }
     }
   }
