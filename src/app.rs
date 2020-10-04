@@ -676,6 +676,52 @@ impl App {
     ));
   }
 
+  pub fn set_saved_artists_to_table(&mut self, saved_artists_page: &CursorBasedPage<FullArtist>) {
+    self.dispatch(IoEvent::SetArtistsToTable(
+      saved_artists_page
+        .items
+        .clone()
+        .into_iter()
+        .collect::<Vec<FullArtist>>(),
+    ))
+  }
+
+  pub fn get_current_user_saved_artists_next(&mut self) {
+    match self
+      .library
+      .saved_artists
+      .get_results(Some(self.library.saved_artists.index + 1))
+      .cloned()
+    {
+      Some(saved_artists) => {
+        self.set_saved_artists_to_table(&saved_artists);
+        self.library.saved_artists.index += 1
+      }
+      None => {
+        if let Some(saved_artists) = &self.library.saved_artists.clone().get_results(None) {
+          match saved_artists.items.last() {
+            Some(last_artist) => {
+              self.dispatch(IoEvent::GetFollowedArtists(Some(last_artist.id.clone())));
+            }
+            None => {
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  pub fn get_current_user_saved_artists_previous(&mut self) {
+    if self.library.saved_artists.index > 0 {
+      self.library.saved_artists.index -= 1;
+    }
+
+    if let Some(saved_artists) = &self.library.saved_artists.get_results(None).cloned() {
+      self.set_saved_artists_to_table(&saved_artists);
+    }
+  }
+
   pub fn get_current_user_saved_tracks_next(&mut self) {
     // Before fetching the next tracks, check if we have already fetched them
     match self

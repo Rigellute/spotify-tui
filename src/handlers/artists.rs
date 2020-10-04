@@ -72,6 +72,8 @@ pub fn handler(key: Key, app: &mut App) {
         app.get_recommendations_for_seed(artist_id_list, None, None);
       }
     }
+    k if k == app.user_config.keys.next_page => app.get_current_user_saved_artists_next(),
+    k if k == app.user_config.keys.previous_page => app.get_current_user_saved_artists_previous(),
     _ => {}
   }
 }
