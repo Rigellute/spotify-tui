@@ -633,6 +633,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "n-ivanov",
+      "name": "n-ivanov",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/11470871?v=4",
+      "profile": "https://github.com/n-ivanov",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
