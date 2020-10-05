@@ -214,6 +214,7 @@ theme:
   playbar_text: White # artist name in player pane
   selected: LightCyan # a) selected pane border, b) hovered item in list, & c) track title in player
   text: "255, 255, 255" # text in panes
+  header: White  # header text in panes (e.g. 'Title', 'Artist', etc.)
 
 behavior:
   seek_milliseconds: 5000
