@@ -642,6 +642,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "bi1yeu",
+      "name": "bi1yeu",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/1185129?v=4",
+      "profile": "http://matthewbilyeu.com/resume/",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
