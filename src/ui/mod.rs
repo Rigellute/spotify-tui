@@ -941,28 +941,41 @@ where
     .margin(5)
     .split(f.size());
 
-  let playing_text = Spans::from(vec![
-        Span::raw("Api response: "),
-        Span::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
-        Span::styled(
-            "
-
-If you are trying to play a track, please check that
-    1. You have a Spotify Premium Account
-    2. Your playback device is active and selected - press `d` to go to device selection menu
-    3. If you're using spotifyd as a playback device, your device name must not contain spaces
-            ",
-            Style::default().fg(app.user_config.theme.text),
+  let playing_text = vec![
+    Spans::from(vec![
+      Span::raw("Api response: "),
+      Span::styled(
+        &app.api_error,
+        Style::default().fg(app.user_config.theme.error_text),
+      ),
+    ]),
+    Spans::from(Span::styled(
+      "If you are trying to play a track, please check that",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 1. You have a Spotify Premium Account",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 2. Your playback device is active and selected - press `d` to go to device selection menu",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 3. If you're using spotifyd as a playback device, your device name must not contain spaces",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled("Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd",
+        Style::default().fg(app.user_config.theme.hint)
         ),
-        Span::styled("
-Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
-        ",
-        Style::default().fg(app.user_config.theme.hint)),
-        Span::styled(
-            "\nPress <Esc> to return",
-            Style::default().fg(app.user_config.theme.inactive),
-        ),
-    ]);
+    ),
+    Spans::from(
+      Span::styled(
+          "\nPress <Esc> to return",
+          Style::default().fg(app.user_config.theme.inactive),
+      ),
+    )
+  ];
 
   let playing_paragraph = Paragraph::new(playing_text)
     .wrap(Wrap { trim: true })
@@ -1184,12 +1197,12 @@ where
     .margin(5)
     .split(f.size());
 
-  let device_instructions = Spans::from(vec![
-        Span::raw("To play tracks, please select a device. "),
-        Span::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. "),
-        Span::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. "),
-        Span::raw("You can change the playback device at any time by pressing `d`."),
-    ]);
+  let device_instructions: Vec<Spans> = vec![
+        "To play tracks, please select a device. ",
+        "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. ",
+        "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. ",
+        "You can change the playback device at any time by pressing `d`.",
+    ].into_iter().map(|instruction| Spans::from(Span::raw(instruction))).collect();
 
   let instructions = Paragraph::new(device_instructions)
     .style(Style::default().fg(app.user_config.theme.text))
@@ -1566,16 +1579,18 @@ where
 
       // suggestion: possibly put this as part of
       // app.dialog, but would have to introduce lifetime
-      let text = Spans::from(vec![
-        Span::raw("Are you sure you want to delete\nthe playlist: "),
-        Span::styled(
+      let text = vec![
+        Spans::from(Span::raw("Are you sure you want to delete the playlist: ")),
+        Spans::from(Span::styled(
           playlist.as_str(),
           Style::default().add_modifier(Modifier::BOLD),
-        ),
-        Span::raw("?"),
-      ]);
+        )),
+        Spans::from(Span::raw("?")),
+      ];
 
-      let text = Paragraph::new(text).alignment(Alignment::Center);
+      let text = Paragraph::new(text)
+        .wrap(Wrap { trim: true })
+        .alignment(Alignment::Center);
 
       f.render_widget(text, vchunks[0]);
 
