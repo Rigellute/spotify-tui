@@ -785,14 +785,16 @@ impl<'a> Network<'a> {
 
     if let Ok((albums, top_tracks, related_artist)) = try_join!(albums, top_tracks, related_artist)
     {
-      let album_ids = albums
-        .items
-        .iter()
-        .filter_map(|item| item.id.to_owned())
-        .collect();
-      self.current_user_saved_albums_contains(album_ids).await;
-
       let mut app = self.app.lock().await;
+
+      app.dispatch(IoEvent::CurrentUserSavedAlbumsContains(
+        albums
+          .items
+          .iter()
+          .filter_map(|item| item.id.to_owned())
+          .collect(),
+      ));
+
       app.artist = Some(Artist {
         artist_name,
         albums,
