@@ -785,6 +785,13 @@ impl<'a> Network<'a> {
 
     if let Ok((albums, top_tracks, related_artist)) = try_join!(albums, top_tracks, related_artist)
     {
+      let album_ids = albums
+        .items
+        .iter()
+        .filter_map(|item| item.id.to_owned())
+        .collect();
+      self.current_user_saved_albums_contains(album_ids).await;
+
       let mut app = self.app.lock().await;
       app.artist = Some(Artist {
         artist_name,
@@ -979,10 +986,10 @@ impl<'a> Network<'a> {
   }
 
   async fn user_artist_check_follow(&mut self, artist_ids: Vec<String>) {
-    if let Ok(are_follwed) = self.spotify.user_artist_check_follow(&artist_ids).await {
+    if let Ok(are_followed) = self.spotify.user_artist_check_follow(&artist_ids).await {
       let mut app = self.app.lock().await;
       artist_ids.iter().enumerate().for_each(|(i, id)| {
-        if are_follwed[i] {
+        if are_followed[i] {
           app.followed_artist_ids_set.insert(id.to_owned());
         } else {
           app.followed_artist_ids_set.remove(id);
@@ -1011,14 +1018,14 @@ impl<'a> Network<'a> {
   }
 
   async fn current_user_saved_albums_contains(&mut self, album_ids: Vec<String>) {
-    if let Ok(are_follwed) = self
+    if let Ok(are_followed) = self
       .spotify
       .current_user_saved_albums_contains(&album_ids)
       .await
     {
       let mut app = self.app.lock().await;
       album_ids.iter().enumerate().for_each(|(i, id)| {
-        if are_follwed[i] {
+        if are_followed[i] {
           app.saved_album_ids_set.insert(id.to_owned());
         } else {
           app.saved_album_ids_set.remove(id);
