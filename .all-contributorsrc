@@ -652,6 +652,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "Utagai",
+      "name": "May",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/10730394?v=4",
+      "profile": "https://github.com/Utagai",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
