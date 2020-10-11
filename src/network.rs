@@ -8,6 +8,7 @@ use rspotify::{
   client::Spotify,
   model::{
     album::SimplifiedAlbum,
+    artist::FullArtist,
     offset::for_position,
     page::Page,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
@@ -71,6 +72,7 @@ pub enum IoEvent {
   GetRecommendationsForTrackId(String, Option<Country>),
   GetRecentlyPlayed,
   GetFollowedArtists(Option<String>),
+  SetArtistsToTable(Vec<FullArtist>),
   UserArtistFollowCheck(Vec<String>),
   GetAlbum(String),
   SetDeviceIdInConfig(String),
@@ -246,6 +248,9 @@ impl<'a> Network<'a> {
       IoEvent::GetFollowedArtists(after) => {
         self.get_followed_artists(after).await;
       }
+      IoEvent::SetArtistsToTable(full_artists) => {
+        self.set_artists_to_table(full_artists).await;
+      }
       IoEvent::UserArtistFollowCheck(artist_ids) => {
         self.user_artist_check_follow(artist_ids).await;
       }
@@ -402,6 +407,11 @@ impl<'a> Network<'a> {
         .filter_map(|item| item.id)
         .collect::<Vec<String>>(),
     ));
+  }
+
+  async fn set_artists_to_table(&mut self, artists: Vec<FullArtist>) {
+    let mut app = self.app.lock().await;
+    app.artists = artists;
   }
 
   async fn get_made_for_you_playlist_tracks(
