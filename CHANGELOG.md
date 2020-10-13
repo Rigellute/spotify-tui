@@ -4,6 +4,7 @@
 
 - Implement next/previous page behavior for the Artists table [#604](https://github.com/Rigellute/spotify-tui/pull/604)
 - Fix app crash when pressing Enter before a screen has loaded [#599](https://github.com/Rigellute/spotify-tui/pull/599)
+- Show saved albums when getting an artist [#612](https://github.com/Rigellute/spotify-tui/pull/612)
 
 ## [0.22.0] - 2020-10-05
 
