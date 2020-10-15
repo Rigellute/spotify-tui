@@ -164,10 +164,10 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
     return true;
   }
 
-  let (podcast_id, matched) = spotify_resource_id(trimmed_uri, "podcast");
+  let (show_id, matched) = spotify_resource_id(trimmed_uri, "show");
   if matched {
-    eprintln!("matched podcast, open for id: {}!", podcast_id);
-    // TODO(may): Dispatch some kind of GetPodcast event, analogous to the ones above?
+    eprintln!("matched show, open for id: {}!", show_id);
+    app.dispatch(IoEvent::GetShowEpisodes(show_id));
     return true;
   }
 
