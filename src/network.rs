@@ -1262,12 +1262,12 @@ impl<'a> Network<'a> {
   async fn get_album_for_track(&mut self, track_id: String) {
     match self.spotify.track(&track_id).await {
       Ok(track) => {
-        if track.album.id.is_none() {
-          // It is unclear when this is possible, but perhaps a track can be album-less. If so,
-          // there isn't much to do here anyways, since we're looking for the parent album.
-          return;
-        }
-        let album_id = track.album.id.unwrap(); // This unwrap is safe due to the above check.
+        // It is unclear when the id can ever be None, but perhaps a track can be album-less. If
+        // so, there isn't much to do here anyways, since we're looking for the parent album.
+        let album_id = match track.album.id {
+          Some(id) => id,
+          None => return,
+        };
 
         if let Ok(album) = self.spotify.album(&album_id).await {
           // The way we map to the UI is zero-indexed, but Spotify is 1-indexed.

@@ -114,55 +114,47 @@ fn process_input(app: &mut App, input: String) {
   app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
 }
 
+fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) -> (String, bool) {
+  let uri_prefix = format!("{}{}{}", base, resource_type, sep);
+  let id_string = uri.trim_start_matches(&uri_prefix);
+  eprintln!(
+    "uri prefix found: {}, for uri: {}, id_string: {}",
+    uri_prefix, uri, id_string
+  );
+  // If the lengths aren't equal, we must have found a match.
+  (id_string.to_string(), id_string.len() != uri.len())
+}
+
 // Returns true if the input was successfully processed as a Spotify URI.
 fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> bool {
-  // This isn't a URL.
-  let trimmed_uri = input.trim_start_matches(base);
-  // If the lengths are not equal, it means we found a match on the expected URL format.
-  let is_uri = trimmed_uri.len() != input.len();
-  if !is_uri {
-    return false;
-  }
-
-  let spotify_resource_id = |uri: &str, resource_type: &str| -> (String, bool) {
-    let uri_prefix = format!("{}{}", resource_type, sep);
-    let id_string = uri.trim_start_matches(&uri_prefix);
-    eprintln!(
-      "uri prefix fouund: {}, for uri: {}, id_string: {}",
-      uri_prefix, uri, id_string
-    );
-    // If the lengths aren't equal, we must have found a match.
-    (id_string.to_string(), id_string.len() != uri.len())
-  };
-
-  let (album_id, matched) = spotify_resource_id(trimmed_uri, "album");
+  let (album_id, matched) = spotify_resource_id(base, input, sep, "album");
   if matched {
     app.dispatch(IoEvent::GetAlbum(album_id));
     return true;
   }
 
-  let (artist_id, matched) = spotify_resource_id(trimmed_uri, "artist");
+  let (artist_id, matched) = spotify_resource_id(base, input, sep, "artist");
   if matched {
     app.get_artist(artist_id.to_string(), "".to_string());
     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
     return true;
   }
 
-  let (track_id, matched) = spotify_resource_id(trimmed_uri, "track");
+  let (track_id, matched) = spotify_resource_id(base, input, sep, "track");
   if matched {
     eprintln!("matched track, open for id: {}!", track_id);
     app.dispatch(IoEvent::GetAlbumForTrack(track_id));
     return true;
   }
 
-  let (playlist_id, matched) = spotify_resource_id(trimmed_uri, "playlist");
+  let (playlist_id, matched) = spotify_resource_id(base, input, sep, "playlist");
   if matched {
     eprintln!("matched playlist, open for id: {}!", playlist_id);
     app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, 0));
     return true;
   }
 
-  let (show_id, matched) = spotify_resource_id(trimmed_uri, "show");
+  let (show_id, matched) = spotify_resource_id(base, input, sep, "show");
   if matched {
     eprintln!("matched show, open for id: {}!", show_id);
     app.dispatch(IoEvent::GetShowEpisodes(show_id));
@@ -407,5 +399,40 @@ mod tests {
     assert_eq!(app.input, str_to_vec_char("你好"));
     assert_eq!(app.input_idx, 2);
     assert_eq!(app.input_cursor_position, 4);
+  }
+
+  mod test_uri_parsing {
+    use super::*;
+
+    const URI_BASE: &str = "spotify:";
+    const URL_BASE: &str = "https://open.spotify.com/";
+
+    fn check_uri_parse(expected_id: &str, parsed: (String, bool)) {
+      assert_eq!(parsed.1, true);
+      assert_eq!(parsed.0, expected_id);
+    }
+
+    #[test]
+    fn artists() {
+      let expected_artist_id = "2ye2Wgw4gimLv2eAKyk1NB";
+      check_uri_parse(
+        expected_artist_id,
+        spotify_resource_id(
+          URI_BASE,
+          "spotify:artist:2ye2Wgw4gimLv2eAKyk1NB",
+          ":",
+          "artist",
+        ),
+      );
+      check_uri_parse(
+        expected_artist_id,
+        spotify_resource_id(
+          URL_BASE,
+          "https://open.spotify.com/artist/2ye2Wgw4gimLv2eAKyk1NB",
+          "/",
+          "artist",
+        ),
+      )
+    }
   }
 }
