@@ -69,36 +69,9 @@ pub fn handler(key: Key, app: &mut App) {
       app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
     }
     Key::Enter => {
-      let user_country = app.get_user_country();
       let input_str: String = app.input.iter().collect();
 
-      // Don't do anything if there is no input
-      if input_str.is_empty() {
-        return;
-      }
-
-      let album_url_prefix = "https://open.spotify.com/album/";
-
-      if input_str.starts_with(album_url_prefix) {
-        let album_id = input_str.trim_start_matches(album_url_prefix);
-        app.dispatch(IoEvent::GetAlbum(album_id.to_string()));
-        return;
-      }
-
-      let artist_url_prefix = "https://open.spotify.com/artist/";
-
-      if input_str.starts_with(artist_url_prefix) {
-        let artist_id = input_str.trim_start_matches(artist_url_prefix);
-        app.get_artist(artist_id.to_string(), "".to_string());
-        app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
-        return;
-      }
-
-      app.dispatch(IoEvent::GetSearchResults(input_str, user_country));
-
-      // On searching for a track, clear the playlist selection
-      app.selected_playlist_index = Some(0);
-      app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
+      process_input(app, input_str);
     }
     Key::Char(c) => {
       app.input.insert(app.input_idx, c);
@@ -119,6 +92,56 @@ pub fn handler(key: Key, app: &mut App) {
     }
     _ => {}
   }
+}
+
+fn process_input(app: &mut App, input: String) {
+  // Don't do anything if there is no input
+  if input.is_empty() {
+    return;
+  }
+
+  if attempt_process_uri(app, &input, "https://open.spotify.com/", "/")
+    || attempt_process_uri(app, &input, "spotify:", ":")
+  {
+    return;
+  }
+
+  // Default fallback behavior: treat the input as a raw search phrase.
+  app.dispatch(IoEvent::GetSearchResults(input, app.get_user_country()));
+
+  // On searching for a track, clear the playlist selection
+  app.selected_playlist_index = Some(0);
+  app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
+}
+
+// Returns true if the input was successfully processed as a Spotify URI.
+fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> bool {
+  // This isn't a URL.
+  let trimmed_uri = input.trim_start_matches(base);
+  // If the lengths are not equal, it means we found a match on the expected URL format.
+  let is_uri = trimmed_uri.len() != input.len();
+  if !is_uri {
+    return false;
+  }
+
+  let album_uri_prefix = format!("album{}", sep);
+  if trimmed_uri.starts_with(&album_uri_prefix) {
+    eprintln!("matched album, opening!");
+    let album_id = trimmed_uri.trim_start_matches(&album_uri_prefix);
+    app.dispatch(IoEvent::GetAlbum(album_id.to_string()));
+    return true;
+  }
+
+  let artist_uri_prefix = format!("artist{}", sep);
+  if trimmed_uri.starts_with(&artist_uri_prefix) {
+    let artist_id = trimmed_uri.trim_start_matches(&artist_uri_prefix);
+    eprintln!("matched artist, opening for id: {}!", artist_id);
+    app.get_artist(artist_id.to_string(), "".to_string());
+    app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
+    return true;
+  }
+
+  false
 }
 
 fn compute_character_width(character: char) -> u16 {
