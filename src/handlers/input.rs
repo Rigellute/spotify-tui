@@ -151,9 +151,7 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
   let (track_id, matched) = spotify_resource_id(trimmed_uri, "track");
   if matched {
     eprintln!("matched track, open for id: {}!", track_id);
-    // TODO(may): Implement an IoEvent for GetTrack that effectively gets the track's parent
-    // album & subsequently dispatches a GetAlbum event, or, perhaps does the same logic of
-    // GetAlbum and then focuses on the track in that album?
+    app.dispatch(IoEvent::GetAlbumForTrack(track_id));
     return true;
   }
 
