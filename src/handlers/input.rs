@@ -141,6 +141,32 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
     return true;
   }
 
+  let track_uri_prefix = format!("track{}", sep);
+  if trimmed_uri.starts_with(&track_uri_prefix) {
+    let track_id = trimmed_uri.trim_start_matches(&track_uri_prefix);
+    eprintln!("matched track, open for id: {}!", track_id);
+    // TODO(may): Implement an IoEvent for GetTrack that effectively gets the track's parent
+    // album & subsequently dispatches a GetAlbum event, or, perhaps does the same logic of
+    // GetAlbum and then focuses on the track in that album?
+    return true;
+  }
+
+  let playlist_uri_prefix = format!("playlist{}", sep);
+  if trimmed_uri.starts_with(&playlist_uri_prefix) {
+    let playlist_id = trimmed_uri.trim_start_matches(&playlist_uri_prefix);
+    eprintln!("matched playlist, open for id: {}!", playlist_id);
+    // TODO(may): Dispatch a GetPlaylistTracks() on the playlist idea and offset 0?
+    return true;
+  }
+
+  let podcast_uri_prefix = format!("podcast{}", sep);
+  if trimmed_uri.starts_with(&podcast_uri_prefix) {
+    let podcast_id = trimmed_uri.trim_start_matches(&podcast_uri_prefix);
+    eprintln!("matched podcast, open for id: {}!", podcast_id);
+    // TODO(may): Dispatch some kind of GetPodcast event, analogous to the ones above?
+    return true;
+  }
+
   false
 }
 
