@@ -124,26 +124,32 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
     return false;
   }
 
-  let album_uri_prefix = format!("album{}", sep);
-  if trimmed_uri.starts_with(&album_uri_prefix) {
-    eprintln!("matched album, opening!");
-    let album_id = trimmed_uri.trim_start_matches(&album_uri_prefix);
-    app.dispatch(IoEvent::GetAlbum(album_id.to_string()));
+  let spotify_resource_id = |uri: &str, resource_type: &str| -> (String, bool) {
+    let uri_prefix = format!("{}{}", resource_type, sep);
+    let id_string = uri.trim_start_matches(&uri_prefix);
+    eprintln!(
+      "uri prefix fouund: {}, for uri: {}, id_string: {}",
+      uri_prefix, uri, id_string
+    );
+    // If the lengths aren't equal, we must have found a match.
+    (id_string.to_string(), id_string.len() != uri.len())
+  };
+
+  let (album_id, matched) = spotify_resource_id(trimmed_uri, "album");
+  if matched {
+    app.dispatch(IoEvent::GetAlbum(album_id));
     return true;
   }
 
-  let artist_uri_prefix = format!("artist{}", sep);
-  if trimmed_uri.starts_with(&artist_uri_prefix) {
-    let artist_id = trimmed_uri.trim_start_matches(&artist_uri_prefix);
-    eprintln!("matched artist, opening for id: {}!", artist_id);
+  let (artist_id, matched) = spotify_resource_id(trimmed_uri, "artist");
+  if matched {
     app.get_artist(artist_id.to_string(), "".to_string());
     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
     return true;
   }
 
-  let track_uri_prefix = format!("track{}", sep);
-  if trimmed_uri.starts_with(&track_uri_prefix) {
-    let track_id = trimmed_uri.trim_start_matches(&track_uri_prefix);
+  let (track_id, matched) = spotify_resource_id(trimmed_uri, "track");
+  if matched {
     eprintln!("matched track, open for id: {}!", track_id);
     // TODO(may): Implement an IoEvent for GetTrack that effectively gets the track's parent
     // album & subsequently dispatches a GetAlbum event, or, perhaps does the same logic of
@@ -151,17 +157,15 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
     return true;
   }
 
-  let playlist_uri_prefix = format!("playlist{}", sep);
-  if trimmed_uri.starts_with(&playlist_uri_prefix) {
-    let playlist_id = trimmed_uri.trim_start_matches(&playlist_uri_prefix);
+  let (playlist_id, matched) = spotify_resource_id(trimmed_uri, "playlist");
+  if matched {
     eprintln!("matched playlist, open for id: {}!", playlist_id);
     // TODO(may): Dispatch a GetPlaylistTracks() on the playlist idea and offset 0?
     return true;
   }
 
-  let podcast_uri_prefix = format!("podcast{}", sep);
-  if trimmed_uri.starts_with(&podcast_uri_prefix) {
-    let podcast_id = trimmed_uri.trim_start_matches(&podcast_uri_prefix);
+  let (podcast_id, matched) = spotify_resource_id(trimmed_uri, "podcast");
+  if matched {
     eprintln!("matched podcast, open for id: {}!", podcast_id);
     // TODO(may): Dispatch some kind of GetPodcast event, analogous to the ones above?
     return true;
