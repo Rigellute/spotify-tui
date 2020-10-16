@@ -123,7 +123,7 @@ fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) ->
   let id_string = id_string_with_query_params[0..query_idx].to_string();
   // If the lengths aren't equal, we must have found a match.
   let matched = id_string_with_query_params.len() != uri.len() && id_string.len() != uri.len();
-  (id_string.to_string(), matched)
+  (id_string, matched)
 }
 
 // Returns true if the input was successfully processed as a Spotify URI.
