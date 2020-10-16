@@ -381,9 +381,7 @@ impl<'a> Network<'a> {
 
       let mut app = self.app.lock().await;
       app.playlist_tracks = Some(playlist_tracks);
-      if app.get_current_route().id != RouteId::TrackTable {
-        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
-      };
+      app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
     };
   }
 
