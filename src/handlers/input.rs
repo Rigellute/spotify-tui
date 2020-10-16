@@ -116,40 +116,53 @@ fn process_input(app: &mut App, input: String) {
 
 fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) -> (String, bool) {
   let uri_prefix = format!("{}{}{}", base, resource_type, sep);
-  let id_string = uri.trim_start_matches(&uri_prefix);
+  let id_string_with_query_params = uri.trim_start_matches(&uri_prefix);
+  let query_idx = id_string_with_query_params
+    .find('?')
+    .unwrap_or(id_string_with_query_params.len());
+  let id_string = id_string_with_query_params[0..query_idx].to_string();
   // If the lengths aren't equal, we must have found a match.
-  (id_string.to_string(), id_string.len() != uri.len())
+  let matched = id_string_with_query_params.len() != uri.len() && id_string.len() != uri.len();
+  (id_string.to_string(), matched)
 }
 
 // Returns true if the input was successfully processed as a Spotify URI.
 fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> bool {
+  eprintln!("ATTEMPTING");
   let (album_id, matched) = spotify_resource_id(base, input, sep, "album");
   if matched {
+    eprintln!("ALBUM");
     app.dispatch(IoEvent::GetAlbum(album_id));
     return true;
   }
 
   let (artist_id, matched) = spotify_resource_id(base, input, sep, "artist");
   if matched {
-    app.get_artist(artist_id.to_string(), "".to_string());
+    eprintln!("ARTIST");
+    app.get_artist(artist_id, "".to_string());
     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
     return true;
   }
 
   let (track_id, matched) = spotify_resource_id(base, input, sep, "track");
   if matched {
+    eprintln!("TRACK");
     app.dispatch(IoEvent::GetAlbumForTrack(track_id));
     return true;
   }
 
   let (playlist_id, matched) = spotify_resource_id(base, input, sep, "playlist");
   if matched {
+    eprintln!("GOTEM WITH ID: {}", playlist_id);
     app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, 0));
     return true;
+  } else {
+    eprintln!("DID NOT MATCH");
   }
 
   let (show_id, matched) = spotify_resource_id(base, input, sep, "show");
   if matched {
+    eprintln!("show");
     app.dispatch(IoEvent::GetShowEpisodes(show_id));
     return true;
   }
@@ -468,6 +481,33 @@ mod tests {
       let (_, matched) = spotify_resource_id(URL_BASE, totally_wrong, "/", "track");
       assert_eq!(matched, false);
       let (_, matched) = spotify_resource_id(URL_BASE, random, "/", "track");
+      assert_eq!(matched, false);
+    }
+
+    #[test]
+    fn parse_with_query_parameters() {
+      // If this test ever fails due to some change to the parsing logic, it is likely a sign we
+      // should just integrate the url crate instead of trying to do things ourselves.
+      let playlist_url_with_query =
+        "https://open.spotify.com/playlist/1cJ6lPBYj2fscs0kqBHsVV?si=OdwuJsbsSeuUAOadehng3A";
+      let playlist_url = "https://open.spotify.com/playlist/1cJ6lPBYj2fscs0kqBHsVV";
+      let expected_id = "1cJ6lPBYj2fscs0kqBHsVV";
+
+      let (actual_id, matched) = spotify_resource_id(URL_BASE, playlist_url, "/", "playlist");
+      assert_eq!(matched, true);
+      assert_eq!(actual_id, expected_id);
+
+      let (actual_id, matched) =
+        spotify_resource_id(URL_BASE, playlist_url_with_query, "/", "playlist");
+      assert_eq!(matched, true);
+      assert_eq!(actual_id, expected_id);
+    }
+
+    #[test]
+    fn mismatched_resource_types_do_not_match() {
+      let playlist_url =
+        "https://open.spotify.com/playlist/1cJ6lPBYj2fscs0kqBHsVV?si=OdwuJsbsSeuUAOadehng3A";
+      let (_, matched) = spotify_resource_id(URL_BASE, playlist_url, "/", "album");
       assert_eq!(matched, false);
     }
   }
