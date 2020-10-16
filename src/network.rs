@@ -1280,7 +1280,8 @@ impl<'a> Network<'a> {
 
           let mut app = self.app.lock().await;
 
-          app.selected_album_full = Some(selected_album);
+          app.selected_album_full = Some(selected_album.clone());
+          app.saved_album_tracks_index = selected_album.selected_index;
           app.album_table_context = AlbumTableContext::Full;
           app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
         }
