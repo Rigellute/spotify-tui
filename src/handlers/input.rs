@@ -117,10 +117,6 @@ fn process_input(app: &mut App, input: String) {
 fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) -> (String, bool) {
   let uri_prefix = format!("{}{}{}", base, resource_type, sep);
   let id_string = uri.trim_start_matches(&uri_prefix);
-  eprintln!(
-    "uri prefix found: {}, for uri: {}, id_string: {}",
-    uri_prefix, uri, id_string
-  );
   // If the lengths aren't equal, we must have found a match.
   (id_string.to_string(), id_string.len() != uri.len())
 }
@@ -142,21 +138,18 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
 
   let (track_id, matched) = spotify_resource_id(base, input, sep, "track");
   if matched {
-    eprintln!("matched track, open for id: {}!", track_id);
     app.dispatch(IoEvent::GetAlbumForTrack(track_id));
     return true;
   }
 
   let (playlist_id, matched) = spotify_resource_id(base, input, sep, "playlist");
   if matched {
-    eprintln!("matched playlist, open for id: {}!", playlist_id);
     app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, 0));
     return true;
   }
 
   let (show_id, matched) = spotify_resource_id(base, input, sep, "show");
   if matched {
-    eprintln!("matched show, open for id: {}!", show_id);
     app.dispatch(IoEvent::GetShowEpisodes(show_id));
     return true;
   }
