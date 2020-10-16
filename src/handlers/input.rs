@@ -412,27 +412,55 @@ mod tests {
       assert_eq!(parsed.0, expected_id);
     }
 
-    #[test]
-    fn artists() {
-      let expected_artist_id = "2ye2Wgw4gimLv2eAKyk1NB";
+    fn run_test_for_id_and_resource_type(id: &str, resource_type: &str) {
       check_uri_parse(
-        expected_artist_id,
+        id,
         spotify_resource_id(
           URI_BASE,
-          "spotify:artist:2ye2Wgw4gimLv2eAKyk1NB",
+          &format!("spotify:{}:{}", resource_type, id),
           ":",
-          "artist",
+          resource_type,
         ),
       );
       check_uri_parse(
-        expected_artist_id,
+        id,
         spotify_resource_id(
           URL_BASE,
-          "https://open.spotify.com/artist/2ye2Wgw4gimLv2eAKyk1NB",
+          &format!("https://open.spotify.com/{}/{}", resource_type, id),
           "/",
-          "artist",
+          resource_type,
         ),
       )
+    }
+
+    #[test]
+    fn artist() {
+      let expected_artist_id = "2ye2Wgw4gimLv2eAKyk1NB";
+      run_test_for_id_and_resource_type(expected_artist_id, "artist");
+    }
+
+    #[test]
+    fn album() {
+      let expected_album_id = "5gzLOflH95LkKYE6XSXE9k";
+      run_test_for_id_and_resource_type(expected_album_id, "album");
+    }
+
+    #[test]
+    fn playlist() {
+      let expected_playlist_id = "1cJ6lPBYj2fscs0kqBHsVV";
+      run_test_for_id_and_resource_type(expected_playlist_id, "playlist");
+    }
+
+    #[test]
+    fn show() {
+      let expected_show_id = "3aNsrV6lkzmcU1w8u8kA7N";
+      run_test_for_id_and_resource_type(expected_show_id, "show");
+    }
+
+    #[test]
+    fn track() {
+      let expected_track_id = "10igKaIKsSB6ZnWxPxPvKO";
+      run_test_for_id_and_resource_type(expected_track_id, "track");
     }
   }
 }
