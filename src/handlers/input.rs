@@ -128,17 +128,14 @@ fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) ->
 
 // Returns true if the input was successfully processed as a Spotify URI.
 fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> bool {
-  eprintln!("ATTEMPTING");
   let (album_id, matched) = spotify_resource_id(base, input, sep, "album");
   if matched {
-    eprintln!("ALBUM");
     app.dispatch(IoEvent::GetAlbum(album_id));
     return true;
   }
 
   let (artist_id, matched) = spotify_resource_id(base, input, sep, "artist");
   if matched {
-    eprintln!("ARTIST");
     app.get_artist(artist_id, "".to_string());
     app.push_navigation_stack(RouteId::Artist, ActiveBlock::ArtistBlock);
     return true;
@@ -146,23 +143,18 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
 
   let (track_id, matched) = spotify_resource_id(base, input, sep, "track");
   if matched {
-    eprintln!("TRACK");
     app.dispatch(IoEvent::GetAlbumForTrack(track_id));
     return true;
   }
 
   let (playlist_id, matched) = spotify_resource_id(base, input, sep, "playlist");
   if matched {
-    eprintln!("GOTEM WITH ID: {}", playlist_id);
     app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, 0));
     return true;
-  } else {
-    eprintln!("DID NOT MATCH");
   }
 
   let (show_id, matched) = spotify_resource_id(base, input, sep, "show");
   if matched {
-    eprintln!("show");
     app.dispatch(IoEvent::GetShowEpisodes(show_id));
     return true;
   }
