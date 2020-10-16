@@ -100,6 +100,9 @@ fn process_input(app: &mut App, input: String) {
     return;
   }
 
+  // On searching for a track, clear the playlist selection
+  app.selected_playlist_index = Some(0);
+
   if attempt_process_uri(app, &input, "https://open.spotify.com/", "/")
     || attempt_process_uri(app, &input, "spotify:", ":")
   {
@@ -108,9 +111,6 @@ fn process_input(app: &mut App, input: String) {
 
   // Default fallback behavior: treat the input as a raw search phrase.
   app.dispatch(IoEvent::GetSearchResults(input, app.get_user_country()));
-
-  // On searching for a track, clear the playlist selection
-  app.selected_playlist_index = Some(0);
   app.push_navigation_stack(RouteId::Search, ActiveBlock::SearchResultBlock);
 }
 
