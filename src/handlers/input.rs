@@ -462,5 +462,20 @@ mod tests {
       let expected_track_id = "10igKaIKsSB6ZnWxPxPvKO";
       run_test_for_id_and_resource_type(expected_track_id, "track");
     }
+
+    #[test]
+    fn invalid_format_doesnt_match() {
+      let swapped = "show:spotify:3aNsrV6lkzmcU1w8u8kA7N";
+      let totally_wrong = "hehe-haha-3aNsrV6lkzmcU1w8u8kA7N";
+      let random = "random string";
+      let (_, matched) = spotify_resource_id(URI_BASE, swapped, ":", "track");
+      assert_eq!(matched, false);
+      let (_, matched) = spotify_resource_id(URI_BASE, totally_wrong, ":", "track");
+      assert_eq!(matched, false);
+      let (_, matched) = spotify_resource_id(URL_BASE, totally_wrong, "/", "track");
+      assert_eq!(matched, false);
+      let (_, matched) = spotify_resource_id(URL_BASE, random, "/", "track");
+      assert_eq!(matched, false);
+    }
   }
 }
