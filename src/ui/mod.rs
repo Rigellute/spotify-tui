@@ -186,7 +186,7 @@ where
           Constraint::Min(1),
           Constraint::Length(6),
         ]
-        .as_ref()
+        .as_ref(),
       )
       .margin(margin)
       .split(f.size());
