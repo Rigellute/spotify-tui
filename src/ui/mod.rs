@@ -23,7 +23,7 @@ use tui::{
 use util::{
   create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
-  millis_to_minutes,
+  millis_to_minutes, SMALL_TERMINAL_WIDTH,
 };
 
 pub enum TableId {
@@ -114,9 +114,14 @@ pub fn draw_input_and_help_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rec
 where
   B: Backend,
 {
+  // Check for the width and change the contraints accordingly
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
-    .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+    .constraints(if app.size.width >= SMALL_TERMINAL_WIDTH {
+      [Constraint::Percentage(65), Constraint::Percentage(35)].as_ref()
+    } else {
+      [Constraint::Percentage(90), Constraint::Percentage(10)].as_ref()
+    })
     .split(layout_chunk);
 
   let current_route = app.get_current_route();
@@ -163,27 +168,42 @@ where
   B: Backend,
 {
   let margin = util::get_main_layout_margin(app);
-  let parent_layout = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints(
-      [
-        Constraint::Length(3),
-        Constraint::Min(1),
-        Constraint::Length(6),
-      ]
-      .as_ref(),
-    )
-    .margin(margin)
-    .split(f.size());
+  // Responsive layout: new one kicks in at width 150 or higher
+  if app.size.width >= SMALL_TERMINAL_WIDTH {
+    let parent_layout = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints([Constraint::Min(1), Constraint::Length(6)].as_ref())
+      .margin(margin)
+      .split(f.size());
 
-  // Search input and help
-  draw_input_and_help_box(f, app, parent_layout[0]);
+    // Nested main block with potential routes
+    draw_routes(f, app, parent_layout[0]);
 
-  // Nested main block with potential routes
-  draw_routes(f, app, parent_layout[1]);
+    // Currently playing
+    draw_playbar(f, app, parent_layout[1]);
+  } else {
+    let parent_layout = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(3),
+          Constraint::Min(1),
+          Constraint::Length(6),
+        ]
+        .as_ref(),
+      )
+      .margin(margin)
+      .split(f.size());
 
-  // Currently playing
-  draw_playbar(f, app, parent_layout[2]);
+    // Search input and help
+    draw_input_and_help_box(f, app, parent_layout[0]);
+
+    // Nested main block with potential routes
+    draw_routes(f, app, parent_layout[1]);
+
+    // Currently playing
+    draw_playbar(f, app, parent_layout[2]);
+  }
 
   // Possibly draw confirm dialog
   draw_dialog(f, app);
@@ -297,13 +317,34 @@ pub fn draw_user_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
 {
-  let chunks = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-    .split(layout_chunk);
+  // Check for width to make a responsive layout
+  if app.size.width >= SMALL_TERMINAL_WIDTH {
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(3),
+          Constraint::Percentage(30),
+          Constraint::Percentage(70),
+        ]
+        .as_ref(),
+      )
+      .split(layout_chunk);
 
-  draw_library_block(f, app, chunks[0]);
-  draw_playlist_block(f, app, chunks[1]);
+    // Search input and help
+    draw_input_and_help_box(f, app, chunks[0]);
+    draw_library_block(f, app, chunks[1]);
+    draw_playlist_block(f, app, chunks[2]);
+  } else {
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+      .split(layout_chunk);
+
+    // Search input and help
+    draw_library_block(f, app, chunks[0]);
+    draw_playlist_block(f, app, chunks[1]);
+  }
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
