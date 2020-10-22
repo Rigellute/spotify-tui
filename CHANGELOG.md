@@ -7,6 +7,7 @@
 - Show saved albums when getting an artist [#612](https://github.com/Rigellute/spotify-tui/pull/612)
 - Transfer playback when changing device [#408](https://github.com/Rigellute/spotify-tui/pull/408)
 - Make layout more responsive to large/small screens [#502](https://github.com/Rigellute/spotify-tui/pull/502)
+- Search using Spotify share URLs and URIs like the desktop client [#623](https://github.com/Rigellute/spotify-tui/pull/623)
 
 ## [0.22.0] - 2020-10-05
 
