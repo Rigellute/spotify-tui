@@ -1,5 +1,5 @@
 use super::user_config::UserConfig;
-use crate::network::IoEvent;
+use crate::{network::IoEvent, paging::NewScrollableResultPages};
 use anyhow::anyhow;
 use rspotify::{
   model::{
@@ -43,94 +43,6 @@ const DEFAULT_ROUTE: Route = Route {
   active_block: ActiveBlock::Empty,
   hovered_block: ActiveBlock::Library,
 };
-
-pub trait PageAdapter<T: Clone> {
-  fn next(&self) -> Option<String>;
-
-  fn items(&self) -> &[T];
-}
-
-impl<T: Clone> PageAdapter<T> for Page<T> {
-  fn next(&self) -> Option<String> {
-    self.next.clone()
-  }
-
-  fn items(&self) -> &[T] {
-    &self.items
-  }
-}
-
-impl<T: Clone> PageAdapter<T> for CursorBasedPage<T> {
-  fn next(&self) -> Option<String> {
-    self.cursors.after.clone()
-  }
-
-  fn items(&self) -> &[T] {
-    &self.items
-  }
-}
-
-pub trait Pageable {
-  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent>;
-}
-
-type SavedArtist = FullArtist;
-
-impl Pageable for SavedTrack {
-  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
-    if let Some(_next_uri) = next {
-      Some(IoEvent::GetCurrentSavedTracks(Some(offset)))
-    } else {
-      None
-    }
-  }
-}
-
-impl Pageable for SavedArtist {
-  fn get_dispatch(after: Option<String>, _offset: u32) -> Option<IoEvent> {
-    if let Some(after) = after {
-      Some(IoEvent::GetFollowedArtists(Some(after)))
-    } else {
-      None
-    }
-  }
-}
-
-impl Pageable for SimplifiedEpisode {
-  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
-    if let Some(_next) = next {
-      Some(IoEvent::GetShowEpisodes(None, offset))
-    } else {
-      None
-    }
-  }
-}
-
-#[derive(Default)]
-pub struct NewScrollableResultPages<T> {
-  pub items: Vec<T>,
-  next: Option<String>,
-}
-
-impl<T: Pageable + Clone> NewScrollableResultPages<T> {
-  pub fn new() -> Self {
-    NewScrollableResultPages {
-      items: vec![],
-      next: None,
-    }
-  }
-
-  pub fn dispatch(&self, app: &mut App) {
-    if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
-      app.dispatch(event);
-    }
-  }
-
-  pub fn add_page(&mut self, page: &dyn PageAdapter<T>) {
-    self.items.extend_from_slice(page.items());
-    self.next = page.next().clone();
-  }
-}
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
@@ -299,12 +211,20 @@ pub struct TrackTable {
   pub context: Option<TrackTableContext>,
 }
 
-#[derive(Default)]
 pub struct EpisodeTable {
   pub show_id: Option<String>,
-  pub episodes: Option<NewScrollableResultPages<SimplifiedEpisode>>,
-  pub selected_index: usize,
+  pub episodes: NewScrollableResultPages<SimplifiedEpisode>,
   pub reversed: bool,
+}
+
+impl Default for EpisodeTable {
+  fn default() -> Self {
+    Self {
+      show_id: Default::default(),
+      episodes: NewScrollableResultPages::new(),
+      reversed: Default::default(),
+    }
+  }
 }
 
 #[derive(Clone)]

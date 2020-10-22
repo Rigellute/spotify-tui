@@ -4,7 +4,7 @@ mod analysis;
 mod artist;
 mod artists;
 mod basic_view;
-mod common_key_events;
+pub mod common_key_events;
 mod dialog;
 mod empty;
 mod episode_table;

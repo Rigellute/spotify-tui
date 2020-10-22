@@ -1343,8 +1343,6 @@ where
   let items = app
     .episode_table
     .episodes
-    .as_ref()
-    .unwrap()
     .items
     .iter()
     .map(|episode| {
@@ -1387,7 +1385,7 @@ where
     layout_chunk,
     ("Episodes", &header),
     &items,
-    app.episode_table.selected_index,
+    app.episode_table.episodes.selected_index,
     highlight_state,
   );
 }

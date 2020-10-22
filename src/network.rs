@@ -447,11 +447,11 @@ impl<'a> Network<'a> {
         .await
       {
         Ok(episodes) => {
-          let current_episodes = app
-            .episode_table
-            .episodes
-            .get_or_insert(NewScrollableResultPages::new());
-          current_episodes.add_page(&episodes);
+          //let mut current_episodes = &app
+          //.episode_table
+          //.episodes;
+          //.get_or_insert(NewScrollableResultPages::new());
+          app.episode_table.episodes.add_page(&episodes);
           app.episode_table.reversed = false;
 
           app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
