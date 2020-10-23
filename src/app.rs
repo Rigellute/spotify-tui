@@ -19,7 +19,7 @@ use rspotify::{
   senum::Country,
 };
 use std::str::FromStr;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::{
   cmp::{max, min},
   collections::HashSet,
@@ -43,6 +43,10 @@ const DEFAULT_ROUTE: Route = Route {
   active_block: ActiveBlock::Empty,
   hovered_block: ActiveBlock::Library,
 };
+
+pub enum TableUIHeight {
+    EpisodeTable(usize),
+}
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
@@ -310,6 +314,8 @@ pub struct App {
   pub help_menu_offset: u32,
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
+  pub ui_tx: Sender<TableUIHeight>,
+  pub ui_rx: Receiver<TableUIHeight>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
@@ -318,6 +324,7 @@ pub struct App {
 
 impl Default for App {
   fn default() -> Self {
+    let (ui_tx, ui_rx) = channel();
     App {
       audio_analysis: None,
       album_table_context: AlbumTableContext::Full,
@@ -388,6 +395,8 @@ impl Default for App {
       help_menu_offset: 0,
       is_loading: false,
       io_tx: None,
+      ui_tx: ui_tx,
+      ui_rx: ui_rx,
       is_fetching_current_playback: false,
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
@@ -462,6 +471,14 @@ impl App {
         self.song_progress_ms = elapsed;
       } else {
         self.song_progress_ms = duration_ms.into();
+      }
+    }
+
+    while let Ok(ui_height) = self.ui_rx.try_recv() {
+      match ui_height {
+        TableUIHeight::EpisodeTable(n) => {
+          self.episode_table.episodes.ui_view_height = Some(n);
+        }
       }
     }
   }

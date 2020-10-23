@@ -4,7 +4,7 @@ pub mod util;
 use super::{
   app::{
     ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
-    SearchResultBlock, LIBRARY_OPTIONS,
+    SearchResultBlock, LIBRARY_OPTIONS, TableUIHeight,
   },
   banner::BANNER,
 };
@@ -1378,6 +1378,8 @@ where
       }
     })
     .collect::<Vec<TableItem>>();
+
+  app.ui_tx.send(TableUIHeight::EpisodeTable(layout_chunk.height as usize));
 
   draw_table(
     f,

@@ -77,6 +77,7 @@ pub struct NewScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
   pub selected_index: usize,
+  pub ui_view_height: Option<usize>,
 }
 
 impl<T: Pageable + Clone> NewScrollableResultPages<T> {
@@ -85,6 +86,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
       selected_index: 0,
       items: vec![],
       next: None,
+      ui_view_height: None,
     }
   }
 
@@ -103,6 +105,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
     match key {
       k if common_key_events::down_event(k) => {
         // TODO: move this into a function to handle getting new pages when needed
+        eprintln!("{:?}", self.ui_view_height);
         self.selected_index = if self.items.len() > 0 {
           (self.selected_index + 1) % self.items.len()
         } else {
