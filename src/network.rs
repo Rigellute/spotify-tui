@@ -1,8 +1,11 @@
-use crate::app::{
-  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, NewScrollableResultPages, RouteId,
-  SelectedAlbum, SelectedFullAlbum, TrackTableContext,
+use crate::{
+  app::{
+    ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
+    SelectedFullAlbum, TrackTableContext,
+  },
+  config::ClientConfig,
+  paging::NewScrollableResultPages,
 };
-use crate::config::ClientConfig;
 use anyhow::anyhow;
 use rspotify::{
   client::Spotify,
@@ -435,9 +438,15 @@ impl<'a> Network<'a> {
 
   async fn get_show_episodes(&mut self, show_id: Option<String>, offset: u32) {
     let mut app = self.app.lock().await;
+    let mut offset = offset;
 
-    if show_id.is_some() {
-      app.episode_table.show_id = show_id.clone();
+    if show_id == app.episode_table.show_id {
+        // If we already have this show's episodes in the table, then just get the next page
+        offset = app.episode_table.episodes.items.len() as u32;
+    } else {
+        // Otherwise, fetch the first page and start a new scrollable page
+        app.episode_table.show_id = show_id;
+        app.episode_table.episodes = NewScrollableResultPages::new();
     }
 
     if let Some(show_id) = app.episode_table.show_id.clone() {
@@ -447,10 +456,6 @@ impl<'a> Network<'a> {
         .await
       {
         Ok(episodes) => {
-          //let mut current_episodes = &app
-          //.episode_table
-          //.episodes;
-          //.get_or_insert(NewScrollableResultPages::new());
           app.episode_table.episodes.add_page(&episodes);
           app.episode_table.reversed = false;
 

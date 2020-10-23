@@ -103,7 +103,6 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
     match key {
       k if common_key_events::down_event(k) => {
         // TODO: move this into a function to handle getting new pages when needed
-        eprintln!("{} {}", self.selected_index, self.items.len());
         self.selected_index = if self.items.len() > 0 {
           (self.selected_index + 1) % self.items.len()
         } else {

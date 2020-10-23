@@ -4,6 +4,7 @@ mod analysis;
 mod artist;
 mod artists;
 mod basic_view;
+// TODO: Don't make this public, find some other way
 pub mod common_key_events;
 mod dialog;
 mod empty;
