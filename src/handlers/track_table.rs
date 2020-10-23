@@ -320,10 +320,9 @@ fn on_enter(app: &mut App) {
     Some(context) => match context {
       TrackTableContext::MyPlaylists => {
         if let Some(_track) = tracks.get(*selected_index) {
-          let context_uri = match (&app.selected_playlist_index, &app.playlists) {
-            (Some(selected_playlist_index), Some(playlists)) => {
-              if let Some(selected_playlist) =
-                playlists.items.get(selected_playlist_index.to_owned())
+          let context_uri = match (&app.active_playlist_index, &app.playlists) {
+            (Some(active_playlist_index), Some(playlists)) => {
+              if let Some(selected_playlist) = playlists.items.get(active_playlist_index.to_owned())
               {
                 Some(selected_playlist.uri.to_owned())
               } else {
