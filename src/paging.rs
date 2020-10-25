@@ -90,7 +90,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
     }
   }
 
-  pub fn dispatch(&self, app: &mut App) {
+  pub fn dispatch(&self, app: &App) {
     if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
       app.dispatch(event);
     }

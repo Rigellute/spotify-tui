@@ -134,6 +134,11 @@ impl<'a> Network<'a> {
 
   #[allow(clippy::cognitive_complexity)]
   pub async fn handle_network_event(&mut self, io_event: IoEvent) {
+    let mut app = self.app.lock().await;
+    app.is_loading = true;
+    // force drop here so we don't deadlock in one of the IO handlers
+    drop(app);
+
     match io_event {
       IoEvent::RefreshAuthentication => {
         self.refresh_authentication().await;
