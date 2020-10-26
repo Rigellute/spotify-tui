@@ -4,7 +4,7 @@ pub mod util;
 use super::{
   app::{
     ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
-    SearchResultBlock, LIBRARY_OPTIONS, TableUIHeight,
+    SearchResultBlock, TableUIHeight, UIViewWindow, LIBRARY_OPTIONS,
   },
   banner::BANNER,
 };
@@ -1379,7 +1379,24 @@ where
     })
     .collect::<Vec<TableItem>>();
 
-  app.ui_tx.send(TableUIHeight::EpisodeTable(layout_chunk.height as usize));
+  // be a little more conservative here so that the eventual paging commands will keep some context at the top of te view
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .episode_table
+        .episodes
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(TableUIHeight::EpisodeTable(UIViewWindow {
+    height: window_height.unwrap_or(0).into(),
+    start_index: start_index,
+  })) {
+    // Not sure what action we would take here
+  }
 
   draw_table(
     f,

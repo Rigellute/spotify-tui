@@ -19,7 +19,7 @@ use rspotify::{
   senum::Country,
 };
 use std::str::FromStr;
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{
   cmp::{max, min},
   collections::HashSet,
@@ -44,8 +44,13 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
+pub struct UIViewWindow {
+  pub height: usize,
+  pub start_index: usize,
+}
+
 pub enum TableUIHeight {
-    EpisodeTable(usize),
+  EpisodeTable(UIViewWindow),
 }
 
 #[derive(Clone)]
@@ -473,8 +478,8 @@ impl App {
 
     while let Ok(ui_height) = self.ui_rx.try_recv() {
       match ui_height {
-        TableUIHeight::EpisodeTable(n) => {
-          self.episode_table.episodes.ui_view_height = Some(n);
+        TableUIHeight::EpisodeTable(window) => {
+          self.episode_table.episodes.ui_view_height = Some(window);
         }
       }
     }
