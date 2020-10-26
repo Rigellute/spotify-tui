@@ -443,15 +443,17 @@ impl<'a> Network<'a> {
 
   async fn get_show_episodes(&mut self, show_id: Option<String>, offset: u32) {
     let mut app = self.app.lock().await;
-    let mut offset = offset;
 
-    if show_id == app.episode_table.show_id {
-        // If we already have this show's episodes in the table, then just get the next page
-        offset = app.episode_table.episodes.items.len() as u32;
-    } else {
+    if show_id.is_some() {
+      if show_id == app.episode_table.show_id && offset == 0 {
+        // The user has just selected this show again from the list, but we already have the
+        // episodes. Just return
+        return;
+      } else if show_id != app.episode_table.show_id {
         // Otherwise, fetch the first page and start a new scrollable page
         app.episode_table.show_id = show_id;
         app.episode_table.episodes = NewScrollableResultPages::new();
+      }
     }
 
     if let Some(show_id) = app.episode_table.show_id.clone() {
@@ -464,13 +466,19 @@ impl<'a> Network<'a> {
           app.episode_table.episodes.add_page(&episodes);
           app.episode_table.reversed = false;
 
-          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+          if app.get_current_route().id != RouteId::PodcastEpisodes {
+            app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+          }
         }
         Err(e) => {
           self.handle_error(anyhow!(e)).await;
         }
       }
     }
+
+    if let Ok(mut fetching_page) = app.episode_table.episodes.fetching_page.lock() {
+      *fetching_page = false;
+    };
   }
 
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {

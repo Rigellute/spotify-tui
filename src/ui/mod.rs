@@ -1398,6 +1398,21 @@ where
     // Not sure what action we would take here
   }
 
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.episode_table.episodes.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.episode_table.episodes.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.episode_table.episodes.dispatch(app);
+    }
+  }
+
   draw_table(
     f,
     app,

@@ -7,8 +7,11 @@ use crate::network::IoEvent;
 
 pub fn handler(key: Key, app: &mut App) {
   match key {
-    k if common_key_events::is_common_key_event(k) => {
-      app.episode_table.episodes.handle_common_key_event(k);
+    k if common_key_events::is_list_navigation_key_event(k, app) => {
+      app.episode_table.episodes.selected_index = app
+        .episode_table
+        .episodes
+        .handle_list_navigation_event(k, app);
     }
     k if common_key_events::left_event(k) => {
       common_key_events::handle_left_event(app);
@@ -19,20 +22,10 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Enter => {
       on_enter(app);
     }
-    // Scroll down
-    k if k == app.user_config.keys.next_page => {}
-    // Scroll up
-    k if k == app.user_config.keys.previous_page => {}
     Key::Char('S') => toggle_sort_by_date(app),
     Key::Char('s') => {} // TODO: handle saving the show
-    Key::Ctrl('e') => jump_to_end(app),
-    Key::Ctrl('a') => jump_to_start(app),
     _ => {}
   }
-}
-
-fn jump_to_end(app: &mut App) {
-  app.episode_table.episodes.selected_index = app.episode_table.episodes.items.len() - 1
 }
 
 fn on_enter(app: &mut App) {
@@ -51,10 +44,6 @@ fn on_enter(app: &mut App) {
     Some(episode_uris),
     Some(app.episode_table.episodes.selected_index),
   ));
-}
-
-fn jump_to_start(app: &mut App) {
-  app.episode_table.episodes.selected_index = 0;
 }
 
 fn toggle_sort_by_date(app: &mut App) {

@@ -1,5 +1,5 @@
 use super::handlers::common_key_events;
-use crate::app::App;
+use crate::app::{App, UIViewWindow};
 use crate::event::Key;
 use crate::network::IoEvent;
 use rspotify::model::{
@@ -8,6 +8,7 @@ use rspotify::model::{
   show::SimplifiedEpisode,
   track::SavedTrack,
 };
+use std::sync::{Arc, Mutex};
 
 pub trait PageAdapter<T: Clone> {
   fn next(&self) -> Option<String>;
@@ -77,7 +78,8 @@ pub struct NewScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
   pub selected_index: usize,
-  pub ui_view_height: Option<usize>,
+  pub ui_view_height: Option<UIViewWindow>,
+  pub fetching_page: Arc<Mutex<bool>>,
 }
 
 impl<T: Pageable + Clone> NewScrollableResultPages<T> {
@@ -87,12 +89,18 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
       items: vec![],
       next: None,
       ui_view_height: None,
+      fetching_page: Arc::new(Mutex::new(false)),
     }
   }
 
   pub fn dispatch(&self, app: &App) {
-    if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
-      app.dispatch(event);
+    if let Ok(mut fetching_page) = self.fetching_page.try_lock() {
+      if *fetching_page == false {
+        *fetching_page = true;
+        if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
+          app.dispatch(event);
+        }
+      }
     }
   }
 
@@ -104,36 +112,51 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
   pub fn handle_list_navigation_event(&self, key: Key, app: &App) -> usize {
     match key {
       k if common_key_events::down_event(k) => {
-        // TODO: move this into a function to handle getting new pages when needed
-        eprintln!("{:?}", self.ui_view_height);
-        self.selected_index = if self.items.len() > 0 {
+        if self.items.len() > 0 {
           (self.selected_index + 1) % self.items.len()
         } else {
           0
         }
       }
-      k if common_key_events::up_event(k) => {
-        // TODO: Move this into a function to handle getting new pages when needed
-        self.selected_index = self
-          .selected_index
-          .checked_sub(1)
-          .unwrap_or(self.items.len() - 1)
-      }
-      k if common_key_events::high_event(k) => {
-        // TODO: jump to the top of the ui view, not the top of the list
-        self.selected_index = 0;
-      }
-      k if common_key_events::middle_event(k) => {
-        // TODO: jump to the center of the ui view, not the center of the list
-        let num_items = self.items.len();
-        self.selected_index = num_items / 2;
-        if num_items % 2 == 0 {
-            self.selected_index -= 1;
+      k if common_key_events::up_event(k) => self
+        .selected_index
+        .checked_sub(1)
+        .unwrap_or(self.items.len() - 1),
+      k if common_key_events::high_event(k) => self
+        .ui_view_height
+        .as_ref()
+        .map(|v| v.start_index)
+        .unwrap_or(self.selected_index),
+      k if common_key_events::middle_event(k) => self
+        .ui_view_height
+        .as_ref()
+        .map(|v| (v.start_index + v.height / 2))
+        .unwrap_or(self.selected_index)
+        .min(self.items.len() - 1),
+      k if common_key_events::low_event(k) => self
+        .ui_view_height
+        .as_ref()
+        .map(|v| (v.start_index + v.height))
+        .unwrap_or(self.selected_index)
+        .min(self.items.len() - 1),
+      k if k == app.user_config.keys.next_page => {
+        if let Some(window) = &self.ui_view_height {
+          if window.height + self.selected_index < self.items.len() {
+            window.height + self.selected_index
+          } else {
+            self.items.len() - 1
+          }
+        } else {
+          self.selected_index
         }
       }
-      k if common_key_events::low_event(k) => {
-        // TODO: jump to the bottom of the ui view, not the list
-        self.selected_index = self.items.len() - 1;
+      k if k == app.user_config.keys.previous_page => {
+        if let Some(window) = &self.ui_view_height {
+          self.selected_index.checked_sub(window.height).unwrap_or(0)
+        } else {
+          self.selected_index
+        }
+      }
       k if common_key_events::list_end_event(k) => self.items.len() - 1,
       k if common_key_events::list_begin_event(k) => 0,
       k if common_key_events::is_list_navigation_key_event(k, app) => {
