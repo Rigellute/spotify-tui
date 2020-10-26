@@ -101,7 +101,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
     self.next = page.next();
   }
 
-  pub fn handle_common_key_event(&mut self, key: Key) {
+  pub fn handle_list_navigation_event(&self, key: Key, app: &App) -> usize {
     match key {
       k if common_key_events::down_event(k) => {
         // TODO: move this into a function to handle getting new pages when needed
@@ -134,8 +134,12 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
       k if common_key_events::low_event(k) => {
         // TODO: jump to the bottom of the ui view, not the list
         self.selected_index = self.items.len() - 1;
+      k if common_key_events::list_end_event(k) => self.items.len() - 1,
+      k if common_key_events::list_begin_event(k) => 0,
+      k if common_key_events::is_list_navigation_key_event(k, app) => {
+        unimplemented!("List navigation event {:?} needs an implementation", k)
       }
-      _ => {}
+      _ => unreachable!("This function cannot handle non-navigation key events!"),
     }
   }
 }

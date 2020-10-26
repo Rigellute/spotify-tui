@@ -49,6 +49,20 @@ pub fn low_event(key: Key) -> bool {
   }
 }
 
+pub fn list_end_event(key: Key) -> bool {
+  match key {
+    Key::Ctrl('e') => true,
+    _ => false,
+  }
+}
+
+pub fn list_begin_event(key: Key) -> bool {
+  match key {
+    Key::Ctrl('a') => true,
+    _ => false,
+  }
+}
+
 pub fn on_down_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
   if let Some(selection_index) = selection_index {
     if selection_data.is_empty() {
@@ -159,12 +173,16 @@ pub fn handle_left_event(app: &mut App) {
   app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Library));
 }
 
-pub fn is_common_key_event(key: Key) -> bool {
-    down_event(key)
+pub fn is_list_navigation_key_event(key: Key, app: &App) -> bool {
+  down_event(key)
     || up_event(key)
     || high_event(key)
     || middle_event(key)
     || low_event(key)
+    || list_end_event(key)
+    || list_begin_event(key)
+    || key == app.user_config.keys.next_page
+    || key == app.user_config.keys.previous_page
 }
 
 #[cfg(test)]
