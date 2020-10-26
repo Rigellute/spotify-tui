@@ -1,5 +1,8 @@
 use super::user_config::UserConfig;
-use crate::{network::IoEvent, paging::NewScrollableResultPages};
+use crate::{
+  network::IoEvent,
+  paging::{NewScrollableResultPages, SavedArtist},
+};
 use anyhow::anyhow;
 use rspotify::{
   model::{
@@ -44,6 +47,7 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
+#[derive(Clone)]
 pub struct UIViewWindow {
   pub height: usize,
   pub start_index: usize,
@@ -51,9 +55,14 @@ pub struct UIViewWindow {
 
 pub enum TableUIHeight {
   EpisodeTable(UIViewWindow),
+  ArtistTable(UIViewWindow),
 }
 
 #[derive(Clone)]
+#[deprecated(
+  since = "0.22.0",
+  note = "This struct is going away in favor of NewScrollableResultPages (which will be renamed once this is gone)"
+)]
 pub struct ScrollableResultPages<T> {
   index: usize,
   pub pages: Vec<T>,
@@ -94,7 +103,7 @@ pub struct Library {
   pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
   pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
   pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
-  pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
+  pub saved_artists: NewScrollableResultPages<SavedArtist>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -268,7 +277,6 @@ pub struct App {
   pub audio_analysis: Option<AudioAnalysis>,
   pub home_scroll: u16,
   pub user_config: UserConfig,
-  pub artists: Vec<FullArtist>,
   pub artist: Option<Artist>,
   pub album_table_context: AlbumTableContext,
   pub saved_album_tracks_index: usize,
@@ -311,7 +319,6 @@ pub struct App {
   pub user: Option<PrivateUser>,
   pub album_list_index: usize,
   pub made_for_you_index: usize,
-  pub artists_list_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
@@ -335,8 +342,6 @@ impl Default for App {
       album_table_context: AlbumTableContext::Full,
       album_list_index: 0,
       made_for_you_index: 0,
-      artists_list_index: 0,
-      artists: vec![],
       artist: None,
       user_config: UserConfig::new(),
       saved_album_tracks_index: 0,
@@ -349,7 +354,7 @@ impl Default for App {
         saved_tracks: ScrollableResultPages::new(),
         made_for_you_playlists: ScrollableResultPages::new(),
         saved_albums: ScrollableResultPages::new(),
-        saved_artists: ScrollableResultPages::new(),
+        saved_artists: NewScrollableResultPages::new(),
         selected_index: 0,
       },
       liked_song_ids_set: HashSet::new(),
@@ -480,6 +485,9 @@ impl App {
       match ui_height {
         TableUIHeight::EpisodeTable(window) => {
           self.episode_table.episodes.ui_view_height = Some(window);
+        }
+        TableUIHeight::ArtistTable(window) => {
+          self.library.saved_artists.ui_view_height = Some(window);
         }
       }
     }
@@ -834,11 +842,9 @@ impl App {
         }
       }
       ActiveBlock::AlbumList => {
-        if let Some(artists) = self.library.saved_artists.get_results(None) {
-          if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
-            let artist_id = selected_artist.id.clone();
-            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
-          }
+        if let Some(selected_artist) = self.library.saved_artists.get_selected_item() {
+          let artist_id = selected_artist.id.clone();
+          self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
         }
       }
       ActiveBlock::ArtistBlock => {
@@ -978,7 +984,7 @@ impl App {
     }
   }
 
-  pub fn get_artist(&mut self, artist_id: String, input_artist_name: String) {
+  pub fn get_artist(&self, artist_id: String, input_artist_name: String) {
     let user_country = self.get_user_country();
     self.dispatch(IoEvent::GetArtist(
       artist_id,

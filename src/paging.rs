@@ -40,7 +40,7 @@ pub trait Pageable {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent>;
 }
 
-type SavedArtist = FullArtist;
+pub type SavedArtist = FullArtist;
 
 impl Pageable for SavedTrack {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
@@ -73,7 +73,7 @@ impl Pageable for SimplifiedEpisode {
 }
 
 /// This struct will hold paged results from the Spotify API. The idea is to collect
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct NewScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
@@ -107,6 +107,10 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
   pub fn add_page(&mut self, page: &dyn PageAdapter<T>) {
     self.items.extend_from_slice(page.items());
     self.next = page.next();
+  }
+
+  pub fn get_selected_item(&self) -> Option<&T> {
+    self.items.get(self.selected_index)
   }
 
   pub fn handle_list_navigation_event(&self, key: Key, app: &App) -> usize {

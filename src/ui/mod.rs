@@ -506,7 +506,9 @@ where
     current_route.hovered_block == ActiveBlock::Artists,
   );
   let items = app
-    .artists
+    .library
+    .saved_artists
+    .items
     .iter()
     .map(|item| TableItem {
       id: item.id.clone(),
@@ -514,13 +516,47 @@ where
     })
     .collect::<Vec<TableItem>>();
 
+  // be a little more conservative here so that the eventual paging commands will keep some context at the top of te view
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .library
+        .saved_artists
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(TableUIHeight::ArtistTable(UIViewWindow {
+    height: window_height.unwrap_or(0).into(),
+    start_index: start_index,
+  })) {
+    // Not sure what action we would take here
+  }
+
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.library.saved_artists.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.library.saved_artists.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.library.saved_artists.dispatch(app);
+    }
+  }
+
   draw_table(
     f,
     app,
     layout_chunk,
     ("Artists", &header),
     &items,
-    app.artists_list_index,
+    app.library.saved_artists.selected_index,
     highlight_state,
   )
 }

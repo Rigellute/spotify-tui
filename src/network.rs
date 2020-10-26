@@ -981,19 +981,22 @@ impl<'a> Network<'a> {
   }
 
   async fn get_followed_artists(&mut self, after: Option<String>) {
+    let mut app = self.app.lock().await;
     match self
       .spotify
       .current_user_followed_artists(self.large_search_limit, after)
       .await
     {
       Ok(saved_artists) => {
-        let mut app = self.app.lock().await;
-        app.artists = saved_artists.artists.items.to_owned();
-        app.library.saved_artists.add_pages(saved_artists.artists);
+        app.library.saved_artists.add_page(&saved_artists.artists);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
+    };
+
+    if let Ok(mut fetching_page) = app.library.saved_artists.fetching_page.lock() {
+      *fetching_page = false;
     };
   }
 
