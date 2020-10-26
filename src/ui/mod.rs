@@ -1310,32 +1310,63 @@ where
     current_route.hovered_block == ActiveBlock::AlbumList,
   );
 
-  let selected_song_index = app.album_list_index;
+  let items = app
+    .library
+    .saved_albums
+    .items
+    .iter()
+    .map(|album_page| TableItem {
+      id: album_page.album.id.to_owned(),
+      format: vec![
+        format!("♥ {}", &album_page.album.name),
+        create_artist_string(&album_page.album.artists),
+        album_page.album.release_date.to_owned(),
+      ],
+    })
+    .collect::<Vec<TableItem>>();
 
-  if let Some(saved_albums) = app.library.saved_albums.get_results(None) {
-    let items = saved_albums
-      .items
-      .iter()
-      .map(|album_page| TableItem {
-        id: album_page.album.id.to_owned(),
-        format: vec![
-          format!("♥ {}", &album_page.album.name),
-          create_artist_string(&album_page.album.artists),
-          album_page.album.release_date.to_owned(),
-        ],
-      })
-      .collect::<Vec<TableItem>>();
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .library
+        .saved_albums
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(TableUIHeight::SavedAlbumsView(UIViewWindow {
+    height: window_height.unwrap_or(0).into(),
+    start_index: start_index,
+  })) {
+    // Not sure what action we would take here
+  }
 
-    draw_table(
-      f,
-      app,
-      layout_chunk,
-      ("Saved Albums", &header),
-      &items,
-      selected_song_index,
-      highlight_state,
-    )
-  };
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.library.saved_albums.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.library.saved_albums.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.library.saved_albums.dispatch(app);
+    }
+  }
+
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Saved Albums", &header),
+    &items,
+    app.library.saved_albums.selected_index,
+    highlight_state,
+  )
 }
 
 pub fn draw_show_episodes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

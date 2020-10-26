@@ -1014,6 +1014,7 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_user_saved_albums(&mut self, offset: Option<u32>) {
+    let mut app = self.app.lock().await;
     match self
       .spotify
       .current_user_saved_albums(self.large_search_limit, offset)
@@ -1022,13 +1023,16 @@ impl<'a> Network<'a> {
       Ok(saved_albums) => {
         // not to show a blank page
         if !saved_albums.items.is_empty() {
-          let mut app = self.app.lock().await;
-          app.library.saved_albums.add_pages(saved_albums);
+          app.library.saved_albums.add_page(&saved_albums);
         }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
+    };
+
+    if let Ok(mut fetching_page) = app.library.saved_albums.fetching_page.lock() {
+      *fetching_page = false;
     };
   }
 

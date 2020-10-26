@@ -3,6 +3,7 @@ use crate::app::{App, UIViewWindow};
 use crate::event::Key;
 use crate::network::IoEvent;
 use rspotify::model::{
+  album::SavedAlbum,
   artist::FullArtist,
   page::{CursorBasedPage, Page},
   show::SimplifiedEpisode,
@@ -56,6 +57,16 @@ impl Pageable for SavedArtist {
   fn get_dispatch(after: Option<String>, _offset: u32) -> Option<IoEvent> {
     if let Some(after) = after {
       Some(IoEvent::GetFollowedArtists(Some(after)))
+    } else {
+      None
+    }
+  }
+}
+
+impl Pageable for SavedAlbum {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
+    if let Some(_next) = next {
+      Some(IoEvent::GetCurrentUserSavedAlbums(Some(offset)))
     } else {
       None
     }

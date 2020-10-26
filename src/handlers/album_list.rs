@@ -6,53 +6,22 @@ use crate::{
 
 pub fn handler(key: Key, app: &mut App) {
   match key {
-    k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
-    k if common_key_events::down_event(k) => {
-      if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
-        let next_index =
-          common_key_events::on_down_press_handler(&albums.items, Some(app.album_list_index));
-        app.album_list_index = next_index;
-      }
-    }
-    k if common_key_events::up_event(k) => {
-      if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
-        let next_index =
-          common_key_events::on_up_press_handler(&albums.items, Some(app.album_list_index));
-        app.album_list_index = next_index;
-      }
-    }
-    k if common_key_events::high_event(k) => {
-      if let Some(_albums) = app.library.saved_albums.get_results(None) {
-        let next_index = common_key_events::on_high_press_handler();
-        app.album_list_index = next_index;
-      }
-    }
-    k if common_key_events::middle_event(k) => {
-      if let Some(albums) = app.library.saved_albums.get_results(None) {
-        let next_index = common_key_events::on_middle_press_handler(&albums.items);
-        app.album_list_index = next_index;
-      }
-    }
-    k if common_key_events::low_event(k) => {
-      if let Some(albums) = app.library.saved_albums.get_results(None) {
-        let next_index = common_key_events::on_low_press_handler(&albums.items);
-        app.album_list_index = next_index;
-      }
+    key if common_key_events::is_list_navigation_key_event(key, app) => {
+      app.library.saved_albums.selected_index = app
+        .library
+        .saved_albums
+        .handle_list_navigation_event(key, app);
     }
     Key::Enter => {
-      if let Some(albums) = app.library.saved_albums.get_results(None) {
-        if let Some(selected_album) = albums.items.get(app.album_list_index) {
-          app.selected_album_full = Some(SelectedFullAlbum {
-            album: selected_album.album.clone(),
-            selected_index: 0,
-          });
-          app.album_table_context = AlbumTableContext::Full;
-          app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
-        };
-      }
+      if let Some(selected_album) = app.library.saved_albums.get_selected_item() {
+        app.selected_album_full = Some(SelectedFullAlbum {
+          album: selected_album.album.clone(),
+          selected_index: 0,
+        });
+        app.album_table_context = AlbumTableContext::Full;
+        app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+      };
     }
-    k if k == app.user_config.keys.next_page => app.get_current_user_saved_albums_next(),
-    k if k == app.user_config.keys.previous_page => app.get_current_user_saved_albums_previous(),
     Key::Char('D') => app.current_user_saved_album_delete(ActiveBlock::AlbumList),
     _ => {}
   };

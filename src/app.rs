@@ -56,6 +56,7 @@ pub struct UIViewWindow {
 pub enum TableUIHeight {
   EpisodeTable(UIViewWindow),
   ArtistTable(UIViewWindow),
+  SavedAlbumsView(UIViewWindow),
 }
 
 #[derive(Clone)]
@@ -102,7 +103,7 @@ pub struct Library {
   pub selected_index: usize,
   pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
   pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
-  pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
+  pub saved_albums: NewScrollableResultPages<SavedAlbum>,
   pub saved_artists: NewScrollableResultPages<SavedArtist>,
 }
 
@@ -317,7 +318,6 @@ pub struct App {
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
-  pub album_list_index: usize,
   pub made_for_you_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
@@ -340,7 +340,6 @@ impl Default for App {
     App {
       audio_analysis: None,
       album_table_context: AlbumTableContext::Full,
-      album_list_index: 0,
       made_for_you_index: 0,
       artist: None,
       user_config: UserConfig::new(),
@@ -353,7 +352,7 @@ impl Default for App {
       library: Library {
         saved_tracks: ScrollableResultPages::new(),
         made_for_you_playlists: ScrollableResultPages::new(),
-        saved_albums: ScrollableResultPages::new(),
+        saved_albums: NewScrollableResultPages::new(),
         saved_artists: NewScrollableResultPages::new(),
         selected_index: 0,
       },
@@ -489,6 +488,9 @@ impl App {
         TableUIHeight::ArtistTable(window) => {
           self.library.saved_artists.ui_view_height = Some(window);
         }
+        TableUIHeight::SavedAlbumsView(window) => {
+          self.library.saved_albums.ui_view_height = Some(window);
+        }
       }
     }
   }
@@ -526,7 +528,7 @@ impl App {
   }
 
   pub fn get_recommendations_for_seed(
-    &mut self,
+    &self,
     seed_artists: Option<Vec<String>>,
     seed_tracks: Option<Vec<String>>,
     first_track: Option<FullTrack>,
@@ -540,7 +542,7 @@ impl App {
     ));
   }
 
-  pub fn get_recommendations_for_track_id(&mut self, id: String) {
+  pub fn get_recommendations_for_track_id(&self, id: String) {
     let user_country = self.get_user_country();
     self.dispatch(IoEvent::GetRecommendationsForTrackId(id, user_country));
   }
@@ -749,28 +751,28 @@ impl App {
     };
   }
 
-  pub fn get_current_user_saved_albums_next(&mut self) {
-    match self
-      .library
-      .saved_albums
-      .get_results(Some(self.library.saved_albums.index + 1))
-      .cloned()
-    {
-      Some(_) => self.library.saved_albums.index += 1,
-      None => {
-        if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
-          let offset = Some(saved_albums.offset + saved_albums.limit);
-          self.dispatch(IoEvent::GetCurrentUserSavedAlbums(offset));
-        }
-      }
-    }
-  }
+  //pub fn get_current_user_saved_albums_next(&mut self) {
+  //match self
+  //.library
+  //.saved_albums
+  //.get_results(Some(self.library.saved_albums.index + 1))
+  //.cloned()
+  //{
+  //Some(_) => self.library.saved_albums.index += 1,
+  //None => {
+  //if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
+  //let offset = Some(saved_albums.offset + saved_albums.limit);
+  //self.dispatch(IoEvent::GetCurrentUserSavedAlbums(offset));
+  //}
+  //}
+  //}
+  //}
 
-  pub fn get_current_user_saved_albums_previous(&mut self) {
-    if self.library.saved_albums.index > 0 {
-      self.library.saved_albums.index -= 1;
-    }
-  }
+  //pub fn get_current_user_saved_albums_previous(&mut self) {
+  //if self.library.saved_albums.index > 0 {
+  //self.library.saved_albums.index -= 1;
+  //}
+  //}
 
   pub fn current_user_saved_album_delete(&mut self, block: ActiveBlock) {
     match block {
@@ -785,11 +787,9 @@ impl App {
         }
       }
       ActiveBlock::AlbumList => {
-        if let Some(albums) = self.library.saved_albums.get_results(None) {
-          if let Some(selected_album) = albums.items.get(self.album_list_index) {
-            let album_id = selected_album.album.id.clone();
-            self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
-          }
+        if let Some(selected_album) = self.library.saved_albums.get_selected_item() {
+          let album_id = selected_album.album.id.clone();
+          self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
         }
       }
       ActiveBlock::ArtistBlock => {
