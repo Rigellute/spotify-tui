@@ -77,7 +77,7 @@ impl Pageable for SimplifiedEpisode {
 
 /// This struct will hold paged results from the Spotify API. The idea is to collect
 #[derive(Default, Clone)]
-pub struct NewScrollableResultPages<T> {
+pub struct ScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
   pub selected_index: usize,
@@ -85,9 +85,9 @@ pub struct NewScrollableResultPages<T> {
   pub fetching_page: Arc<AtomicBool>,
 }
 
-impl<T: Pageable + Clone> NewScrollableResultPages<T> {
+impl<T: Pageable + Clone> ScrollableResultPages<T> {
   pub fn new() -> Self {
-    NewScrollableResultPages {
+    ScrollableResultPages {
       selected_index: 0,
       items: vec![],
       next: None,

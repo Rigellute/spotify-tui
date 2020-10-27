@@ -1,7 +1,7 @@
 use super::user_config::UserConfig;
 use crate::{
   network::IoEvent,
-  paging::{MadeForYouPlaylist, NewScrollableResultPages, SavedArtist},
+  paging::{MadeForYouPlaylist, SavedArtist, ScrollableResultPages},
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -59,16 +59,6 @@ pub enum TableUIHeight {
   SavedAlbumsView(UIViewWindow),
 }
 
-#[derive(Clone)]
-//#[deprecated(
-//since = "0.22.0",
-//note = "This struct is going away in favor of NewScrollableResultPages (which will be renamed once this is gone)"
-//)]
-pub struct ScrollableResultPages<T> {
-  index: usize,
-  pub pages: Vec<T>,
-}
-
 #[derive(Default)]
 pub struct SpotifyResultAndSelectedIndex<T> {
   pub index: usize,
@@ -78,19 +68,19 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 #[derive(Clone)]
 pub struct Library {
   pub selected_index: usize,
-  pub saved_tracks: NewScrollableResultPages<SavedTrack>,
-  pub made_for_you_playlists: NewScrollableResultPages<MadeForYouPlaylist>,
-  pub saved_albums: NewScrollableResultPages<SavedAlbum>,
-  pub saved_artists: NewScrollableResultPages<SavedArtist>,
+  pub saved_tracks: ScrollableResultPages<SavedTrack>,
+  pub made_for_you_playlists: ScrollableResultPages<MadeForYouPlaylist>,
+  pub saved_albums: ScrollableResultPages<SavedAlbum>,
+  pub saved_artists: ScrollableResultPages<SavedArtist>,
 }
 impl Default for Library {
   fn default() -> Self {
     Self {
       selected_index: 0,
-      saved_tracks: NewScrollableResultPages::new(),
-      made_for_you_playlists: NewScrollableResultPages::new(),
-      saved_albums: NewScrollableResultPages::new(),
-      saved_artists: NewScrollableResultPages::new(),
+      saved_tracks: ScrollableResultPages::new(),
+      made_for_you_playlists: ScrollableResultPages::new(),
+      saved_albums: ScrollableResultPages::new(),
+      saved_artists: ScrollableResultPages::new(),
     }
   }
 }
@@ -220,7 +210,7 @@ pub struct TrackTable {
 
 pub struct EpisodeTable {
   pub show_id: Option<String>,
-  pub episodes: NewScrollableResultPages<SimplifiedEpisode>,
+  pub episodes: ScrollableResultPages<SimplifiedEpisode>,
   pub reversed: bool,
 }
 
@@ -228,7 +218,7 @@ impl Default for EpisodeTable {
   fn default() -> Self {
     Self {
       show_id: Default::default(),
-      episodes: NewScrollableResultPages::new(),
+      episodes: ScrollableResultPages::new(),
       reversed: Default::default(),
     }
   }

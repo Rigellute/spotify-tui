@@ -4,7 +4,7 @@ use crate::{
     SelectedFullAlbum, TrackTableContext,
   },
   config::ClientConfig,
-  paging::NewScrollableResultPages,
+  paging::ScrollableResultPages,
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -453,7 +453,7 @@ impl<'a> Network<'a> {
       } else if show_id != app.episode_table.show_id {
         // Otherwise, fetch the first page and start a new scrollable page
         app.episode_table.show_id = show_id;
-        app.episode_table.episodes = NewScrollableResultPages::new();
+        app.episode_table.episodes = ScrollableResultPages::new();
       }
     }
 
