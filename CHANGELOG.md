@@ -2,15 +2,33 @@
 
 ## [Unreleased]
 
+- Implement next/previous page behavior for the Artists table [#604](https://github.com/Rigellute/spotify-tui/pull/604)
+- Fix app crash when pressing Enter before a screen has loaded [#599](https://github.com/Rigellute/spotify-tui/pull/599)
+- Show saved albums when getting an artist [#612](https://github.com/Rigellute/spotify-tui/pull/612)
+- Transfer playback when changing device [#408](https://github.com/Rigellute/spotify-tui/pull/408)
+- Make layout more responsive to large/small screens [#502](https://github.com/Rigellute/spotify-tui/pull/502)
+- Search using Spotify share URLs and URIs like the desktop client [#623](https://github.com/Rigellute/spotify-tui/pull/623)
+
+## [0.22.0] - 2020-10-05
+
+### Fixed
+
 - Show ♥ next to album name in saved list [#540](https://github.com/Rigellute/spotify-tui/pull/540)
+- Fix to be able to follow an artist in search result view [#565](https://github.com/Rigellute/spotify-tui/pull/565)
+- Don't add analysis view to stack if already in it [#580](https://github.com/Rigellute/spotify-tui/pull/580)
+
+### Added
+
 - Add additional line of help to show that 'w' can be used to save/like an album [#548](https://github.com/Rigellute/spotify-tui/pull/548)
 - Add handling Home and End buttons in user input [#550](https://github.com/Rigellute/spotify-tui/pull/550)
 - Add `playbar_progress_text` to user config and upgrade tui lib [#564](https://github.com/Rigellute/spotify-tui/pull/564)
 - Add basic playbar support for podcasts [#563](https://github.com/Rigellute/spotify-tui/pull/563)
-- Fix to be able to follow an artist in search result view [#565](https://github.com/Rigellute/spotify-tui/pull/565)
 - Add 'enable_text_emphasis' behavior config option [#573](https://github.com/Rigellute/spotify-tui/pull/573)
-- Don't add analysis view to stack if already in it [#580](https://github.com/Rigellute/spotify-tui/pull/580)
 - Add next/prev page, jump to start/end to user config [#566](https://github.com/Rigellute/spotify-tui/pull/566)
+- Add possibility to queue a song [#567](https://github.com/Rigellute/spotify-tui/pull/567)
+- Add user-configurable header styling [#583](https://github.com/Rigellute/spotify-tui/pull/583)
+- Show active keybindings in Help [#585](https://github.com/Rigellute/spotify-tui/pull/585)
+- Full Podcast support [#581](https://github.com/Rigellute/spotify-tui/pull/581)
 
 ## [0.21.0] - 2020-07-24
 

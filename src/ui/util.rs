@@ -3,6 +3,7 @@ use crate::user_config::Theme;
 use rspotify::model::artist::SimplifiedArtist;
 use tui::style::Style;
 
+pub const SMALL_TERMINAL_WIDTH: u16 = 150;
 pub const SMALL_TERMINAL_HEIGHT: u16 = 45;
 
 pub fn get_search_results_highlight_state(

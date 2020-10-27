@@ -26,6 +26,7 @@ pub struct UserTheme {
   pub playbar_text: Option<String>,
   pub selected: Option<String>,
   pub text: Option<String>,
+  pub header: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -45,6 +46,7 @@ pub struct Theme {
   pub playbar_text: Color,
   pub selected: Color,
   pub text: Color,
+  pub header: Color,
 }
 
 impl Default for Theme {
@@ -65,6 +67,7 @@ impl Default for Theme {
       playbar_text: Color::White,
       selected: Color::LightCyan,
       text: Color::White,
+      header: Color::White,
     }
   }
 }
@@ -367,6 +370,7 @@ impl UserConfig {
     to_theme_item!(playbar_text);
     to_theme_item!(selected);
     to_theme_item!(text);
+    to_theme_item!(header);
     Ok(())
   }
 

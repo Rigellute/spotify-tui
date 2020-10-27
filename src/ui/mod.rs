@@ -23,7 +23,7 @@ use tui::{
 use util::{
   create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
-  millis_to_minutes,
+  millis_to_minutes, SMALL_TERMINAL_WIDTH,
 };
 
 pub enum TableId {
@@ -86,7 +86,7 @@ where
   let gray = Style::default().fg(app.user_config.theme.text);
   let header = ["Description", "Event", "Context"];
 
-  let help_docs = get_help_docs();
+  let help_docs = get_help_docs(&app.user_config.keys);
   let help_docs = &help_docs[app.help_menu_offset as usize..];
 
   let rows = help_docs
@@ -114,9 +114,14 @@ pub fn draw_input_and_help_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rec
 where
   B: Backend,
 {
+  // Check for the width and change the contraints accordingly
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
-    .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+    .constraints(if app.size.width >= SMALL_TERMINAL_WIDTH {
+      [Constraint::Percentage(65), Constraint::Percentage(35)].as_ref()
+    } else {
+      [Constraint::Percentage(90), Constraint::Percentage(10)].as_ref()
+    })
     .split(layout_chunk);
 
   let current_route = app.get_current_route();
@@ -163,27 +168,42 @@ where
   B: Backend,
 {
   let margin = util::get_main_layout_margin(app);
-  let parent_layout = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints(
-      [
-        Constraint::Length(3),
-        Constraint::Min(1),
-        Constraint::Length(6),
-      ]
-      .as_ref(),
-    )
-    .margin(margin)
-    .split(f.size());
+  // Responsive layout: new one kicks in at width 150 or higher
+  if app.size.width >= SMALL_TERMINAL_WIDTH {
+    let parent_layout = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints([Constraint::Min(1), Constraint::Length(6)].as_ref())
+      .margin(margin)
+      .split(f.size());
 
-  // Search input and help
-  draw_input_and_help_box(f, app, parent_layout[0]);
+    // Nested main block with potential routes
+    draw_routes(f, app, parent_layout[0]);
 
-  // Nested main block with potential routes
-  draw_routes(f, app, parent_layout[1]);
+    // Currently playing
+    draw_playbar(f, app, parent_layout[1]);
+  } else {
+    let parent_layout = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(3),
+          Constraint::Min(1),
+          Constraint::Length(6),
+        ]
+        .as_ref(),
+      )
+      .margin(margin)
+      .split(f.size());
 
-  // Currently playing
-  draw_playbar(f, app, parent_layout[2]);
+    // Search input and help
+    draw_input_and_help_box(f, app, parent_layout[0]);
+
+    // Nested main block with potential routes
+    draw_routes(f, app, parent_layout[1]);
+
+    // Currently playing
+    draw_playbar(f, app, parent_layout[2]);
+  }
 
   // Possibly draw confirm dialog
   draw_dialog(f, app);
@@ -297,13 +317,34 @@ pub fn draw_user_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
 {
-  let chunks = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-    .split(layout_chunk);
+  // Check for width to make a responsive layout
+  if app.size.width >= SMALL_TERMINAL_WIDTH {
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(3),
+          Constraint::Percentage(30),
+          Constraint::Percentage(70),
+        ]
+        .as_ref(),
+      )
+      .split(layout_chunk);
 
-  draw_library_block(f, app, chunks[0]);
-  draw_playlist_block(f, app, chunks[1]);
+    // Search input and help
+    draw_input_and_help_box(f, app, chunks[0]);
+    draw_library_block(f, app, chunks[1]);
+    draw_playlist_block(f, app, chunks[2]);
+  } else {
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+      .split(layout_chunk);
+
+    // Search input and help
+    draw_library_block(f, app, chunks[0]);
+    draw_playlist_block(f, app, chunks[1]);
+  }
 }
 
 pub fn draw_search_results<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -977,28 +1018,41 @@ where
     .margin(5)
     .split(f.size());
 
-  let playing_text = Spans::from(vec![
-        Span::raw("Api response: "),
-        Span::styled(&app.api_error, Style::default().fg(app.user_config.theme.error_text)),
-        Span::styled(
-            "
-
-If you are trying to play a track, please check that
-    1. You have a Spotify Premium Account
-    2. Your playback device is active and selected - press `d` to go to device selection menu
-    3. If you're using spotifyd as a playback device, your device name must not contain spaces
-            ",
-            Style::default().fg(app.user_config.theme.text),
+  let playing_text = vec![
+    Spans::from(vec![
+      Span::raw("Api response: "),
+      Span::styled(
+        &app.api_error,
+        Style::default().fg(app.user_config.theme.error_text),
+      ),
+    ]),
+    Spans::from(Span::styled(
+      "If you are trying to play a track, please check that",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 1. You have a Spotify Premium Account",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 2. Your playback device is active and selected - press `d` to go to device selection menu",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled(
+      " 3. If you're using spotifyd as a playback device, your device name must not contain spaces",
+      Style::default().fg(app.user_config.theme.text),
+    )),
+    Spans::from(Span::styled("Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd",
+        Style::default().fg(app.user_config.theme.hint)
         ),
-        Span::styled("
-Hint: a playback device must be either an official spotify client or a light weight alternative such as spotifyd
-        ",
-        Style::default().fg(app.user_config.theme.hint)),
-        Span::styled(
-            "\nPress <Esc> to return",
-            Style::default().fg(app.user_config.theme.inactive),
-        ),
-    ]);
+    ),
+    Spans::from(
+      Span::styled(
+          "\nPress <Esc> to return",
+          Style::default().fg(app.user_config.theme.inactive),
+      ),
+    )
+  ];
 
   let playing_paragraph = Paragraph::new(playing_text)
     .wrap(Wrap { trim: true })
@@ -1220,12 +1274,12 @@ where
     .margin(5)
     .split(f.size());
 
-  let device_instructions = Spans::from(vec![
-        Span::raw("To play tracks, please select a device. "),
-        Span::raw("Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. "),
-        Span::raw("Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. "),
-        Span::raw("You can change the playback device at any time by pressing `d`."),
-    ]);
+  let device_instructions: Vec<Spans> = vec![
+        "To play tracks, please select a device. ",
+        "Use `j/k` or up/down arrow keys to move up and down and <Enter> to select. ",
+        "Your choice here will be cached so you can jump straight back in when you next open `spotify-tui`. ",
+        "You can change the playback device at any time by pressing `d`.",
+    ].into_iter().map(|instruction| Spans::from(Span::raw(instruction))).collect();
 
   let instructions = Paragraph::new(device_instructions)
     .style(Style::default().fg(app.user_config.theme.text))
@@ -1668,16 +1722,18 @@ where
 
       // suggestion: possibly put this as part of
       // app.dialog, but would have to introduce lifetime
-      let text = Spans::from(vec![
-        Span::raw("Are you sure you want to delete\nthe playlist: "),
-        Span::styled(
+      let text = vec![
+        Spans::from(Span::raw("Are you sure you want to delete the playlist: ")),
+        Spans::from(Span::styled(
           playlist.as_str(),
           Style::default().add_modifier(Modifier::BOLD),
-        ),
-        Span::raw("?"),
-      ]);
+        )),
+        Spans::from(Span::raw("?")),
+      ];
 
-      let text = Paragraph::new(text).alignment(Alignment::Center);
+      let text = Paragraph::new(text)
+        .wrap(Wrap { trim: true })
+        .alignment(Alignment::Center);
 
       f.render_widget(text, vchunks[0]);
 
@@ -1818,6 +1874,7 @@ fn draw_table<B>(
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
+    .header_style(Style::default().fg(app.user_config.theme.header))
     .widths(&widths);
   f.render_widget(table, layout_chunk);
 }

@@ -41,24 +41,21 @@ pub fn handler(key: Key, app: &mut App) {
       }
     }
     Key::Enter => {
-      let (playlists, selected_playlist_index) = (
-        &app
-          .library
-          .made_for_you_playlists
-          .get_results(Some(0))
-          .unwrap(),
+      if let (Some(playlists), selected_playlist_index) = (
+        &app.library.made_for_you_playlists.get_results(Some(0)),
         &app.made_for_you_index,
-      );
-      app.track_table.context = Some(TrackTableContext::MadeForYou);
-      app.playlist_offset = 0;
-      if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned()) {
-        app.made_for_you_offset = 0;
-        let playlist_id = selected_playlist.id.to_owned();
-        app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
-          playlist_id,
-          app.made_for_you_offset,
-        ));
-      }
+      ) {
+        app.track_table.context = Some(TrackTableContext::MadeForYou);
+        app.playlist_offset = 0;
+        if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned()) {
+          app.made_for_you_offset = 0;
+          let playlist_id = selected_playlist.id.to_owned();
+          app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
+            playlist_id,
+            app.made_for_you_offset,
+          ));
+        }
+      };
     }
     _ => {}
   }

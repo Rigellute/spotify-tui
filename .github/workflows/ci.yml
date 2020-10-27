@@ -72,9 +72,10 @@ jobs:
     needs: prepare
     steps:
       - uses: actions/checkout@master
+      # Temporarily downgrade Clippy until a new stable release includes a fix for CI breaking on 1.47 https://github.com/rust-lang/rust-clippy/issues/6147
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.46.0
           override: true
       - run: rustup component add clippy
       - uses: actions-rs/cargo@v1

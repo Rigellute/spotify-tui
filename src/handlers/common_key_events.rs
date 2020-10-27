@@ -1,52 +1,32 @@
 use super::super::app::{ActiveBlock, App, RouteId};
 use crate::event::Key;
+
 pub fn down_event(key: Key) -> bool {
-  match key {
-    Key::Down | Key::Char('j') | Key::Ctrl('n') => true,
-    _ => false,
-  }
+  matches!(key, Key::Down | Key::Char('j') | Key::Ctrl('n'))
 }
 
 pub fn up_event(key: Key) -> bool {
-  match key {
-    Key::Up | Key::Char('k') | Key::Ctrl('p') => true,
-    _ => false,
-  }
+  matches!(key, Key::Up | Key::Char('k') | Key::Ctrl('p'))
 }
 
 pub fn left_event(key: Key) -> bool {
-  match key {
-    Key::Left | Key::Char('h') | Key::Ctrl('b') => true,
-    _ => false,
-  }
+  matches!(key, Key::Left | Key::Char('h') | Key::Ctrl('b'))
 }
 
 pub fn right_event(key: Key) -> bool {
-  match key {
-    Key::Right | Key::Char('l') | Key::Ctrl('f') => true,
-    _ => false,
-  }
+  matches!(key, Key::Right | Key::Char('l') | Key::Ctrl('f'))
 }
 
 pub fn high_event(key: Key) -> bool {
-  match key {
-    Key::Char('H') => true,
-    _ => false,
-  }
+  matches!(key, Key::Char('H'))
 }
 
 pub fn middle_event(key: Key) -> bool {
-  match key {
-    Key::Char('M') => true,
-    _ => false,
-  }
+  matches!(key, Key::Char('M'))
 }
 
 pub fn low_event(key: Key) -> bool {
-  match key {
-    Key::Char('L') => true,
-    _ => false,
-  }
+  matches!(key, Key::Char('L'))
 }
 
 pub fn list_end_event(key: Key) -> bool {

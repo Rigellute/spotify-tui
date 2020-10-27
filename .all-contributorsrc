@@ -633,6 +633,52 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "n-ivanov",
+      "name": "n-ivanov",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/11470871?v=4",
+      "profile": "https://github.com/n-ivanov",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "bi1yeu",
+      "name": "bi1yeu",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/1185129?v=4",
+      "profile": "http://matthewbilyeu.com/resume/",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "Utagai",
+      "name": "May",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/10730394?v=4",
+      "profile": "https://github.com/Utagai",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mucinoab",
+      "name": "Bruno A. Muciño",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/28630268?v=4",
+      "profile": "https://mucinoab.github.io/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "OrangeFran",
+      "name": "Finn Hediger",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/55061632?v=4",
+      "profile": "https://github.com/OrangeFran",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
