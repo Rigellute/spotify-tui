@@ -102,6 +102,17 @@ pub struct Library {
   pub saved_albums: NewScrollableResultPages<SavedAlbum>,
   pub saved_artists: NewScrollableResultPages<SavedArtist>,
 }
+impl Default for Library {
+  fn default() -> Self {
+    Self {
+      selected_index: 0,
+      saved_tracks: NewScrollableResultPages::new(),
+      made_for_you_playlists: NewScrollableResultPages::new(),
+      saved_albums: NewScrollableResultPages::new(),
+      saved_artists: NewScrollableResultPages::new(),
+    }
+  }
+}
 
 #[derive(PartialEq, Debug)]
 pub enum SearchResultBlock {
@@ -343,13 +354,7 @@ impl Default for App {
       selected_album_simplified: None,
       selected_album_full: None,
       home_scroll: 0,
-      library: Library {
-        saved_tracks: ScrollableResultPages::new(),
-        made_for_you_playlists: NewScrollableResultPages::new(),
-        saved_albums: NewScrollableResultPages::new(),
-        saved_artists: NewScrollableResultPages::new(),
-        selected_index: 0,
-      },
+      library: Default::default(),
       liked_song_ids_set: HashSet::new(),
       followed_artist_ids_set: HashSet::new(),
       saved_album_ids_set: HashSet::new(),
