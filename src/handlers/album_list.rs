@@ -12,6 +12,7 @@ pub fn handler(key: Key, app: &mut App) {
         .saved_albums
         .handle_list_navigation_event(key, app);
     }
+    k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
     Key::Enter => {
       if let Some(selected_album) = app.library.saved_albums.get_selected_item() {
         app.selected_album_full = Some(SelectedFullAlbum {
