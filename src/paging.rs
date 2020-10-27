@@ -53,41 +53,25 @@ impl Pageable for MadeForYouPlaylist {}
 
 impl Pageable for SavedTrack {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
-    if let Some(_next_uri) = next {
-      Some(IoEvent::GetCurrentSavedTracks(Some(offset)))
-    } else {
-      None
-    }
+    next.and(Some(IoEvent::GetCurrentSavedTracks(Some(offset))))
   }
 }
 
 impl Pageable for SavedArtist {
   fn get_dispatch(after: Option<String>, _offset: u32) -> Option<IoEvent> {
-    if let Some(after) = after {
-      Some(IoEvent::GetFollowedArtists(Some(after)))
-    } else {
-      None
-    }
+    after.map(Some).map(IoEvent::GetFollowedArtists)
   }
 }
 
 impl Pageable for SavedAlbum {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
-    if let Some(_next) = next {
-      Some(IoEvent::GetCurrentUserSavedAlbums(Some(offset)))
-    } else {
-      None
-    }
+    next.and(Some(IoEvent::GetCurrentUserSavedAlbums(Some(offset))))
   }
 }
 
 impl Pageable for SimplifiedEpisode {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
-    if let Some(_next) = next {
-      Some(IoEvent::GetShowEpisodes(None, offset))
-    } else {
-      None
-    }
+    next.and(Some(IoEvent::GetShowEpisodes(None, offset)))
   }
 }
 
