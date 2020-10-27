@@ -11,7 +11,6 @@ use rspotify::{
   client::Spotify,
   model::{
     album::SimplifiedAlbum,
-    artist::FullArtist,
     offset::for_position,
     page::Page,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
@@ -75,7 +74,6 @@ pub enum IoEvent {
   GetRecommendationsForTrackId(String, Option<Country>),
   GetRecentlyPlayed,
   GetFollowedArtists(Option<String>),
-  SetArtistsToTable(Vec<FullArtist>),
   UserArtistFollowCheck(Vec<String>),
   GetAlbum(String),
   TransferPlaybackToDevice(String),
@@ -257,9 +255,6 @@ impl<'a> Network<'a> {
       IoEvent::GetFollowedArtists(after) => {
         self.get_followed_artists(after).await;
       }
-      IoEvent::SetArtistsToTable(full_artists) => {
-        self.set_artists_to_table(full_artists).await;
-      }
       IoEvent::UserArtistFollowCheck(artist_ids) => {
         self.user_artist_check_follow(artist_ids).await;
       }
@@ -417,11 +412,6 @@ impl<'a> Network<'a> {
         .filter_map(|item| item.id)
         .collect::<Vec<String>>(),
     ));
-  }
-
-  async fn set_artists_to_table(&mut self, artists: Vec<FullArtist>) {
-    let mut app = self.app.lock().await;
-    app.artists = artists;
   }
 
   async fn get_made_for_you_playlist_tracks(
@@ -1003,18 +993,21 @@ impl<'a> Network<'a> {
 
   async fn get_followed_artists(&mut self, after: Option<String>) {
     let mut app = self.app.lock().await;
-    match self
-      .spotify
-      .current_user_followed_artists(self.large_search_limit, after)
-      .await
-    {
-      Ok(saved_artists) => {
-        app.library.saved_artists.add_page(&saved_artists.artists);
-      }
-      Err(e) => {
-        self.handle_error(anyhow!(e)).await;
-      }
-    };
+
+    if (after.is_none() && app.library.saved_artists.items.is_empty()) || after.is_some() {
+      match self
+        .spotify
+        .current_user_followed_artists(self.large_search_limit, after)
+        .await
+      {
+        Ok(saved_artists) => {
+          app.library.saved_artists.add_page(&saved_artists.artists);
+        }
+        Err(e) => {
+          self.handle_error(anyhow!(e)).await;
+        }
+      };
+    }
 
     if let Ok(mut fetching_page) = app.library.saved_artists.fetching_page.lock() {
       *fetching_page = false;
