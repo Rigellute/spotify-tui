@@ -1,7 +1,8 @@
 use super::handlers::common_key_events;
-use crate::app::{App, UIViewWindow};
+use crate::app::App;
 use crate::event::Key;
 use crate::network::IoEvent;
+use crate::ui::Window;
 use rspotify::model::{
   album::SavedAlbum,
   artist::FullArtist,
@@ -81,7 +82,7 @@ pub struct ScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
   pub selected_index: usize,
-  pub ui_view_height: Option<UIViewWindow>,
+  pub ui_view_height: Option<Window>,
   pub fetching_page: Arc<AtomicBool>,
 }
 

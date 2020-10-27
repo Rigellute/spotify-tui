@@ -2,6 +2,7 @@ use super::user_config::UserConfig;
 use crate::{
   network::IoEvent,
   paging::{MadeForYouPlaylist, SavedArtist, ScrollableResultPages},
+  ui::UIView,
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -46,18 +47,6 @@ const DEFAULT_ROUTE: Route = Route {
   active_block: ActiveBlock::Empty,
   hovered_block: ActiveBlock::Library,
 };
-
-#[derive(Clone)]
-pub struct UIViewWindow {
-  pub height: usize,
-  pub start_index: usize,
-}
-
-pub enum TableUIHeight {
-  EpisodeTable(UIViewWindow),
-  ArtistTable(UIViewWindow),
-  SavedAlbumsView(UIViewWindow),
-}
 
 #[derive(Default)]
 pub struct SpotifyResultAndSelectedIndex<T> {
@@ -303,8 +292,8 @@ pub struct App {
   pub help_menu_offset: u32,
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
-  pub ui_tx: Sender<TableUIHeight>,
-  pub ui_rx: Receiver<TableUIHeight>,
+  pub ui_tx: Sender<UIView>,
+  pub ui_rx: Receiver<UIView>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
@@ -452,13 +441,13 @@ impl App {
 
     while let Ok(ui_height) = self.ui_rx.try_recv() {
       match ui_height {
-        TableUIHeight::EpisodeTable(window) => {
+        UIView::EpisodeTable(window) => {
           self.episode_table.episodes.ui_view_height = Some(window);
         }
-        TableUIHeight::ArtistTable(window) => {
+        UIView::ArtistTable(window) => {
           self.library.saved_artists.ui_view_height = Some(window);
         }
-        TableUIHeight::SavedAlbumsView(window) => {
+        UIView::SavedAlbumsView(window) => {
           self.library.saved_albums.ui_view_height = Some(window);
         }
       }

@@ -4,7 +4,7 @@ pub mod util;
 use super::{
   app::{
     ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
-    SearchResultBlock, TableUIHeight, UIViewWindow, LIBRARY_OPTIONS,
+    SearchResultBlock, LIBRARY_OPTIONS,
   },
   banner::BANNER,
 };
@@ -70,6 +70,18 @@ pub struct TableHeaderItem<'a> {
 pub struct TableItem {
   id: String,
   format: Vec<String>,
+}
+
+#[derive(Clone)]
+pub struct Window {
+  pub height: usize,
+  pub start_index: usize,
+}
+
+pub enum UIView {
+  EpisodeTable(Window),
+  ArtistTable(Window),
+  SavedAlbumsView(Window),
 }
 
 pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
@@ -569,7 +581,7 @@ where
         .checked_sub(height.into())
     })
     .unwrap_or(0);
-  if let Err(_e) = app.ui_tx.send(TableUIHeight::ArtistTable(UIViewWindow {
+  if let Err(_e) = app.ui_tx.send(UIView::ArtistTable(Window {
     height: window_height.unwrap_or(0).into(),
     start_index,
   })) {
@@ -1390,7 +1402,7 @@ where
         .checked_sub(height.into())
     })
     .unwrap_or(0);
-  if let Err(_e) = app.ui_tx.send(TableUIHeight::SavedAlbumsView(UIViewWindow {
+  if let Err(_e) = app.ui_tx.send(UIView::SavedAlbumsView(Window {
     height: window_height.unwrap_or(0).into(),
     start_index,
   })) {
@@ -1512,7 +1524,7 @@ where
         .checked_sub(height.into())
     })
     .unwrap_or(0);
-  if let Err(_e) = app.ui_tx.send(TableUIHeight::EpisodeTable(UIViewWindow {
+  if let Err(_e) = app.ui_tx.send(UIView::EpisodeTable(Window {
     height: window_height.unwrap_or(0).into(),
     start_index,
   })) {
