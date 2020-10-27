@@ -162,19 +162,17 @@ fn handle_low_event(app: &mut App) {
 fn handle_recommended_tracks(app: &mut App) {
   match app.album_table_context {
     AlbumTableContext::Full => {
-      if let Some(albums) = &app.library.clone().saved_albums.get_results(None) {
-        if let Some(selected_album) = albums.items.get(app.album_list_index) {
-          if let Some(track) = &selected_album
-            .album
-            .tracks
-            .items
-            .get(app.saved_album_tracks_index)
-          {
-            if let Some(id) = &track.id {
-              app.recommendations_context = Some(RecommendationsContext::Song);
-              app.recommendations_seed = track.name.clone();
-              app.get_recommendations_for_track_id(id.to_string());
-            }
+      if let Some(selected_album) = &app.library.saved_albums.get_selected_item() {
+        if let Some(track) = &selected_album
+          .album
+          .tracks
+          .items
+          .get(app.saved_album_tracks_index)
+        {
+          if let Some(id) = &track.id {
+            app.recommendations_context = Some(RecommendationsContext::Song);
+            app.recommendations_seed = track.name.clone();
+            app.get_recommendations_for_track_id(id.to_string());
           }
         }
       }

@@ -1,5 +1,9 @@
 use super::user_config::UserConfig;
-use crate::network::IoEvent;
+use crate::{
+  network::IoEvent,
+  paging::{MadeForYouPlaylist, SavedArtist, ScrollableResultPages},
+  ui::UIView,
+};
 use anyhow::anyhow;
 use rspotify::{
   model::{
@@ -19,7 +23,7 @@ use rspotify::{
   senum::Country,
 };
 use std::str::FromStr;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{
   cmp::{max, min},
   collections::HashSet,
@@ -44,35 +48,6 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
-#[derive(Clone)]
-pub struct ScrollableResultPages<T> {
-  index: usize,
-  pub pages: Vec<T>,
-}
-
-impl<T> ScrollableResultPages<T> {
-  pub fn new() -> ScrollableResultPages<T> {
-    ScrollableResultPages {
-      index: 0,
-      pages: vec![],
-    }
-  }
-
-  pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
-    self.pages.get(at_index.unwrap_or(self.index))
-  }
-
-  pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
-    self.pages.get_mut(at_index.unwrap_or(self.index))
-  }
-
-  pub fn add_pages(&mut self, new_pages: T) {
-    self.pages.push(new_pages);
-    // Whenever a new page is added, set the active index to the end of the vector
-    self.index = self.pages.len() - 1;
-  }
-}
-
 #[derive(Default)]
 pub struct SpotifyResultAndSelectedIndex<T> {
   pub index: usize,
@@ -82,10 +57,21 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 #[derive(Clone)]
 pub struct Library {
   pub selected_index: usize,
-  pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
-  pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
-  pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
-  pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
+  pub saved_tracks: ScrollableResultPages<SavedTrack>,
+  pub made_for_you_playlists: ScrollableResultPages<MadeForYouPlaylist>,
+  pub saved_albums: ScrollableResultPages<SavedAlbum>,
+  pub saved_artists: ScrollableResultPages<SavedArtist>,
+}
+impl Default for Library {
+  fn default() -> Self {
+    Self {
+      selected_index: 0,
+      saved_tracks: ScrollableResultPages::new(),
+      made_for_you_playlists: ScrollableResultPages::new(),
+      saved_albums: ScrollableResultPages::new(),
+      saved_artists: ScrollableResultPages::new(),
+    }
+  }
 }
 
 #[derive(PartialEq, Debug)]
@@ -211,11 +197,20 @@ pub struct TrackTable {
   pub context: Option<TrackTableContext>,
 }
 
-#[derive(Default)]
 pub struct EpisodeTable {
-  pub episodes: Vec<SimplifiedEpisode>,
-  pub selected_index: usize,
+  pub show_id: Option<String>,
+  pub episodes: ScrollableResultPages<SimplifiedEpisode>,
   pub reversed: bool,
+}
+
+impl Default for EpisodeTable {
+  fn default() -> Self {
+    Self {
+      show_id: Default::default(),
+      episodes: ScrollableResultPages::new(),
+      reversed: Default::default(),
+    }
+  }
 }
 
 #[derive(Clone)]
@@ -250,7 +245,6 @@ pub struct App {
   pub audio_analysis: Option<AudioAnalysis>,
   pub home_scroll: u16,
   pub user_config: UserConfig,
-  pub artists: Vec<FullArtist>,
   pub artist: Option<Artist>,
   pub album_table_context: AlbumTableContext,
   pub saved_album_tracks_index: usize,
@@ -292,9 +286,6 @@ pub struct App {
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
-  pub album_list_index: usize,
-  pub made_for_you_index: usize,
-  pub artists_list_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
@@ -302,6 +293,8 @@ pub struct App {
   pub help_menu_offset: u32,
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
+  pub ui_tx: Sender<UIView>,
+  pub ui_rx: Receiver<UIView>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
@@ -310,13 +303,10 @@ pub struct App {
 
 impl Default for App {
   fn default() -> Self {
+    let (ui_tx, ui_rx) = channel();
     App {
       audio_analysis: None,
       album_table_context: AlbumTableContext::Full,
-      album_list_index: 0,
-      made_for_you_index: 0,
-      artists_list_index: 0,
-      artists: vec![],
       artist: None,
       user_config: UserConfig::new(),
       saved_album_tracks_index: 0,
@@ -325,13 +315,7 @@ impl Default for App {
       selected_album_simplified: None,
       selected_album_full: None,
       home_scroll: 0,
-      library: Library {
-        saved_tracks: ScrollableResultPages::new(),
-        made_for_you_playlists: ScrollableResultPages::new(),
-        saved_albums: ScrollableResultPages::new(),
-        saved_artists: ScrollableResultPages::new(),
-        selected_index: 0,
-      },
+      library: Default::default(),
       liked_song_ids_set: HashSet::new(),
       followed_artist_ids_set: HashSet::new(),
       saved_album_ids_set: HashSet::new(),
@@ -381,6 +365,8 @@ impl Default for App {
       help_menu_offset: 0,
       is_loading: false,
       io_tx: None,
+      ui_tx,
+      ui_rx,
       is_fetching_current_playback: false,
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
@@ -404,12 +390,9 @@ impl App {
   }
 
   // Send a network event to the network thread
-  pub fn dispatch(&mut self, action: IoEvent) {
-    // `is_loading` will be set to false again after the async action has finished in network.rs
-    self.is_loading = true;
+  pub fn dispatch(&self, action: IoEvent) {
     if let Some(io_tx) = &self.io_tx {
       if let Err(e) = io_tx.send(action) {
-        self.is_loading = false;
         println!("Error from dispatch {}", e);
         // TODO: handle error
       };
@@ -457,6 +440,20 @@ impl App {
         self.song_progress_ms = duration_ms.into();
       }
     }
+
+    while let Ok(ui_height) = self.ui_rx.try_recv() {
+      match ui_height {
+        UIView::EpisodeTable(window) => {
+          self.episode_table.episodes.ui_view_height = Some(window);
+        }
+        UIView::ArtistTable(window) => {
+          self.library.saved_artists.ui_view_height = Some(window);
+        }
+        UIView::SavedAlbumsView(window) => {
+          self.library.saved_albums.ui_view_height = Some(window);
+        }
+      }
+    }
   }
 
   pub fn seek_forwards(&mut self) {
@@ -492,7 +489,7 @@ impl App {
   }
 
   pub fn get_recommendations_for_seed(
-    &mut self,
+    &self,
     seed_artists: Option<Vec<String>>,
     seed_tracks: Option<Vec<String>>,
     first_track: Option<FullTrack>,
@@ -506,7 +503,7 @@ impl App {
     ));
   }
 
-  pub fn get_recommendations_for_track_id(&mut self, id: String) {
+  pub fn get_recommendations_for_track_id(&self, id: String) {
     let user_country = self.get_user_country();
     self.dispatch(IoEvent::GetRecommendationsForTrackId(id, user_country));
   }
@@ -667,121 +664,10 @@ impl App {
     }
   }
 
-  pub fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
-    self.dispatch(IoEvent::SetTracksToTable(
-      saved_track_page
-        .items
-        .clone()
-        .into_iter()
-        .map(|item| item.track)
-        .collect::<Vec<FullTrack>>(),
-    ));
-  }
-
-  pub fn set_saved_artists_to_table(&mut self, saved_artists_page: &CursorBasedPage<FullArtist>) {
-    self.dispatch(IoEvent::SetArtistsToTable(
-      saved_artists_page
-        .items
-        .clone()
-        .into_iter()
-        .collect::<Vec<FullArtist>>(),
-    ))
-  }
-
-  pub fn get_current_user_saved_artists_next(&mut self) {
-    match self
-      .library
-      .saved_artists
-      .get_results(Some(self.library.saved_artists.index + 1))
-      .cloned()
-    {
-      Some(saved_artists) => {
-        self.set_saved_artists_to_table(&saved_artists);
-        self.library.saved_artists.index += 1
-      }
-      None => {
-        if let Some(saved_artists) = &self.library.saved_artists.clone().get_results(None) {
-          match saved_artists.items.last() {
-            Some(last_artist) => {
-              self.dispatch(IoEvent::GetFollowedArtists(Some(last_artist.id.clone())));
-            }
-            None => {
-              return;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  pub fn get_current_user_saved_artists_previous(&mut self) {
-    if self.library.saved_artists.index > 0 {
-      self.library.saved_artists.index -= 1;
-    }
-
-    if let Some(saved_artists) = &self.library.saved_artists.get_results(None).cloned() {
-      self.set_saved_artists_to_table(&saved_artists);
-    }
-  }
-
-  pub fn get_current_user_saved_tracks_next(&mut self) {
-    // Before fetching the next tracks, check if we have already fetched them
-    match self
-      .library
-      .saved_tracks
-      .get_results(Some(self.library.saved_tracks.index + 1))
-      .cloned()
-    {
-      Some(saved_tracks) => {
-        self.set_saved_tracks_to_table(&saved_tracks);
-        self.library.saved_tracks.index += 1
-      }
-      None => {
-        if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
-          let offset = Some(saved_tracks.offset + saved_tracks.limit);
-          self.dispatch(IoEvent::GetCurrentSavedTracks(offset));
-        }
-      }
-    }
-  }
-
-  pub fn get_current_user_saved_tracks_previous(&mut self) {
-    if self.library.saved_tracks.index > 0 {
-      self.library.saved_tracks.index -= 1;
-    }
-
-    if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None).cloned() {
-      self.set_saved_tracks_to_table(&saved_tracks);
-    }
-  }
-
   pub fn shuffle(&mut self) {
     if let Some(context) = &self.current_playback_context.clone() {
       self.dispatch(IoEvent::Shuffle(context.shuffle_state));
     };
-  }
-
-  pub fn get_current_user_saved_albums_next(&mut self) {
-    match self
-      .library
-      .saved_albums
-      .get_results(Some(self.library.saved_albums.index + 1))
-      .cloned()
-    {
-      Some(_) => self.library.saved_albums.index += 1,
-      None => {
-        if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
-          let offset = Some(saved_albums.offset + saved_albums.limit);
-          self.dispatch(IoEvent::GetCurrentUserSavedAlbums(offset));
-        }
-      }
-    }
-  }
-
-  pub fn get_current_user_saved_albums_previous(&mut self) {
-    if self.library.saved_albums.index > 0 {
-      self.library.saved_albums.index -= 1;
-    }
   }
 
   pub fn current_user_saved_album_delete(&mut self, block: ActiveBlock) {
@@ -797,11 +683,9 @@ impl App {
         }
       }
       ActiveBlock::AlbumList => {
-        if let Some(albums) = self.library.saved_albums.get_results(None) {
-          if let Some(selected_album) = albums.items.get(self.album_list_index) {
-            let album_id = selected_album.album.id.clone();
-            self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
-          }
+        if let Some(selected_album) = self.library.saved_albums.get_selected_item() {
+          let album_id = selected_album.album.id.clone();
+          self.dispatch(IoEvent::CurrentUserSavedAlbumDelete(album_id));
         }
       }
       ActiveBlock::ArtistBlock => {
@@ -854,11 +738,9 @@ impl App {
         }
       }
       ActiveBlock::AlbumList => {
-        if let Some(artists) = self.library.saved_artists.get_results(None) {
-          if let Some(selected_artist) = artists.items.get(self.artists_list_index) {
-            let artist_id = selected_artist.id.clone();
-            self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
-          }
+        if let Some(selected_artist) = self.library.saved_artists.get_selected_item() {
+          let artist_id = selected_artist.id.clone();
+          self.dispatch(IoEvent::UserUnfollowArtists(vec![artist_id]));
         }
       }
       ActiveBlock::ArtistBlock => {
@@ -951,14 +833,18 @@ impl App {
     const RELEASE_RADAR: &str = "Release Radar";
     const ON_REPEAT: &str = "On Repeat";
     const REPEAT_REWIND: &str = "Repeat Rewind";
+    const YOUR_TOP_SONGS: &str = "Your Top Songs";
+    const BEST_OF_THE_DECADE: &str = "Best of the Decade For You";
 
-    if self.library.made_for_you_playlists.pages.is_empty() {
+    if self.library.made_for_you_playlists.items.is_empty() {
       // We shouldn't be fetching all the results immediately - only load the data when the
       // user selects the playlist
       self.made_for_you_search_and_add(DISCOVER_WEEKLY);
       self.made_for_you_search_and_add(RELEASE_RADAR);
       self.made_for_you_search_and_add(ON_REPEAT);
       self.made_for_you_search_and_add(REPEAT_REWIND);
+      self.made_for_you_search_and_add(YOUR_TOP_SONGS);
+      self.made_for_you_search_and_add(BEST_OF_THE_DECADE);
     }
   }
 
@@ -998,7 +884,7 @@ impl App {
     }
   }
 
-  pub fn get_artist(&mut self, artist_id: String, input_artist_name: String) {
+  pub fn get_artist(&self, artist_id: String, input_artist_name: String) {
     let user_country = self.get_user_country();
     self.dispatch(IoEvent::GetArtist(
       artist_id,

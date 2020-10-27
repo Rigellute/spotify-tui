@@ -1,14 +1,16 @@
-use crate::app::{
-  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
-  SelectedFullAlbum, TrackTableContext,
+use crate::{
+  app::{
+    ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
+    SelectedFullAlbum, TrackTableContext,
+  },
+  config::ClientConfig,
+  paging::ScrollableResultPages,
 };
-use crate::config::ClientConfig;
 use anyhow::anyhow;
 use rspotify::{
   client::Spotify,
   model::{
     album::SimplifiedAlbum,
-    artist::FullArtist,
     offset::for_position,
     page::Page,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
@@ -23,7 +25,7 @@ use rspotify::{
 };
 use serde_json::{map::Map, Value};
 use std::{
-  sync::Arc,
+  sync::{atomic::Ordering, Arc},
   time::{Duration, Instant, SystemTime},
 };
 use tokio::sync::Mutex;
@@ -36,7 +38,6 @@ pub enum IoEvent {
   GetPlaylists,
   GetDevices,
   GetSearchResults(String, Option<Country>),
-  SetTracksToTable(Vec<FullTrack>),
   GetMadeForYouPlaylistTracks(String, u32),
   GetPlaylistTracks(String, u32),
   GetCurrentSavedTracks(Option<u32>),
@@ -72,13 +73,12 @@ pub enum IoEvent {
   GetRecommendationsForTrackId(String, Option<Country>),
   GetRecentlyPlayed,
   GetFollowedArtists(Option<String>),
-  SetArtistsToTable(Vec<FullArtist>),
   UserArtistFollowCheck(Vec<String>),
   GetAlbum(String),
   TransferPlaybackToDevice(String),
   GetAlbumForTrack(String),
   CurrentUserSavedTracksContains(Vec<String>),
-  GetShowEpisodes(String),
+  GetShowEpisodes(Option<String>, u32),
   AddItemToQueue(String),
 }
 
@@ -134,6 +134,11 @@ impl<'a> Network<'a> {
 
   #[allow(clippy::cognitive_complexity)]
   pub async fn handle_network_event(&mut self, io_event: IoEvent) {
+    let mut app = self.app.lock().await;
+    app.is_loading = true;
+    // force drop here so we don't deadlock in one of the IO handlers
+    drop(app);
+
     match io_event {
       IoEvent::RefreshAuthentication => {
         self.refresh_authentication().await;
@@ -149,9 +154,6 @@ impl<'a> Network<'a> {
       }
       IoEvent::GetCurrentPlayback => {
         self.get_current_playback().await;
-      }
-      IoEvent::SetTracksToTable(full_tracks) => {
-        self.set_tracks_to_table(full_tracks).await;
       }
       IoEvent::GetSearchResults(search_term, country) => {
         self.get_search_results(search_term, country).await;
@@ -249,9 +251,6 @@ impl<'a> Network<'a> {
       IoEvent::GetFollowedArtists(after) => {
         self.get_followed_artists(after).await;
       }
-      IoEvent::SetArtistsToTable(full_artists) => {
-        self.set_artists_to_table(full_artists).await;
-      }
       IoEvent::UserArtistFollowCheck(artist_ids) => {
         self.user_artist_check_follow(artist_ids).await;
       }
@@ -270,8 +269,8 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
       }
-      IoEvent::GetShowEpisodes(show_id) => {
-        self.get_show_episodes(show_id).await;
+      IoEvent::GetShowEpisodes(show_id, offset) => {
+        self.get_show_episodes(show_id, offset).await;
       }
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
@@ -411,11 +410,6 @@ impl<'a> Network<'a> {
     ));
   }
 
-  async fn set_artists_to_table(&mut self, artists: Vec<FullArtist>) {
-    let mut app = self.app.lock().await;
-    app.artists = artists;
-  }
-
   async fn get_made_for_you_playlist_tracks(
     &mut self,
     playlist_id: String,
@@ -445,23 +439,49 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_show_episodes(&mut self, show_id: String) {
-    match self
-      .spotify
-      .get_shows_episodes(show_id, self.large_search_limit, 0, None)
-      .await
-    {
-      Ok(episodes) => {
-        let mut app = self.app.lock().await;
-        app.episode_table.episodes = episodes.items;
-        app.episode_table.reversed = false;
+  async fn get_show_episodes(&mut self, show_id: Option<String>, offset: u32) {
+    let mut app = self.app.lock().await;
 
-        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
-      }
-      Err(e) => {
-        self.handle_error(anyhow!(e)).await;
+    if show_id.is_some() {
+      if show_id == app.episode_table.show_id && offset == 0 {
+        // The user has just selected this show again from the list, but we already have the
+        // episodes. Just push onto the stack and return
+        if app.get_current_route().id != RouteId::PodcastEpisodes {
+          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+        }
+        return;
+      } else if show_id != app.episode_table.show_id {
+        // Otherwise, fetch the first page and start a new scrollable page
+        app.episode_table.show_id = show_id;
+        app.episode_table.episodes = ScrollableResultPages::new();
       }
     }
+
+    if let Some(show_id) = app.episode_table.show_id.clone() {
+      match self
+        .spotify
+        .get_shows_episodes(show_id, self.large_search_limit, offset, None)
+        .await
+      {
+        Ok(episodes) => {
+          app.episode_table.episodes.add_page(&episodes);
+          app.episode_table.reversed = false;
+
+          if app.get_current_route().id != RouteId::PodcastEpisodes {
+            app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+          }
+        }
+        Err(e) => {
+          self.handle_error(anyhow!(e)).await;
+        }
+      }
+    }
+
+    app
+      .episode_table
+      .episodes
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
@@ -559,13 +579,14 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
+    let mut app = self.app.lock().await;
     match self
       .spotify
       .current_user_saved_tracks(self.large_search_limit, offset)
       .await
     {
       Ok(saved_tracks) => {
-        let mut app = self.app.lock().await;
+        // TODO: use the scrollable object directly instead of copying out items
         app.track_table.tracks = saved_tracks
           .items
           .clone()
@@ -579,13 +600,19 @@ impl<'a> Network<'a> {
           }
         });
 
-        app.library.saved_tracks.add_pages(saved_tracks);
+        app.library.saved_tracks.add_page(&saved_tracks);
         app.track_table.context = Some(TrackTableContext::SavedTracks);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
     }
+
+    app
+      .library
+      .saved_tracks
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn start_playback(
@@ -973,20 +1000,28 @@ impl<'a> Network<'a> {
   }
 
   async fn get_followed_artists(&mut self, after: Option<String>) {
-    match self
-      .spotify
-      .current_user_followed_artists(self.large_search_limit, after)
-      .await
-    {
-      Ok(saved_artists) => {
-        let mut app = self.app.lock().await;
-        app.artists = saved_artists.artists.items.to_owned();
-        app.library.saved_artists.add_pages(saved_artists.artists);
-      }
-      Err(e) => {
-        self.handle_error(anyhow!(e)).await;
-      }
-    };
+    let mut app = self.app.lock().await;
+
+    if (after.is_none() && app.library.saved_artists.items.is_empty()) || after.is_some() {
+      match self
+        .spotify
+        .current_user_followed_artists(self.large_search_limit, after)
+        .await
+      {
+        Ok(saved_artists) => {
+          app.library.saved_artists.add_page(&saved_artists.artists);
+        }
+        Err(e) => {
+          self.handle_error(anyhow!(e)).await;
+        }
+      };
+    }
+
+    app
+      .library
+      .saved_artists
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn user_artist_check_follow(&mut self, artist_ids: Vec<String>) {
@@ -1003,6 +1038,7 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_user_saved_albums(&mut self, offset: Option<u32>) {
+    let mut app = self.app.lock().await;
     match self
       .spotify
       .current_user_saved_albums(self.large_search_limit, offset)
@@ -1011,14 +1047,19 @@ impl<'a> Network<'a> {
       Ok(saved_albums) => {
         // not to show a blank page
         if !saved_albums.items.is_empty() {
-          let mut app = self.app.lock().await;
-          app.library.saved_albums.add_pages(saved_albums);
+          app.library.saved_albums.add_page(&saved_albums);
         }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
     };
+
+    app
+      .library
+      .saved_albums
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn current_user_saved_albums_contains(&mut self, album_ids: Vec<String>) {
@@ -1150,29 +1191,21 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(SearchResult::Playlists(mut search_playlists)) => {
-        let mut filtered_playlists = search_playlists
+        let filtered_playlists = search_playlists
           .items
           .iter()
-          .filter(|playlist| playlist.owner.id == SPOTIFY_ID && playlist.name == search_string)
+          .filter(|playlist| {
+            playlist.owner.id == SPOTIFY_ID && playlist.name.contains(&search_string)
+          })
           .map(|playlist| playlist.to_owned())
           .collect::<Vec<SimplifiedPlaylist>>();
 
         let mut app = self.app.lock().await;
-        if !app.library.made_for_you_playlists.pages.is_empty() {
-          app
-            .library
-            .made_for_you_playlists
-            .get_mut_results(None)
-            .unwrap()
-            .items
-            .append(&mut filtered_playlists);
-        } else {
-          search_playlists.items = filtered_playlists;
-          app
-            .library
-            .made_for_you_playlists
-            .add_pages(search_playlists);
-        }
+        search_playlists.items = filtered_playlists;
+        app
+          .library
+          .made_for_you_playlists
+          .add_page(&search_playlists);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

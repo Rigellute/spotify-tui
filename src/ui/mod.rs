@@ -72,6 +72,18 @@ pub struct TableItem {
   format: Vec<String>,
 }
 
+#[derive(Clone)]
+pub struct Window {
+  pub height: usize,
+  pub start_index: usize,
+}
+
+pub enum UIView {
+  EpisodeTable(Window),
+  ArtistTable(Window),
+  SavedAlbumsView(Window),
+}
+
 pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
@@ -547,7 +559,9 @@ where
     current_route.hovered_block == ActiveBlock::Artists,
   );
   let items = app
-    .artists
+    .library
+    .saved_artists
+    .items
     .iter()
     .map(|item| TableItem {
       id: item.id.clone(),
@@ -555,13 +569,47 @@ where
     })
     .collect::<Vec<TableItem>>();
 
+  // be a little more conservative here so that the eventual paging commands will keep some context at the top of te view
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .library
+        .saved_artists
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(UIView::ArtistTable(Window {
+    height: window_height.unwrap_or(0).into(),
+    start_index,
+  })) {
+    // Not sure what action we would take here
+  }
+
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.library.saved_artists.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.library.saved_artists.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.library.saved_artists.dispatch(app);
+    }
+  }
+
   draw_table(
     f,
     app,
     layout_chunk,
     ("Artists", &header),
     &items,
-    app.artists_list_index,
+    app.library.saved_artists.selected_index,
     highlight_state,
   )
 }
@@ -1328,32 +1376,63 @@ where
     current_route.hovered_block == ActiveBlock::AlbumList,
   );
 
-  let selected_song_index = app.album_list_index;
+  let items = app
+    .library
+    .saved_albums
+    .items
+    .iter()
+    .map(|album_page| TableItem {
+      id: album_page.album.id.to_owned(),
+      format: vec![
+        format!("♥ {}", &album_page.album.name),
+        create_artist_string(&album_page.album.artists),
+        album_page.album.release_date.to_owned(),
+      ],
+    })
+    .collect::<Vec<TableItem>>();
 
-  if let Some(saved_albums) = app.library.saved_albums.get_results(None) {
-    let items = saved_albums
-      .items
-      .iter()
-      .map(|album_page| TableItem {
-        id: album_page.album.id.to_owned(),
-        format: vec![
-          format!("♥ {}", &album_page.album.name),
-          create_artist_string(&album_page.album.artists),
-          album_page.album.release_date.to_owned(),
-        ],
-      })
-      .collect::<Vec<TableItem>>();
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .library
+        .saved_albums
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(UIView::SavedAlbumsView(Window {
+    height: window_height.unwrap_or(0).into(),
+    start_index,
+  })) {
+    // Not sure what action we would take here
+  }
 
-    draw_table(
-      f,
-      app,
-      layout_chunk,
-      ("Saved Albums", &header),
-      &items,
-      selected_song_index,
-      highlight_state,
-    )
-  };
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.library.saved_albums.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.library.saved_albums.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.library.saved_albums.dispatch(app);
+    }
+  }
+
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Saved Albums", &header),
+    &items,
+    app.library.saved_albums.selected_index,
+    highlight_state,
+  )
 }
 
 pub fn draw_show_episodes<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1397,6 +1476,7 @@ where
   let items = app
     .episode_table
     .episodes
+    .items
     .iter()
     .map(|episode| {
       let (played_str, time_str) = match episode.resume_point {
@@ -1432,13 +1512,47 @@ where
     })
     .collect::<Vec<TableItem>>();
 
+  // be a little more conservative here so that the eventual paging commands will keep some context at the top of te view
+  let padding = 6;
+  let window_height = layout_chunk.height.checked_sub(padding);
+  let start_index = window_height
+    .and_then(|height| {
+      app
+        .episode_table
+        .episodes
+        .selected_index
+        .checked_sub(height.into())
+    })
+    .unwrap_or(0);
+  if let Err(_e) = app.ui_tx.send(UIView::EpisodeTable(Window {
+    height: window_height.unwrap_or(0).into(),
+    start_index,
+  })) {
+    // Not sure what action we would take here
+  }
+
+  // Make sure we have enough items to fill the screen (if available)
+  if items.len() < layout_chunk.height.into() {
+    app.episode_table.episodes.dispatch(app);
+  }
+
+  if let Some(available_items) = items
+    .len()
+    .checked_sub(app.episode_table.episodes.selected_index)
+  {
+    if available_items < layout_chunk.height.into() {
+      // Make sure we can always page down a full screen
+      app.episode_table.episodes.dispatch(app);
+    }
+  }
+
   draw_table(
     f,
     app,
     layout_chunk,
     ("Episodes", &header),
     &items,
-    app.episode_table.selected_index,
+    app.episode_table.episodes.selected_index,
     highlight_state,
   );
 }
@@ -1456,32 +1570,32 @@ where
     }],
   };
 
-  if let Some(playlists) = &app.library.made_for_you_playlists.get_results(None) {
-    let items = playlists
-      .items
-      .iter()
-      .map(|playlist| TableItem {
-        id: playlist.id.to_owned(),
-        format: vec![playlist.name.to_owned()],
-      })
-      .collect::<Vec<TableItem>>();
+  let items = app
+    .library
+    .made_for_you_playlists
+    .items
+    .iter()
+    .map(|playlist| TableItem {
+      id: playlist.id.to_owned(),
+      format: vec![playlist.name.to_owned()],
+    })
+    .collect::<Vec<TableItem>>();
 
-    let current_route = app.get_current_route();
-    let highlight_state = (
-      current_route.active_block == ActiveBlock::MadeForYou,
-      current_route.hovered_block == ActiveBlock::MadeForYou,
-    );
+  let current_route = app.get_current_route();
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::MadeForYou,
+    current_route.hovered_block == ActiveBlock::MadeForYou,
+  );
 
-    draw_table(
-      f,
-      app,
-      layout_chunk,
-      ("Made For You", &header),
-      &items,
-      app.made_for_you_index,
-      highlight_state,
-    );
-  }
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Made For You", &header),
+    &items,
+    app.library.made_for_you_playlists.selected_index,
+    highlight_state,
+  );
 }
 
 pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

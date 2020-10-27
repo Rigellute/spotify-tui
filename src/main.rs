@@ -4,6 +4,7 @@ mod config;
 mod event;
 mod handlers;
 mod network;
+mod paging;
 mod redirect_uri;
 mod ui;
 mod user_config;
