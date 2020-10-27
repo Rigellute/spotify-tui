@@ -38,7 +38,6 @@ pub enum IoEvent {
   GetPlaylists,
   GetDevices,
   GetSearchResults(String, Option<Country>),
-  SetTracksToTable(Vec<FullTrack>),
   GetMadeForYouPlaylistTracks(String, u32),
   GetPlaylistTracks(String, u32),
   GetCurrentSavedTracks(Option<u32>),
@@ -155,9 +154,6 @@ impl<'a> Network<'a> {
       }
       IoEvent::GetCurrentPlayback => {
         self.get_current_playback().await;
-      }
-      IoEvent::SetTracksToTable(full_tracks) => {
-        self.set_tracks_to_table(full_tracks).await;
       }
       IoEvent::GetSearchResults(search_term, country) => {
         self.get_search_results(search_term, country).await;
@@ -583,13 +579,14 @@ impl<'a> Network<'a> {
   }
 
   async fn get_current_user_saved_tracks(&mut self, offset: Option<u32>) {
+    let mut app = self.app.lock().await;
     match self
       .spotify
       .current_user_saved_tracks(self.large_search_limit, offset)
       .await
     {
       Ok(saved_tracks) => {
-        let mut app = self.app.lock().await;
+        // TODO: use the scrollable object directly instead of copying out items
         app.track_table.tracks = saved_tracks
           .items
           .clone()
@@ -603,13 +600,19 @@ impl<'a> Network<'a> {
           }
         });
 
-        app.library.saved_tracks.add_pages(saved_tracks);
+        app.library.saved_tracks.add_page(&saved_tracks);
         app.track_table.context = Some(TrackTableContext::SavedTracks);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
     }
+
+    app
+      .library
+      .saved_tracks
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn start_playback(

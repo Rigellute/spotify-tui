@@ -62,7 +62,11 @@ pub fn handler(key: Key, app: &mut App) {
           }
           TrackTableContext::RecommendedTracks => {}
           TrackTableContext::SavedTracks => {
-            app.get_current_user_saved_tracks_next();
+            // TODO: this currently has no effect
+            app.library.saved_tracks.selected_index = app
+              .library
+              .saved_tracks
+              .handle_list_navigation_event(key, app);
           }
           TrackTableContext::AlbumSearch => {}
           TrackTableContext::PlaylistSearch => {}
@@ -106,7 +110,11 @@ pub fn handler(key: Key, app: &mut App) {
           }
           TrackTableContext::RecommendedTracks => {}
           TrackTableContext::SavedTracks => {
-            app.get_current_user_saved_tracks_previous();
+            // TODO: this currently has no effect
+            app.library.saved_tracks.selected_index = app
+              .library
+              .saved_tracks
+              .handle_list_navigation_event(key, app);
           }
           TrackTableContext::AlbumSearch => {}
           TrackTableContext::PlaylistSearch => {}
@@ -170,19 +178,19 @@ fn play_random_song(app: &mut App) {
       }
       TrackTableContext::RecommendedTracks => {}
       TrackTableContext::SavedTracks => {
-        if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
-          let track_uris: Vec<String> = saved_tracks
-            .items
-            .iter()
-            .map(|item| item.track.uri.to_owned())
-            .collect();
-          let rand_idx = thread_rng().gen_range(0, track_uris.len());
-          app.dispatch(IoEvent::StartPlayback(
-            None,
-            Some(track_uris),
-            Some(rand_idx),
-          ))
-        }
+        let track_uris: Vec<String> = app
+          .library
+          .saved_tracks
+          .items
+          .iter()
+          .map(|item| item.track.uri.to_owned())
+          .collect();
+        let rand_idx = thread_rng().gen_range(0, track_uris.len());
+        app.dispatch(IoEvent::StartPlayback(
+          None,
+          Some(track_uris),
+          Some(rand_idx),
+        ))
       }
       TrackTableContext::AlbumSearch => {}
       TrackTableContext::PlaylistSearch => {
@@ -335,19 +343,19 @@ fn on_enter(app: &mut App) {
         ));
       }
       TrackTableContext::SavedTracks => {
-        if let Some(saved_tracks) = &app.library.saved_tracks.get_results(None) {
-          let track_uris: Vec<String> = saved_tracks
-            .items
-            .iter()
-            .map(|item| item.track.uri.to_owned())
-            .collect();
+        let track_uris: Vec<String> = app
+          .library
+          .saved_tracks
+          .items
+          .iter()
+          .map(|item| item.track.uri.to_owned())
+          .collect();
 
-          app.dispatch(IoEvent::StartPlayback(
-            None,
-            Some(track_uris),
-            Some(app.track_table.selected_index),
-          ));
-        };
+        app.dispatch(IoEvent::StartPlayback(
+          None,
+          Some(track_uris),
+          Some(app.track_table.selected_index),
+        ));
       }
       TrackTableContext::AlbumSearch => {}
       TrackTableContext::PlaylistSearch => {
@@ -420,11 +428,9 @@ fn on_queue(app: &mut App) {
         }
       }
       TrackTableContext::SavedTracks => {
-        if let Some(page) = app.library.saved_tracks.get_results(None) {
-          if let Some(saved_track) = page.items.get(app.track_table.selected_index) {
-            let uri = saved_track.track.uri.clone();
-            app.dispatch(IoEvent::AddItemToQueue(uri));
-          }
+        if let Some(saved_track) = app.library.saved_tracks.get_selected_item() {
+          let uri = saved_track.track.uri.clone();
+          app.dispatch(IoEvent::AddItemToQueue(uri));
         }
       }
       TrackTableContext::AlbumSearch => {}

@@ -69,25 +69,6 @@ pub struct ScrollableResultPages<T> {
   pub pages: Vec<T>,
 }
 
-impl<T> ScrollableResultPages<T> {
-  pub fn new() -> ScrollableResultPages<T> {
-    ScrollableResultPages {
-      index: 0,
-      pages: vec![],
-    }
-  }
-
-  pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
-    self.pages.get(at_index.unwrap_or(self.index))
-  }
-
-  pub fn add_pages(&mut self, new_pages: T) {
-    self.pages.push(new_pages);
-    // Whenever a new page is added, set the active index to the end of the vector
-    self.index = self.pages.len() - 1;
-  }
-}
-
 #[derive(Default)]
 pub struct SpotifyResultAndSelectedIndex<T> {
   pub index: usize,
@@ -97,7 +78,7 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 #[derive(Clone)]
 pub struct Library {
   pub selected_index: usize,
-  pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
+  pub saved_tracks: NewScrollableResultPages<SavedTrack>,
   pub made_for_you_playlists: NewScrollableResultPages<MadeForYouPlaylist>,
   pub saved_albums: NewScrollableResultPages<SavedAlbum>,
   pub saved_artists: NewScrollableResultPages<SavedArtist>,
@@ -702,76 +683,11 @@ impl App {
     }
   }
 
-  pub fn set_saved_tracks_to_table(&mut self, saved_track_page: &Page<SavedTrack>) {
-    self.dispatch(IoEvent::SetTracksToTable(
-      saved_track_page
-        .items
-        .clone()
-        .into_iter()
-        .map(|item| item.track)
-        .collect::<Vec<FullTrack>>(),
-    ));
-  }
-
-  pub fn get_current_user_saved_tracks_next(&mut self) {
-    // Before fetching the next tracks, check if we have already fetched them
-    match self
-      .library
-      .saved_tracks
-      .get_results(Some(self.library.saved_tracks.index + 1))
-      .cloned()
-    {
-      Some(saved_tracks) => {
-        self.set_saved_tracks_to_table(&saved_tracks);
-        self.library.saved_tracks.index += 1
-      }
-      None => {
-        if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
-          let offset = Some(saved_tracks.offset + saved_tracks.limit);
-          self.dispatch(IoEvent::GetCurrentSavedTracks(offset));
-        }
-      }
-    }
-  }
-
-  pub fn get_current_user_saved_tracks_previous(&mut self) {
-    if self.library.saved_tracks.index > 0 {
-      self.library.saved_tracks.index -= 1;
-    }
-
-    if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None).cloned() {
-      self.set_saved_tracks_to_table(&saved_tracks);
-    }
-  }
-
   pub fn shuffle(&mut self) {
     if let Some(context) = &self.current_playback_context.clone() {
       self.dispatch(IoEvent::Shuffle(context.shuffle_state));
     };
   }
-
-  //pub fn get_current_user_saved_albums_next(&mut self) {
-  //match self
-  //.library
-  //.saved_albums
-  //.get_results(Some(self.library.saved_albums.index + 1))
-  //.cloned()
-  //{
-  //Some(_) => self.library.saved_albums.index += 1,
-  //None => {
-  //if let Some(saved_albums) = &self.library.saved_albums.get_results(None) {
-  //let offset = Some(saved_albums.offset + saved_albums.limit);
-  //self.dispatch(IoEvent::GetCurrentUserSavedAlbums(offset));
-  //}
-  //}
-  //}
-  //}
-
-  //pub fn get_current_user_saved_albums_previous(&mut self) {
-  //if self.library.saved_albums.index > 0 {
-  //self.library.saved_albums.index -= 1;
-  //}
-  //}
 
   pub fn current_user_saved_album_delete(&mut self, block: ActiveBlock) {
     match block {
