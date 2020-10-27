@@ -1188,29 +1188,21 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(SearchResult::Playlists(mut search_playlists)) => {
-        let mut filtered_playlists = search_playlists
+        let filtered_playlists = search_playlists
           .items
           .iter()
-          .filter(|playlist| playlist.owner.id == SPOTIFY_ID && playlist.name == search_string)
+          .filter(|playlist| {
+            playlist.owner.id == SPOTIFY_ID && playlist.name.contains(&search_string)
+          })
           .map(|playlist| playlist.to_owned())
           .collect::<Vec<SimplifiedPlaylist>>();
 
         let mut app = self.app.lock().await;
-        if !app.library.made_for_you_playlists.pages.is_empty() {
-          app
-            .library
-            .made_for_you_playlists
-            .get_mut_results(None)
-            .unwrap()
-            .items
-            .append(&mut filtered_playlists);
-        } else {
-          search_playlists.items = filtered_playlists;
-          app
-            .library
-            .made_for_you_playlists
-            .add_pages(search_playlists);
-        }
+        search_playlists.items = filtered_playlists;
+        app
+          .library
+          .made_for_you_playlists
+          .add_page(&search_playlists);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

@@ -1558,32 +1558,32 @@ where
     }],
   };
 
-  if let Some(playlists) = &app.library.made_for_you_playlists.get_results(None) {
-    let items = playlists
-      .items
-      .iter()
-      .map(|playlist| TableItem {
-        id: playlist.id.to_owned(),
-        format: vec![playlist.name.to_owned()],
-      })
-      .collect::<Vec<TableItem>>();
+  let items = app
+    .library
+    .made_for_you_playlists
+    .items
+    .iter()
+    .map(|playlist| TableItem {
+      id: playlist.id.to_owned(),
+      format: vec![playlist.name.to_owned()],
+    })
+    .collect::<Vec<TableItem>>();
 
-    let current_route = app.get_current_route();
-    let highlight_state = (
-      current_route.active_block == ActiveBlock::MadeForYou,
-      current_route.hovered_block == ActiveBlock::MadeForYou,
-    );
+  let current_route = app.get_current_route();
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::MadeForYou,
+    current_route.hovered_block == ActiveBlock::MadeForYou,
+  );
 
-    draw_table(
-      f,
-      app,
-      layout_chunk,
-      ("Made For You", &header),
-      &items,
-      app.made_for_you_index,
-      highlight_state,
-    );
-  }
+  draw_table(
+    f,
+    app,
+    layout_chunk,
+    ("Made For You", &header),
+    &items,
+    app.library.made_for_you_playlists.selected_index,
+    highlight_state,
+  );
 }
 
 pub fn draw_recently_played_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

@@ -1,7 +1,7 @@
 use super::user_config::UserConfig;
 use crate::{
   network::IoEvent,
-  paging::{NewScrollableResultPages, SavedArtist},
+  paging::{MadeForYouPlaylist, NewScrollableResultPages, SavedArtist},
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -81,10 +81,6 @@ impl<T> ScrollableResultPages<T> {
     self.pages.get(at_index.unwrap_or(self.index))
   }
 
-  pub fn get_mut_results(&mut self, at_index: Option<usize>) -> Option<&mut T> {
-    self.pages.get_mut(at_index.unwrap_or(self.index))
-  }
-
   pub fn add_pages(&mut self, new_pages: T) {
     self.pages.push(new_pages);
     // Whenever a new page is added, set the active index to the end of the vector
@@ -102,7 +98,7 @@ pub struct SpotifyResultAndSelectedIndex<T> {
 pub struct Library {
   pub selected_index: usize,
   pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
-  pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
+  pub made_for_you_playlists: NewScrollableResultPages<MadeForYouPlaylist>,
   pub saved_albums: NewScrollableResultPages<SavedAlbum>,
   pub saved_artists: NewScrollableResultPages<SavedArtist>,
 }
@@ -318,7 +314,6 @@ pub struct App {
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
-  pub made_for_you_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
@@ -340,7 +335,6 @@ impl Default for App {
     App {
       audio_analysis: None,
       album_table_context: AlbumTableContext::Full,
-      made_for_you_index: 0,
       artist: None,
       user_config: UserConfig::new(),
       saved_album_tracks_index: 0,
@@ -351,7 +345,7 @@ impl Default for App {
       home_scroll: 0,
       library: Library {
         saved_tracks: ScrollableResultPages::new(),
-        made_for_you_playlists: ScrollableResultPages::new(),
+        made_for_you_playlists: NewScrollableResultPages::new(),
         saved_albums: NewScrollableResultPages::new(),
         saved_artists: NewScrollableResultPages::new(),
         selected_index: 0,
@@ -937,14 +931,18 @@ impl App {
     const RELEASE_RADAR: &str = "Release Radar";
     const ON_REPEAT: &str = "On Repeat";
     const REPEAT_REWIND: &str = "Repeat Rewind";
+    const YOUR_TOP_SONGS: &str = "Your Top Songs";
+    const BEST_OF_THE_DECADE: &str = "Best of the Decade For You";
 
-    if self.library.made_for_you_playlists.pages.is_empty() {
+    if self.library.made_for_you_playlists.items.is_empty() {
       // We shouldn't be fetching all the results immediately - only load the data when the
       // user selects the playlist
       self.made_for_you_search_and_add(DISCOVER_WEEKLY);
       self.made_for_you_search_and_add(RELEASE_RADAR);
       self.made_for_you_search_and_add(ON_REPEAT);
       self.made_for_you_search_and_add(REPEAT_REWIND);
+      self.made_for_you_search_and_add(YOUR_TOP_SONGS);
+      self.made_for_you_search_and_add(BEST_OF_THE_DECADE);
     }
   }
 

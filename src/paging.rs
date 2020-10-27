@@ -6,6 +6,7 @@ use rspotify::model::{
   album::SavedAlbum,
   artist::FullArtist,
   page::{CursorBasedPage, Page},
+  playlist::SimplifiedPlaylist,
   show::SimplifiedEpisode,
   track::SavedTrack,
 };
@@ -39,10 +40,16 @@ impl<T: Clone> PageAdapter<T> for CursorBasedPage<T> {
 }
 
 pub trait Pageable {
-  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent>;
+  fn get_dispatch(_next: Option<String>, _offset: u32) -> Option<IoEvent> {
+    // Dummy implementation
+    None
+  }
 }
 
 pub type SavedArtist = FullArtist;
+pub type MadeForYouPlaylist = SimplifiedPlaylist;
+
+impl Pageable for MadeForYouPlaylist {}
 
 impl Pageable for SavedTrack {
   fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
