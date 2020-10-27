@@ -25,7 +25,7 @@ use rspotify::{
 };
 use serde_json::{map::Map, Value};
 use std::{
-  sync::Arc,
+  sync::{atomic::Ordering, Arc},
   time::{Duration, Instant, SystemTime},
 };
 use tokio::sync::Mutex;
@@ -478,9 +478,11 @@ impl<'a> Network<'a> {
       }
     }
 
-    if let Ok(mut fetching_page) = app.episode_table.episodes.fetching_page.lock() {
-      *fetching_page = false;
-    };
+    app
+      .episode_table
+      .episodes
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn get_search_results(&mut self, search_term: String, country: Option<Country>) {
@@ -1009,9 +1011,11 @@ impl<'a> Network<'a> {
       };
     }
 
-    if let Ok(mut fetching_page) = app.library.saved_artists.fetching_page.lock() {
-      *fetching_page = false;
-    };
+    app
+      .library
+      .saved_artists
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn user_artist_check_follow(&mut self, artist_ids: Vec<String>) {
@@ -1045,9 +1049,11 @@ impl<'a> Network<'a> {
       }
     };
 
-    if let Ok(mut fetching_page) = app.library.saved_albums.fetching_page.lock() {
-      *fetching_page = false;
-    };
+    app
+      .library
+      .saved_albums
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn current_user_saved_albums_contains(&mut self, album_ids: Vec<String>) {

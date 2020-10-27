@@ -9,7 +9,8 @@ use rspotify::model::{
   show::SimplifiedEpisode,
   track::SavedTrack,
 };
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 pub trait PageAdapter<T: Clone> {
   fn next(&self) -> Option<String>;
@@ -90,7 +91,7 @@ pub struct NewScrollableResultPages<T> {
   next: Option<String>,
   pub selected_index: usize,
   pub ui_view_height: Option<UIViewWindow>,
-  pub fetching_page: Arc<Mutex<bool>>,
+  pub fetching_page: Arc<AtomicBool>,
 }
 
 impl<T: Pageable + Clone> NewScrollableResultPages<T> {
@@ -100,17 +101,15 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
       items: vec![],
       next: None,
       ui_view_height: None,
-      fetching_page: Arc::new(Mutex::new(false)),
+      fetching_page: Arc::new(AtomicBool::new(false)),
     }
   }
 
   pub fn dispatch(&self, app: &App) {
-    if let Ok(mut fetching_page) = self.fetching_page.try_lock() {
-      if *fetching_page == false {
-        *fetching_page = true;
-        if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
-          app.dispatch(event);
-        }
+    if !(self.fetching_page.load(Ordering::Relaxed)) {
+      self.fetching_page.store(true, Ordering::Relaxed);
+      if let Some(event) = T::get_dispatch(self.next.clone(), self.items.len() as u32) {
+        app.dispatch(event);
       }
     }
   }
@@ -127,7 +126,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
   pub fn handle_list_navigation_event(&self, key: Key, app: &App) -> usize {
     match key {
       k if common_key_events::down_event(k) => {
-        if self.items.len() > 0 {
+        if !self.items.is_empty() {
           (self.selected_index + 1) % self.items.len()
         } else {
           0
@@ -167,7 +166,7 @@ impl<T: Pageable + Clone> NewScrollableResultPages<T> {
       }
       k if k == app.user_config.keys.previous_page => {
         if let Some(window) = &self.ui_view_height {
-          self.selected_index.checked_sub(window.height).unwrap_or(0)
+          self.selected_index.saturating_sub(window.height)
         } else {
           self.selected_index
         }

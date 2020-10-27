@@ -571,7 +571,7 @@ where
     .unwrap_or(0);
   if let Err(_e) = app.ui_tx.send(TableUIHeight::ArtistTable(UIViewWindow {
     height: window_height.unwrap_or(0).into(),
-    start_index: start_index,
+    start_index,
   })) {
     // Not sure what action we would take here
   }
@@ -1392,7 +1392,7 @@ where
     .unwrap_or(0);
   if let Err(_e) = app.ui_tx.send(TableUIHeight::SavedAlbumsView(UIViewWindow {
     height: window_height.unwrap_or(0).into(),
-    start_index: start_index,
+    start_index,
   })) {
     // Not sure what action we would take here
   }
@@ -1514,7 +1514,7 @@ where
     .unwrap_or(0);
   if let Err(_e) = app.ui_tx.send(TableUIHeight::EpisodeTable(UIViewWindow {
     height: window_height.unwrap_or(0).into(),
-    start_index: start_index,
+    start_index,
   })) {
     // Not sure what action we would take here
   }
