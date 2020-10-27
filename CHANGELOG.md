@@ -8,6 +8,7 @@
 - Transfer playback when changing device [#408](https://github.com/Rigellute/spotify-tui/pull/408)
 - Make layout more responsive to large/small screens [#502](https://github.com/Rigellute/spotify-tui/pull/502)
 - Search using Spotify share URLs and URIs like the desktop client [#623](https://github.com/Rigellute/spotify-tui/pull/623)
+- Fix use of incorrect playlist index when playing from an associated track table [#632](https://github.com/Rigellute/spotify-tui/pull/632)
 
 ## [0.22.0] - 2020-10-05
 
