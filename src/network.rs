@@ -449,7 +449,10 @@ impl<'a> Network<'a> {
     if show_id.is_some() {
       if show_id == app.episode_table.show_id && offset == 0 {
         // The user has just selected this show again from the list, but we already have the
-        // episodes. Just return
+        // episodes. Just push onto the stack and return
+        if app.get_current_route().id != RouteId::PodcastEpisodes {
+          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+        }
         return;
       } else if show_id != app.episode_table.show_id {
         // Otherwise, fetch the first page and start a new scrollable page
