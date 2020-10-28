@@ -86,8 +86,7 @@ where
   // resolving constraints on widths of table columns.
   let format_row = |r: Vec<String>| vec![format!("{:50}{:40}{:20}", r[0], r[1], r[2])];
 
-  let white = Style::default().fg(app.user_config.theme.text);
-  let gray = Style::default().fg(app.user_config.theme.text);
+  let help_menu_style = Style::default().fg(app.user_config.theme.text);
   let header = ["Description", "Event", "Context"];
   let header = format_row(header.iter().map(|s| s.to_string()).collect());
 
@@ -97,17 +96,17 @@ where
 
   let rows = help_docs
     .iter()
-    .map(|item| Row::StyledData(item.iter(), gray));
+    .map(|item| Row::StyledData(item.iter(), help_menu_style));
 
   let help_menu = Table::new(header.iter(), rows)
     .block(
       Block::default()
         .borders(Borders::ALL)
-        .style(white)
-        .title(Span::styled("Help (press <Esc> to go back)", gray))
-        .border_style(gray),
+        .style(help_menu_style)
+        .title(Span::styled("Help (press <Esc> to go back)", help_menu_style))
+        .border_style(help_menu_style),
     )
-    .style(Style::default().fg(app.user_config.theme.text))
+    .style(help_menu_style)
     .widths(&[
       Constraint::Max(110),
     ]);
