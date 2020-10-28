@@ -103,13 +103,14 @@ where
       Block::default()
         .borders(Borders::ALL)
         .style(help_menu_style)
-        .title(Span::styled("Help (press <Esc> to go back)", help_menu_style))
+        .title(Span::styled(
+          "Help (press <Esc> to go back)",
+          help_menu_style,
+        ))
         .border_style(help_menu_style),
     )
     .style(help_menu_style)
-    .widths(&[
-      Constraint::Max(110),
-    ]);
+    .widths(&[Constraint::Max(110)]);
   f.render_widget(help_menu, chunks[0]);
 }
 
