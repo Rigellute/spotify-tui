@@ -82,11 +82,17 @@ where
     .margin(2)
     .split(f.size());
 
+  // Create a one-column table to avoid flickering due to non-determinism when
+  // resolving constraints on widths of table columns.
+  let format_row = |r: Vec<String>| vec![format!("{:50}{:40}{:20}", r[0], r[1], r[2])];
+
   let white = Style::default().fg(app.user_config.theme.text);
   let gray = Style::default().fg(app.user_config.theme.text);
   let header = ["Description", "Event", "Context"];
+  let header = format_row(header.iter().map(|s| s.to_string()).collect());
 
   let help_docs = get_help_docs(&app.user_config.keys);
+  let help_docs = help_docs.into_iter().map(format_row).collect::<Vec<_>>();
   let help_docs = &help_docs[app.help_menu_offset as usize..];
 
   let rows = help_docs
@@ -103,9 +109,7 @@ where
     )
     .style(Style::default().fg(app.user_config.theme.text))
     .widths(&[
-      Constraint::Length(50),
-      Constraint::Length(40),
-      Constraint::Length(20),
+      Constraint::Max(110),
     ]);
   f.render_widget(help_menu, chunks[0]);
 }
