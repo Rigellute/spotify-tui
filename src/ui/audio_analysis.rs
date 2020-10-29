@@ -1,5 +1,8 @@
 use super::util;
 use crate::app::App;
+use rhai::serde::to_dynamic;
+use rhai::{Array, Dynamic, Map};
+use rhai::{Engine, Scope};
 use tui::{
   backend::Backend,
   layout::{Constraint, Direction, Layout},
@@ -20,7 +23,7 @@ where
 
   let chunks = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Min(5), Constraint::Length(95)].as_ref())
+    .constraints([Constraint::Min(5), Constraint::Length(75)].as_ref())
     .margin(margin)
     .split(f.size());
 
@@ -36,8 +39,7 @@ where
   let gray = Style::default().fg(app.user_config.theme.inactive);
   let width = (chunks[1].width) as f32 / (1 + PITCHES.len()) as f32;
   let tick_rate = app.user_config.behavior.tick_rate_milliseconds;
-  let bar_chart_title = &format!("Pitches | Tick Rate {} {}FPS", tick_rate, 1000 / tick_rate);
-
+  let bar_chart_title = &format!("Pitches | Tick Rate {} {}FPS", tick_rate, 1000 / tick_rate,);
   let bar_chart_block = Block::default()
     .borders(Borders::ALL)
     .style(white)
@@ -58,6 +60,43 @@ where
   if let Some(analysis) = &app.audio_analysis {
     let progress_seconds = (app.song_progress_ms as f32) / 1000.0;
 
+    // TODO: Move to own function
+    let info: Vec<String> = {
+      // TODO: Set up raw engine
+      match &app.visulizer {
+        Ok(ast) => {
+          let engine = Engine::new();
+          match to_dynamic(analysis.clone()) {
+            Ok(dynamic_analysis) => {
+              match engine.call_fn(
+                &mut Scope::new(),
+                &ast,
+                "analysis",
+                (dynamic_analysis, progress_seconds),
+              ) {
+                Ok(txt) => {
+                  let txt: Array = txt;
+                  txt
+                    .to_vec()
+                    .iter()
+                    .map(|item| {
+                      item
+                        .clone()
+                        .try_cast::<String>()
+                        .unwrap_or("Bad analysis provided, could not cast to String.".to_string())
+                    })
+                    .collect()
+                }
+                Err(err) => vec!["Error in script".to_string(), format!("{}", err)],
+              }
+            }
+            Err(err) => vec!["Spotify error".to_string(), format!("{}", err)],
+          }
+        }
+        Err(err) => vec!["Script compilation error".to_string(), format!("{}", err)],
+      }
+    };
+
     let beat = analysis
       .beats
       .iter()
@@ -66,33 +105,14 @@ where
     let beat_offset = beat
       .map(|beat| beat.start - progress_seconds)
       .unwrap_or(0.0);
+
     let segment = analysis
       .segments
       .iter()
       .find(|segment| segment.start >= progress_seconds);
-    let section = analysis
-      .sections
-      .iter()
-      .find(|section| section.start >= progress_seconds);
 
-    if let (Some(segment), Some(section)) = (segment, section) {
-      let texts = vec![
-        Spans::from(format!(
-          "Tempo: {} (confidence {:.0}%)",
-          section.tempo,
-          section.tempo_confidence * 100.0
-        )),
-        Spans::from(format!(
-          "Key: {} (confidence {:.0}%)",
-          PITCHES.get(section.key as usize).unwrap_or(&PITCHES[0]),
-          section.key_confidence * 100.0
-        )),
-        Spans::from(format!(
-          "Time Signature: {}/4 (confidence {:.0}%)",
-          section.time_signature,
-          section.time_signature_confidence * 100.0
-        )),
-      ];
+    if let Some(segment) = segment {
+      let texts: Vec<Spans> = info.iter().map(|span| Spans::from(span.clone())).collect();
       let p = Paragraph::new(texts)
         .block(analysis_block)
         .style(Style::default().fg(app.user_config.theme.text));

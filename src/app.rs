@@ -1,6 +1,7 @@
 use super::user_config::UserConfig;
 use crate::network::IoEvent;
 use anyhow::anyhow;
+use rhai::{Engine, AST};
 use rspotify::{
   model::{
     album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
@@ -305,6 +306,8 @@ pub struct App {
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
+  // Exposed Rhai engine to allow for module extensions.
+  pub visulizer: Result<AST, String>,
 }
 
 impl Default for App {
@@ -383,6 +386,64 @@ impl Default for App {
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
+      visulizer: {
+        let engine = Engine::new();
+        match engine.compile(
+              r#"
+
+                fn pct(value) {
+                    // this is the most ridiculous hack
+                    let v = "" + value;
+                    (100.0 * parse_float(v)) + "%"
+                }
+
+                // fn get_current_section
+
+                fn analysis(analysis, progress) {
+                    let PITCHES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",];
+                    let texts = ["Unable to find section."];
+                    for section in analysis["sections"] {
+                        if section["start"] >= progress {
+                            let section_key = section["key"];
+                            let pitch = PITCHES[section_key];
+                            let tempo = "Tempo: ";
+                            let section_tempo = section["tempo"];
+                            let confidence = section["confidence"];
+                            let confidence_pct = pct(confidence);
+                            tempo += section_tempo + " (confidence ";
+                            tempo += confidence_pct + ")";
+
+                            let key_confidence = section["key_confidence"];
+                            let key_confidence_pct = pct(key_confidence);
+                            let key = "Key: " + pitch + " (confidence ";
+                            key += key_confidence_pct + ")";
+
+                            let time_signature = section["time_signature"];
+                            let time_signature_confidence = section["time_signature_confidence"];
+                            let time_signature_confidence_pct = pct(time_signature_confidence);
+                            let signature = "Time Signature: " + time_signature  + "/4 (confidence " + time_signature_confidence_pct + ")";
+                            let temp_texts = [tempo, key, signature];
+                            texts = temp_texts;
+                            break;
+                        }
+                    }
+                    texts
+                }
+                fn draw(analysis, progress) {
+                    // let beats = analysis["beats"].filter(|beat| beat["start"] >= progress);
+                    // let beat_offset = beats.map(|beat| beat[start] - progress)
+                    // segment["pitches"].map(|pitch, index| {
+                    //
+                    // }
+
+                    let result = analysis["meta"];
+                    result["analysis_time"] + progress
+                }
+              "#) {
+                Err(err) => Err(format!("Compilation Error: {}", err)),
+                Ok(ast) => Ok(ast),
+              }
+      },
     }
   }
 }
