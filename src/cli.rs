@@ -27,10 +27,19 @@ async fn list_devices(net: &mut Network<'_>) -> String {
             devices_string.push_str(d.name.as_str());
             devices_string.push_str("\n");
         }
-        devices_string[..(devices_string.len() - 2)].to_string()
+        devices_string[..(devices_string.len() - 1)].to_string()
     } else {
         "No devices avaible".to_string()
     }
+}
+
+fn join_artists(vec: Vec<SimplifiedArtist>) -> String {
+    let mut output = String::new();
+    for artist in vec {
+        output.push_str(artist.name.as_str()); 
+        output.push_str(", ");
+    }
+    output[..(output.len() - 2)].to_string()
 }
 
 async fn set_device(net: &mut Network<'_>, matches: &ArgMatches<'_>) -> Result<(), String> {
@@ -71,31 +80,21 @@ async fn get_status(net: &mut Network<'_>) -> String {
         None => return "No track playing".to_string()
     };
 
-    let join_artists = |vec: Vec<SimplifiedArtist>| -> String {
-        let mut output = String::new();
-        for artist in vec {
-            output.push_str(artist.name.as_str()); 
-            output.push_str(", ");
-        }
-        output[..(output.len() - 3)].to_string()
-    };
-
     match playing_item {
         PlayingItem::Track(track) => {
             format!(
-                "{} {} - {} from {}",
+                "{} {} - {}",
                 playing_status,
                 track.name,
                 join_artists(track.artists),
-                track.album.name
             )
         },
         PlayingItem::Episode(episode) => {
             format!(
-                "{} {} from {}",
+                "{} {} - {}",
                 playing_status,
                 episode.name,
-                episode.show.name
+                episode.show.publisher
             ) 
         }
     }
@@ -108,11 +107,92 @@ async fn play_track(net: &mut Network<'_>, uri: String) -> String {
     format!("Started playback of {}", uri)
 }
 
-async fn search_track(net: &mut Network<'_>, search: String, _country: Option<String>) -> String {
+enum Query {
+    Playlist,
+    Track,
+    Artist,
+    Album,
+    Show
+}
+
+// Query for a playlist, track, artist, shows and albums
+// Returns result and their respective uris (to play them)
+async fn query(
+    net: &mut Network<'_>,
+    search: String,
+    item: Query,
+) -> String {
     net.handle_network_event(
         IoEvent::GetSearchResults(search, None)
     ).await;
-    String::new()
+
+    let mut output = String::new();
+    let app = net.app.lock().await;
+    match item {
+        Query::Playlist => {
+            if let Some(results) = &app.search_results.playlists {
+                for r in &results.items {
+                    output.push_str(format!(
+                        "{} ({})\n", 
+                        r.name, r.uri
+                    ).as_str());
+                }
+            } else {
+                return "No playlists found".to_string()
+            }
+        },
+        Query::Track => {
+            if let Some(results) = &app.search_results.tracks {
+                for r in &results.items {
+                    output.push_str(format!(
+                        "{} - {} ({})\n", 
+                        r.name, r.album.name, r.uri
+                    ).as_str());
+                }
+            } else {
+                return "No tracks found".to_string()
+            }
+        },
+        Query::Artist => {
+            if let Some(results) = &app.search_results.artists {
+                for r in &results.items {
+                    output.push_str(format!(
+                        "{} ({})\n", 
+                        r.name, r.uri
+                    ).as_str());
+                }
+            } else {
+                return "No artists found".to_string()
+            }
+        },
+        Query::Show => {
+            if let Some(results) = &app.search_results.shows {
+                for r in &results.items {
+                    output.push_str(format!(
+                        "{} - {} ({})\n", 
+                        r.name, r.publisher, r.uri
+                    ).as_str());
+                }
+            } else {
+                return "No shows found".to_string()
+            }
+        }
+        Query::Album => {
+            if let Some(results) = &app.search_results.albums {
+                for r in &results.items {
+                    output.push_str(format!(
+                        "{} - {} ({})\n", 
+                        r.name, join_artists(r.artists.clone()),
+                        r.uri.as_ref().unwrap_or(&"no uri".to_string())
+                    ).as_str());
+                }
+            } else {
+                return "No albums found".to_string()
+            }
+        }
+    }
+
+    output
 }
 
 pub async fn handle_matches(
@@ -132,7 +212,10 @@ pub async fn handle_matches(
     }
     net.handle_network_event(IoEvent::GetCurrentPlayback).await;
 
-    if matches.is_present("status") {
+    if let Some(search) = matches.value_of("query") {
+        // Get type of query (to be implemented)
+        return query(net, search.to_string(), Query::Track).await
+    } else if matches.is_present("status") {
         return get_status(net).await
     } else if matches.is_present("toggle") {
         return toggle_playback(net).await
