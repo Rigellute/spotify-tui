@@ -1,4 +1,5 @@
 mod app;
+mod cli;
 mod banner;
 mod config;
 mod event;
@@ -14,7 +15,7 @@ use anyhow::Result;
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
-use clap::{App as ClapApp, Arg};
+use clap::{App as ClapApp, Arg, ArgGroup, SubCommand};
 use config::ClientConfig;
 use crossterm::{
   cursor::MoveTo,
@@ -44,6 +45,7 @@ use tui::{
   Terminal,
 };
 use user_config::{UserConfig, UserConfigPaths};
+use cli::handle_matches;
 
 const SCOPES: [&str; 14] = [
   "playlist-read-collaborative",
@@ -140,6 +142,47 @@ async fn main() -> Result<()> {
                                .long("config")
                                .help("Specify configuration file path.")
                                .takes_value(true))
+         .subcommand(SubCommand::with_name("cmd")
+                               .about("Send command through the spotify api")
+                               .version("0.1")
+                               // Actions
+                               .arg(Arg::with_name("toggle")
+                                    .short("t")
+                                    .long("toggle")
+                                    .help("Toggle play/pause of playback"))
+                               .arg(Arg::with_name("list-devices")
+                                    .short("l")
+                                    .long("list-devices")
+                                    .help("List all avaible devices"))
+                               .arg(Arg::with_name("status")
+                                    .short("s")
+                                    .long("status")
+                                    .help("Get status of current playback"))
+                               .arg(Arg::with_name("play")
+                                    .short("p")
+                                    .long("play")
+                                    .takes_value(true)
+                                    .value_name("URI")
+                                    .help("Start playback of uri"))
+                               // Args that need no further information
+                               .group(ArgGroup::with_name("no-info")
+                                    .args(&[
+                                        "list-devices"
+                                    ])
+                                    .conflicts_with("device"))
+                               // Args that need more specifications
+                               // like --device
+                               .group(ArgGroup::with_name("more-info")
+                                    .args(&[
+                                        "status", "play", "toggle"
+                                    ]))
+                                // Additional options
+                               .arg(Arg::with_name("device")
+                                    .short("d")
+                                    .long("device")
+                                    .takes_value(true)
+                                    .value_name("DEVICE")
+                                    .help("Specify playback device to use")))
         .get_matches();
 
   let mut user_config = UserConfig::new();
@@ -190,13 +233,18 @@ async fn main() -> Result<()> {
       )));
 
       let cloned_app = Arc::clone(&app);
-      std::thread::spawn(move || {
+      // Check if user asked to execute command
+      if let Some(sub_matches) = matches.subcommand_matches("cmd") {
         let mut network = Network::new(oauth, spotify, client_config, &app);
-        start_tokio(sync_io_rx, &mut network);
-      });
-
-      // The UI must run in the "main" thread
-      start_ui(user_config, &cloned_app).await?;
+        println!("{}", handle_matches(sub_matches, &mut network).await);
+      } else {
+        std::thread::spawn(move || {
+          let mut network = Network::new(oauth, spotify, client_config, &app);
+          start_tokio(sync_io_rx, &mut network);
+        });
+        // The UI must run in the "main" thread
+        start_ui(user_config, &cloned_app).await?;
+      }
     }
     None => println!("\nSpotify auth failed"),
   }

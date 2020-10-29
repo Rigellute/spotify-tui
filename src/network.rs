@@ -112,7 +112,7 @@ pub struct Network<'a> {
   large_search_limit: u32,
   small_search_limit: u32,
   client_config: ClientConfig,
-  app: &'a Arc<Mutex<App>>,
+  pub app: &'a Arc<Mutex<App>>,
 }
 
 impl<'a> Network<'a> {
