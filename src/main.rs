@@ -154,35 +154,40 @@ async fn main() -> Result<()> {
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about(env!("CARGO_PKG_DESCRIPTION"))
                                .about("Pause/resume playback of a device")
-                               .arg(device_arg))
+                               .arg(&device_arg))
          .subcommand(SubCommand::with_name("list")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about(env!("CARGO_PKG_DESCRIPTION"))
                                .about("List devices, playlists")
-                               .arg())
+                               .arg(Arg::with_name("devices")
+                                    .short("d")
+                                    .long("devices")
+                                    .help("List devices"))
+                               .arg(Arg::with_name("playlists")
+                                    .short("p")
+                                    .long("playlists")
+                                    .help("List playlists"))
+                               .group(ArgGroup::with_name("listable")
+                                    .args(&["devices", "playlists"])
+                                    .multiple(false)
+                                    .required(true)))
          .subcommand(SubCommand::with_name("status")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about(env!("CARGO_PKG_DESCRIPTION"))
-                               .arg(device_arg)
-                               .arg(Arg::with_name("format")
-                                    .short("f")
-                                    .long("format")
-                                    .takes_value(true)
-                                    .value_name("FORMAT")
-                                    .default_value("{s}: {n} - {a}")
-                                    .help("Specify output format")))
+                               .arg(&device_arg))
         .subcommand(SubCommand::with_name("play")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about(env!("CARGO_PKG_DESCRIPTION"))
-                               .arg(device_arg)
+                               .arg(&device_arg)
+                               .arg(Arg::with_name("URI")
+                                    .required(true)
+                                    .help("Specify URI to play"))
                                .arg(Arg::with_name("track")
                                     .short("t")
                                     .long("track")
-                                    .takes_value(true)
-                                    .value_name("TRACK")
                                     .conflicts_with_all(&[
                                         "playlist", "shuffle"
                                     ])
@@ -190,8 +195,6 @@ async fn main() -> Result<()> {
                                .arg(Arg::with_name("playlist")
                                     .short("p")
                                     .long("playlist")
-                                    .takes_value(true)
-                                    .value_name("PLAYLIST")
                                     .conflicts_with_all(&[
                                         "track"
                                     ])
@@ -204,35 +207,28 @@ async fn main() -> Result<()> {
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about(env!("CARGO_PKG_DESCRIPTION"))
+                               .arg(Arg::with_name("SEARCH")
+                                    .required(true)
+                                    .help("Query items based on SEARCH"))
                                .arg(Arg::with_name("track")
                                     .short("t")
                                     .long("track")
-                                    .takes_value(true)
-                                    .value_name("TRACK")
                                     .help("Search for track"))
                                .arg(Arg::with_name("playlist")
                                     .short("p")
                                     .long("playlist")
-                                    .takes_value(true)
-                                    .value_name("PLAYLIST")
                                     .help("Search for playlist"))
                                .arg(Arg::with_name("artist")
                                     .short("a")
                                     .long("artist")
-                                    .takes_value(true)
-                                    .value_name("ARTIST")
                                     .help("Search for artist"))
                                .arg(Arg::with_name("album")
-                                    .short("al")
+                                    .short("l")
                                     .long("album")
-                                    .takes_value(true)
-                                    .value_name("ALBUM")
                                     .help("Search for album"))
                                .arg(Arg::with_name("show")
                                     .short("s")
                                     .long("show")
-                                    .takes_value(true)
-                                    .value_name("SHOW")
                                     .help("Search for show"))
                                .group(ArgGroup::with_name("types")
                                     .args(&[
@@ -288,12 +284,22 @@ async fn main() -> Result<()> {
         token_expiry,
       )));
 
-      let cloned_app = Arc::clone(&app);
       // Check if user asked to execute command
-      if let Some(sub_matches) = matches.subcommand_matches("cmd") {
+      let mut sub_matches = None;
+      let possible_cmds = ["toggle", "list", "status", "play", "query"];
+      for cmd in &possible_cmds {
+          if let Some(m) = matches.subcommand_matches(cmd) {
+              sub_matches = Some((m, cmd));
+          }
+      }
+
+      // Work with the cli (not really async)
+      if let Some((m, cmd)) = sub_matches {
         let mut network = Network::new(oauth, spotify, client_config, &app);
-        println!("{}", handle_matches(sub_matches, &mut network).await);
+        println!("{}", handle_matches(m, cmd.to_string(), &mut network).await);
+      // Launch the tui (async)
       } else {
+        let cloned_app = Arc::clone(&app);
         std::thread::spawn(move || {
           let mut network = Network::new(oauth, spotify, client_config, &app);
           start_tokio(sync_io_rx, &mut network);

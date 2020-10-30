@@ -627,7 +627,6 @@ impl<'a> Network<'a> {
 
     match result {
       Ok(()) => {
-        println!("Successfull!");
         let mut app = self.app.lock().await;
         app.song_progress_ms = 0;
         app.dispatch(IoEvent::GetCurrentPlayback);

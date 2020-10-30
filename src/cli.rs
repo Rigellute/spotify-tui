@@ -20,14 +20,31 @@ async fn toggle_playback(net: &mut Network<'_>) -> String {
     "Started playback".to_string()
 }
 
+async fn list_playlists(net: &mut Network<'_>) -> String {
+    net.handle_network_event(IoEvent::GetPlaylists).await;
+    let mut output = String::new();
+    if let Some(playlists) = &net.app.lock().await.playlists {
+        for p in &playlists.items {
+            output.push_str(format!(
+                "{} ({})", p.name, p.uri
+            ).as_str());
+            output.push('\n');
+        }
+        output[..(output.len() - 1)].to_string()
+    } else {
+        "No playlists".to_string()
+    }
+}
+
 async fn list_devices(net: &mut Network<'_>) -> String {
     if let Some(devices) = &net.app.lock().await.devices {
-        let mut devices_string = String::new();
+        let mut output = String::new();
         for d in &devices.devices {
-            devices_string.push_str(d.name.as_str());
-            devices_string.push_str("\n");
+            output.push_str(d.name.as_str());
+            output.push('\n');
         }
-        devices_string[..(devices_string.len() - 1)].to_string()
+        // Remove the last unnecessary \n
+        output[..(output.len() - 1)].to_string()
     } else {
         "No devices avaible".to_string()
     }
@@ -42,16 +59,14 @@ fn join_artists(vec: Vec<SimplifiedArtist>) -> String {
     output[..(output.len() - 2)].to_string()
 }
 
-async fn set_device(net: &mut Network<'_>, matches: &ArgMatches<'_>) -> Result<(), String> {
+async fn set_device(net: &mut Network<'_>, name: String) -> Result<(), String> {
     // Change the device if specified by user
     let mut app = net.app.lock().await;
     let mut selected_device_index = Some(0);
     if let Some(dp) = &app.devices {
-        if let Some(device_name) = matches.value_of("device") {
-            for (i, d) in dp.devices.iter().enumerate() {
-                if d.name == device_name {
-                    selected_device_index = Some(i);
-                }
+        for (i, d) in dp.devices.iter().enumerate() {
+            if d.name == name {
+                selected_device_index = Some(i);
             }
         }
     } else {
@@ -62,6 +77,7 @@ async fn set_device(net: &mut Network<'_>, matches: &ArgMatches<'_>) -> Result<(
     Ok(())
 }
 
+// Format is to be implemented
 async fn get_status(net: &mut Network<'_>) -> String {
     let context = match net.app.lock().await.current_playback_context.clone() {
         Some(c) => c,
@@ -69,9 +85,9 @@ async fn get_status(net: &mut Network<'_>) -> String {
     };
     
     let playing_status = if context.is_playing {
-        "▶"
+        "▶ "
     } else {
-        "⏸"
+        "⏸ "
     };
     let playing_item = match context.item {
         Some(item) => {
@@ -100,10 +116,17 @@ async fn get_status(net: &mut Network<'_>) -> String {
     }
 }
 
-async fn play_track(net: &mut Network<'_>, uri: String) -> String {
-    net.handle_network_event(
-        IoEvent::StartPlayback(Some(uri.clone()), None, None)
-    ).await;
+async fn play_uri(net: &mut Network<'_>, uri: String, track: bool) -> String {
+    // Track was requested
+    if track {
+        net.handle_network_event(
+            IoEvent::StartPlayback(None, Some(vec![uri.clone()]), Some(0))
+        ).await;
+    } else {
+        net.handle_network_event(
+            IoEvent::StartPlayback(Some(uri.clone()), None, None)
+        ).await;
+    }
     format!("Started playback of {}", uri)
 }
 
@@ -113,6 +136,25 @@ enum Query {
     Artist,
     Album,
     Show
+}
+
+impl Query {
+    fn from_args(m: &ArgMatches<'_>) -> Self {
+        for (k, v) in &m.args {
+            if v.occurs >= 1 {
+                match k { 
+                    &"playlist" => return Self::Playlist,
+                    &"track" => return Self::Track,
+                    &"artist" => return Self::Artist,
+                    &"album" => return Self::Album,
+                    &"show" => return Self::Show,
+                    _ => continue
+                }
+            }
+        }
+        // Search for tracks by default
+        Self::Track 
+    }
 }
 
 // Query for a playlist, track, artist, shows and albums
@@ -197,31 +239,61 @@ async fn query(
 
 pub async fn handle_matches(
     matches: &ArgMatches<'_>, 
+    cmd: String,
     net: &mut Network<'_>,
 ) -> String {
     // Query devices
     net.handle_network_event(IoEvent::GetDevices).await;
-
-    if matches.is_present("list-devices") {
-        return list_devices(net).await
-    }
-
-    // Update the playback and the default device
-    if let Err(e) = set_device(net, matches).await {
-        return e
-    }
     net.handle_network_event(IoEvent::GetCurrentPlayback).await;
 
-    if let Some(search) = matches.value_of("query") {
-        // Get type of query (to be implemented)
-        return query(net, search.to_string(), Query::Track).await
-    } else if matches.is_present("status") {
-        return get_status(net).await
-    } else if matches.is_present("toggle") {
-        return toggle_playback(net).await
-    } else if let Some(uri) = matches.value_of("play") {
-        return play_track(net, uri.to_string()).await
+    if let Some(d) = matches.value_of("device") {
+        if set_device(net, d.to_string()).await.is_err() {
+            return "Err: failed to set device".to_string()
+        }
     }
 
-    String::new()
+    // Evalute the subcommand
+    match cmd.as_str() {
+        "toggle" => {
+            toggle_playback(net).await
+        },
+        "list" => {
+            if matches.is_present("devices") {
+                list_devices(net).await
+            } else if matches.is_present("playlists") {
+                list_playlists(net).await
+            // Never called, just here for the compiler 
+            } else {
+                String::new()
+            }
+        },
+        "status" => {
+            get_status(net).await
+        },
+        "play" => {
+            if let Some(uri) = matches.value_of("URI") {
+                if matches.is_present("playlist") {
+                    play_uri(net, uri.to_string(), false).await
+                } else {
+                    // Play track by default
+                    play_uri(net, uri.to_string(), true).await
+                }
+            // Never called, just here for the compiler 
+            } else {
+                String::new()
+            }
+        },
+        "query" => {
+            if let Some(search) = matches.value_of("SEARCH") {
+                let query_type = Query::from_args(matches);
+                query(net, search.to_string(), query_type).await
+            } else {
+                String::new()
+            }
+        },
+        // Never called, just here for the compiler
+        _ => {
+            String::new()
+        }
+    }
 }
