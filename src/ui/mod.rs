@@ -951,9 +951,15 @@ where
           )),
         );
       f.render_widget(artist, chunks[0]);
-      let perc = get_track_progress_percentage(app.song_progress_ms, duration_ms);
 
-      let song_progress_label = display_track_progress(app.song_progress_ms, duration_ms);
+      let progress_ms = match app.seek_ms {
+        Some(seek_ms) => seek_ms,
+        None => app.song_progress_ms,
+      };
+
+      let perc = get_track_progress_percentage(progress_ms, duration_ms);
+
+      let song_progress_label = display_track_progress(progress_ms, duration_ms);
       let modifier = if app.user_config.behavior.enable_text_emphasis {
         Modifier::ITALIC | Modifier::BOLD
       } else {
