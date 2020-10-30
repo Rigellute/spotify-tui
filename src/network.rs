@@ -632,7 +632,6 @@ impl<'a> Network<'a> {
         app.dispatch(IoEvent::GetCurrentPlayback);
       }
       Err(e) => {
-        println!("Failed! {}", e);
         self.handle_error(e).await;
       }
     }
