@@ -136,7 +136,8 @@ async fn main() -> Result<()> {
       .long("format")
       .takes_value(true)
       .value_name("FORMAT")
-      .default_value("%t - %a (%s)")
+      // Default value get's set by subcommands
+      .default_value("%s")
       .help("Specify output format");
   let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -184,7 +185,8 @@ async fn main() -> Result<()> {
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about("Print out status of a device")
                                .arg(&device_arg)
-                               .arg(&format_arg))
+                               .arg(format_arg.clone()
+                                    .default_value("%s %t - %a")))
         .subcommand(SubCommand::with_name("play")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
