@@ -1,6 +1,6 @@
 mod app;
-mod cli;
 mod banner;
+mod cli;
 mod config;
 mod event;
 mod handlers;
@@ -16,6 +16,7 @@ use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
 use clap::{App as ClapApp, Arg, ArgGroup, SubCommand};
+use cli::handle_matches;
 use config::ClientConfig;
 use crossterm::{
   cursor::MoveTo,
@@ -45,7 +46,6 @@ use tui::{
   Terminal,
 };
 use user_config::{UserConfig, UserConfigPaths};
-use cli::handle_matches;
 
 const SCOPES: [&str; 14] = [
   "playlist-read-collaborative",
@@ -126,19 +126,19 @@ async fn main() -> Result<()> {
   }));
 
   let device_arg = Arg::with_name("device")
-      .short("d")
-      .long("device")
-      .takes_value(true)
-      .value_name("DEVICE")
-      .help("Specify device to use");
+    .short("d")
+    .long("device")
+    .takes_value(true)
+    .value_name("DEVICE")
+    .help("Specify device to use");
   let format_arg = Arg::with_name("format")
-      .short("f")
-      .long("format")
-      .takes_value(true)
-      .value_name("FORMAT")
-      // Default value get's set by subcommands
-      .default_value("%s")
-      .help("Specify output format");
+    .short("f")
+    .long("format")
+    .takes_value(true)
+    .value_name("FORMAT")
+    // Default value get's set by subcommands
+    .default_value("%s")
+    .help("Specify output format");
   let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -306,9 +306,9 @@ async fn main() -> Result<()> {
       let mut sub_matches = None;
       let possible_cmds = ["toggle", "list", "status", "play", "query"];
       for cmd in &possible_cmds {
-          if let Some(m) = matches.subcommand_matches(cmd) {
-              sub_matches = Some((m, cmd));
-          }
+        if let Some(m) = matches.subcommand_matches(cmd) {
+          sub_matches = Some((m, cmd));
+        }
       }
 
       // Work with the cli (not really async)
