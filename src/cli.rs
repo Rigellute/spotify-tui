@@ -62,23 +62,21 @@ fn format_output(
 // Commands
 //
 
-// for "spt toggle"
+// For "spt toggle"
 // Non-concurrent copy of app.toggle_playback
-async fn toggle_playback(net: &mut Network<'_>) -> String {
+async fn toggle_playback(net: &mut Network<'_>) {
   let context = net.app.lock().await.current_playback_context.clone();
   if let Some(c) = context {
     if c.is_playing {
       net.handle_network_event(IoEvent::PausePlayback).await;
-      return "Paused playback".to_string();
+      return;
     }
   }
   net
     .handle_network_event(IoEvent::StartPlayback(None, None, None))
     .await;
-  "Started playback".to_string()
 }
 
-//
 async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
   net.handle_network_event(IoEvent::GetPlaylists).await;
   let mut output = String::new();
@@ -181,7 +179,7 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
   }
 }
 
-async fn play_uri(net: &mut Network<'_>, uri: String, track: bool) -> String {
+async fn play_uri(net: &mut Network<'_>, uri: String, track: bool) {
   // Track was requested
   if track {
     net
@@ -196,7 +194,6 @@ async fn play_uri(net: &mut Network<'_>, uri: String, track: bool) -> String {
       .handle_network_event(IoEvent::StartPlayback(Some(uri.clone()), None, None))
       .await;
   }
-  format!("Started playback of {}", uri)
 }
 
 // Query for a playlist, track, artist, shows and albums
@@ -353,8 +350,11 @@ pub async fn handle_matches(
   }
 
   // Evalute the subcommand
-  match cmd.as_str() {
-    "toggle" => toggle_playback(net).await,
+  let output = match cmd.as_str() {
+    "toggle" => {
+      toggle_playback(net).await;
+      get_status(net, "%s %t - %a".to_string()).await
+    }
     "list" => {
       if matches.is_present("devices") {
         list_devices(net).await
@@ -374,11 +374,12 @@ pub async fn handle_matches(
     "play" => {
       if let Some(uri) = matches.value_of("URI") {
         if matches.is_present("playlist") {
-          play_uri(net, uri.to_string(), false).await
+          play_uri(net, uri.to_string(), false).await;
         } else {
           // Play track by default
-          play_uri(net, uri.to_string(), true).await
+          play_uri(net, uri.to_string(), true).await;
         }
+        get_status(net, "%s %t - %a".to_string()).await
       // Never called, just here for the compiler
       } else {
         String::new()
@@ -395,5 +396,13 @@ pub async fn handle_matches(
     }
     // Never called, just here for the compiler
     _ => String::new(),
+  };
+
+  // Check if there was an error
+  let api_error = net.app.lock().await.api_error.clone();
+  if api_error.is_empty() {
+    output
+  } else {
+    format!("Err: {}", api_error)
   }
 }
