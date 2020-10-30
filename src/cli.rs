@@ -331,7 +331,8 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
     }
   }
 
-  output
+  // Remove the last newline
+  output[..(output.len() - 1)].to_string()
 }
 
 pub async fn handle_matches(
@@ -353,6 +354,7 @@ pub async fn handle_matches(
   let output = match cmd.as_str() {
     "toggle" => {
       toggle_playback(net).await;
+      net.handle_network_event(IoEvent::GetCurrentPlayback).await;
       get_status(net, "%s %t - %a".to_string()).await
     }
     "list" => {
@@ -379,6 +381,7 @@ pub async fn handle_matches(
           // Play track by default
           play_uri(net, uri.to_string(), true).await;
         }
+        net.handle_network_event(IoEvent::GetCurrentPlayback).await;
         get_status(net, "%s %t - %a".to_string()).await
       // Never called, just here for the compiler
       } else {
