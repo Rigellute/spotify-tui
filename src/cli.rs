@@ -2,11 +2,70 @@ use crate::network::Network;
 use crate::network::IoEvent;
 
 use rspotify::model::{
-    artist::SimplifiedArtist,
     PlayingItem
 };
 use clap::ArgMatches;
 
+enum Type {
+    Playlist,
+    Track,
+    Artist,
+    Album,
+    Show
+}
+
+impl Type {
+    fn from_args(m: &ArgMatches<'_>) -> Self {
+        for (k, v) in &m.args {
+            if v.occurs >= 1 {
+                match k { 
+                    &"playlist" => return Self::Playlist,
+                    &"track" => return Self::Track,
+                    &"artist" => return Self::Artist,
+                    &"album" => return Self::Album,
+                    &"show" => return Self::Show,
+                    _ => continue
+                }
+            }
+        }
+        // Search for tracks by default
+        Self::Track 
+    }
+}
+
+//
+// Utils functions
+// 
+
+fn format_output(
+    format: String,
+    album: Option<String>,
+    artist: Option<String>,
+    playlist: Option<String>,
+    track: Option<String>,
+    show: Option<String>,
+    uri: Option<String>,
+    playing: bool
+) -> String {
+    // Extract the names and join them together
+    let val = |x: Option<String>| -> String {
+        x.unwrap_or("None".to_string())
+    };
+    
+    format.replace("%l", &val(album))
+        .replace("%a", &val(artist))
+        .replace("%p", &val(playlist))
+        .replace("%t", &val(track))
+        .replace("%h", &val(show))
+        .replace("%u", &val(uri))
+        .replace("%s", if playing { "▶ " } else { "⏸ " } )
+}
+
+//
+// Commands
+//
+
+// for "spt toggle"
 // Non-concurrent copy of app.toggle_playback
 async fn toggle_playback(net: &mut Network<'_>) -> String {
     let context = net.app.lock().await.current_playback_context.clone();
@@ -20,16 +79,25 @@ async fn toggle_playback(net: &mut Network<'_>) -> String {
     "Started playback".to_string()
 }
 
-async fn list_playlists(net: &mut Network<'_>) -> String {
+//
+async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
     net.handle_network_event(IoEvent::GetPlaylists).await;
     let mut output = String::new();
     if let Some(playlists) = &net.app.lock().await.playlists {
         for p in &playlists.items {
-            output.push_str(format!(
-                "{} ({})", p.name, p.uri
+            output.push_str(format_output(
+                format.clone(),
+                None,
+                None,
+                Some(p.name.clone()),
+                None,
+                None,
+                Some(p.uri.clone()),
+                false
             ).as_str());
             output.push('\n');
         }
+        // Remove the last newline
         output[..(output.len() - 1)].to_string()
     } else {
         "No playlists".to_string()
@@ -48,15 +116,6 @@ async fn list_devices(net: &mut Network<'_>) -> String {
     } else {
         "No devices avaible".to_string()
     }
-}
-
-fn join_artists(vec: Vec<SimplifiedArtist>) -> String {
-    let mut output = String::new();
-    for artist in vec {
-        output.push_str(artist.name.as_str()); 
-        output.push_str(", ");
-    }
-    output[..(output.len() - 2)].to_string()
 }
 
 async fn set_device(net: &mut Network<'_>, name: String) -> Result<(), String> {
@@ -78,17 +137,12 @@ async fn set_device(net: &mut Network<'_>, name: String) -> Result<(), String> {
 }
 
 // Format is to be implemented
-async fn get_status(net: &mut Network<'_>) -> String {
+async fn get_status(net: &mut Network<'_>, format: String) -> String {
     let context = match net.app.lock().await.current_playback_context.clone() {
         Some(c) => c,
         None => return "Err: no context avaible".to_string()
     };
     
-    let playing_status = if context.is_playing {
-        "▶ "
-    } else {
-        "⏸ "
-    };
     let playing_item = match context.item {
         Some(item) => {
             item
@@ -98,20 +152,32 @@ async fn get_status(net: &mut Network<'_>) -> String {
 
     match playing_item {
         PlayingItem::Track(track) => {
-            format!(
-                "{} {} - {}",
-                playing_status,
-                track.name,
-                join_artists(track.artists),
+            format_output(
+                format,
+                Some(track.album.name),
+                Some(
+                    track.artists.iter().map(|a| {
+                        a.name.clone()
+                    }).collect::<Vec<String>>().join(", ")
+                ),
+                None,
+                Some(track.name),
+                None,
+                Some(track.uri),
+                context.is_playing
             )
         },
         PlayingItem::Episode(episode) => {
-            format!(
-                "{} {} - {}",
-                playing_status,
-                episode.name,
-                episode.show.publisher
-            ) 
+            format_output(
+                format,
+                Some(episode.show.name),
+                Some(episode.show.publisher),
+                None,
+                Some(episode.name),
+                None,
+                Some(episode.uri),
+                context.is_playing
+            )
         }
     }
 }
@@ -130,39 +196,13 @@ async fn play_uri(net: &mut Network<'_>, uri: String, track: bool) -> String {
     format!("Started playback of {}", uri)
 }
 
-enum Query {
-    Playlist,
-    Track,
-    Artist,
-    Album,
-    Show
-}
-
-impl Query {
-    fn from_args(m: &ArgMatches<'_>) -> Self {
-        for (k, v) in &m.args {
-            if v.occurs >= 1 {
-                match k { 
-                    &"playlist" => return Self::Playlist,
-                    &"track" => return Self::Track,
-                    &"artist" => return Self::Artist,
-                    &"album" => return Self::Album,
-                    &"show" => return Self::Show,
-                    _ => continue
-                }
-            }
-        }
-        // Search for tracks by default
-        Self::Track 
-    }
-}
-
 // Query for a playlist, track, artist, shows and albums
 // Returns result and their respective uris (to play them)
 async fn query(
     net: &mut Network<'_>,
     search: String,
-    item: Query,
+    format: String,
+    item: Type
 ) -> String {
     net.handle_network_event(
         IoEvent::GetSearchResults(search, None)
@@ -171,62 +211,101 @@ async fn query(
     let mut output = String::new();
     let app = net.app.lock().await;
     match item {
-        Query::Playlist => {
+        Type::Playlist => {
             if let Some(results) = &app.search_results.playlists {
                 for r in &results.items {
-                    output.push_str(format!(
-                        "{} ({})\n", 
-                        r.name, r.uri
+                    output.push_str(format_output(
+                        format.clone(),
+                        None,
+                        None,
+                        Some(r.name.clone()),
+                        None,
+                        None,
+                        Some(r.uri.clone()),
+                        false
                     ).as_str());
+                    output.push('\n');
                 }
             } else {
                 return "No playlists found".to_string()
             }
         },
-        Query::Track => {
+        Type::Track => {
             if let Some(results) = &app.search_results.tracks {
                 for r in &results.items {
-                    output.push_str(format!(
-                        "{} - {} ({})\n", 
-                        r.name, r.album.name, r.uri
+                    output.push_str(format_output(
+                        format.clone(),
+                        Some(r.album.name.clone()),
+                        Some(r.artists.iter().map(|a| {
+                            a.name.clone()
+                        }).collect::<Vec<String>>().join(", ")),
+                        None,
+                        Some(r.name.clone()),
+                        None,
+                        Some(r.uri.clone()),
+                        false
                     ).as_str());
+                    output.push('\n');
                 }
             } else {
                 return "No tracks found".to_string()
             }
         },
-        Query::Artist => {
+        Type::Artist => {
             if let Some(results) = &app.search_results.artists {
                 for r in &results.items {
-                    output.push_str(format!(
-                        "{} ({})\n", 
-                        r.name, r.uri
+                    output.push_str(format_output(
+                        format.clone(),
+                        None,
+                        Some(r.name.clone()),
+                        None,
+                        None,
+                        None,
+                        Some(r.uri.clone()),
+                        false
                     ).as_str());
+                    output.push('\n');
                 }
             } else {
                 return "No artists found".to_string()
             }
         },
-        Query::Show => {
+        Type::Show => {
             if let Some(results) = &app.search_results.shows {
                 for r in &results.items {
-                    output.push_str(format!(
-                        "{} - {} ({})\n", 
-                        r.name, r.publisher, r.uri
+                    output.push_str(format_output(
+                        format.clone(),
+                        None,
+                        Some(r.publisher.clone()),
+                        None,
+                        None,
+                        Some(r.name.clone()),
+                        Some(r.uri.clone()),
+                        false
                     ).as_str());
+                    output.push('\n');
                 }
             } else {
                 return "No shows found".to_string()
             }
         }
-        Query::Album => {
+        Type::Album => {
             if let Some(results) = &app.search_results.albums {
                 for r in &results.items {
-                    output.push_str(format!(
-                        "{} - {} ({})\n", 
-                        r.name, join_artists(r.artists.clone()),
-                        r.uri.as_ref().unwrap_or(&"no uri".to_string())
+                    output.push_str(format_output(
+                        format.clone(),
+                        Some(r.name.clone()),
+                        Some(r.artists.iter().map(|a| {
+                            a.name.clone()
+                        }).collect::<Vec<String>>().join(", ")),
+                        None,
+                        None,
+                        None,
+                        // This is actually already an Option<String>
+                        r.uri.clone(),
+                        false
                     ).as_str());
+                    output.push('\n');
                 }
             } else {
                 return "No albums found".to_string()
@@ -261,14 +340,17 @@ pub async fn handle_matches(
             if matches.is_present("devices") {
                 list_devices(net).await
             } else if matches.is_present("playlists") {
-                list_playlists(net).await
+                let format = matches.value_of("format").unwrap().to_string();
+                list_playlists(net, format).await
             // Never called, just here for the compiler 
             } else {
                 String::new()
             }
         },
         "status" => {
-            get_status(net).await
+            // Does not panic because it has a default value
+            let format = matches.value_of("format").unwrap().to_string();
+            get_status(net, format).await
         },
         "play" => {
             if let Some(uri) = matches.value_of("URI") {
@@ -284,9 +366,10 @@ pub async fn handle_matches(
             }
         },
         "query" => {
+            let format = matches.value_of("format").unwrap().to_string();
             if let Some(search) = matches.value_of("SEARCH") {
-                let query_type = Query::from_args(matches);
-                query(net, search.to_string(), query_type).await
+                let query_type = Type::from_args(matches);
+                query(net, search.to_string(), format, query_type).await
             } else {
                 String::new()
             }

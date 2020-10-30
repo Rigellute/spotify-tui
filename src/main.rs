@@ -131,6 +131,13 @@ async fn main() -> Result<()> {
       .takes_value(true)
       .value_name("DEVICE")
       .help("Specify device to use");
+  let format_arg = Arg::with_name("format")
+      .short("f")
+      .long("format")
+      .takes_value(true)
+      .value_name("FORMAT")
+      .default_value("%t - %a (%s)")
+      .help("Specify output format");
   let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -166,6 +173,8 @@ async fn main() -> Result<()> {
                                     .short("p")
                                     .long("playlists")
                                     .help("List playlists"))
+                               .arg(format_arg.clone()
+                                    .default_value("%p (%u)"))
                                .group(ArgGroup::with_name("listable")
                                     .args(&["devices", "playlists"])
                                     .multiple(false)
@@ -174,7 +183,8 @@ async fn main() -> Result<()> {
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about("Print out status of a device")
-                               .arg(&device_arg))
+                               .arg(&device_arg)
+                               .arg(&format_arg))
         .subcommand(SubCommand::with_name("play")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
@@ -208,6 +218,14 @@ async fn main() -> Result<()> {
                                .arg(Arg::with_name("SEARCH")
                                     .required(true)
                                     .help("Query items based on SEARCH"))
+                               .arg(format_arg
+                                    .default_value_ifs(&[
+                                        ("track",    None, "%t - %a (%u)"),
+                                        ("playlist", None, "%p (%u)"     ),
+                                        ("artist",   None, "%a (%u)"     ),
+                                        ("album",    None, "%l - %a (%u)"),
+                                        ("show",     None, "%h - %a (%u)")
+                                    ]))
                                .arg(Arg::with_name("track")
                                     .short("t")
                                     .long("track")
