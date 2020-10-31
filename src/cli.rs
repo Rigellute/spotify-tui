@@ -37,26 +37,23 @@ impl Type {
 
 fn format_output(
   format: String,
-  album: Option<String>,
-  artist: Option<String>,
-  playlist: Option<String>,
-  track: Option<String>,
-  show: Option<String>,
-  uri: Option<String>,
-  device: Option<String>,
+  album: Option<&str>,
+  artist: Option<&str>,
+  playlist: Option<&str>,
+  track: Option<&str>,
+  show: Option<&str>,
+  uri: Option<&str>,
+  device: Option<&str>,
   playing: bool,
 ) -> String {
-  // Extract the names and join them together
-  let val = |x: Option<String>| -> String { x.unwrap_or("None".to_string()) };
-
   format
-    .replace("%l", &val(album))
-    .replace("%a", &val(artist))
-    .replace("%p", &val(playlist))
-    .replace("%t", &val(track))
-    .replace("%h", &val(show))
-    .replace("%u", &val(uri))
-    .replace("%d", &val(device))
+    .replace("%l", album.unwrap_or("None"))
+    .replace("%a", artist.unwrap_or("None"))
+    .replace("%p", playlist.unwrap_or("None"))
+    .replace("%t", track.unwrap_or("None"))
+    .replace("%h", show.unwrap_or("None"))
+    .replace("%u", uri.unwrap_or("None"))
+    .replace("%d", device.unwrap_or("None"))
     .replace("%s", if playing { "▶ " } else { "⏸ " })
 }
 
@@ -89,10 +86,10 @@ async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
           format.clone(),
           None,
           None,
-          Some(p.name.clone()),
+          Some(&p.name),
           None,
           None,
-          Some(p.uri.clone()),
+          Some(&p.uri),
           None,
           false,
         )
@@ -156,31 +153,31 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
   match playing_item {
     PlayingItem::Track(track) => format_output(
       format,
-      Some(track.album.name),
+      Some(&track.album.name),
       Some(
-        track
+        &track
           .artists
           .iter()
-          .map(|a| a.name.clone())
-          .collect::<Vec<String>>()
-          .join(", "),
+          .map(|a| a.name.as_str())
+          .collect::<Vec<&str>>()
+          .join(", ")
       ),
       None,
-      Some(track.name),
+      Some(&track.name),
       None,
-      Some(track.uri),
-      Some(context.device.name),
+      Some(&track.uri),
+      Some(&context.device.name),
       context.is_playing,
     ),
     PlayingItem::Episode(episode) => format_output(
       format,
-      Some(episode.show.name),
-      Some(episode.show.publisher),
+      Some(&episode.show.name),
+      Some(&episode.show.publisher),
       None,
-      Some(episode.name),
+      Some(&episode.name),
       None,
-      Some(episode.uri),
-      Some(context.device.name),
+      Some(&episode.uri),
+      Some(&context.device.name),
       context.is_playing,
     ),
   }
@@ -221,10 +218,10 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               format.clone(),
               None,
               None,
-              Some(r.name.clone()),
+              Some(&r.name),
               None,
               None,
-              Some(r.uri.clone()),
+              Some(&r.uri),
               None,
               false,
             )
@@ -242,18 +239,18 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
           output.push_str(
             format_output(
               format.clone(),
-              Some(r.album.name.clone()),
+              Some(&r.album.name),
               Some(
-                r.artists
+                &r.artists
                   .iter()
-                  .map(|a| a.name.clone())
-                  .collect::<Vec<String>>()
+                  .map(|a| a.name.as_str())
+                  .collect::<Vec<&str>>()
                   .join(", "),
               ),
               None,
-              Some(r.name.clone()),
+              Some(&r.name),
               None,
-              Some(r.uri.clone()),
+              Some(&r.uri),
               None,
               false,
             )
@@ -272,11 +269,11 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
             format_output(
               format.clone(),
               None,
-              Some(r.name.clone()),
+              Some(&r.name),
               None,
               None,
               None,
-              Some(r.uri.clone()),
+              Some(&r.uri),
               None,
               false,
             )
@@ -295,11 +292,11 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
             format_output(
               format.clone(),
               None,
-              Some(r.publisher.clone()),
+              Some(&r.publisher),
               None,
               None,
-              Some(r.name.clone()),
-              Some(r.uri.clone()),
+              Some(&r.name),
+              Some(&r.uri),
               None,
               false,
             )
@@ -317,19 +314,19 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
           output.push_str(
             format_output(
               format.clone(),
-              Some(r.name.clone()),
+              Some(&r.name),
               Some(
-                r.artists
+                &r.artists
                   .iter()
-                  .map(|a| a.name.clone())
-                  .collect::<Vec<String>>()
-                  .join(", "),
+                  .map(|a| a.name.as_str())
+                  .collect::<Vec<&str>>()
+                  .join(", ")
               ),
               None,
               None,
               None,
-              // This is actually already an Option<String>
-              r.uri.clone(),
+              // This is actually already an Option<>
+              r.uri.as_deref(),
               None,
               false,
             )
@@ -429,8 +426,12 @@ pub async fn handle_matches(
     }
     "transfer" => {
       if let Some(device) = matches.value_of("DEVICE") {
-        transfer_playback(net, device).await;
-        get_status(net, "%s %t - %a on %d".to_string()).await
+        let output = transfer_playback(net, device).await;
+        if output.is_empty() {
+          get_status(net, "%s %t - %a on %d".to_string()).await
+        } else {
+          output
+        }
       } else {
         String::new()
       }
