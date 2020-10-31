@@ -165,7 +165,12 @@ async fn main() -> Result<()> {
                                .arg(&device_arg)
                                .arg(format_arg.clone()
                                     .default_value("%s %t - %a")
-                                    .default_value_if("mark", None, "%f %s %t - %a"))
+                                    .default_value_ifs(&[
+                                      ("like",      None, "%f %s %t - %a"   ),
+                                      ("shuffle",   None, "%f %s %t - %a"   ),
+                                      ("repeat",    None, "%f %s %t - %a"   ),
+                                      ("transfer",  None, "%s %t - %a on %d" )
+                                    ]))
                                .arg(Arg::with_name("toggle")
                                     .short("t")
                                     .long("toggle")
