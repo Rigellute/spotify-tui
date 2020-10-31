@@ -335,6 +335,26 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
   output[..(output.len() - 1)].to_string()
 }
 
+async fn transfer_playback(net: &mut Network<'_>, device: &str) -> String {
+  // Get the device id by name
+  let mut id = String::new();
+  if let Some(devices) = &net.app.lock().await.devices {
+    for d in &devices.devices {
+      if d.name == device {
+        id.push_str(d.id.as_str());
+        break;
+      }
+    }
+  };
+
+  if id.is_empty() {
+    format!("Err: no device with name {}", device)
+  } else {
+    net.handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string())).await;
+    String::new()
+  }
+}
+
 pub async fn handle_matches(
   matches: &ArgMatches<'_>,
   cmd: String,
@@ -375,7 +395,7 @@ pub async fn handle_matches(
     }
     "play" => {
       if let Some(uri) = matches.value_of("URI") {
-        if matches.is_present("playlist") {
+        if matches.is_present("context") {
           play_uri(net, uri.to_string(), false).await;
         } else {
           // Play track by default
@@ -393,6 +413,15 @@ pub async fn handle_matches(
       if let Some(search) = matches.value_of("SEARCH") {
         let query_type = Type::from_args(matches);
         query(net, search.to_string(), format, query_type).await
+      } else {
+        String::new()
+      }
+    }
+    "transfer" => {
+      if let Some(device) = matches.value_of("DEVICE") {
+        transfer_playback(net, device).await;
+        net.handle_network_event(IoEvent::GetCurrentPlayback).await;
+        get_status(net, "%s %t - %a".to_string()).await
       } else {
         String::new()
       }

@@ -171,6 +171,7 @@ async fn main() -> Result<()> {
                                .arg(Arg::with_name("devices")
                                     .short("d")
                                     .long("devices")
+                                    .conflicts_with("format")
                                     .help("List devices"))
                                .arg(Arg::with_name("playlists")
                                     .short("p")
@@ -206,13 +207,13 @@ async fn main() -> Result<()> {
                                         "playlist", "shuffle"
                                     ])
                                     .help("Specify track to play"))
-                               .arg(Arg::with_name("playlist")
-                                    .short("p")
-                                    .long("playlist")
+                               .arg(Arg::with_name("context")
+                                    .short("c")
+                                    .long("context")
                                     .conflicts_with_all(&[
                                         "track"
                                     ])
-                                    .help("Specify playlist to play"))
+                                    .help("Specify a context (artist, playlist, album) to play"))
                                .arg(Arg::with_name("shuffle")
                                     .short("s")
                                     .long("shuffle")
@@ -258,6 +259,14 @@ async fn main() -> Result<()> {
                                         "track", "playlist", "artist", "album", "show"
                                     ])
                                     .multiple(false)))
+        .subcommand(SubCommand::with_name("transfer")
+                               .version(env!("CARGO_PKG_VERSION"))
+                               .author(env!("CARGO_PKG_AUTHORS"))
+                               .about("Transfer playback to device")
+                               .visible_alias("tf")
+                               .arg(Arg::with_name("DEVICE")
+                                    .required(true)
+                                    .help("Specify DEVICE to transfer playback to")))
         .get_matches();
 
   let mut user_config = UserConfig::new();
@@ -309,7 +318,7 @@ async fn main() -> Result<()> {
 
       // Check if user asked to execute command
       let mut sub_matches = None;
-      let possible_cmds = ["toggle", "list", "status", "play", "query"];
+      let possible_cmds = ["toggle", "list", "status", "play", "query", "transfer"];
       for cmd in &possible_cmds {
         if let Some(m) = matches.subcommand_matches(cmd) {
           sub_matches = Some((m, cmd));
