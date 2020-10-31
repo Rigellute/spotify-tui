@@ -160,7 +160,7 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
           .iter()
           .map(|a| a.name.as_str())
           .collect::<Vec<&str>>()
-          .join(", ")
+          .join(", "),
       ),
       None,
       Some(&track.name),
@@ -320,7 +320,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
                   .iter()
                   .map(|a| a.name.as_str())
                   .collect::<Vec<&str>>()
-                  .join(", ")
+                  .join(", "),
               ),
               None,
               None,
@@ -359,7 +359,9 @@ async fn transfer_playback(net: &mut Network<'_>, device: &str) -> String {
   if id.is_empty() {
     format!("Err: no device with name {}", device)
   } else {
-    net.handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string())).await;
+    net
+      .handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string()))
+      .await;
     String::new()
   }
 }
@@ -381,9 +383,18 @@ pub async fn handle_matches(
 
   // Evalute the subcommand
   let output = match cmd.as_str() {
-    "toggle" => {
-      toggle_playback(net).await;
-      get_status(net, "%s %t - %a".to_string()).await
+    "playback" => {
+      let format = matches.value_of("format").unwrap();
+      if matches.is_present("toggle") {
+        toggle_playback(net).await;
+      } else if let Some(d) = matches.value_of("transfer") {
+        let output = transfer_playback(net, d).await;
+        if !output.is_empty() {
+          return output;
+        }
+      }
+
+      get_status(net, format.to_string()).await
     }
     "list" => {
       if matches.is_present("devices") {
@@ -420,18 +431,6 @@ pub async fn handle_matches(
       if let Some(search) = matches.value_of("SEARCH") {
         let query_type = Type::from_args(matches);
         query(net, search.to_string(), format, query_type).await
-      } else {
-        String::new()
-      }
-    }
-    "transfer" => {
-      if let Some(device) = matches.value_of("DEVICE") {
-        let output = transfer_playback(net, device).await;
-        if output.is_empty() {
-          get_status(net, "%s %t - %a on %d".to_string()).await
-        } else {
-          output
-        }
       } else {
         String::new()
       }

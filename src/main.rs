@@ -157,12 +157,32 @@ async fn main() -> Result<()> {
                                .help("Specify configuration file path.")
                                .takes_value(true))
          // Control spotify from the command line
-         .subcommand(SubCommand::with_name("toggle")
+         .subcommand(SubCommand::with_name("playback")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
-                               .about("Pause/resume playback of a device")
-                               .visible_alias("t")
-                               .arg(&device_arg))
+                               .about("Interact with playback of a device")
+                               .visible_alias("pb")
+                               .arg(&device_arg)
+                               .arg(format_arg.clone()
+                                    .default_value("%s %t - %a"))
+                               .arg(Arg::with_name("toggle")
+                                    .short("t")
+                                    .long("toggle")
+                                    .help("Pause/resume playback of a device"))
+                               .arg(Arg::with_name("status")
+                                    .short("s")
+                                    .long("status")
+                                    .help("Print out status of a device"))
+                               .arg(Arg::with_name("transfer")
+                                    .short("r")
+                                    .long("transfer")
+                                    .conflicts_with("device")
+                                    .takes_value(true)
+                                    .help("Transfer playback to device"))
+                               .group(ArgGroup::with_name("actions")
+                                    .args(&["toggle", "status", "transfer"])
+                                    .multiple(false)
+                                    .required(true)))
          .subcommand(SubCommand::with_name("list")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
@@ -183,18 +203,10 @@ async fn main() -> Result<()> {
                                     .args(&["devices", "playlists"])
                                     .multiple(false)
                                     .required(true)))
-         .subcommand(SubCommand::with_name("status")
-                               .version(env!("CARGO_PKG_VERSION"))
-                               .author(env!("CARGO_PKG_AUTHORS"))
-                               .about("Print out status of a device")
-                               .visible_alias("s")
-                               .arg(&device_arg)
-                               .arg(format_arg.clone()
-                                    .default_value("%s %t - %a")))
         .subcommand(SubCommand::with_name("play")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
-                               .about("Play a uri of a track or playlist")
+                               .about("Play a uri (track, playlist, artist, album)")
                                .visible_alias("p")
                                .arg(&device_arg)
                                .arg(Arg::with_name("URI")
@@ -203,21 +215,15 @@ async fn main() -> Result<()> {
                                .arg(Arg::with_name("track")
                                     .short("t")
                                     .long("track")
-                                    .conflicts_with_all(&[
-                                        "playlist", "shuffle"
-                                    ])
                                     .help("Specify track to play"))
                                .arg(Arg::with_name("context")
                                     .short("c")
                                     .long("context")
-                                    .conflicts_with_all(&[
-                                        "track"
-                                    ])
                                     .help("Specify a context (artist, playlist, album) to play"))
-                               .arg(Arg::with_name("shuffle")
-                                    .short("s")
-                                    .long("shuffle")
-                                    .help("Switch to shuffle mode")))
+                               .group(ArgGroup::with_name("types")
+                                    .args(&["track", "context"])
+                                    .multiple(false)
+                                    .required(true)))
         .subcommand(SubCommand::with_name("query")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
@@ -225,7 +231,7 @@ async fn main() -> Result<()> {
                                .visible_alias("q")
                                .arg(Arg::with_name("SEARCH")
                                     .required(true)
-                                    .help("Query items based on SEARCH"))
+                                    .help("Search for tracks and more"))
                                .arg(format_arg
                                     .default_value_ifs(&[
                                         ("track",    None, "%t - %a (%u)"),
@@ -258,15 +264,8 @@ async fn main() -> Result<()> {
                                     .args(&[
                                         "track", "playlist", "artist", "album", "show"
                                     ])
-                                    .multiple(false)))
-        .subcommand(SubCommand::with_name("transfer")
-                               .version(env!("CARGO_PKG_VERSION"))
-                               .author(env!("CARGO_PKG_AUTHORS"))
-                               .about("Transfer playback to device")
-                               .visible_alias("tf")
-                               .arg(Arg::with_name("DEVICE")
-                                    .required(true)
-                                    .help("Specify DEVICE to transfer playback to")))
+                                    .multiple(false)
+                                    .required(true)))
         .get_matches();
 
   let mut user_config = UserConfig::new();
@@ -318,7 +317,7 @@ async fn main() -> Result<()> {
 
       // Check if user asked to execute command
       let mut sub_matches = None;
-      let possible_cmds = ["toggle", "list", "status", "play", "query", "transfer"];
+      let possible_cmds = ["list", "play", "query", "playback"];
       for cmd in &possible_cmds {
         if let Some(m) = matches.subcommand_matches(cmd) {
           sub_matches = Some((m, cmd));
