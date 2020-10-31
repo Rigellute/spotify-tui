@@ -230,22 +230,28 @@ async fn toggle_playback(net: &mut Network<'_>) {
     .await;
 }
 
-async fn list(net: &mut Network<'_>, item: Type, format: Option<&str>) -> String {
+async fn list(net: &mut Network<'_>, item: Type, format: &str) -> String {
   match item {
     Type::Device => {
       if let Some(devices) = &net.app.lock().await.devices {
         devices
           .devices
           .iter()
-          .map(|d| d.name.as_str())
-          .collect::<Vec<&str>>()
+          .map(|d| {
+            format_output(
+              format.to_string(),
+              vec![Format::Device(d.name.clone())],
+              None,
+              false,
+            )
+          })
+          .collect::<Vec<String>>()
           .join("\n")
       } else {
         "No devices avaible".to_string()
       }
     }
     Type::Playlist => {
-      let format = format.unwrap();
       net.handle_network_event(IoEvent::GetPlaylists).await;
       if let Some(playlists) = &net.app.lock().await.playlists {
         playlists
@@ -266,7 +272,6 @@ async fn list(net: &mut Network<'_>, item: Type, format: Option<&str>) -> String
       }
     }
     Type::Liked => {
-      let format = format.unwrap();
       net
         .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
         .await;
@@ -605,7 +610,7 @@ pub async fn handle_matches(
     }
     "query" => {
       if matches.is_present("list") {
-        let format = matches.value_of("format");
+        let format = matches.value_of("format").unwrap();
         let category = Type::list_from_matches(matches);
         list(net, category, format).await
       } else if let Some(search) = matches.value_of("search") {
