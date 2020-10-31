@@ -189,26 +189,6 @@ async fn main() -> Result<()> {
                                     .args(&["toggle", "status", "transfer", "mark"])
                                     .multiple(false)
                                     .required(true)))
-         .subcommand(SubCommand::with_name("list")
-                               .version(env!("CARGO_PKG_VERSION"))
-                               .author(env!("CARGO_PKG_AUTHORS"))
-                               .about("List devices, playlists")
-                               .visible_alias("l")
-                               .arg(Arg::with_name("devices")
-                                    .short("d")
-                                    .long("devices")
-                                    .conflicts_with("format")
-                                    .help("List devices"))
-                               .arg(Arg::with_name("playlists")
-                                    .short("p")
-                                    .long("playlists")
-                                    .help("List playlists"))
-                               .arg(format_arg.clone()
-                                    .default_value("%p (%u)"))
-                               .group(ArgGroup::with_name("listable")
-                                    .args(&["devices", "playlists"])
-                                    .multiple(false)
-                                    .required(true)))
         .subcommand(SubCommand::with_name("play")
                                .version(env!("CARGO_PKG_VERSION"))
                                .author(env!("CARGO_PKG_AUTHORS"))
@@ -235,9 +215,6 @@ async fn main() -> Result<()> {
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about("Search for tracks, playlists and more")
                                .visible_alias("q")
-                               .arg(Arg::with_name("SEARCH")
-                                    .required(true)
-                                    .help("Search for tracks and more"))
                                .arg(format_arg
                                     .default_value_ifs(&[
                                         ("track",    None, "%t - %a (%u)"),
@@ -246,30 +223,56 @@ async fn main() -> Result<()> {
                                         ("album",    None, "%l - %a (%u)"),
                                         ("show",     None, "%h - %a (%u)")
                                     ]))
+                               // Listing
+                               .arg(Arg::with_name("list")
+                                    .short("l")
+                                    .long("list")
+                                    .requires("listable")
+                                    .help("List devices and playlists"))
+                               .arg(Arg::with_name("device")
+                                    .short("d")
+                                    .long("device")
+                                    .conflicts_with("format")
+                                    .help("Show devices"))
+                               .group(ArgGroup::with_name("listable")
+                                    .args(&["device", "playlist"])
+                                    .multiple(false))
+                               // Searching
+                               .arg(Arg::with_name("search")
+                                    .short("s")
+                                    .long("search")
+                                    .takes_value(true)
+                                    .value_name("SEARCH")
+                                    .requires("searchable")
+                                    .help("Search for tracks etc."))
                                .arg(Arg::with_name("track")
                                     .short("t")
                                     .long("track")
-                                    .help("Search for track"))
+                                    .help("Show tracks"))
                                .arg(Arg::with_name("playlist")
                                     .short("p")
                                     .long("playlist")
-                                    .help("Search for playlist"))
+                                    .help("Show playlists"))
                                .arg(Arg::with_name("artist")
                                     .short("a")
                                     .long("artist")
-                                    .help("Search for artist"))
+                                    .help("Show artists"))
                                .arg(Arg::with_name("album")
-                                    .short("l")
+                                    .short("b")
                                     .long("album")
-                                    .help("Search for album"))
+                                    .help("Show albums"))
                                .arg(Arg::with_name("show")
-                                    .short("s")
+                                    .short("h")
                                     .long("show")
-                                    .help("Search for show"))
-                               .group(ArgGroup::with_name("types")
+                                    .help("Show shows"))
+                               .group(ArgGroup::with_name("searchable")
                                     .args(&[
                                         "track", "playlist", "artist", "album", "show"
                                     ])
+                                    .multiple(false))
+                               // Actions
+                               .group(ArgGroup::with_name("actions")
+                                    .args(&["list", "search"])
                                     .multiple(false)
                                     .required(true)))
         .get_matches();
@@ -323,7 +326,7 @@ async fn main() -> Result<()> {
 
       // Check if user asked to execute command
       let mut sub_matches = None;
-      let possible_cmds = ["list", "play", "query", "playback"];
+      let possible_cmds = ["play", "query", "playback"];
       for cmd in &possible_cmds {
         if let Some(m) = matches.subcommand_matches(cmd) {
           sub_matches = Some((m, cmd));

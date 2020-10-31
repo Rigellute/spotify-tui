@@ -80,7 +80,7 @@ fn format_output(
   let playing_string = if playing { "▶ " } else { "⏸ " };
 
   format
-    .replace("%l", album.unwrap_or("None"))
+    .replace("%b", album.unwrap_or("None"))
     .replace("%a", artist.unwrap_or("None"))
     .replace("%p", playlist.unwrap_or("None"))
     .replace("%t", track.unwrap_or("None"))
@@ -181,7 +181,6 @@ async fn mark(net: &mut Network<'_>, flag: Flag) -> Result<(), String> {
       };
       net.handle_network_event(IoEvent::Repeat(r)).await;
     }
-    _ => {}
   }
 
   Ok(())
@@ -538,10 +537,21 @@ pub async fn handle_matches(
       }
     }
     "query" => {
-      let format = matches.value_of("format").unwrap().to_string();
-      if let Some(search) = matches.value_of("SEARCH") {
+      if matches.is_present("list") {
+        if matches.is_present("device") {
+          list_devices(net).await
+        } else if matches.is_present("playlist") {
+          let format = matches.value_of("format").unwrap().to_string();
+          list_playlists(net, format).await
+        // Never called, just here for the compiler
+        } else {
+          String::new()
+        }
+      } else if let Some(search) = matches.value_of("search") {
+        let format = matches.value_of("format").unwrap().to_string();
         let query_type = Type::from_args(matches);
         query(net, search.to_string(), format, query_type).await
+      // Never called, just here for the compiler
       } else {
         String::new()
       }
