@@ -21,21 +21,32 @@ enum Type {
 }
 
 impl Type {
-  fn search_from_string(c: &str) -> Result<Self, String> {
-    match c {
-      "p" | "playlist" => Ok(Self::Playlist),
-      "t" | "track" => Ok(Self::Track),
-      "a" | "artist" => Ok(Self::Artist),
-      "b" | "album" => Ok(Self::Album),
-      "s" | "show" => Ok(Self::Show),
-      _ => Err(format!("Err: no such category '{}'", c)),
+  fn search_from_matches(m: &ArgMatches<'_>) -> Self {
+    if m.is_present("playlists") {
+      Self::Playlist
+    } else if m.is_present("tracks") {
+      Self::Track
+    } else if m.is_present("artists") {
+      Self::Artist
+    } else if m.is_present("albums") {
+      Self::Album
+    } else if m.is_present("shows") {
+      Self::Show
+    }
+    // Default: track
+    else {
+      Self::Track
     }
   }
-  fn list_from_string(c: &str) -> Result<Self, String> {
-    match c {
-      "p" | "playlist" => Ok(Self::Playlist),
-      "d" | "device" => Ok(Self::Device),
-      _ => Err(format!("Err: no such category '{}'", c)),
+  fn list_from_matches(m: &ArgMatches<'_>) -> Self {
+    if m.is_present("playlists") {
+      Self::Playlist
+    } else if m.is_present("devices") {
+      Self::Device
+    }
+    // Default: device
+    else {
+      Self::Device
     }
   }
 }
@@ -47,19 +58,20 @@ enum Flag {
 }
 
 impl Flag {
-  fn from_string(s: &str) -> Result<Self, String> {
-    match s {
-      "l" | "like" => Ok(Self::Like),
-      "s" | "shuffle" => Ok(Self::Shuffle),
-      "r" | "repeat" => Ok(Self::Repeat),
-      _ => Err(format!("Err: no such flag '{}'", s)),
+  fn from_matches(m: &ArgMatches<'_>) -> Self {
+    if m.is_present("like") {
+      Self::Like
+    } else if m.is_present("shuffle") {
+      Self::Shuffle
+    } else if m.is_present("repeat") {
+      Self::Repeat
+    }
+    // No default, just placeholder (clap requires user to specify something)
+    else {
+      Self::Like
     }
   }
 }
-
-//
-// Utils functions
-//
 
 enum FormatType {
   Album(SimplifiedAlbum),
@@ -163,13 +175,13 @@ fn format_output(
   let mut f = format;
 
   let flags_string = if let Some((r, s, l)) = flags {
-    let shuffle = if s { "🔀" } else { "" };
+    let shuffle = if s { "咽" } else { "" };
     let repeat = match r {
       RepeatState::Off => "",
-      RepeatState::Track => "🔂",
-      RepeatState::Context => "🔁",
+      RepeatState::Track => "綾",
+      RepeatState::Context => "凌",
     };
-    let like = if l { "❤️ " } else { "" };
+    let like = if l { " " } else { "" };
     [shuffle, repeat, like]
       .iter()
       .filter(|a| !a.is_empty())
@@ -180,7 +192,7 @@ fn format_output(
   } else {
     "".to_string()
   };
-  let playing_string = if playing { "▶ " } else { "⏸ " };
+  let playing_string = if playing { "契" } else { "" };
 
   // Replace set values
   for val in values {
@@ -201,7 +213,6 @@ fn format_output(
 // Commands
 //
 
-// For "spt toggle"
 // Non-concurrent copy of app.toggle_playback
 async fn toggle_playback(net: &mut Network<'_>) {
   let context = net.app.lock().await.current_playback_context.clone();
@@ -541,11 +552,10 @@ pub async fn handle_matches(
         if !output.is_empty() {
           return output;
         }
-      } else if let Some(f) = matches.value_of("mark") {
-        let flag = match Flag::from_string(f) {
-          Ok(r) => r,
-          Err(e) => return e,
-        };
+      }
+
+      if matches.is_present("flags") {
+        let flag = Flag::from_matches(matches);
         if let Err(e) = mark(net, flag).await {
           return e;
         }
@@ -568,20 +578,13 @@ pub async fn handle_matches(
       }
     }
     "query" => {
-      let category = matches.value_of("category").unwrap();
       if matches.is_present("list") {
         let format = matches.value_of("format");
-        let category = match Type::list_from_string(category) {
-          Ok(t) => t,
-          Err(e) => return e,
-        };
+        let category = Type::list_from_matches(matches);
         list(net, category, format).await
       } else if let Some(search) = matches.value_of("search") {
         let format = matches.value_of("format").unwrap().to_string();
-        let query_type = match Type::search_from_string(category) {
-          Ok(t) => t,
-          Err(e) => return e,
-        };
+        let query_type = Type::search_from_matches(matches);
         query(net, search.to_string(), format, query_type).await
       // Never called, just here for the compiler
       } else {
