@@ -43,6 +43,7 @@ fn format_output(
   track: Option<String>,
   show: Option<String>,
   uri: Option<String>,
+  device: Option<String>,
   playing: bool,
 ) -> String {
   // Extract the names and join them together
@@ -55,6 +56,7 @@ fn format_output(
     .replace("%t", &val(track))
     .replace("%h", &val(show))
     .replace("%u", &val(uri))
+    .replace("%d", &val(device))
     .replace("%s", if playing { "▶ " } else { "⏸ " })
 }
 
@@ -91,6 +93,7 @@ async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
           None,
           None,
           Some(p.uri.clone()),
+          None,
           false,
         )
         .as_str(),
@@ -138,6 +141,8 @@ async fn set_device(net: &mut Network<'_>, name: String) -> Result<(), String> {
 
 // Format is to be implemented
 async fn get_status(net: &mut Network<'_>, format: String) -> String {
+  // Update info on current playback
+  net.handle_network_event(IoEvent::GetCurrentPlayback).await;
   let context = match net.app.lock().await.current_playback_context.clone() {
     Some(c) => c,
     None => return "Err: no context avaible".to_string(),
@@ -164,6 +169,7 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
       Some(track.name),
       None,
       Some(track.uri),
+      Some(context.device.name),
       context.is_playing,
     ),
     PlayingItem::Episode(episode) => format_output(
@@ -174,6 +180,7 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
       Some(episode.name),
       None,
       Some(episode.uri),
+      Some(context.device.name),
       context.is_playing,
     ),
   }
@@ -218,6 +225,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               None,
               Some(r.uri.clone()),
+              None,
               false,
             )
             .as_str(),
@@ -246,6 +254,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               Some(r.name.clone()),
               None,
               Some(r.uri.clone()),
+              None,
               false,
             )
             .as_str(),
@@ -268,6 +277,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               None,
               Some(r.uri.clone()),
+              None,
               false,
             )
             .as_str(),
@@ -290,6 +300,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               Some(r.name.clone()),
               Some(r.uri.clone()),
+              None,
               false,
             )
             .as_str(),
@@ -319,6 +330,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               // This is actually already an Option<String>
               r.uri.clone(),
+              None,
               false,
             )
             .as_str(),
@@ -362,7 +374,6 @@ pub async fn handle_matches(
 ) -> String {
   // Query devices
   net.handle_network_event(IoEvent::GetDevices).await;
-  net.handle_network_event(IoEvent::GetCurrentPlayback).await;
 
   if let Some(d) = matches.value_of("device") {
     if set_device(net, d.to_string()).await.is_err() {
@@ -374,7 +385,6 @@ pub async fn handle_matches(
   let output = match cmd.as_str() {
     "toggle" => {
       toggle_playback(net).await;
-      net.handle_network_event(IoEvent::GetCurrentPlayback).await;
       get_status(net, "%s %t - %a".to_string()).await
     }
     "list" => {
@@ -401,7 +411,6 @@ pub async fn handle_matches(
           // Play track by default
           play_uri(net, uri.to_string(), true).await;
         }
-        net.handle_network_event(IoEvent::GetCurrentPlayback).await;
         get_status(net, "%s %t - %a".to_string()).await
       // Never called, just here for the compiler
       } else {
@@ -420,8 +429,7 @@ pub async fn handle_matches(
     "transfer" => {
       if let Some(device) = matches.value_of("DEVICE") {
         transfer_playback(net, device).await;
-        net.handle_network_event(IoEvent::GetCurrentPlayback).await;
-        get_status(net, "%s %t - %a".to_string()).await
+        get_status(net, "%s %t - %a on %d".to_string()).await
       } else {
         String::new()
       }
