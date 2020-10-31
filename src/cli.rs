@@ -374,6 +374,7 @@ pub async fn handle_matches(
 ) -> String {
   // Query devices
   net.handle_network_event(IoEvent::GetDevices).await;
+  net.handle_network_event(IoEvent::GetCurrentPlayback).await;
 
   if let Some(d) = matches.value_of("device") {
     if set_device(net, d.to_string()).await.is_err() {
