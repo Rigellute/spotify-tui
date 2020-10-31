@@ -136,8 +136,6 @@ async fn main() -> Result<()> {
     .long("format")
     .takes_value(true)
     .value_name("FORMAT")
-    // Default value get's set by subcommands
-    .default_value("%s")
     .help("Specify output format");
   let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -229,6 +227,8 @@ async fn main() -> Result<()> {
                                .visible_alias("q")
                                .arg(format_arg
                                     .default_value_ifs(&[
+                                        ("devices",     None, "%d"          ),
+                                        ("liked",       None, "%t - %a (%u)"),
                                         ("tracks",      None, "%t - %a (%u)"),
                                         ("playlists",   None, "%p (%u)"     ),
                                         ("artists",     None, "%a (%u)"     ),
@@ -239,19 +239,20 @@ async fn main() -> Result<()> {
                                .arg(Arg::with_name("list")
                                     .short("l")
                                     .long("list")
-                                    .requires("listable")
                                     .help("List devices and playlists"))
                                .arg(Arg::with_name("devices")
                                     .short("d")
                                     .long("devices")
-                                    .conflicts_with("format")
                                     .help("List the category 'devices'"))
                                .arg(Arg::with_name("playlists")
                                     .short("p")
                                     .long("playlists")
                                     .help("List / search the category 'playlists'"))
+                               .arg(Arg::with_name("liked")
+                                    .long("liked")
+                                    .help("List the category 'liked songs'"))
                                .group(ArgGroup::with_name("listable")
-                                    .args(&["devices", "playlists"])
+                                    .args(&["devices", "playlists", "liked"])
                                     .multiple(false))
                                // Searching
                                .arg(Arg::with_name("search")

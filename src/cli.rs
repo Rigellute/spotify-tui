@@ -18,6 +18,7 @@ enum Type {
   Album,
   Show,
   Device,
+  Liked,
 }
 
 impl Type {
@@ -43,6 +44,8 @@ impl Type {
       Self::Playlist
     } else if m.is_present("devices") {
       Self::Device
+    } else if m.is_present("liked") {
+      Self::Liked
     }
     // Default: device
     else {
@@ -261,6 +264,29 @@ async fn list(net: &mut Network<'_>, item: Type, format: Option<&str>) -> String
       } else {
         "No playlists".to_string()
       }
+    }
+    Type::Liked => {
+      let format = format.unwrap();
+      net
+        .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
+        .await;
+      net
+        .app
+        .lock()
+        .await
+        .track_table
+        .tracks
+        .iter()
+        .map(|t| {
+          format_output(
+            format.to_string(),
+            Format::from_type(FormatType::Track(t.clone())),
+            None,
+            false,
+          )
+        })
+        .collect::<Vec<String>>()
+        .join("\n")
     }
     _ => String::new(),
   }
