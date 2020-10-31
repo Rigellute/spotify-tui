@@ -2,7 +2,7 @@ use crate::network::IoEvent;
 use crate::network::Network;
 
 use clap::ArgMatches;
-use rspotify::model::PlayingItem;
+use rspotify::{model::PlayingItem, senum::RepeatState};
 
 enum Type {
   Playlist,
@@ -31,6 +31,23 @@ impl Type {
   }
 }
 
+enum Flag {
+  Like,
+  Shuffle,
+  Repeat,
+}
+
+impl Flag {
+  fn from_string(s: &str) -> Result<Self, String> {
+    match s {
+      "l" | "like" => Ok(Self::Like),
+      "s" | "shuffle" => Ok(Self::Shuffle),
+      "r" | "repeat" => Ok(Self::Repeat),
+      _ => Err(format!("Err: no such flag '{}'", s)),
+    }
+  }
+}
+
 //
 // Utils functions
 //
@@ -44,8 +61,24 @@ fn format_output(
   show: Option<&str>,
   uri: Option<&str>,
   device: Option<&str>,
+  // (repeat, shuffle, like)
+  flags: Option<(RepeatState, bool, bool)>,
   playing: bool,
 ) -> String {
+  let flags_string = if let Some((r, s, l)) = flags {
+    let shuffle = if s { "🔀" } else { "" };
+    let repeat = match r {
+      RepeatState::Off => "",
+      RepeatState::Track => "🔂",
+      RepeatState::Context => "🔁",
+    };
+    let like = if l { "❤️ " } else { "" };
+    format!("{} {} {}", shuffle, repeat, like)
+  } else {
+    "".to_string()
+  };
+  let playing_string = if playing { "▶ " } else { "⏸ " };
+
   format
     .replace("%l", album.unwrap_or("None"))
     .replace("%a", artist.unwrap_or("None"))
@@ -54,7 +87,8 @@ fn format_output(
     .replace("%h", show.unwrap_or("None"))
     .replace("%u", uri.unwrap_or("None"))
     .replace("%d", device.unwrap_or("None"))
-    .replace("%s", if playing { "▶ " } else { "⏸ " })
+    .replace("%f", &flags_string)
+    .replace("%s", &playing_string)
 }
 
 //
@@ -91,6 +125,7 @@ async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
           None,
           Some(&p.uri),
           None,
+          None,
           false,
         )
         .as_str(),
@@ -102,6 +137,54 @@ async fn list_playlists(net: &mut Network<'_>, format: String) -> String {
   } else {
     "No playlists".to_string()
   }
+}
+
+async fn mark(net: &mut Network<'_>, flag: Flag) -> Result<(), String> {
+  let c = {
+    let app = net.app.lock().await;
+    match app.current_playback_context.clone() {
+      Some(c) => c,
+      None => return Err("Err: no context avaible".to_string()),
+    }
+  };
+
+  match flag {
+    Flag::Like => {
+      // Get the id of the current song
+      let id = match c.item {
+        Some(i) => match i {
+          PlayingItem::Track(t) => match t.id {
+            Some(id) => id,
+            None => return Err("Err: item has no id".to_string()),
+          },
+          PlayingItem::Episode(_) => {
+            return Err("Err: saving episodes not yet implemented".to_string())
+          }
+        },
+        None => return Err("Err: no item playing".to_string()),
+      };
+      net.handle_network_event(IoEvent::ToggleSaveTrack(id)).await;
+    }
+    Flag::Shuffle => {
+      net
+        .handle_network_event(IoEvent::Shuffle(c.shuffle_state))
+        .await
+    }
+    // Very weird behavior
+    // For some reason you can't set RepeatState::Track
+    // This just toggles between RepeatState::Off and RepeatState::Context
+    Flag::Repeat => {
+      let r = match c.repeat_state {
+        RepeatState::Off => RepeatState::Off,
+        RepeatState::Track => RepeatState::Track,
+        RepeatState::Context => RepeatState::Track,
+      };
+      net.handle_network_event(IoEvent::Repeat(r)).await;
+    }
+    _ => {}
+  }
+
+  Ok(())
 }
 
 async fn list_devices(net: &mut Network<'_>) -> String {
@@ -140,6 +223,10 @@ async fn set_device(net: &mut Network<'_>, name: String) -> Result<(), String> {
 async fn get_status(net: &mut Network<'_>, format: String) -> String {
   // Update info on current playback
   net.handle_network_event(IoEvent::GetCurrentPlayback).await;
+  net
+    .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
+    .await;
+
   let context = match net.app.lock().await.current_playback_context.clone() {
     Some(c) => c,
     None => return "Err: no context avaible".to_string(),
@@ -167,6 +254,16 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
       None,
       Some(&track.uri),
       Some(&context.device.name),
+      Some((
+        context.repeat_state,
+        context.shuffle_state,
+        net
+          .app
+          .lock()
+          .await
+          .liked_song_ids_set
+          .contains(&track.id.unwrap_or(String::new())),
+      )),
       context.is_playing,
     ),
     PlayingItem::Episode(episode) => format_output(
@@ -178,6 +275,7 @@ async fn get_status(net: &mut Network<'_>, format: String) -> String {
       None,
       Some(&episode.uri),
       Some(&context.device.name),
+      Some((context.repeat_state, context.shuffle_state, false)),
       context.is_playing,
     ),
   }
@@ -223,6 +321,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               Some(&r.uri),
               None,
+              None,
               false,
             )
             .as_str(),
@@ -252,6 +351,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               Some(&r.uri),
               None,
+              None,
               false,
             )
             .as_str(),
@@ -275,6 +375,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               Some(&r.uri),
               None,
+              None,
               false,
             )
             .as_str(),
@@ -297,6 +398,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               Some(&r.name),
               Some(&r.uri),
+              None,
               None,
               false,
             )
@@ -327,6 +429,7 @@ async fn query(net: &mut Network<'_>, search: String, format: String, item: Type
               None,
               // This is actually already an Option<>
               r.uri.as_deref(),
+              None,
               None,
               false,
             )
@@ -391,6 +494,14 @@ pub async fn handle_matches(
         let output = transfer_playback(net, d).await;
         if !output.is_empty() {
           return output;
+        }
+      } else if let Some(f) = matches.value_of("mark") {
+        let flag = match Flag::from_string(f) {
+          Ok(r) => r,
+          Err(e) => return e,
+        };
+        if let Err(e) = mark(net, flag).await {
+          return e;
         }
       }
 
