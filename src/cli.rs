@@ -136,13 +136,15 @@ impl JumpDirection {
 //
 
 // Types to creat a Format enum from
+// Boxing was proposed by cargo clippy
+// to reduce the size of this enum
 enum FormatType {
-  Album(SimplifiedAlbum),
-  Artist(FullArtist),
-  Playlist(SimplifiedPlaylist),
-  Track(FullTrack),
-  Episode(FullEpisode),
-  Show(SimplifiedShow),
+  Album(Box<SimplifiedAlbum>),
+  Artist(Box<FullArtist>),
+  Playlist(Box<SimplifiedPlaylist>),
+  Track(Box<FullTrack>),
+  Episode(Box<FullEpisode>),
+  Show(Box<SimplifiedShow>),
 }
 
 // Types that get formatted
@@ -250,7 +252,7 @@ fn format_output(
       .iter()
       .filter(|a| !a.is_empty())
       // Reduce the &&str to &str
-      .map(|a| *a)
+      .copied()
       .collect::<Vec<&str>>()
       .join(" ")
   } else {
@@ -338,7 +340,7 @@ impl<'a> CliApp<'a> {
             .map(|p| {
               format_output(
                 format.to_string(),
-                Format::from_type(FormatType::Playlist(p.clone())),
+                Format::from_type(FormatType::Playlist(Box::new(p.clone()))),
                 None,
                 false,
               )
@@ -365,7 +367,7 @@ impl<'a> CliApp<'a> {
           .map(|t| {
             format_output(
               format.to_string(),
-              Format::from_type(FormatType::Track(t.clone())),
+              Format::from_type(FormatType::Track(Box::new(t.clone()))),
               None,
               false,
             )
@@ -496,8 +498,8 @@ impl<'a> CliApp<'a> {
 
     match playing_item {
       PlayingItem::Track(track) => {
-        let id = track.id.clone().unwrap_or(String::new());
-        let mut hs = Format::from_type(FormatType::Track(track));
+        let id = track.id.clone().unwrap_or_default();
+        let mut hs = Format::from_type(FormatType::Track(Box::new(track)));
         hs.push(Format::Device(context.device.name));
         format_output(
           format,
@@ -511,7 +513,7 @@ impl<'a> CliApp<'a> {
         )
       }
       PlayingItem::Episode(episode) => {
-        let mut hs = Format::from_type(FormatType::Episode(episode));
+        let mut hs = Format::from_type(FormatType::Episode(Box::new(episode)));
         hs.push(Format::Device(context.device.name));
         format_output(
           format,
@@ -622,7 +624,7 @@ impl<'a> CliApp<'a> {
             .map(|r| {
               format_output(
                 format.clone(),
-                Format::from_type(FormatType::Playlist(r.clone())),
+                Format::from_type(FormatType::Playlist(Box::new(r.clone()))),
                 None,
                 false,
               )
@@ -641,7 +643,7 @@ impl<'a> CliApp<'a> {
             .map(|r| {
               format_output(
                 format.clone(),
-                Format::from_type(FormatType::Track(r.clone())),
+                Format::from_type(FormatType::Track(Box::new(r.clone()))),
                 None,
                 false,
               )
@@ -660,7 +662,7 @@ impl<'a> CliApp<'a> {
             .map(|r| {
               format_output(
                 format.clone(),
-                Format::from_type(FormatType::Artist(r.clone())),
+                Format::from_type(FormatType::Artist(Box::new(r.clone()))),
                 None,
                 false,
               )
@@ -679,7 +681,7 @@ impl<'a> CliApp<'a> {
             .map(|r| {
               format_output(
                 format.clone(),
-                Format::from_type(FormatType::Show(r.clone())),
+                Format::from_type(FormatType::Show(Box::new(r.clone()))),
                 None,
                 false,
               )
@@ -698,7 +700,7 @@ impl<'a> CliApp<'a> {
             .map(|r| {
               format_output(
                 format.clone(),
-                Format::from_type(FormatType::Album(r.clone())),
+                Format::from_type(FormatType::Album(Box::new(r.clone()))),
                 None,
                 false,
               )
