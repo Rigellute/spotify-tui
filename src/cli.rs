@@ -157,6 +157,7 @@ enum Format {
   Show(String),
   Uri(String),
   Device(String),
+  Volume(u32),
 }
 
 fn join_artists(a: Vec<SimplifiedArtist>) -> String {
@@ -214,8 +215,11 @@ impl Format {
       Self::Show(s) => s,
       Self::Uri(s) => s,
       Self::Device(s) => s,
+      // Because this match statements
+      // needs to return a &String I have to do it this way
+      Self::Volume(s) => return s.to_string(),
     }
-    .to_string()
+    .clone()
   }
   fn get_placeholder(&self) -> &str {
     match self {
@@ -226,6 +230,7 @@ impl Format {
       Self::Show(_) => "%h",
       Self::Uri(_) => "%u",
       Self::Device(_) => "%d",
+      Self::Volume(_) => "%v",
     }
   }
 }
@@ -266,7 +271,7 @@ fn format_output(
   }
 
   // Replace the rest with 'None'
-  for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d"] {
+  for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v"] {
     f = f.replace(p, "None");
   }
 
@@ -301,6 +306,24 @@ impl<'a> CliApp<'a> {
       .await;
   }
 
+  async fn volume(&mut self, vol: String) -> Result<(), String> {
+    let num = match vol.parse::<u32>() {
+      Ok(n) => n,
+      Err(_) => return Err(format!("Err: failed to convert {} to u32", vol)),
+    };
+
+    // Check if it's in range
+    if num > 100 {
+      return Err(format!("Err: {} is too big, max volume is 100", num));
+    };
+
+    self
+      .0
+      .handle_network_event(IoEvent::ChangeVolume(num as u8))
+      .await;
+    Ok(())
+  }
+
   // spt playback --next
   async fn jump(&mut self, d: JumpDirection) {
     match d {
@@ -320,7 +343,10 @@ impl<'a> CliApp<'a> {
             .map(|d| {
               format_output(
                 format.to_string(),
-                vec![Format::Device(d.name.clone())],
+                vec![
+                  Format::Device(d.name.clone()),
+                  Format::Volume(d.volume_percent),
+                ],
                 None,
                 false,
               )
@@ -501,6 +527,7 @@ impl<'a> CliApp<'a> {
         let id = track.id.clone().unwrap_or_default();
         let mut hs = Format::from_type(FormatType::Track(Box::new(track)));
         hs.push(Format::Device(context.device.name));
+        hs.push(Format::Volume(context.device.volume_percent));
         format_output(
           format,
           hs,
@@ -515,6 +542,7 @@ impl<'a> CliApp<'a> {
       PlayingItem::Episode(episode) => {
         let mut hs = Format::from_type(FormatType::Episode(Box::new(episode)));
         hs.push(Format::Device(context.device.name));
+        hs.push(Format::Volume(context.device.volume_percent));
         format_output(
           format,
           hs,
@@ -752,6 +780,10 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
       } else if matches.is_present("jumps") {
         let direction = JumpDirection::from_matches(matches);
         cli.jump(direction).await;
+      } else if let Some(vol) = matches.value_of("volume") {
+        if let Err(e) = cli.volume(vol.to_string()).await {
+          return e;
+        }
       }
 
       cli.get_status(format.to_string()).await

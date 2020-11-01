@@ -198,6 +198,12 @@ async fn main() -> Result<()> {
                                     .short("p")
                                     .long("previous")
                                     .help("Jump to previous song"))
+                               .arg(Arg::with_name("volume")
+                                    .short("v")
+                                    .long("volume")
+                                    .takes_value(true)
+                                    .value_name("VALUE")
+                                    .help("Turn volume up or down"))
                                .group(ArgGroup::with_name("jumps")
                                     .args(&["next", "previous"])
                                     .multiple(false))
@@ -205,7 +211,7 @@ async fn main() -> Result<()> {
                                     .args(&["like", "shuffle", "repeat"])
                                     .multiple(false))
                                .group(ArgGroup::with_name("actions")
-                                    .args(&["toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous"])
+                                    .args(&["toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous", "volume"])
                                     .multiple(false)
                                     .required(true)))
         .subcommand(SubCommand::with_name("play")
@@ -263,7 +269,7 @@ async fn main() -> Result<()> {
                                .visible_alias("q")
                                .arg(format_arg
                                     .default_value_ifs(&[
-                                        ("devices",     None, "%d"          ),
+                                        ("devices",     None, "%v% %d"       ),
                                         ("liked",       None, "%t - %a (%u)"),
                                         ("tracks",      None, "%t - %a (%u)"),
                                         ("playlists",   None, "%p (%u)"     ),
