@@ -346,8 +346,8 @@ async fn main() -> Result<()> {
 
       // Work with the cli (not really async)
       if let Some((m, cmd)) = sub_matches {
-        let mut network = Network::new(oauth, spotify, client_config, &app);
-        println!("{}", handle_matches(m, cmd.to_string(), &mut network).await);
+        let network = Network::new(oauth, spotify, client_config, &app);
+        println!("{}", handle_matches(m, cmd.to_string(), network).await);
       // Launch the tui (async)
       } else {
         let cloned_app = Arc::clone(&app);
