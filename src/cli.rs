@@ -11,10 +11,14 @@ use rspotify::{
   senum::RepeatState,
 };
 
-const LIKED_EMOJI: &'static str = " ";
-const SHUFFLE_EMOJI: &'static str = "咽";
-const REPEAT_T_EMOJI: &'static str = "綾";
-const REPEAT_C_EMOJI: &'static str = "凌";
+const LIKED_EMOJI: &str = " ";
+const SHUFFLE_EMOJI: &str = "咽";
+const REPEAT_T_EMOJI: &str = "綾";
+const REPEAT_C_EMOJI: &str = "凌";
+
+//
+// Possible types to list or search
+//
 
 enum Type {
   Playlist,
@@ -59,6 +63,10 @@ impl Type {
   }
 }
 
+//
+// Possible flags to set
+//
+
 enum Flag {
   Like,
   Shuffle,
@@ -81,6 +89,35 @@ impl Flag {
   }
 }
 
+//
+// Possible directions to jump to
+//
+
+enum JumpDirection {
+  Next,
+  Previous,
+}
+
+impl JumpDirection {
+  fn from_matches(m: &ArgMatches<'_>) -> Self {
+    if m.is_present("next") {
+      Self::Next
+    } else if m.is_present("previous") {
+      Self::Previous
+    // Again: there is no default value
+    // If this function was called, one of these above
+    // has to be specified
+    } else {
+      Self::Next
+    }
+  }
+}
+
+//
+// For fomatting (-f / --format flag)
+//
+
+// Types to creat a Format enum from
 enum FormatType {
   Album(SimplifiedAlbum),
   Artist(FullArtist),
@@ -90,6 +127,7 @@ enum FormatType {
   Show(SimplifiedShow),
 }
 
+// Types that get formatted
 #[derive(Clone)]
 enum Format {
   Album(String),
@@ -221,7 +259,6 @@ fn format_output(
 // Commands
 //
 
-//
 struct CliApp<'a>(Network<'a>);
 
 // Non-concurrent functions
@@ -242,6 +279,14 @@ impl<'a> CliApp<'a> {
       .0
       .handle_network_event(IoEvent::StartPlayback(None, None, None))
       .await;
+  }
+
+  // spt playback --next
+  async fn jump(&mut self, d: JumpDirection) {
+    match d {
+      JumpDirection::Next => self.0.handle_network_event(IoEvent::NextTrack).await,
+      JumpDirection::Previous => self.0.handle_network_event(IoEvent::PreviousTrack).await,
+    }
   }
 
   // spt query -l ...
@@ -620,13 +665,14 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
         if !output.is_empty() {
           return output;
         }
-      }
-
-      if matches.is_present("flags") {
+      } else if matches.is_present("flags") {
         let flag = Flag::from_matches(matches);
         if let Err(e) = cli.mark(flag).await {
           return e;
         }
+      } else if matches.is_present("jumps") {
+        let direction = JumpDirection::from_matches(matches);
+        cli.jump(direction).await;
       }
 
       cli.get_status(format.to_string()).await
