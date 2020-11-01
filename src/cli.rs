@@ -20,6 +20,7 @@ const REPEAT_C_EMOJI: &str = "凌";
 // Possible types to list or search
 //
 
+#[derive(Debug)]
 enum Type {
   Playlist,
   Track,
@@ -31,6 +32,23 @@ enum Type {
 }
 
 impl Type {
+  fn play_from_matches(m: &ArgMatches<'_>) -> Self {
+    if m.is_present("playlist") {
+      Self::Playlist
+    } else if m.is_present("track") {
+      Self::Track
+    } else if m.is_present("artist") {
+      Self::Artist
+    } else if m.is_present("album") {
+      Self::Album
+    } else if m.is_present("show") {
+      Self::Show
+    }
+    // Default: track
+    else {
+      Self::Track
+    }
+  }
   fn search_from_matches(m: &ArgMatches<'_>) -> Self {
     if m.is_present("playlists") {
       Self::Playlist
@@ -505,10 +523,9 @@ impl<'a> CliApp<'a> {
     }
   }
 
-  // spt play -t / -p URI
-  async fn play_uri(&mut self, uri: String, track: bool) {
-    // Track was requested
-    if track {
+  // spt play -u URI
+  async fn play_uri(&mut self, uri: String) {
+    if uri.contains("spotify:track:") {
       self
         .0
         .handle_network_event(IoEvent::StartPlayback(
@@ -523,6 +540,66 @@ impl<'a> CliApp<'a> {
         .handle_network_event(IoEvent::StartPlayback(Some(uri.clone()), None, None))
         .await;
     }
+  }
+
+  // spt play -n NAME ...
+  async fn play(&mut self, name: String, item: Type) -> Result<(), String> {
+    self
+      .0
+      .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
+      .await;
+    // Get the uri of the first found
+    // item or return an error message
+    let uri = {
+      let results = &self.0.app.lock().await.search_results;
+      match item {
+        Type::Track => {
+          if let Some(r) = &results.tracks {
+            r.items[0].uri.clone()
+          } else {
+            return Err(format!("No tracks with name {} found", name));
+          }
+        }
+        Type::Album => {
+          if let Some(r) = &results.albums {
+            let album = &r.items[0];
+            if let Some(uri) = &album.uri {
+              uri.clone()
+            } else {
+              return Err(format!("Album {} has no uri", album.name));
+            }
+          } else {
+            return Err(format!("No albums with name {} found", name));
+          }
+        }
+        Type::Artist => {
+          if let Some(r) = &results.artists {
+            r.items[0].uri.clone()
+          } else {
+            return Err(format!("No artists with name {} found", name));
+          }
+        }
+        Type::Show => {
+          if let Some(r) = &results.shows {
+            r.items[0].uri.clone()
+          } else {
+            return Err(format!("No shows with name {} found", name));
+          }
+        }
+        Type::Playlist => {
+          if let Some(r) = &results.playlists {
+            r.items[0].uri.clone()
+          } else {
+            return Err(format!("No playlists with name {} found", name));
+          }
+        }
+        _ => String::new(),
+      }
+    };
+
+    // Play the uri
+    self.play_uri(uri).await;
+    Ok(())
   }
 
   // Query for a playlist, track, artist, shows and albums
@@ -678,18 +755,15 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
       cli.get_status(format.to_string()).await
     }
     "play" => {
-      if let Some(uri) = matches.value_of("URI") {
-        if matches.is_present("context") {
-          cli.play_uri(uri.to_string(), false).await;
-        } else {
-          // Play track by default
-          cli.play_uri(uri.to_string(), true).await;
+      if let Some(uri) = matches.value_of("uri") {
+        cli.play_uri(uri.to_string()).await;
+      } else if let Some(name) = matches.value_of("name") {
+        let category = Type::play_from_matches(matches);
+        if let Err(e) = cli.play(name.to_string(), category).await {
+          return e;
         }
-        cli.get_status("%s %t - %a".to_string()).await
-      // Never called, just here for the compiler
-      } else {
-        String::new()
       }
+      cli.get_status("%s %t - %a".to_string()).await
     }
     "query" => {
       if matches.is_present("list") {
