@@ -175,7 +175,6 @@ async fn main() -> Result<()> {
                                     .long("status")
                                     .help("Print out status of a device"))
                                .arg(Arg::with_name("transfer")
-                                    .short("r")
                                     .long("transfer")
                                     .conflicts_with("device")
                                     .takes_value(true)
