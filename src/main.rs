@@ -208,7 +208,7 @@ async fn main() -> Result<()> {
                                     .short("v")
                                     .long("volume")
                                     .takes_value(true)
-                                    .value_name("VALUE")
+                                    .value_name("VOLUME")
                                     .help("Turn volume up or down"))
                                .group(ArgGroup::with_name("jumps")
                                     .args(&["next", "previous"])

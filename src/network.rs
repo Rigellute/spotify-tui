@@ -725,7 +725,6 @@ impl<'a> Network<'a> {
         };
       }
       Err(e) => {
-        println!("Failed");
         self.handle_error(anyhow!(e)).await;
       }
     };
