@@ -158,6 +158,9 @@ enum Format {
   Uri(String),
   Device(String),
   Volume(u32),
+  // This is a bit long, should it be splitted up?
+  Flags((RepeatState, bool, bool)),
+  Playing(bool),
 }
 
 fn join_artists(a: Vec<SimplifiedArtist>) -> String {
@@ -208,19 +211,37 @@ impl Format {
   // Is there a better way?
   fn inner(&self) -> String {
     match self {
-      Self::Album(s) => s,
-      Self::Artist(s) => s,
-      Self::Playlist(s) => s,
-      Self::Track(s) => s,
-      Self::Show(s) => s,
-      Self::Uri(s) => s,
-      Self::Device(s) => s,
+      Self::Album(s) => s.clone(),
+      Self::Artist(s) => s.clone(),
+      Self::Playlist(s) => s.clone(),
+      Self::Track(s) => s.clone(),
+      Self::Show(s) => s.clone(),
+      Self::Uri(s) => s.clone(),
+      Self::Device(s) => s.clone(),
       // Because this match statements
       // needs to return a &String I have to do it this way
-      Self::Volume(s) => return s.to_string(),
+      Self::Volume(s) => s.to_string(),
+      Self::Flags((r, s, l)) => {
+        let like = if *l { LIKED_EMOJI } else { "" };
+        let shuffle = if *s { SHUFFLE_EMOJI } else { "" };
+        let repeat = match r {
+          RepeatState::Off => "",
+          RepeatState::Track => REPEAT_T_EMOJI,
+          RepeatState::Context => REPEAT_C_EMOJI,
+        };
+
+        [shuffle, repeat, like]
+          .iter()
+          .filter(|a| !a.is_empty())
+          // Reduce the &&str to &str
+          .copied()
+          .collect::<Vec<&str>>()
+          .join(" ")
+      }
+      Self::Playing(s) => if *s { "契" } else { "" }.to_string(),
     }
-    .clone()
   }
+
   fn get_placeholder(&self) -> &str {
     match self {
       Self::Album(_) => "%b",
@@ -231,53 +252,27 @@ impl Format {
       Self::Uri(_) => "%u",
       Self::Device(_) => "%d",
       Self::Volume(_) => "%v",
+      Self::Flags(_) => "%f",
+      Self::Playing(_) => "%s",
     }
   }
 }
 
-fn format_output(
-  format: String,
-  values: Vec<Format>,
-  // (repeat, shuffle, like)
-  flags: Option<(RepeatState, bool, bool)>,
-  playing: bool,
-) -> String {
-  // Create a mutable 'clone'
-  let mut f = format;
-
-  let flags_string = if let Some((r, s, l)) = flags {
-    let shuffle = if s { SHUFFLE_EMOJI } else { "" };
-    let repeat = match r {
-      RepeatState::Off => "",
-      RepeatState::Track => REPEAT_T_EMOJI,
-      RepeatState::Context => REPEAT_C_EMOJI,
-    };
-    let like = if l { LIKED_EMOJI } else { "" };
-    [shuffle, repeat, like]
-      .iter()
-      .filter(|a| !a.is_empty())
-      // Reduce the &&str to &str
-      .copied()
-      .collect::<Vec<&str>>()
-      .join(" ")
-  } else {
-    "".to_string()
-  };
-  let playing_string = if playing { "契" } else { "" };
-
+fn format_output(mut format: String, values: Vec<Format>) -> String {
   // Replace set values
   for val in values {
-    f = f.replace(val.get_placeholder(), &val.inner());
+    format = format.replace(val.get_placeholder(), &val.inner());
   }
 
   // Replace the rest with 'None'
-  for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v"] {
-    f = f.replace(p, "None");
+  for p in &[
+    // List of all flags
+    "%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s",
+  ] {
+    format = format.replace(p, "None");
   }
 
-  // Add the last two
-  f.replace("%f", &flags_string)
-    .replace("%s", &playing_string)
+  format
 }
 
 //
@@ -347,8 +342,6 @@ impl<'a> CliApp<'a> {
                   Format::Device(d.name.clone()),
                   Format::Volume(d.volume_percent),
                 ],
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -367,8 +360,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.to_string(),
                 Format::from_type(FormatType::Playlist(Box::new(p.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -394,8 +385,6 @@ impl<'a> CliApp<'a> {
             format_output(
               format.to_string(),
               Format::from_type(FormatType::Track(Box::new(t.clone()))),
-              None,
-              false,
             )
           })
           .collect::<Vec<String>>()
@@ -500,38 +489,36 @@ impl<'a> CliApp<'a> {
 
     let playing_item = match context.item {
       Some(item) => item,
-      None => return "No track playing".to_string(),
+      None => return "Err: no track playing".to_string(),
     };
 
-    match playing_item {
+    let mut hs = match playing_item {
       PlayingItem::Track(track) => {
         let id = track.id.clone().unwrap_or_default();
         let mut hs = Format::from_type(FormatType::Track(Box::new(track)));
-        hs.push(Format::Device(context.device.name));
-        hs.push(Format::Volume(context.device.volume_percent));
-        format_output(
-          format,
-          hs,
-          Some((
-            context.repeat_state,
-            context.shuffle_state,
-            self.0.app.lock().await.liked_song_ids_set.contains(&id),
-          )),
-          context.is_playing,
-        )
+        hs.push(Format::Flags((
+          context.repeat_state,
+          context.shuffle_state,
+          self.0.app.lock().await.liked_song_ids_set.contains(&id),
+        )));
+        hs
       }
       PlayingItem::Episode(episode) => {
         let mut hs = Format::from_type(FormatType::Episode(Box::new(episode)));
-        hs.push(Format::Device(context.device.name));
-        hs.push(Format::Volume(context.device.volume_percent));
-        format_output(
-          format,
-          hs,
-          Some((context.repeat_state, context.shuffle_state, false)),
-          context.is_playing,
-        )
+        hs.push(Format::Flags((
+          context.repeat_state,
+          context.shuffle_state,
+          false,
+        )));
+        hs
       }
-    }
+    };
+
+    hs.push(Format::Device(context.device.name));
+    hs.push(Format::Volume(context.device.volume_percent));
+    hs.push(Format::Playing(context.is_playing));
+
+    format_output(format, hs)
   }
 
   // spt play -u URI
@@ -634,8 +621,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.clone(),
                 Format::from_type(FormatType::Playlist(Box::new(r.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -653,8 +638,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.clone(),
                 Format::from_type(FormatType::Track(Box::new(r.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -672,8 +655,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.clone(),
                 Format::from_type(FormatType::Artist(Box::new(r.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -691,8 +672,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.clone(),
                 Format::from_type(FormatType::Show(Box::new(r.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -710,8 +689,6 @@ impl<'a> CliApp<'a> {
               format_output(
                 format.clone(),
                 Format::from_type(FormatType::Album(Box::new(r.clone()))),
-                None,
-                false,
               )
             })
             .collect::<Vec<String>>()
@@ -772,6 +749,7 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
           return e;
         }
       }
+
       cli.get_status("%s %t - %a".to_string()).await
     }
     "query" => {
