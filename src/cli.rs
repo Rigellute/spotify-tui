@@ -568,7 +568,7 @@ impl<'a> CliApp<'a> {
           if let Some(r) = &results.tracks {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("No tracks with name {} found", name));
+            return Err(format!("Err: no tracks with name {}", name));
           }
         }
         Type::Album => {
@@ -577,31 +577,31 @@ impl<'a> CliApp<'a> {
             if let Some(uri) = &album.uri {
               uri.clone()
             } else {
-              return Err(format!("Album {} has no uri", album.name));
+              return Err(format!("Err: album {} has no uri", album.name));
             }
           } else {
-            return Err(format!("No albums with name {} found", name));
+            return Err(format!("Err: no albums with name {}", name));
           }
         }
         Type::Artist => {
           if let Some(r) = &results.artists {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("No artists with name {} found", name));
+            return Err(format!("Err: no artists with name {}", name));
           }
         }
         Type::Show => {
           if let Some(r) = &results.shows {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("No shows with name {} found", name));
+            return Err(format!("Err: no shows with name {}", name));
           }
         }
         Type::Playlist => {
           if let Some(r) = &results.playlists {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("No playlists with name {} found", name));
+            return Err(format!("Err: no playlists with name {}", name));
           }
         }
         _ => String::new(),
@@ -620,7 +620,7 @@ impl<'a> CliApp<'a> {
   async fn query(&mut self, search: String, format: String, item: Type) -> String {
     self
       .0
-      .handle_network_event(IoEvent::GetSearchResults(search, None))
+      .handle_network_event(IoEvent::GetSearchResults(search.clone(), None))
       .await;
 
     let app = self.0.app.lock().await;
@@ -641,7 +641,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No playlists found".to_string()
+          format!("Err: no playlists with name {}", search)
         }
       }
       Type::Track => {
@@ -660,7 +660,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No tracks found".to_string()
+          format!("Err: no tracks with name {}", search)
         }
       }
       Type::Artist => {
@@ -679,7 +679,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No artists found".to_string()
+          format!("Err: no artists with name {}", search)
         }
       }
       Type::Show => {
@@ -698,7 +698,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No shows found".to_string()
+          format!("Err: no shows with name {}", search)
         }
       }
       Type::Album => {
@@ -717,7 +717,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No albums found".to_string()
+          format!("Err: no albums with name {}", search)
         }
       }
       // Never called, just here for compiler
