@@ -125,12 +125,6 @@ async fn main() -> Result<()> {
     panic_hook(info);
   }));
 
-  let device_arg = Arg::with_name("device")
-    .short("d")
-    .long("device")
-    .takes_value(true)
-    .value_name("DEVICE")
-    .help("Specify device to use");
   let format_arg = Arg::with_name("format")
     .short("f")
     .long("format")
@@ -167,7 +161,6 @@ async fn main() -> Result<()> {
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about("Interact with playback of a device")
                                .visible_alias("pb")
-                               .arg(&device_arg)
                                .arg(format_arg.clone()
                                     .default_value("%f %s %t - %a")
                                     .default_value_ifs(&[
@@ -183,7 +176,6 @@ async fn main() -> Result<()> {
                                     .help("Print out status of a device"))
                                .arg(Arg::with_name("transfer")
                                     .long("transfer")
-                                    .conflicts_with("device")
                                     .takes_value(true)
                                     .value_name("DEVICE")
                                     .help("Transfer playback to device"))
@@ -225,7 +217,6 @@ async fn main() -> Result<()> {
                                .author(env!("CARGO_PKG_AUTHORS"))
                                .about("Play a uri (track, playlist, artist, album)")
                                .visible_alias("p")
-                               .arg(&device_arg)
                                .arg(format_arg.clone()
                                     .default_value("%s %t - %a"))
                                .arg(Arg::with_name("uri")

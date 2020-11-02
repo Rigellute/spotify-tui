@@ -481,25 +481,6 @@ impl<'a> CliApp<'a> {
     Ok(())
   }
 
-  // spt ... -d ... (specify device to control)
-  async fn set_device(&mut self, name: String) -> Result<(), String> {
-    // Change the device if specified by user
-    let mut app = self.0.app.lock().await;
-    let mut selected_device_index = Some(0);
-    if let Some(dp) = &app.devices {
-      for (i, d) in dp.devices.iter().enumerate() {
-        if d.name == name {
-          selected_device_index = Some(i);
-        }
-      }
-    } else {
-      // Error out if no device is avaible
-      return Err("Err: no device avaible".to_string());
-    }
-    app.selected_device_index = selected_device_index;
-    Ok(())
-  }
-
   // spt playback -s
   async fn get_status(&mut self, format: String) -> String {
     // Update info on current playback
@@ -754,12 +735,6 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
     .0
     .handle_network_event(IoEvent::GetCurrentPlayback)
     .await;
-
-  if let Some(d) = matches.value_of("device") {
-    if cli.set_device(d.to_string()).await.is_err() {
-      return "Err: failed to set device".to_string();
-    }
-  }
 
   // Evalute the subcommand
   let output = match cmd.as_str() {
