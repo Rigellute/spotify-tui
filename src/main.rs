@@ -164,6 +164,7 @@ async fn main() -> Result<()> {
                                .arg(format_arg.clone()
                                     .default_value("%f %s %t - %a")
                                     .default_value_ifs(&[
+                                      ("volume",    None, "%v% %s %t - %a"),
                                       ("transfer",  None, "%f %s %t - %a on %d" )
                                     ]))
                                .arg(Arg::with_name("toggle")
@@ -232,6 +233,14 @@ async fn main() -> Result<()> {
                                     .value_name("NAME")
                                     .requires("contexts")
                                     .help("Play first match with NAME from category"))
+                               .arg(Arg::with_name("queue")
+                                    .short("q")
+                                    .long("queue")
+                                    // Only works with tracks
+                                    .conflicts_with_all(
+                                      &["album", "artist", "playlist", "show"]
+                                    )
+                                    .help("Add track to queue instead of playing"))
                                .arg(Arg::with_name("album")
                                     .short("b")
                                     .long("album")

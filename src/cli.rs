@@ -458,12 +458,10 @@ impl<'a> CliApp<'a> {
       // For some reason you can't set RepeatState::Track
       // This just toggles between RepeatState::Off and RepeatState::Context
       Flag::Repeat => {
-        let r = match c.repeat_state {
-          RepeatState::Off => RepeatState::Off,
-          RepeatState::Track => RepeatState::Track,
-          RepeatState::Context => RepeatState::Track,
-        };
-        self.0.handle_network_event(IoEvent::Repeat(r)).await;
+        self
+          .0
+          .handle_network_event(IoEvent::Repeat(c.repeat_state))
+          .await;
       }
     }
 
@@ -541,7 +539,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt play -n NAME ...
-  async fn play(&mut self, name: String, item: Type) -> Result<(), String> {
+  async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<(), String> {
     self
       .0
       .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
@@ -595,8 +593,16 @@ impl<'a> CliApp<'a> {
       }
     };
 
-    // Play the uri
-    self.play_uri(uri).await;
+    // Play or queue the uri
+    if queue {
+      self
+        .0
+        .handle_network_event(IoEvent::AddItemToQueue(uri))
+        .await;
+    } else {
+      self.play_uri(uri).await;
+    }
+
     Ok(())
   }
 
@@ -745,7 +751,10 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
         cli.play_uri(uri.to_string()).await;
       } else if let Some(name) = matches.value_of("name") {
         let category = Type::play_from_matches(matches);
-        if let Err(e) = cli.play(name.to_string(), category).await {
+        if let Err(e) = cli
+          .play(name.to_string(), category, matches.is_present("queue"))
+          .await
+        {
           return e;
         }
       }
