@@ -550,7 +550,7 @@ pub fn handler(key: Key, app: &mut App) {
           app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistSearch));
         }
       }
-      SearchResultBlock::ShowSearch => app.user_unfollow_show(),
+      SearchResultBlock::ShowSearch => app.user_unfollow_show(ActiveBlock::SearchResultBlock),
       SearchResultBlock::Empty => {}
     },
     Key::Char('r') => handle_recommended_tracks(app),

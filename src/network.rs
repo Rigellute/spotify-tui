@@ -61,6 +61,8 @@ pub enum IoEvent {
   CurrentUserSavedAlbumsContains(Vec<String>),
   CurrentUserSavedAlbumDelete(String),
   CurrentUserSavedAlbumAdd(String),
+  CurrentUserSavedShowDelete(String),
+  CurrentUserSavedShowAdd(String),
   UserUnfollowArtists(Vec<String>),
   UserFollowArtists(Vec<String>),
   UserFollowPlaylist(String, String, Option<bool>),
@@ -78,6 +80,7 @@ pub enum IoEvent {
   TransferPlaybackToDevice(String),
   GetAlbumForTrack(String),
   CurrentUserSavedTracksContains(Vec<String>),
+  GetSavedShows(Option<u32>),
   GetShowEpisodes(String),
   AddItemToQueue(String),
 }
@@ -215,6 +218,12 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedAlbumAdd(album_id) => {
         self.current_user_saved_album_add(album_id).await;
       }
+      IoEvent::CurrentUserSavedShowDelete(show_id) => {
+        self.current_user_saved_show_delete(show_id).await;
+      }
+      IoEvent::CurrentUserSavedShowAdd(show_id) => {
+        self.current_user_saved_show_add(show_id).await;
+      }
       IoEvent::UserUnfollowArtists(artist_ids) => {
         self.user_unfollow_artists(artist_ids).await;
       }
@@ -269,6 +278,9 @@ impl<'a> Network<'a> {
       }
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
+      }
+      IoEvent::GetSavedShows(offset) => {
+        self.get_saved_shows(offset).await;
       }
       IoEvent::GetShowEpisodes(show_id) => {
         self.get_show_episodes(show_id).await;
@@ -442,6 +454,25 @@ impl<'a> Network<'a> {
       app.made_for_you_tracks = Some(made_for_you_tracks);
       if app.get_current_route().id != RouteId::TrackTable {
         app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+      }
+    }
+  }
+
+  async fn get_saved_shows(&mut self, offset: Option<u32>) {
+    match self
+      .spotify
+      .get_saved_show(self.large_search_limit, offset)
+      .await
+    {
+      Ok(saved_shows) => {
+        // not to show a blank page
+        if !saved_shows.items.is_empty() {
+          let mut app = self.app.lock().await;
+          app.library.saved_shows.add_pages(saved_shows);
+        }
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
       }
     }
   }
@@ -1070,6 +1101,36 @@ impl<'a> Network<'a> {
         app.saved_album_ids_set.insert(album_id.to_owned());
       }
       Err(e) => self.handle_error(anyhow!(e)).await,
+    }
+  }
+
+  async fn current_user_saved_show_delete(&mut self, show_id: String) {
+    match self
+      .spotify
+      .remove_users_saved_shows(vec![show_id], None)
+      .await
+    {
+      Ok(_) => {
+        self.get_saved_shows(None).await;
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
+  async fn current_user_saved_show_add(&mut self, show_id: String) {
+    match self
+        .spotify
+        .save_shows(vec![show_id])
+        .await
+    {
+      Ok(_) => {
+        self.get_saved_shows(None).await;
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
     }
   }
 
