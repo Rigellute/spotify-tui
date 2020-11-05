@@ -304,6 +304,7 @@ pub struct App {
   pub size: Rect,
   pub small_search_limit: u32,
   pub song_progress_ms: u128,
+  pub seek_ms: Option<u128>,
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
   pub user: Option<PrivateUser>,
@@ -384,6 +385,7 @@ impl Default for App {
         tracks: None,
       },
       song_progress_ms: 0,
+      seek_ms: None,
       selected_device_index: None,
       selected_playlist_index: None,
       active_playlist_index: None,
@@ -436,6 +438,26 @@ impl App {
     }
   }
 
+  fn apply_seek(&mut self, seek_ms: u32) {
+    if let Some(CurrentlyPlaybackContext {
+      item: Some(item), ..
+    }) = &self.current_playback_context
+    {
+      let duration_ms = match item {
+        PlayingItem::Track(track) => track.duration_ms,
+        PlayingItem::Episode(episode) => episode.duration_ms,
+      };
+
+      let event = if seek_ms < duration_ms {
+        IoEvent::Seek(seek_ms)
+      } else {
+        IoEvent::NextTrack
+      };
+
+      self.dispatch(event);
+    }
+  }
+
   fn poll_current_playback(&mut self) {
     // Poll every 5 seconds
     let poll_interval_ms = 5_000;
@@ -447,7 +469,11 @@ impl App {
 
     if !self.is_fetching_current_playback && elapsed >= poll_interval_ms {
       self.is_fetching_current_playback = true;
-      self.dispatch(IoEvent::GetCurrentPlayback);
+      // Trigger the seek if the user has set a new position
+      match self.seek_ms {
+        Some(seek_ms) => self.apply_seek(seek_ms as u32),
+        None => self.dispatch(IoEvent::GetCurrentPlayback),
+      }
     }
   }
 
@@ -456,15 +482,20 @@ impl App {
     if let Some(CurrentlyPlaybackContext {
       item: Some(item),
       progress_ms: Some(progress_ms),
-      is_playing: true,
+      is_playing,
       ..
     }) = &self.current_playback_context
     {
-      let elapsed = self
-        .instant_since_last_current_playback_poll
-        .elapsed()
-        .as_millis()
-        + u128::from(*progress_ms);
+      // Update progress even when the song is not playing,
+      // because seeking is possible while paused
+      let elapsed = if *is_playing {
+        self
+          .instant_since_last_current_playback_poll
+          .elapsed()
+          .as_millis()
+      } else {
+        0u128
+      } + u128::from(*progress_ms);
 
       let duration_ms = match item {
         PlayingItem::Track(track) => track.duration_ms,
@@ -489,26 +520,31 @@ impl App {
         PlayingItem::Episode(episode) => episode.duration_ms,
       };
 
-      let event = if duration_ms - self.song_progress_ms as u32
-        > self.user_config.behavior.seek_milliseconds
-      {
-        IoEvent::Seek(self.song_progress_ms as u32 + self.user_config.behavior.seek_milliseconds)
-      } else {
-        IoEvent::NextTrack
+      let old_progress = match self.seek_ms {
+        Some(seek_ms) => seek_ms,
+        None => self.song_progress_ms,
       };
 
-      self.dispatch(event);
+      let new_progress = min(
+        old_progress as u32 + self.user_config.behavior.seek_milliseconds,
+        duration_ms,
+      );
+
+      self.seek_ms = Some(new_progress as u128);
     }
   }
 
   pub fn seek_backwards(&mut self) {
-    let new_progress = if self.song_progress_ms as u32 > self.user_config.behavior.seek_milliseconds
-    {
-      self.song_progress_ms as u32 - self.user_config.behavior.seek_milliseconds
+    let old_progress = match self.seek_ms {
+      Some(seek_ms) => seek_ms,
+      None => self.song_progress_ms,
+    };
+    let new_progress = if old_progress as u32 > self.user_config.behavior.seek_milliseconds {
+      old_progress as u32 - self.user_config.behavior.seek_milliseconds
     } else {
       0u32
     };
-    self.dispatch(IoEvent::Seek(new_progress));
+    self.seek_ms = Some(new_progress as u128);
   }
 
   pub fn get_recommendations_for_seed(

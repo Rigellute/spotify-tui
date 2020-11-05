@@ -338,6 +338,7 @@ impl<'a> Network<'a> {
     }
 
     let mut app = self.app.lock().await;
+    app.seek_ms.take();
     app.is_fetching_current_playback = false;
   }
 
@@ -644,6 +645,9 @@ impl<'a> Network<'a> {
         .await
       {
         Ok(()) => {
+          // Wait between seek and status query.
+          // Without it, the Spotify API may return the old progress.
+          tokio::time::delay_for(Duration::from_millis(1000)).await;
           self.get_current_playback().await;
         }
         Err(e) => {
