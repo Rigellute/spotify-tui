@@ -43,7 +43,7 @@ use tui::{
   backend::{Backend, CrosstermBackend},
   Terminal,
 };
-use user_config::{UserConfig, UserConfigPaths, PluginPaths};
+use user_config::{PluginPaths, UserConfig, UserConfigPaths};
 
 const SCOPES: [&str; 14] = [
   "playlist-read-collaborative",
@@ -150,12 +150,12 @@ async fn main() -> Result<()> {
   let mut user_config = UserConfig::new();
   if let Some(config_file_path) = matches.value_of("config") {
     let config_file_path = PathBuf::from(config_file_path);
-    let path = UserConfigPaths { config_file_path};
+    let path = UserConfigPaths { config_file_path };
     user_config.path_to_config.replace(path);
   }
   if let Some(plugin_path) = matches.value_of("plugin") {
     let plugin_path = PathBuf::from(plugin_path);
-    let path = PluginPaths { plugin_path};
+    let path = PluginPaths { plugin_path };
     user_config.path_to_plugin.replace(path);
   }
   user_config.load_config()?;

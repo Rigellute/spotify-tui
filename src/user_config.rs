@@ -474,7 +474,8 @@ impl UserConfig {
         self.path_to_plugin.as_ref().unwrap()
       }
     }
-    .plugin_path.clone();
+    .plugin_path
+    .clone();
 
     macro_rules! extract_plugin {
       ($kind: ident, $enum: ident) => {
@@ -560,11 +561,11 @@ impl UserConfig {
     match self.get_visualizer() {
       Ok(visualizer) => visualizer,
       Err(err) => VisualApp {
-            style: VisualStyle::Invalid,
-            warning: Some(err),
-            path: PathBuf::new(),
-            name: "<None>".to_string(),
-        },
+        style: VisualStyle::Invalid,
+        warning: Some(err),
+        path: PathBuf::new(),
+        name: "<None>".to_string(),
+      },
     }
   }
 }
