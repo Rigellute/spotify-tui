@@ -11,7 +11,7 @@ use rspotify::{
     page::{CursorBasedPage, Page},
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
-    show::{SimplifiedEpisode, SimplifiedShow, Show},
+    show::{Show, SimplifiedEpisode, SimplifiedShow},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
     user::PrivateUser,
     PlayingItem,

@@ -1120,11 +1120,7 @@ impl<'a> Network<'a> {
   }
 
   async fn current_user_saved_show_add(&mut self, show_id: String) {
-    match self
-        .spotify
-        .save_shows(vec![show_id])
-        .await
-    {
+    match self.spotify.save_shows(vec![show_id]).await {
       Ok(_) => {
         self.get_saved_shows(None).await;
       }

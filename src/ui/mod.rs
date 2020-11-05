@@ -572,8 +572,8 @@ where
 }
 
 pub fn draw_podcast_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-  where
-      B: Backend,
+where
+  B: Backend,
 {
   let header = TableHeader {
     id: TableId::Podcast,
