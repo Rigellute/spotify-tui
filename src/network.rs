@@ -75,7 +75,8 @@ pub enum IoEvent {
   SetArtistsToTable(Vec<FullArtist>),
   UserArtistFollowCheck(Vec<String>),
   GetAlbum(String),
-  SetDeviceIdInConfig(String),
+  TransferPlaybackToDevice(String),
+  GetAlbumForTrack(String),
   CurrentUserSavedTracksContains(Vec<String>),
   GetShowEpisodes(String),
   AddItemToQueue(String),
@@ -257,8 +258,11 @@ impl<'a> Network<'a> {
       IoEvent::GetAlbum(album_id) => {
         self.get_album(album_id).await;
       }
-      IoEvent::SetDeviceIdInConfig(device_id) => {
-        self.set_device_id_in_config(device_id).await;
+      IoEvent::TransferPlaybackToDevice(device_id) => {
+        self.transfert_playback_to_device(device_id).await;
+      }
+      IoEvent::GetAlbumForTrack(track_id) => {
+        self.get_album_for_track(track_id).await;
       }
       IoEvent::Shuffle(shuffle_state) => {
         self.shuffle(shuffle_state).await;
@@ -377,9 +381,7 @@ impl<'a> Network<'a> {
 
       let mut app = self.app.lock().await;
       app.playlist_tracks = Some(playlist_tracks);
-      if app.get_current_route().id != RouteId::TrackTable {
-        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
-      };
+      app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
     };
   }
 
@@ -1255,7 +1257,50 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn set_device_id_in_config(&mut self, device_id: String) {
+  async fn get_album_for_track(&mut self, track_id: String) {
+    match self.spotify.track(&track_id).await {
+      Ok(track) => {
+        // It is unclear when the id can ever be None, but perhaps a track can be album-less. If
+        // so, there isn't much to do here anyways, since we're looking for the parent album.
+        let album_id = match track.album.id {
+          Some(id) => id,
+          None => return,
+        };
+
+        if let Ok(album) = self.spotify.album(&album_id).await {
+          // The way we map to the UI is zero-indexed, but Spotify is 1-indexed.
+          let zero_indexed_track_number = track.track_number - 1;
+          let selected_album = SelectedFullAlbum {
+            album,
+            // Overflow should be essentially impossible here, so we prefer the cleaner 'as'.
+            selected_index: zero_indexed_track_number as usize,
+          };
+
+          let mut app = self.app.lock().await;
+
+          app.selected_album_full = Some(selected_album.clone());
+          app.saved_album_tracks_index = selected_album.selected_index;
+          app.album_table_context = AlbumTableContext::Full;
+          app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+        }
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
+  async fn transfert_playback_to_device(&mut self, device_id: String) {
+    match self.spotify.transfer_playback(&device_id, true).await {
+      Ok(()) => {
+        self.get_current_playback().await;
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+        return;
+      }
+    };
+
     match self.client_config.set_device_id(device_id) {
       Ok(()) => {
         let mut app = self.app.lock().await;
