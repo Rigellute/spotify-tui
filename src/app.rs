@@ -261,7 +261,7 @@ pub struct App {
   // Inputs:
   // input is the string for input;
   // input_idx is the index of the cursor in terms of character;
-  // input_cursor_position is the sum of the width of charaters preceding the cursor.
+  // input_cursor_position is the sum of the width of characters preceding the cursor.
   // Reason for this complication is due to non-ASCII characters, they may
   // take more than 1 bytes to store and more than 1 character width to display.
   pub input: Vec<char>,
@@ -270,6 +270,7 @@ pub struct App {
   pub liked_song_ids_set: HashSet<String>,
   pub followed_artist_ids_set: HashSet<String>,
   pub saved_album_ids_set: HashSet<String>,
+  pub saved_show_ids_set: HashSet<String>,
   pub large_search_limit: u32,
   pub library: Library,
   pub playlist_offset: u32,
@@ -340,6 +341,7 @@ impl Default for App {
       liked_song_ids_set: HashSet::new(),
       followed_artist_ids_set: HashSet::new(),
       saved_album_ids_set: HashSet::new(),
+      saved_show_ids_set: HashSet::new(),
       navigation_stack: vec![DEFAULT_ROUTE],
       large_search_limit: 20,
       small_search_limit: 4,
@@ -893,7 +895,7 @@ impl App {
       None => {
         if let Some(saved_shows) = &self.library.saved_shows.get_results(None) {
           let offset = Some(saved_shows.offset + saved_shows.limit);
-          self.dispatch(IoEvent::GetSavedShows(offset));
+          self.dispatch(IoEvent::GetCurrentUserSavedShows(offset));
         }
       }
     }
@@ -1000,8 +1002,21 @@ impl App {
     }
   }
 
-  pub fn user_follow_show(&mut self) {
-    unimplemented!();
+  pub fn user_follow_show(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(shows) = &self.search_results.shows {
+          if let Some(selected_index) = self.search_results.selected_shows_index {
+            let show_id = shows.items[selected_index].id.to_owned();
+            self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+          }
+        }
+      }
+      ActiveBlock::EpisodeTable => {
+        unimplemented!();
+      }
+      _ => (),
+    }
   }
 
   pub fn user_unfollow_show(&mut self, block: ActiveBlock) {
@@ -1015,6 +1030,14 @@ impl App {
         }
       }
       ActiveBlock::SearchResultBlock => {
+        if let Some(shows) = &self.search_results.shows {
+          if let Some(selected_index) = self.search_results.selected_shows_index {
+            let show_id = shows.items[selected_index].id.to_owned();
+            self.dispatch(IoEvent::CurrentUserSavedShowDelete(show_id));
+          }
+        }
+      }
+      ActiveBlock::EpisodeTable => {
         unimplemented!();
       }
       _ => (),

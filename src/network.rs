@@ -61,8 +61,6 @@ pub enum IoEvent {
   CurrentUserSavedAlbumsContains(Vec<String>),
   CurrentUserSavedAlbumDelete(String),
   CurrentUserSavedAlbumAdd(String),
-  CurrentUserSavedShowDelete(String),
-  CurrentUserSavedShowAdd(String),
   UserUnfollowArtists(Vec<String>),
   UserFollowArtists(Vec<String>),
   UserFollowPlaylist(String, String, Option<bool>),
@@ -80,7 +78,10 @@ pub enum IoEvent {
   TransferPlaybackToDevice(String),
   GetAlbumForTrack(String),
   CurrentUserSavedTracksContains(Vec<String>),
-  GetSavedShows(Option<u32>),
+  GetCurrentUserSavedShows(Option<u32>),
+  CurrentUserSavedShowsContains(Vec<String>),
+  CurrentUserSavedShowDelete(String),
+  CurrentUserSavedShowAdd(String),
   GetShowEpisodes(String),
   AddItemToQueue(String),
 }
@@ -218,12 +219,6 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedAlbumAdd(album_id) => {
         self.current_user_saved_album_add(album_id).await;
       }
-      IoEvent::CurrentUserSavedShowDelete(show_id) => {
-        self.current_user_saved_show_delete(show_id).await;
-      }
-      IoEvent::CurrentUserSavedShowAdd(show_id) => {
-        self.current_user_saved_show_add(show_id).await;
-      }
       IoEvent::UserUnfollowArtists(artist_ids) => {
         self.user_unfollow_artists(artist_ids).await;
       }
@@ -279,8 +274,17 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedTracksContains(track_ids) => {
         self.current_user_saved_tracks_contains(track_ids).await;
       }
-      IoEvent::GetSavedShows(offset) => {
-        self.get_saved_shows(offset).await;
+      IoEvent::GetCurrentUserSavedShows(offset) => {
+        self.get_current_user_saved_shows(offset).await;
+      }
+      IoEvent::CurrentUserSavedShowsContains(show_ids) => {
+        self.current_user_saved_shows_contains(show_ids).await;
+      }
+      IoEvent::CurrentUserSavedShowDelete(show_id) => {
+        self.current_user_saved_shows_delete(show_id).await;
+      }
+      IoEvent::CurrentUserSavedShowAdd(show_id) => {
+        self.current_user_saved_shows_add(show_id).await;
       }
       IoEvent::GetShowEpisodes(show_id) => {
         self.get_show_episodes(show_id).await;
@@ -458,7 +462,7 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_saved_shows(&mut self, offset: Option<u32>) {
+  async fn get_current_user_saved_shows(&mut self, offset: Option<u32>) {
     match self
       .spotify
       .get_saved_show(self.large_search_limit, offset)
@@ -474,6 +478,23 @@ impl<'a> Network<'a> {
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
+    }
+  }
+
+  async fn current_user_saved_shows_contains(&mut self, show_ids: Vec<String>) {
+    if let Ok(are_followed) = self
+      .spotify
+      .check_users_saved_shows(show_ids.to_owned())
+      .await
+    {
+      let mut app = self.app.lock().await;
+      show_ids.iter().enumerate().for_each(|(i, id)| {
+        if are_followed[i] {
+          app.saved_show_ids_set.insert(id.to_owned());
+        } else {
+          app.saved_show_ids_set.remove(id);
+        }
+      })
     }
   }
 
@@ -576,6 +597,15 @@ impl<'a> Network<'a> {
 
         // Check if these albums are saved
         app.dispatch(IoEvent::CurrentUserSavedAlbumsContains(album_ids));
+
+        let show_ids = show_results
+          .items
+          .iter()
+          .map(|show| show.id.to_owned())
+          .collect();
+
+        // check if these shows are saved
+        app.dispatch(IoEvent::CurrentUserSavedShowsContains(show_ids));
 
         app.search_results.tracks = Some(track_results);
         app.search_results.artists = Some(artist_results);
@@ -1104,14 +1134,16 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn current_user_saved_show_delete(&mut self, show_id: String) {
+  async fn current_user_saved_shows_delete(&mut self, show_id: String) {
     match self
       .spotify
-      .remove_users_saved_shows(vec![show_id], None)
+      .remove_users_saved_shows(vec![show_id.to_owned()], None)
       .await
     {
       Ok(_) => {
-        self.get_saved_shows(None).await;
+        self.get_current_user_saved_shows(None).await;
+        let mut app = self.app.lock().await;
+        app.saved_show_ids_set.remove(&show_id.to_owned());
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -1119,10 +1151,12 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn current_user_saved_show_add(&mut self, show_id: String) {
-    match self.spotify.save_shows(vec![show_id]).await {
+  async fn current_user_saved_shows_add(&mut self, show_id: String) {
+    match self.spotify.save_shows(vec![show_id.to_owned()]).await {
       Ok(_) => {
-        self.get_saved_shows(None).await;
+        self.get_current_user_saved_shows(None).await;
+        let mut app = self.app.lock().await;
+        app.saved_show_ids_set.insert(show_id.to_owned());
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
