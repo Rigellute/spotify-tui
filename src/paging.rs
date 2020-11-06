@@ -7,10 +7,11 @@ use rspotify::model::{
   album::SavedAlbum,
   artist::FullArtist,
   page::{CursorBasedPage, Page},
-  playlist::SimplifiedPlaylist,
+  playlist::{PlaylistTrack, SimplifiedPlaylist},
   show::SimplifiedEpisode,
-  track::SavedTrack,
+  track::{FullTrack, SavedTrack, SimplifiedTrack},
 };
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -76,14 +77,57 @@ impl Pageable for SimplifiedEpisode {
   }
 }
 
+// Track table context newtypes
+macro_rules! wrap_with_type {
+  ($old:ty,$new:ident) => {
+    #[derive(Clone)]
+    pub struct $new($old);
+
+    impl Deref for $new {
+      type Target = $old;
+
+      fn deref(&self) -> &$old {
+        &self.0
+      }
+    }
+
+    impl From<$old> for $new {
+      fn from(o: $old) -> Self {
+        $new(o)
+      }
+    }
+  };
+}
+
+wrap_with_type!(FullTrack, MyPlaylistsTrack);
+wrap_with_type!(SimplifiedTrack, AlbumSearchTrack);
+wrap_with_type!(FullTrack, PlaylistSearchTrack);
+wrap_with_type!(FullTrack, RecommendedTrack);
+wrap_with_type!(PlaylistTrack, MadeForYouTrack);
+
+
+impl Pageable for FullTrack {}
+
 /// This struct will hold paged results from the Spotify API. The idea is to collect
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct ScrollableResultPages<T> {
   pub items: Vec<T>,
   next: Option<String>,
   pub selected_index: usize,
   pub ui_view_height: Option<Window>,
   pub fetching_page: Arc<AtomicBool>,
+}
+
+impl<T> Default for ScrollableResultPages<T> {
+  fn default() -> Self {
+    Self {
+      items: Vec::new(),
+      next: Default::default(),
+      selected_index: Default::default(),
+      ui_view_height: Default::default(),
+      fetching_page: Default::default(),
+    }
+  }
 }
 
 impl<T: Pageable + Clone> ScrollableResultPages<T> {
@@ -109,6 +153,14 @@ impl<T: Pageable + Clone> ScrollableResultPages<T> {
   pub fn add_page(&mut self, page: &dyn PageAdapter<T>) {
     self.items.extend_from_slice(page.items());
     self.next = page.next();
+  }
+
+  pub fn add_page_items(&mut self, page_items: &[T]) {
+    self.items.extend_from_slice(page_items);
+  }
+
+  pub fn add_page_next(&mut self, next: Option<String>) {
+    self.next = next;
   }
 
   pub fn get_selected_item(&self) -> Option<&T> {
