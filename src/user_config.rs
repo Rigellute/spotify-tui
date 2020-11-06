@@ -500,9 +500,9 @@ impl UserConfig {
 
           let app = VisualApp {
             style: VisualStyle::$enum,
-            warning: warning,
             path: plugin_file,
             name: name.to_string(),
+            warning,
           };
           self.visuals.plugins.push(app);
           index += 1;

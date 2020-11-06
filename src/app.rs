@@ -420,7 +420,7 @@ impl App {
       io_tx: Some(io_tx),
       user_config,
       spotify_token_expiry,
-      visualizer: visualizer,
+      visualizer,
       ..App::default()
     }
   }
