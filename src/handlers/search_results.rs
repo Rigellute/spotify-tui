@@ -292,7 +292,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
       ) {
         if let Some(album) = albums_result.items.get(index.to_owned()).cloned() {
           app.track_table.context = Some(TrackTableContext::AlbumSearch);
-          app.dispatch(IoEvent::GetAlbumTracks(Box::new(album)));
+          app.dispatch(IoEvent::GetAlbumTracks(album.id, 0));
         };
       }
     }

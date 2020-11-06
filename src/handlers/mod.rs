@@ -218,7 +218,7 @@ fn handle_jump_to_album(app: &mut App) {
   {
     match item {
       PlayingItem::Track(track) => {
-        app.dispatch(IoEvent::GetAlbumTracks(Box::new(track.album)));
+        app.dispatch(IoEvent::GetAlbumTracks(track.album.id, 0));
       }
       PlayingItem::Episode(_episode) => {
         // Do nothing for episode (yet!)

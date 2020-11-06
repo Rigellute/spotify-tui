@@ -111,6 +111,12 @@ impl Pageable for MadeForYouTrack {
   }
 }
 
+impl Pageable for AlbumSearchTrack {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
+    next.and(Some(IoEvent::GetAlbumTracks(None, offset)))
+  }
+}
+
 impl Pageable for FullTrack {}
 
 /// This struct will hold paged results from the Spotify API. The idea is to collect

@@ -4,7 +4,7 @@ use crate::{
     SelectedFullAlbum, TrackTableContext,
   },
   config::ClientConfig,
-  paging::{MadeForYouTrack, ScrollableResultPages},
+  paging::{AlbumSearchTrack, MadeForYouTrack, ScrollableResultPages},
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -51,7 +51,7 @@ pub enum IoEvent {
   PausePlayback,
   ChangeVolume(u8),
   GetArtist(String, String, Option<Country>),
-  GetAlbumTracks(Box<SimplifiedAlbum>),
+  GetAlbumTracks(Option<String>, u32),
   GetRecommendationsForSeed(
     Option<Vec<String>>,
     Option<Vec<String>>,
@@ -197,8 +197,8 @@ impl<'a> Network<'a> {
       IoEvent::GetArtist(artist_id, input_artist_name, country) => {
         self.get_artist(artist_id, input_artist_name, country).await;
       }
-      IoEvent::GetAlbumTracks(album) => {
-        self.get_album_tracks(album).await;
+      IoEvent::GetAlbumTracks(album_id, offset) => {
+        self.get_album_tracks(album_id, offset).await;
       }
       IoEvent::GetRecommendationsForSeed(seed_artists, seed_tracks, first_track, country) => {
         self
@@ -849,29 +849,46 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_album_tracks(&mut self, album: Box<SimplifiedAlbum>) {
-    if let Some(album_id) = &album.id {
+  async fn get_album_tracks(&mut self, album_id: Option<String>, offset: u32) {
+    let mut app = self.app.lock().await;
+    if album_id.is_some() {
+      if album_id == app.track_table.album_search_tracks.context_id && offset == 0 {
+        if app.get_current_route().id != RouteId::AlbumTracks {
+          app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+        }
+        return;
+      } else if album_id != app.track_table.album_search_tracks.context_id {
+        app.track_table.album_search_tracks.context_id = album_id;
+        app.track_table.album_search_tracks.tracks = ScrollableResultPages::new();
+      }
+    }
+
+    if let Some(album_id) = app.track_table.album_search_tracks.context_id.clone() {
       match self
         .spotify
         .album_track(&album_id.clone(), self.large_search_limit, 0)
         .await
       {
-        Ok(tracks) => {
-          let track_ids = tracks
-            .items
-            .iter()
-            .filter_map(|item| item.id.clone())
-            .collect::<Vec<String>>();
+        Ok(page) => {
+          let tracks = page.items;
+          app.track_table.album_search_tracks.tracks.add_page_items(
+            &tracks
+              .clone()
+              .into_iter()
+              .map(Into::into)
+              .collect::<Vec<AlbumSearchTrack>>(),
+          );
+          app
+            .track_table
+            .album_search_tracks
+            .tracks
+            .add_page_next(page.next);
 
-          let mut app = self.app.lock().await;
-          app.selected_album_simplified = Some(SelectedAlbum {
-            album: *album,
-            tracks,
-            selected_index: 0,
-          });
+          if app.get_current_route().id != RouteId::AlbumTracks {
+            app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+          }
 
-          app.album_table_context = AlbumTableContext::Simplified;
-          app.push_navigation_stack(RouteId::AlbumTracks, ActiveBlock::AlbumTracks);
+          let track_ids = tracks.into_iter().filter_map(|track| track.id).collect::<Vec<String>>();
           app.dispatch(IoEvent::CurrentUserSavedTracksContains(track_ids));
         }
         Err(e) => {
@@ -879,6 +896,13 @@ impl<'a> Network<'a> {
         }
       }
     }
+
+    app
+      .track_table
+      .album_search_tracks
+      .tracks
+      .fetching_page
+      .store(false, Ordering::Relaxed);
   }
 
   async fn get_recommendations_for_seed(

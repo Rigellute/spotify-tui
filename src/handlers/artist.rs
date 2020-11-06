@@ -207,7 +207,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
           .cloned()
         {
           app.track_table.context = Some(TrackTableContext::AlbumSearch);
-          app.dispatch(IoEvent::GetAlbumTracks(Box::new(selected_album)));
+          app.dispatch(IoEvent::GetAlbumTracks(selected_album.id, 0));
         }
       }
       ArtistBlock::RelatedArtists => {
