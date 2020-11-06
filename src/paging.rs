@@ -105,6 +105,11 @@ wrap_with_type!(FullTrack, PlaylistSearchTrack);
 wrap_with_type!(FullTrack, RecommendedTrack);
 wrap_with_type!(PlaylistTrack, MadeForYouTrack);
 
+impl Pageable for MadeForYouTrack {
+  fn get_dispatch(next: Option<String>, offset: u32) -> Option<IoEvent> {
+    next.and(Some(IoEvent::GetMadeForYouPlaylistTracks(None, offset)))
+  }
+}
 
 impl Pageable for FullTrack {}
 

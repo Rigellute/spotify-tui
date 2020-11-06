@@ -14,12 +14,12 @@ pub fn handler(key: Key, app: &mut App) {
         .handle_list_navigation_event(key, app);
     }
     Key::Enter => {
-      app.track_table.context = Some(TrackTableContext::MadeForYou);
-      app.playlist_offset = 0;
       if let Some(selected_playlist) = app.library.made_for_you_playlists.get_selected_item() {
         let playlist_id = selected_playlist.id.to_owned();
+        app.track_table.context = Some(TrackTableContext::MadeForYou);
+        app.playlist_offset = 0;
         app.dispatch(IoEvent::GetMadeForYouPlaylistTracks(
-          playlist_id,
+          Some(playlist_id),
           app.made_for_you_offset,
         ));
       }

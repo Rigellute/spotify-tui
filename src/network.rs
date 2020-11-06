@@ -4,7 +4,7 @@ use crate::{
     SelectedFullAlbum, TrackTableContext,
   },
   config::ClientConfig,
-  paging::ScrollableResultPages,
+  paging::{MadeForYouTrack, ScrollableResultPages},
 };
 use anyhow::anyhow;
 use rspotify::{
@@ -38,7 +38,7 @@ pub enum IoEvent {
   GetPlaylists,
   GetDevices,
   GetSearchResults(String, Option<Country>),
-  GetMadeForYouPlaylistTracks(String, u32),
+  GetMadeForYouPlaylistTracks(Option<String>, u32),
   GetPlaylistTracks(String, u32),
   GetCurrentSavedTracks(Option<u32>),
   StartPlayback(Option<String>, Option<Vec<String>>, Option<usize>),
@@ -398,8 +398,7 @@ impl<'a> Network<'a> {
   }
 
   async fn set_tracks_to_table(&mut self, tracks: Vec<FullTrack>) {
-    let mut app = self.app.lock().await;
-    app.track_table.tracks = tracks.clone();
+    let app = self.app.lock().await;
 
     // Send this event round (don't block here)
     app.dispatch(IoEvent::CurrentUserSavedTracksContains(
@@ -410,31 +409,49 @@ impl<'a> Network<'a> {
     ));
   }
 
-  async fn get_made_for_you_playlist_tracks(
-    &mut self,
-    playlist_id: String,
-    made_for_you_offset: u32,
-  ) {
-    if let Ok(made_for_you_tracks) = self
-      .spotify
-      .user_playlist_tracks(
-        "spotify",
-        &playlist_id,
-        None,
-        Some(self.large_search_limit),
-        Some(made_for_you_offset),
-        None,
-      )
-      .await
-    {
-      self
-        .set_playlist_tracks_to_table(&made_for_you_tracks)
-        .await;
+  async fn get_made_for_you_playlist_tracks(&mut self, playlist_id: Option<String>, offset: u32) {
+    let mut app = self.app.lock().await;
+    if playlist_id.is_some() {
+      if app.track_table.made_for_you_tracks.context_id == playlist_id && offset == 0 {
+        // We already have the tracks for this playlist loaded. Navigate and return
+        if app.get_current_route().id != RouteId::MadeForYou {
+          app.push_navigation_stack(RouteId::MadeForYou, ActiveBlock::MadeForYou);
+        }
+        return;
+      } else if playlist_id != app.track_table.made_for_you_tracks.context_id {
+        app.track_table.made_for_you_tracks.context_id = playlist_id;
+        app.track_table.made_for_you_tracks.tracks = ScrollableResultPages::new();
+      }
+    }
 
-      let mut app = self.app.lock().await;
-      app.made_for_you_tracks = Some(made_for_you_tracks);
-      if app.get_current_route().id != RouteId::TrackTable {
-        app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+    if let Some(playlist_id) = &app.track_table.made_for_you_tracks.context_id {
+      if let Ok(made_for_you_tracks) = self
+        .spotify
+        .user_playlist_tracks(
+          "spotify",
+          &playlist_id,
+          None,
+          Some(self.large_search_limit),
+          Some(offset),
+          None,
+        )
+        .await
+      {
+        app.track_table.made_for_you_tracks.tracks.add_page_items(
+          &made_for_you_tracks
+            .items
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<MadeForYouTrack>>(),
+        );
+        app
+          .track_table
+          .made_for_you_tracks
+          .tracks
+          .add_page_next(made_for_you_tracks.next);
+        if app.get_current_route().id != RouteId::TrackTable {
+          app.push_navigation_stack(RouteId::TrackTable, ActiveBlock::TrackTable);
+        }
       }
     }
   }
@@ -587,12 +604,6 @@ impl<'a> Network<'a> {
     {
       Ok(saved_tracks) => {
         // TODO: use the scrollable object directly instead of copying out items
-        app.track_table.tracks = saved_tracks
-          .items
-          .clone()
-          .into_iter()
-          .map(|item| item.track)
-          .collect::<Vec<FullTrack>>();
 
         saved_tracks.items.iter().for_each(|item| {
           if let Some(track_id) = &item.track.id {

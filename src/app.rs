@@ -1,7 +1,10 @@
 use super::user_config::UserConfig;
 use crate::{
   network::IoEvent,
-  paging::{MadeForYouPlaylist, SavedArtist, ScrollableResultPages},
+  paging::{
+    AlbumSearchTrack, MadeForYouPlaylist, MadeForYouTrack, MyPlaylistsTrack, Pageable,
+    PlaylistSearchTrack, RecommendedTrack, SavedArtist, ScrollableResultPages,
+  },
   ui::UIView,
 };
 use anyhow::anyhow;
@@ -151,7 +154,6 @@ pub struct Route {
   pub hovered_block: ActiveBlock,
 }
 
-// Is it possible to compose enums?
 #[derive(PartialEq, Debug)]
 pub enum TrackTableContext {
   MyPlaylists,
@@ -162,7 +164,6 @@ pub enum TrackTableContext {
   MadeForYou,
 }
 
-// Is it possible to compose enums?
 #[derive(Clone, PartialEq, Debug, Copy)]
 pub enum AlbumTableContext {
   Simplified,
@@ -190,27 +191,40 @@ pub struct SearchResult {
   pub selected_block: SearchResultBlock,
 }
 
+pub struct TrackTableTracks<T>
+where
+  T: Pageable,
+{
+  pub context_id: Option<String>,
+  pub tracks: ScrollableResultPages<T>,
+}
+
+impl<T: Pageable> Default for TrackTableTracks<T> {
+  fn default() -> Self {
+    Self {
+      tracks: Default::default(),
+      context_id: Default::default(),
+    }
+  }
+}
+
 #[derive(Default)]
 pub struct TrackTable {
-  pub tracks: Vec<FullTrack>,
-  pub selected_index: usize,
+  pub made_for_you_tracks: TrackTableTracks<MadeForYouTrack>,
+  pub album_search_tracks: TrackTableTracks<AlbumSearchTrack>,
+  //pub my_playlist_tracks: TrackTableTracks<MyPlaylistsTrack>,
+  //pub playlist_search_tracks: TrackTableTracks<PlaylistSearchTrack>,
+  //pub recommended_tracks: TrackTableTracks<RecommendedTrack>,
+  pub saved_tracks: TrackTableTracks<SavedTrack>,
+  pub tracks: ScrollableResultPages<FullTrack>,
   pub context: Option<TrackTableContext>,
 }
 
+#[derive(Default)]
 pub struct EpisodeTable {
   pub show_id: Option<String>,
   pub episodes: ScrollableResultPages<SimplifiedEpisode>,
   pub reversed: bool,
-}
-
-impl Default for EpisodeTable {
-  fn default() -> Self {
-    Self {
-      show_id: Default::default(),
-      episodes: ScrollableResultPages::new(),
-      reversed: Default::default(),
-    }
-  }
 }
 
 #[derive(Clone)]

@@ -768,6 +768,7 @@ where
   let items = app
     .track_table
     .tracks
+    .items
     .iter()
     .map(|item| TableItem {
       id: item.id.clone().unwrap_or_else(|| "".to_string()),
@@ -798,7 +799,7 @@ where
     layout_chunk,
     (&recommendations_ui[..], &header),
     &items,
-    app.track_table.selected_index,
+    app.track_table.tracks.selected_index,
     highlight_state,
   )
 }
@@ -847,6 +848,7 @@ where
   let items = app
     .track_table
     .tracks
+    .items
     .iter()
     .map(|item| TableItem {
       id: item.id.clone().unwrap_or_else(|| "".to_string()),
@@ -866,7 +868,7 @@ where
     layout_chunk,
     ("Songs", &header),
     &items,
-    app.track_table.selected_index,
+    app.track_table.tracks.selected_index,
     highlight_state,
   )
 }
