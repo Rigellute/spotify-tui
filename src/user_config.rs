@@ -1,3 +1,4 @@
+use crate::error::VisualizationError;
 use crate::event::Key;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
@@ -245,7 +246,7 @@ pub struct VisualsString {
 
 #[derive(Clone)]
 pub struct VisualApp {
-  pub warning: Option<String>,
+  pub warning: Option<VisualizationError>,
   pub path: PathBuf,
   pub style: VisualStyle,
   pub name: String,
@@ -351,7 +352,7 @@ impl UserConfig {
 
           if self.path_to_plugin.is_none() {
             let paths = PluginPaths {
-              plugin_path: plugin_dir.to_path_buf(),
+              plugin_path: plugin_dir,
             };
             self.path_to_plugin = Some(paths);
           }
@@ -466,7 +467,7 @@ impl UserConfig {
   pub fn load_visuals(&mut self, visuals: VisualsString) -> Result<()> {
     let mut index: usize = 0;
     let mut default_index: Option<usize> = None;
-    let default_plugin = visuals.default.unwrap_or("<None>".to_string());
+    let default_plugin = visuals.default.unwrap_or_else(|| "<None>".to_string());
     let plugin_path = match &self.path_to_plugin {
       Some(path) => path,
       None => {
@@ -495,14 +496,14 @@ impl UserConfig {
           let warning = if plugin_file.exists() {
             None
           } else {
-            Some("Plugin cannot be found.".to_string())
+            Some(VisualizationError::from("Plugin cannot be found."))
           };
 
           let app = VisualApp {
             style: VisualStyle::$enum,
-            warning: warning,
             path: plugin_file,
             name: name.to_string(),
+            warning,
           };
           self.visuals.plugins.push(app);
           index += 1;
@@ -551,10 +552,10 @@ impl UserConfig {
     Ok(())
   }
 
-  pub fn get_visualizer(&self) -> Result<VisualApp, String> {
+  pub fn get_visualizer(&self) -> Result<VisualApp, VisualizationError> {
     match self.visuals.current {
       Some(index) => Ok(self.visuals.plugins[index].clone()),
-      None => Err("No visualizer plugin set.".to_string()),
+      None => Err(VisualizationError::from("No visualizer plugin set.")),
     }
   }
   pub fn get_visualizer_or_default(&self) -> VisualApp {

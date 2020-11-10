@@ -1,5 +1,6 @@
 use super::util;
 use crate::app::App;
+use crate::error::VisualizationError;
 use crate::user_config::VisualStyle;
 use rhai::{
   serde::{from_dynamic, to_dynamic},
@@ -92,10 +93,9 @@ where
                     .to_vec()
                     .iter()
                     .map(|item| {
-                      item
-                        .clone()
-                        .try_cast::<String>()
-                        .unwrap_or("Bad analysis provided, could not cast to String.".to_string())
+                      item.clone().try_cast::<String>().unwrap_or_else(|| {
+                        "Bad analysis provided, could not cast to String.".to_string()
+                      })
                     })
                     .collect()
                 }
@@ -121,7 +121,7 @@ where
     // Invalid viz
     match visual_app.style {
       VisualStyle::Bar => {
-        let data: Result<Vec<(String, u64)>, String> = {
+        let data: Result<Vec<(String, u64)>, VisualizationError> = {
           // TODO: Set up raw engine
           match &app.visualizer {
             Ok(ast) => {
@@ -142,19 +142,31 @@ where
                             .labels
                             .iter()
                             .zip(data.counts.iter())
-                            .map(|(label, count)| (label.clone(), count.clone()))
+                            .map(|(label, count)| (label.clone(), *count))
                             .collect(),
                         )
                       }
-                      Err(err) => Err(format!("Unable to type cast: {}", err)),
+                      Err(err) => Err(VisualizationError::from(format!(
+                        "Unable to type cast: {}",
+                        err
+                      ))),
                     },
-                    Err(err) => Err(format!("Error in script: {}", err)),
+                    Err(err) => Err(VisualizationError::from(format!(
+                      "Error in script: {}",
+                      err
+                    ))),
                   }
                 }
-                Err(err) => Err(format!("Unable to serialize spotify information: {}", err)),
+                Err(err) => Err(VisualizationError::from(format!(
+                  "Unable to serialize spotify information: {}",
+                  err
+                ))),
               }
             }
-            Err(err) => Err(format!("Compilation error: {}", err)),
+            Err(err) => Err(VisualizationError::from(format!(
+              "Compilation error: {}",
+              err
+            ))),
           }
         };
         match data {
@@ -175,7 +187,7 @@ where
               );
             f.render_widget(analysis_bar, chunks[1]);
           }
-          Err(message) => {
+          Err(VisualizationError::Warning(message)) => {
             let ts: Vec<Spans> = vec![Spans::from(message)];
             let p = Paragraph::new(ts)
               .block(bar_chart_block)
