@@ -1,6 +1,7 @@
 mod app;
 mod banner;
 mod config;
+mod error;
 mod event;
 mod handlers;
 mod network;

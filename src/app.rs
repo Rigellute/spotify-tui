@@ -1,4 +1,5 @@
 use super::user_config::UserConfig;
+use crate::error::VisualizationError;
 use crate::network::IoEvent;
 use anyhow::anyhow;
 use rhai::{Engine, AST};
@@ -45,14 +46,17 @@ const DEFAULT_ROUTE: Route = Route {
   hovered_block: ActiveBlock::Library,
 };
 
-pub fn load_visuals(user_config: &UserConfig) -> Result<AST, String> {
+pub fn load_visuals(user_config: &UserConfig) -> Result<AST, VisualizationError> {
   let engine = Engine::new();
   // First read from script so we don't have to keep recompiling
   // Make struct to serialize from: https://schungx.github.io/rhai/rust/serde.html#deserialization
   // Read scripts from configuration
   match user_config.get_visualizer() {
     Ok(app) => match engine.compile_file(app.path) {
-      Err(err) => Err(format!("Compilation Error: {}", err)),
+      Err(err) => Err(VisualizationError::Warning(format!(
+        "Compilation Error: {}",
+        err
+      ))),
       Ok(ast) => Ok(ast),
     },
     Err(message) => Err(message),
@@ -323,7 +327,7 @@ pub struct App {
   pub dialog: Option<String>,
   pub confirm: bool,
   // Exposed Rhai engine to allow for module extensions.
-  pub visualizer: Result<AST, String>,
+  pub visualizer: Result<AST, VisualizationError>,
 }
 
 impl Default for App {
@@ -404,7 +408,7 @@ impl Default for App {
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
-      visualizer: Err("Visualizer never initialized.".to_string()),
+      visualizer: Err(VisualizationError::from("Visualizer never initialized.")),
     }
   }
 }
