@@ -449,8 +449,8 @@ impl UserConfig {
     }
   }
 
-  pub fn liked_icon(&self) -> &str {
-    &self.behavior.liked_icon
+  pub fn padded_liked_icon(&self) -> String {
+    format!("{} ", &self.behavior.liked_icon)
   }
 }
 
