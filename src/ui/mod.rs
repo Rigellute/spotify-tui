@@ -395,7 +395,7 @@ where
             song_name += "▶ "
           }
           if app.liked_song_ids_set.contains(&id) {
-            song_name += "♥ ";
+            song_name += app.user_config.liked_icon();
           }
 
           song_name += &item.name;
@@ -423,7 +423,7 @@ where
         .map(|item| {
           let mut artist = String::new();
           if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
-            artist.push_str("♥ ");
+            artist.push_str(app.user_config.liked_icon());
           }
           artist.push_str(&item.name.to_owned());
           artist
@@ -457,7 +457,7 @@ where
           let mut album_artist = String::new();
           if let Some(album_id) = &item.id {
             if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-              album_artist.push_str("♥ ");
+              album_artist.push_str(app.user_config.liked_icon());
             }
           }
           album_artist.push_str(&format!(
@@ -925,7 +925,7 @@ where
       };
 
       let track_name = if app.liked_song_ids_set.contains(&item_id) {
-        format!("♥ {}", name)
+        format!("{} {}", app.user_config.liked_icon(), name)
       } else {
         name
       };
@@ -1191,7 +1191,7 @@ where
         let mut album_artist = String::new();
         if let Some(album_id) = &item.id {
           if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-            album_artist.push_str("♥ ");
+            album_artist.push_str(app.user_config.liked_icon());
           }
         }
         album_artist.push_str(&format!(
@@ -1219,7 +1219,7 @@ where
       .map(|item| {
         let mut artist = String::new();
         if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
-          artist.push_str("♥ ");
+          artist.push_str(app.user_config.liked_icon());
         }
         artist.push_str(&item.name.to_owned());
         artist
@@ -1347,7 +1347,11 @@ where
       .map(|album_page| TableItem {
         id: album_page.album.id.to_owned(),
         format: vec![
-          format!("♥ {}", &album_page.album.name),
+          format!(
+            "{} {}",
+            app.user_config.liked_icon(),
+            &album_page.album.name
+          ),
           create_artist_string(&album_page.album.artists),
           album_page.album.release_date.to_owned(),
         ],
@@ -1731,10 +1735,10 @@ fn draw_table<B>(
           }
         }
 
-        // Show this ♥ if the song is liked
+        // Show this the liked icon if the song is liked
         if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
           if app.liked_song_ids_set.contains(item.id.as_str()) {
-            formatted_row[liked_idx] = " ♥".to_string();
+            formatted_row[liked_idx] = app.user_config.liked_icon().to_string();
           }
         }
       }
