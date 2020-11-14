@@ -925,7 +925,7 @@ where
       };
 
       let track_name = if app.liked_song_ids_set.contains(&item_id) {
-        format!("{} {}", &app.user_config.padded_liked_icon(), name)
+        format!("{}{}", &app.user_config.padded_liked_icon(), name)
       } else {
         name
       };
@@ -1348,7 +1348,7 @@ where
         id: album_page.album.id.to_owned(),
         format: vec![
           format!(
-            "{} {}",
+            "{}{}",
             app.user_config.padded_liked_icon(),
             &album_page.album.name
           ),
