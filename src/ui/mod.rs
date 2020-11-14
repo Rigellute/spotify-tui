@@ -23,7 +23,7 @@ use tui::{
 use util::{
   create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
-  millis_to_minutes, SMALL_TERMINAL_WIDTH,
+  millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
 pub enum TableId {
@@ -831,20 +831,23 @@ pub fn draw_basic_view<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
 {
-  let chunks = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints(
-      [
-        Constraint::Percentage(44),
-        Constraint::Min(6),
-        Constraint::Percentage(44),
-      ]
-      .as_ref(),
-    )
-    .margin(4)
-    .split(f.size());
+  // If space is negative, do nothing because the widget would not fit
+  if let Some(s) = app.size.height.checked_sub(BASIC_VIEW_HEIGHT) {
+    let space = s / 2;
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(space),
+          Constraint::Length(BASIC_VIEW_HEIGHT),
+          Constraint::Length(space),
+        ]
+        .as_ref(),
+      )
+      .split(f.size());
 
-  draw_playbar(f, app, chunks[1]);
+    draw_playbar(f, app, chunks[1]);
+  }
 }
 
 pub fn draw_playbar<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
