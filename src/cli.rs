@@ -15,6 +15,8 @@ const LIKED_EMOJI: &str = " ";
 const SHUFFLE_EMOJI: &str = "咽";
 const REPEAT_T_EMOJI: &str = "綾";
 const REPEAT_C_EMOJI: &str = "凌";
+const PLAYING_EMOJI: &str = "契";
+const PAUSED_EMOJI: &str = " ";
 
 //
 // Possible types to list or search
@@ -135,7 +137,7 @@ impl JumpDirection {
 // For fomatting (-f / --format flag)
 //
 
-// Types to creat a Format enum from
+// Types to create a Format enum from
 // Boxing was proposed by cargo clippy
 // to reduce the size of this enum
 enum FormatType {
@@ -176,12 +178,10 @@ impl Format {
     match t {
       FormatType::Album(a) => {
         let joined_artists = join_artists(a.artists.clone());
-
         let mut vec = vec![Self::Album(a.name), Self::Artist(joined_artists)];
         if let Some(uri) = a.uri {
           vec.push(Self::Uri(uri));
         }
-
         vec
       }
       FormatType::Artist(a) => vec![Self::Artist(a.name), Self::Uri(a.uri)],
@@ -238,7 +238,7 @@ impl Format {
           .collect::<Vec<&str>>()
           .join(" ")
       }
-      Self::Playing(s) => if *s { "契" } else { "" }.to_string(),
+      Self::Playing(s) => if *s { PLAYING_EMOJI } else { PAUSED_EMOJI }.to_string(),
     }
   }
 
