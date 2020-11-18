@@ -259,20 +259,16 @@ impl Format {
 }
 
 fn format_output(mut format: String, values: Vec<Format>) -> String {
-  // Replace set values
   for val in values {
     format = format.replace(val.get_placeholder(), &val.inner());
   }
-
-  // Replace the rest with 'None'
+  // Replace unsupported flags with 'None'
   for p in &[
-    // List of all flags
     "%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s",
   ] {
     format = format.replace(p, "None");
   }
-
-  format
+  format.trim().to_string()
 }
 
 //
@@ -284,7 +280,7 @@ struct CliApp<'a>(Network<'a>);
 // Non-concurrent functions
 // I feel that async in a cli is not working
 // I just .await all processes and directly interact
-// by calling network.handle_network_event
+// by calling network.handle_network_event (network = self.0)
 impl<'a> CliApp<'a> {
   // spt playback -t
   async fn toggle_playback(&mut self) {
