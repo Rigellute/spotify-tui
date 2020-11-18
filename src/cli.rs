@@ -263,9 +263,7 @@ fn format_output(mut format: String, values: Vec<Format>) -> String {
     format = format.replace(val.get_placeholder(), &val.inner());
   }
   // Replace unsupported flags with 'None'
-  for p in &[
-    "%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s",
-  ] {
+  for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s"] {
     format = format.replace(p, "None");
   }
   format.trim().to_string()
