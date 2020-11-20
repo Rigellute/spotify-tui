@@ -111,7 +111,7 @@ pub struct Network<'a> {
   spotify: Spotify,
   large_search_limit: u32,
   small_search_limit: u32,
-  client_config: ClientConfig,
+  pub client_config: ClientConfig,
   pub app: &'a Arc<Mutex<App>>,
 }
 
