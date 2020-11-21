@@ -1,6 +1,22 @@
 use super::user_config::UserConfig;
+use crate::error::VisualizationError;
 use crate::network::IoEvent;
 use anyhow::anyhow;
+use rhai::{
+  packages::Package, // 'Package' trait
+  packages::{
+    // pre-defined packages
+    ArithmeticPackage,
+    BasicArrayPackage,
+    BasicMapPackage,
+    BasicMathPackage,
+    LogicPackage,
+    MoreStringPackage,
+  },
+  Engine,
+  Module,
+  Scope,
+};
 use rspotify::{
   model::{
     album::{FullAlbum, SavedAlbum, SimplifiedAlbum},
@@ -43,6 +59,37 @@ const DEFAULT_ROUTE: Route = Route {
   active_block: ActiveBlock::Empty,
   hovered_block: ActiveBlock::Library,
 };
+
+pub fn load_visuals(user_config: &UserConfig) -> Result<Engine, VisualizationError> {
+  let mut engine = Engine::new_raw();
+  // First read from script so we don't have to keep recompiling
+  // Make struct to serialize from: https://schungx.github.io/rhai/rust/serde.html#deserialization
+  // Read scripts from configuration
+  match user_config.get_visualizer() {
+    Ok(app) => match engine.compile_file(app.path) {
+      Err(err) => Err(VisualizationError::Warning(format!(
+        "Compilation Error: {}",
+        err
+      ))),
+      Ok(ast) => match Module::eval_ast_as_new(Scope::new(), &ast, &engine) {
+        Ok(ref mut module) => {
+          ArithmeticPackage::init(module);
+          LogicPackage::init(module);
+          BasicArrayPackage::init(module);
+          BasicMapPackage::init(module);
+          BasicMathPackage::init(module);
+          MoreStringPackage::init(module);
+          engine.load_package(module.clone());
+          Ok(engine)
+        }
+        Err(err) => Err(VisualizationError::Warning(format!(
+          "Failed to compile module",
+        ))),
+      },
+    },
+    Err(message) => Err(message),
+  }
+}
 
 #[derive(Clone)]
 pub struct ScrollableResultPages<T> {
@@ -307,6 +354,12 @@ pub struct App {
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
+  // Exposed Rhai engine to allow for module extensions.
+  // TODO: Create a Visulization Struct
+  // Has get Engine
+  // Has set Engine
+  // Has closure call
+  pub visualizer: Result<Engine, VisualizationError>,
 }
 
 impl Default for App {
@@ -387,6 +440,7 @@ impl Default for App {
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
+      visualizer: Err(VisualizationError::from("Visualizer never initialized.")),
     }
   }
 }
@@ -397,10 +451,12 @@ impl App {
     user_config: UserConfig,
     spotify_token_expiry: SystemTime,
   ) -> App {
+    let visualizer = load_visuals(&user_config);
     App {
       io_tx: Some(io_tx),
       user_config,
       spotify_token_expiry,
+      visualizer,
       ..App::default()
     }
   }

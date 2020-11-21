@@ -28,6 +28,7 @@ crossterm = "0.18"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.7.3"
 anyhow = "1.0.33"
+rhai = {version = "0.19.4", features = ["sync", "serde", "f32_float"] }
 
 [[bin]]
 bench = false

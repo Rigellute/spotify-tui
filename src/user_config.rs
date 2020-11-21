@@ -1,3 +1,4 @@
+use crate::error::VisualizationError;
 use crate::event::Key;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
@@ -10,6 +11,8 @@ use tui::style::Color;
 const FILE_NAME: &str = "config.yml";
 const CONFIG_DIR: &str = ".config";
 const APP_CONFIG_DIR: &str = "spotify-tui";
+const PLUGIN_DIR: &str = "visulizations";
+const PLUGIN_EXTENSION: &str = "rhai";
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct UserTheme {
@@ -144,6 +147,10 @@ fn check_reserved_keys(key: Key) -> Result<()> {
 pub struct UserConfigPaths {
   pub config_file_path: PathBuf,
 }
+#[derive(Clone)]
+pub struct PluginPaths {
+  pub plugin_path: PathBuf,
+}
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct KeyBindingsString {
@@ -223,11 +230,40 @@ pub struct BehaviorConfig {
   pub show_loading_indicator: bool,
 }
 
+#[derive(Clone)]
+pub enum VisualStyle {
+  Bar,
+  Chart,
+  Invalid,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct VisualsString {
+  pub default: Option<String>,
+  pub bar: Vec<String>,
+  pub chart: Vec<String>,
+}
+
+#[derive(Clone)]
+pub struct VisualApp {
+  pub warning: Option<VisualizationError>,
+  pub path: PathBuf,
+  pub style: VisualStyle,
+  pub name: String,
+}
+
+#[derive(Clone)]
+pub struct VisualPlugins {
+  pub current: Option<usize>,
+  pub plugins: Vec<VisualApp>,
+}
+
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
   keybindings: Option<KeyBindingsString>,
   behavior: Option<BehaviorConfigString>,
   theme: Option<UserTheme>,
+  visuals: Option<VisualsString>,
 }
 
 #[derive(Clone)]
@@ -235,7 +271,9 @@ pub struct UserConfig {
   pub keys: KeyBindings,
   pub theme: Theme,
   pub behavior: BehaviorConfig,
+  pub visuals: VisualPlugins,
   pub path_to_config: Option<UserConfigPaths>,
+  pub path_to_plugin: Option<PluginPaths>,
 }
 
 impl UserConfig {
@@ -277,31 +315,49 @@ impl UserConfig {
         enable_text_emphasis: true,
         show_loading_indicator: true,
       },
+      visuals: VisualPlugins {
+        current: None,
+        plugins: vec![],
+      },
       path_to_config: None,
+      path_to_plugin: None,
     }
   }
 
   pub fn get_or_build_paths(&mut self) -> Result<()> {
     match dirs::home_dir() {
       Some(home) => {
-        let path = Path::new(&home);
-        let home_config_dir = path.join(CONFIG_DIR);
-        let app_config_dir = home_config_dir.join(APP_CONFIG_DIR);
+        if self.path_to_plugin.is_none() || self.path_to_config.is_none() {
+          let path = Path::new(&home);
+          let home_config_dir = path.join(CONFIG_DIR);
+          let app_config_dir = home_config_dir.join(APP_CONFIG_DIR);
+          let plugin_dir = app_config_dir.join(PLUGIN_DIR);
 
-        if !home_config_dir.exists() {
-          fs::create_dir(&home_config_dir)?;
+          if !home_config_dir.exists() {
+            fs::create_dir(&home_config_dir)?;
+          }
+
+          if !app_config_dir.exists() {
+            fs::create_dir(&app_config_dir)?;
+          }
+
+          let config_file_path = &app_config_dir.join(FILE_NAME);
+
+          if self.path_to_config.is_none() {
+            let paths = UserConfigPaths {
+              config_file_path: config_file_path.to_path_buf(),
+            };
+            self.path_to_config = Some(paths);
+          }
+
+          if self.path_to_plugin.is_none() {
+            let paths = PluginPaths {
+              plugin_path: plugin_dir,
+            };
+            self.path_to_plugin = Some(paths);
+          }
         }
 
-        if !app_config_dir.exists() {
-          fs::create_dir(&app_config_dir)?;
-        }
-
-        let config_file_path = &app_config_dir.join(FILE_NAME);
-
-        let paths = UserConfigPaths {
-          config_file_path: config_file_path.to_path_buf(),
-        };
-        self.path_to_config = Some(paths);
         Ok(())
       }
       None => Err(anyhow!("No $HOME directory found for client config")),
@@ -408,6 +464,61 @@ impl UserConfig {
     Ok(())
   }
 
+  pub fn load_visuals(&mut self, visuals: VisualsString) -> Result<()> {
+    let mut index: usize = 0;
+    let mut default_index: Option<usize> = None;
+    let default_plugin = visuals.default.unwrap_or_else(|| "<None>".to_string());
+    let plugin_path = match &self.path_to_plugin {
+      Some(path) => path,
+      None => {
+        self.get_or_build_paths()?;
+        self.path_to_plugin.as_ref().unwrap()
+      }
+    }
+    .plugin_path
+    .clone();
+
+    macro_rules! extract_plugin {
+      ($kind: ident, $enum: ident) => {
+        for name in visuals.$kind.iter() {
+          if name == &default_plugin {
+            match default_index {
+              Some(_) => return Err(anyhow!("Ambigious default plugin: \"{}\"", default_plugin)),
+              None => {
+                default_index = Some(index);
+              }
+            }
+          }
+          let mut plugin_file = plugin_path.clone();
+          plugin_file.push(name);
+          plugin_file.set_extension(PLUGIN_EXTENSION);
+          let plugin_file = plugin_file;
+          let warning = if plugin_file.exists() {
+            None
+          } else {
+            Some(VisualizationError::from("Plugin cannot be found."))
+          };
+
+          let app = VisualApp {
+            style: VisualStyle::$enum,
+            path: plugin_file,
+            name: name.to_string(),
+            warning,
+          };
+          self.visuals.plugins.push(app);
+          index += 1;
+        }
+      };
+    };
+
+    extract_plugin!(bar, Bar);
+    extract_plugin!(chart, Chart);
+
+    self.visuals.current = default_index;
+
+    Ok(())
+  }
+
   pub fn load_config(&mut self) -> Result<()> {
     let paths = match &self.path_to_config {
       Some(path) => path,
@@ -428,17 +539,34 @@ impl UserConfig {
       if let Some(keybindings) = config_yml.keybindings.clone() {
         self.load_keybindings(keybindings)?;
       }
-
       if let Some(behavior) = config_yml.behavior {
         self.load_behaviorconfig(behavior)?;
       }
       if let Some(theme) = config_yml.theme {
         self.load_theme(theme)?;
       }
+      if let Some(visuals) = config_yml.visuals {
+        self.load_visuals(visuals)?;
+      }
+    }
+    Ok(())
+  }
 
-      Ok(())
-    } else {
-      Ok(())
+  pub fn get_visualizer(&self) -> Result<VisualApp, VisualizationError> {
+    match self.visuals.current {
+      Some(index) => Ok(self.visuals.plugins[index].clone()),
+      None => Err(VisualizationError::from("No visualizer plugin set.")),
+    }
+  }
+  pub fn get_visualizer_or_default(&self) -> VisualApp {
+    match self.get_visualizer() {
+      Ok(visualizer) => visualizer,
+      Err(err) => VisualApp {
+        style: VisualStyle::Invalid,
+        warning: Some(err),
+        path: PathBuf::new(),
+        name: "<None>".to_string(),
+      },
     }
   }
 }
