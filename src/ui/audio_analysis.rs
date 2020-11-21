@@ -4,7 +4,7 @@ use crate::error::VisualizationError;
 use crate::user_config::VisualStyle;
 use rhai::{
   serde::{from_dynamic, to_dynamic},
-  Array, Engine, Scope,
+  Array, Engine, Scope, AST,
 };
 use tui::{
   backend::Backend,
@@ -70,21 +70,21 @@ where
       .style(Style::default().fg(app.user_config.theme.text))
   };
 
-  if let Some(analysis) = &app.audio_analysis {
-    let progress_seconds = (app.song_progress_ms as f32) / 1000.0;
+  let engine = Engine::new_raw();
+  if let Ok(ast) = engine.compile("fn analysis_hook(a, b){ analysis(a,b) }; fn draw_hook(a, b){ draw(a,b) };") {
+    if let Some(analysis) = &app.audio_analysis {
+      let progress_seconds = (app.song_progress_ms as f32) / 1000.0;
 
-    // TODO: Move to own function
-    let info: Vec<String> = {
-      // TODO: Set up raw engine
-      match &app.visualizer {
-        Ok(ast) => {
-          let engine = Engine::new();
-          match to_dynamic(analysis.clone()) {
+      // TODO: Move to own function
+      let info: Vec<String> = {
+        // TODO: Set up raw engine
+        match &app.visualizer {
+          Ok(engine) => match to_dynamic(analysis.clone()) {
             Ok(dynamic_analysis) => {
               match engine.call_fn(
                 &mut Scope::new(),
                 &ast,
-                "analysis",
+                "analysis_hook",
                 (dynamic_analysis, progress_seconds),
               ) {
                 Ok(txt) => {
@@ -103,35 +103,32 @@ where
               }
             }
             Err(err) => vec!["Spotify error".to_string(), format!("{}", err)],
-          }
+          },
+          Err(err) => vec!["Script compilation error".to_string(), format!("{}", err)],
         }
-        Err(err) => vec!["Script compilation error".to_string(), format!("{}", err)],
-      }
-    };
+      };
 
-    let texts: Vec<Spans> = info.iter().map(|span| Spans::from(span.clone())).collect();
-    let p = Paragraph::new(texts)
-      .block(analysis_block)
-      .style(Style::default().fg(app.user_config.theme.text));
-    f.render_widget(p, chunks[0]);
+      let texts: Vec<Spans> = info.iter().map(|span| Spans::from(span.clone())).collect();
+      let p = Paragraph::new(texts)
+        .block(analysis_block)
+        .style(Style::default().fg(app.user_config.theme.text));
+      f.render_widget(p, chunks[0]);
 
-    // TODO: Pass back a struct with render
-    // Struct should have optional error
-    // Match against config
-    // Invalid viz
-    match visual_app.style {
-      VisualStyle::Bar => {
-        let data: Result<Vec<(String, u64)>, VisualizationError> = {
-          // TODO: Set up raw engine
-          match &app.visualizer {
-            Ok(ast) => {
-              let engine = Engine::new();
-              match to_dynamic(analysis.clone()) {
+      // TODO: Pass back a struct with render
+      // Struct should have optional error
+      // Match against config
+      // Invalid viz
+      match visual_app.style {
+        VisualStyle::Bar => {
+          let data: Result<Vec<(String, u64)>, VisualizationError> = {
+            // TODO: Set up raw engine
+            match &app.visualizer {
+              Ok(engine) => match to_dynamic(analysis.clone()) {
                 Ok(dynamic_analysis) => {
                   match engine.call_fn(
                     &mut Scope::new(),
                     &ast,
-                    "draw",
+                    "draw_hook",
                     (dynamic_analysis, progress_seconds),
                   ) {
                     Ok(data) => match from_dynamic(&data) {
@@ -161,51 +158,51 @@ where
                   "Unable to serialize spotify information: {}",
                   err
                 ))),
-              }
+              },
+              Err(err) => Err(VisualizationError::from(format!(
+                "Compilation error: {}",
+                err
+              ))),
             }
-            Err(err) => Err(VisualizationError::from(format!(
-              "Compilation error: {}",
-              err
-            ))),
-          }
-        };
-        match data {
-          Ok(data) => {
-            let data: Vec<(&str, u64)> =
-              data.iter().map(|item| (item.0.as_str(), item.1)).collect();
-            let width = (chunks[1].width) as f32 / (1 + data.len()) as f32;
+          };
+          match data {
+            Ok(data) => {
+              let data: Vec<(&str, u64)> =
+                data.iter().map(|item| (item.0.as_str(), item.1)).collect();
+              let width = (chunks[1].width) as f32 / (1 + data.len()) as f32;
 
-            let analysis_bar = BarChart::default()
-              .block(bar_chart_block)
-              .data(data.as_slice())
-              .bar_width(width as u16)
-              .bar_style(Style::default().fg(app.user_config.theme.analysis_bar))
-              .value_style(
-                Style::default()
-                  .fg(app.user_config.theme.analysis_bar_text)
-                  .bg(app.user_config.theme.analysis_bar),
-              );
-            f.render_widget(analysis_bar, chunks[1]);
-          }
-          Err(VisualizationError::Warning(message)) => {
-            let ts: Vec<Spans> = vec![Spans::from(message)];
-            let p = Paragraph::new(ts)
-              .block(bar_chart_block)
-              .style(Style::default().fg(app.user_config.theme.text));
-            f.render_widget(p, chunks[1]);
+              let analysis_bar = BarChart::default()
+                .block(bar_chart_block)
+                .data(data.as_slice())
+                .bar_width(width as u16)
+                .bar_style(Style::default().fg(app.user_config.theme.analysis_bar))
+                .value_style(
+                  Style::default()
+                    .fg(app.user_config.theme.analysis_bar_text)
+                    .bg(app.user_config.theme.analysis_bar),
+                );
+              f.render_widget(analysis_bar, chunks[1]);
+            }
+            Err(VisualizationError::Warning(message)) => {
+              let ts: Vec<Spans> = vec![Spans::from(message)];
+              let p = Paragraph::new(ts)
+                .block(bar_chart_block)
+                .style(Style::default().fg(app.user_config.theme.text));
+              f.render_widget(p, chunks[1]);
+            }
           }
         }
+        _ => {
+          let ts: Vec<Spans> = vec![Spans::from("Unsupported type.")];
+          let p = Paragraph::new(ts)
+            .block(bar_chart_block)
+            .style(Style::default().fg(app.user_config.theme.text));
+          f.render_widget(p, chunks[1]);
+        }
       }
-      _ => {
-        let ts: Vec<Spans> = vec![Spans::from("Unsupported type.")];
-        let p = Paragraph::new(ts)
-          .block(bar_chart_block)
-          .style(Style::default().fg(app.user_config.theme.text));
-        f.render_widget(p, chunks[1]);
-      }
+    } else {
+      f.render_widget(empty_analysis_block(), chunks[0]);
+      f.render_widget(empty_pitches_block(), chunks[1]);
     }
-  } else {
-    f.render_widget(empty_analysis_block(), chunks[0]);
-    f.render_widget(empty_pitches_block(), chunks[1]);
   }
 }
