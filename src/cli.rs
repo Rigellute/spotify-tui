@@ -1,6 +1,7 @@
 use crate::network::IoEvent;
 use crate::network::Network;
 
+use anyhow::{anyhow, Result};
 use clap::ArgMatches;
 use rspotify::{
   model::{
@@ -296,7 +297,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt ... -d ... (specify device to control)
-  async fn set_device(&mut self, name: String) -> Result<(), String> {
+  async fn set_device(&mut self, name: String) -> Result<()> {
     // Change the device if specified by user
     let mut app = self.0.app.lock().await;
     let mut device_index = 0;
@@ -305,28 +306,29 @@ impl<'a> CliApp<'a> {
         if d.name == name {
           device_index = i;
           // Save the id of the device
-          if let Err(e) = self.0.client_config.set_device_id(d.id.clone()) {
-            return Err(e.to_string());
-          }
+          self
+            .0
+            .client_config
+            .set_device_id(d.id.clone())
+            .map_err(|_e| anyhow!("failed to set device with name '{}'", d.name))?;
         }
       }
     } else {
       // Error out if no device is avaible
-      return Err("Err: no device avaible".to_string());
+      return Err(anyhow!("no device avaible"));
     }
     app.selected_device_index = Some(device_index);
     Ok(())
   }
 
-  async fn volume(&mut self, vol: String) -> Result<(), String> {
-    let num = match vol.parse::<u32>() {
-      Ok(n) => n,
-      Err(_) => return Err(format!("Err: failed to convert {} to u32", vol)),
-    };
+  async fn volume(&mut self, vol: String) -> Result<()> {
+    let num = vol
+      .parse::<u32>()
+      .map_err(|_e| anyhow!("failed to convert {} to u32", vol))?;
 
     // Check if it's in range
     if num > 100 {
-      return Err(format!("Err: {} is too big, max volume is 100", num));
+      return Err(anyhow!("{} is too big, max volume is 100", num));
     };
 
     self
@@ -425,7 +427,7 @@ impl<'a> CliApp<'a> {
     };
 
     if id.is_empty() {
-      format!("Err: no device with name {}", device)
+      format!("no device with name {}", device)
     } else {
       self
         .0
@@ -436,13 +438,13 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback --like / --shuffle / --repeat
-  async fn mark(&mut self, flag: Flag) -> Result<(), String> {
+  async fn mark(&mut self, flag: Flag) -> Result<()> {
     let c = {
       let app = self.0.app.lock().await;
-      match app.current_playback_context.clone() {
-        Some(c) => c,
-        None => return Err("Err: no context avaible".to_string()),
-      }
+      app
+        .current_playback_context
+        .clone()
+        .ok_or_else(|| anyhow!("no context avaible"))?
     };
 
     match flag {
@@ -450,19 +452,14 @@ impl<'a> CliApp<'a> {
         // Get the id of the current song
         let id = match c.item {
           Some(i) => match i {
-            PlayingItem::Track(t) => match t.id {
-              Some(id) => id,
-              None => return Err("Err: item has no id".to_string()),
-            },
-            PlayingItem::Episode(_) => {
-              return Err("Err: saving episodes not yet implemented".to_string())
-            }
+            PlayingItem::Track(t) => t.id.ok_or_else(|| anyhow!("item has no id")),
+            PlayingItem::Episode(_) => Err(anyhow!("saving episodes not yet implemented")),
           },
-          None => return Err("Err: no item playing".to_string()),
+          None => Err(anyhow!("no item playing")),
         };
         self
           .0
-          .handle_network_event(IoEvent::ToggleSaveTrack(id))
+          .handle_network_event(IoEvent::ToggleSaveTrack(id?))
           .await;
       }
       Flag::Shuffle => {
@@ -486,7 +483,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback -s
-  async fn get_status(&mut self, format: String) -> String {
+  async fn get_status(&mut self, format: String) -> Result<String> {
     // Update info on current playback
     self
       .0
@@ -497,15 +494,16 @@ impl<'a> CliApp<'a> {
       .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
       .await;
 
-    let context = match self.0.app.lock().await.current_playback_context.clone() {
-      Some(c) => c,
-      None => return "Err: no context avaible".to_string(),
-    };
+    let context = self
+      .0
+      .app
+      .lock()
+      .await
+      .current_playback_context
+      .clone()
+      .ok_or_else(|| anyhow!("no context avaible"))?;
 
-    let playing_item = match context.item {
-      Some(item) => item,
-      None => return "Err: no track playing".to_string(),
-    };
+    let playing_item = context.item.ok_or_else(|| anyhow!("no track playing"))?;
 
     let mut hs = match playing_item {
       PlayingItem::Track(track) => {
@@ -533,7 +531,7 @@ impl<'a> CliApp<'a> {
     hs.push(Format::Volume(context.device.volume_percent));
     hs.push(Format::Playing(context.is_playing));
 
-    format_output(format, hs)
+    Ok(format_output(format, hs))
   }
 
   // spt play -u URI
@@ -556,7 +554,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt play -n NAME ...
-  async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<(), String> {
+  async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<()> {
     self
       .0
       .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
@@ -570,7 +568,7 @@ impl<'a> CliApp<'a> {
           if let Some(r) = &results.tracks {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("Err: no tracks with name {}", name));
+            return Err(anyhow!("no tracks with name {}", name));
           }
         }
         Type::Album => {
@@ -579,31 +577,31 @@ impl<'a> CliApp<'a> {
             if let Some(uri) = &album.uri {
               uri.clone()
             } else {
-              return Err(format!("Err: album {} has no uri", album.name));
+              return Err(anyhow!("album {} has no uri", album.name));
             }
           } else {
-            return Err(format!("Err: no albums with name {}", name));
+            return Err(anyhow!("no albums with name {}", name));
           }
         }
         Type::Artist => {
           if let Some(r) = &results.artists {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("Err: no artists with name {}", name));
+            return Err(anyhow!("no artists with name {}", name));
           }
         }
         Type::Show => {
           if let Some(r) = &results.shows {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("Err: no shows with name {}", name));
+            return Err(anyhow!("no shows with name {}", name));
           }
         }
         Type::Playlist => {
           if let Some(r) = &results.playlists {
             r.items[0].uri.clone()
           } else {
-            return Err(format!("Err: no playlists with name {}", name));
+            return Err(anyhow!("no playlists with name {}", name));
           }
         }
         _ => String::new(),
@@ -649,7 +647,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("Err: no playlists with name {}", search)
+          format!("no playlists with name {}", search)
         }
       }
       Type::Track => {
@@ -666,7 +664,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("Err: no tracks with name {}", search)
+          format!("no tracks with name {}", search)
         }
       }
       Type::Artist => {
@@ -683,7 +681,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("Err: no artists with name {}", search)
+          format!("no artists with name {}", search)
         }
       }
       Type::Show => {
@@ -700,7 +698,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("Err: no shows with name {}", search)
+          format!("no shows with name {}", search)
         }
       }
       Type::Album => {
@@ -717,7 +715,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("Err: no albums with name {}", search)
+          format!("no albums with name {}", search)
         }
       }
       // Never called, just here for compiler
@@ -726,7 +724,11 @@ impl<'a> CliApp<'a> {
   }
 }
 
-pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<'_>) -> String {
+pub async fn handle_matches(
+  matches: &ArgMatches<'_>,
+  cmd: String,
+  net: Network<'_>,
+) -> Result<String> {
   // Tuple struct
   let mut cli = CliApp(net);
 
@@ -737,36 +739,30 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
     .await;
 
   if let Some(d) = matches.value_of("device") {
-    if cli.set_device(d.to_string()).await.is_err() {
-      return format!("Err: failed to select device '{}'", d);
-    }
+    cli.set_device(d.to_string()).await?
   }
 
   // Evalute the subcommand
   let output = match cmd.as_str() {
     "playback" => {
       let format = matches.value_of("format").unwrap();
+      // Run the action, and print out the status
       if matches.is_present("toggle") {
         cli.toggle_playback().await;
       } else if let Some(d) = matches.value_of("transfer") {
         let output = cli.transfer_playback(d).await;
         if !output.is_empty() {
-          return output;
+          return Ok(output);
         }
       } else if matches.is_present("flags") {
         let flag = Flag::from_matches(matches);
-        if let Err(e) = cli.mark(flag).await {
-          return e;
-        }
+        cli.mark(flag).await?;
       } else if matches.is_present("jumps") {
         let direction = JumpDirection::from_matches(matches);
         cli.jump(direction).await;
       } else if let Some(vol) = matches.value_of("volume") {
-        if let Err(e) = cli.volume(vol.to_string()).await {
-          return e;
-        }
+        cli.volume(vol.to_string()).await?;
       }
-
       cli.get_status(format.to_string()).await
     }
     "play" => {
@@ -774,32 +770,28 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
         cli.play_uri(uri.to_string()).await;
       } else if let Some(name) = matches.value_of("name") {
         let category = Type::play_from_matches(matches);
-        if let Err(e) = cli
+        cli
           .play(name.to_string(), category, matches.is_present("queue"))
-          .await
-        {
-          return e;
-        }
+          .await?;
       }
-
       cli.get_status("%s %t - %a".to_string()).await
     }
     "query" => {
       if matches.is_present("list") {
         let format = matches.value_of("format").unwrap();
         let category = Type::list_from_matches(matches);
-        cli.list(category, format).await
+        Ok(cli.list(category, format).await)
       } else if let Some(search) = matches.value_of("search") {
         let format = matches.value_of("format").unwrap().to_string();
         let query_type = Type::search_from_matches(matches);
-        cli.query(search.to_string(), format, query_type).await
+        Ok(cli.query(search.to_string(), format, query_type).await)
       // Never called, just here for the compiler
       } else {
-        String::new()
+        Ok(String::new())
       }
     }
     // Never called, just here for the compiler
-    _ => String::new(),
+    _ => Ok(String::new()),
   };
 
   // Check if there was an error
@@ -807,6 +799,6 @@ pub async fn handle_matches(matches: &ArgMatches<'_>, cmd: String, net: Network<
   if api_error.is_empty() {
     output
   } else {
-    format!("Err: {}", api_error)
+    Err(anyhow!("{}", api_error))
   }
 }
