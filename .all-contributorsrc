@@ -688,6 +688,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "marcomicera",
+      "name": "Marco Micera",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/13918587?v=4",
+      "profile": "http://marcomicera.github.io",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
