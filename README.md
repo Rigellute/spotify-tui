@@ -223,8 +223,11 @@ behavior:
   tick_rate_milliseconds: 250
   # Enable text emphasis (typically italic/bold text styling). Disabling this might be important if the terminal config is otherwise restricted and rendering text escapes interferes with the UI.
   enable_text_emphasis: true
-  # controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
+  # Controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
   show_loading_indicator: true
+  # Determines the text icon to display next to "liked" Spotify items, such as
+  # liked songs and albums, or followed artists. Can be any length string.
+  liked_icon: "♥"
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
