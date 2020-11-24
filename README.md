@@ -179,7 +179,7 @@ But here they are again:
 1. Run `spt`
 1. Enter your `Client ID`
 1. Enter your `Client Secret`
-1. Press enter to confirm the default port (8888)
+1. Press enter to confirm the default port (8888) or enter a custom port
 1. You will be redirected to an official Spotify webpage to ask you for permissions.
 1. After accepting the permissions, you'll be redirected to localhost. If all goes well, the redirect URL will be parsed automatically and now you're done. If the local webserver fails for some reason you'll be redirected to a blank webpage that might say something like "Connection Refused" since no server is running. Regardless, copy the URL and paste into the prompt in the terminal.
 
