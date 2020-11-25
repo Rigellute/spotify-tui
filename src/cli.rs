@@ -740,11 +740,11 @@ pub async fn handle_matches(
 
   // If the device_id is not specified, select the first avaible device
   if cli.0.client_config.device_id.is_none() {
-      if let Some(p) = &cli.0.app.lock().await.devices {
-        if let Some(d) = p.devices.get(0) {
-            cli.0.client_config.set_device_id(d.id.clone())?;
-        }
+    if let Some(p) = &cli.0.app.lock().await.devices {
+      if let Some(d) = p.devices.get(0) {
+        cli.0.client_config.set_device_id(d.id.clone())?;
       }
+    }
   }
 
   if let Some(d) = matches.value_of("device") {
