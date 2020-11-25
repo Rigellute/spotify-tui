@@ -514,7 +514,7 @@ where
         .map(|item| {
           let mut show_name = String::new();
           if app.saved_show_ids_set.contains(&item.id.to_owned()) {
-            show_name.push_str("♥ ");
+            show_name.push_str(&app.user_config.padded_liked_icon());
           }
           show_name.push_str(&format!("{:} - {}", item.name, item.publisher));
           show_name
