@@ -1007,8 +1007,9 @@ impl App {
       ActiveBlock::SearchResultBlock => {
         if let Some(shows) = &self.search_results.shows {
           if let Some(selected_index) = self.search_results.selected_shows_index {
-            let show_id = shows.items[selected_index].id.to_owned();
-            self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+            if let Some(show_id) = shows.items.get(selected_index).map(|item| item.id.clone()) {
+              self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+            }
           }
         }
       }
