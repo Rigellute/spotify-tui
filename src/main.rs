@@ -141,7 +141,8 @@ async fn main() -> Result<()> {
       "There are multiple format specifiers you can use:
 %a: artist, %b: album, %p: playlist, %t: track, %h: show,
 %f: flags (shuffle, repeat, like), %s: playback status, 
-%v: volume, %d: current device.",
+%v: volume, %d: current device. Example:
+spt pb -s -f 'playing on %d at %v%",
     );
 
   let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
