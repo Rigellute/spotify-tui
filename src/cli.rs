@@ -338,7 +338,7 @@ impl<'a> CliApp<'a> {
     Ok(())
   }
 
-  // spt playback --next
+  // spt playback --next / --previous
   async fn jump(&mut self, d: JumpDirection) {
     match d {
       JumpDirection::Next => self.0.handle_network_event(IoEvent::NextTrack).await,
@@ -737,6 +737,15 @@ pub async fn handle_matches(
     .0
     .handle_network_event(IoEvent::GetCurrentPlayback)
     .await;
+
+  // If the device_id is not specified, select the first avaible device
+  if cli.0.client_config.device_id.is_none() {
+      if let Some(p) = &cli.0.app.lock().await.devices {
+        if let Some(d) = p.devices.get(0) {
+            cli.0.client_config.set_device_id(d.id.clone())?;
+        }
+      }
+  }
 
   if let Some(d) = matches.value_of("device") {
     cli.set_device(d.to_string()).await?
