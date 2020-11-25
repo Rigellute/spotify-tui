@@ -1167,37 +1167,6 @@ where
   f.render_widget(bottom_text, chunks[1]);
 }
 
-// fn draw_not_implemented_yet<B>(
-//   f: &mut Frame<B>,
-//   app: &App,
-//   layout_chunk: Rect,
-//   block: ActiveBlock,
-//   title: &str,
-// ) where
-//   B: Backend,
-// {
-//   let current_route = app.get_current_route();
-//   let highlight_state = (
-//     current_route.active_block == block,
-//     current_route.hovered_block == block,
-//   );
-//   let display_block = Block::default()
-//     .title(Span::styled(
-//       title,
-//       get_color(highlight_state, app.user_config.theme),
-//     ))
-//     .borders(Borders::ALL)
-//     .border_style(get_color(highlight_state, app.user_config.theme));
-//
-//   let text = Text::from("Not implemented yet!");
-//
-//   let not_implemented = Paragraph::new(text)
-//     .style(Style::default().fg(app.user_config.theme.text))
-//     .block(display_block)
-//     .wrap(Wrap { trim: true });
-//   f.render_widget(not_implemented, layout_chunk);
-// }
-
 fn draw_artist_albums<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
