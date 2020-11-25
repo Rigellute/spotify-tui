@@ -23,7 +23,7 @@ use tui::{
 use util::{
   create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
-  millis_to_minutes, SMALL_TERMINAL_WIDTH,
+  millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
 pub enum TableId {
@@ -396,7 +396,7 @@ where
             song_name += "▶ "
           }
           if app.liked_song_ids_set.contains(&id) {
-            song_name += "♥ ";
+            song_name += &app.user_config.padded_liked_icon();
           }
 
           song_name += &item.name;
@@ -424,7 +424,7 @@ where
         .map(|item| {
           let mut artist = String::new();
           if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
-            artist.push_str("♥ ");
+            artist.push_str(&app.user_config.padded_liked_icon());
           }
           artist.push_str(&item.name.to_owned());
           artist
@@ -458,7 +458,7 @@ where
           let mut album_artist = String::new();
           if let Some(album_id) = &item.id {
             if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-              album_artist.push_str("♥ ");
+              album_artist.push_str(&app.user_config.padded_liked_icon());
             }
           }
           album_artist.push_str(&format!(
@@ -891,20 +891,23 @@ pub fn draw_basic_view<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,
 {
-  let chunks = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints(
-      [
-        Constraint::Percentage(44),
-        Constraint::Min(6),
-        Constraint::Percentage(44),
-      ]
-      .as_ref(),
-    )
-    .margin(4)
-    .split(f.size());
+  // If space is negative, do nothing because the widget would not fit
+  if let Some(s) = app.size.height.checked_sub(BASIC_VIEW_HEIGHT) {
+    let space = s / 2;
+    let chunks = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(
+        [
+          Constraint::Length(space),
+          Constraint::Length(BASIC_VIEW_HEIGHT),
+          Constraint::Length(space),
+        ]
+        .as_ref(),
+      )
+      .split(f.size());
 
-  draw_playbar(f, app, chunks[1]);
+    draw_playbar(f, app, chunks[1]);
+  }
 }
 
 pub fn draw_playbar<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -985,7 +988,7 @@ where
       };
 
       let track_name = if app.liked_song_ids_set.contains(&item_id) {
-        format!("♥ {}", name)
+        format!("{}{}", &app.user_config.padded_liked_icon(), name)
       } else {
         name
       };
@@ -1251,7 +1254,7 @@ where
         let mut album_artist = String::new();
         if let Some(album_id) = &item.id {
           if app.saved_album_ids_set.contains(&album_id.to_owned()) {
-            album_artist.push_str("♥ ");
+            album_artist.push_str(&app.user_config.padded_liked_icon());
           }
         }
         album_artist.push_str(&format!(
@@ -1279,7 +1282,7 @@ where
       .map(|item| {
         let mut artist = String::new();
         if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
-          artist.push_str("♥ ");
+          artist.push_str(&app.user_config.padded_liked_icon());
         }
         artist.push_str(&item.name.to_owned());
         artist
@@ -1407,7 +1410,11 @@ where
       .map(|album_page| TableItem {
         id: album_page.album.id.to_owned(),
         format: vec![
-          format!("♥ {}", &album_page.album.name),
+          format!(
+            "{}{}",
+            app.user_config.padded_liked_icon(),
+            &album_page.album.name
+          ),
           create_artist_string(&album_page.album.artists),
           album_page.album.release_date.to_owned(),
         ],
@@ -1791,10 +1798,10 @@ fn draw_table<B>(
           }
         }
 
-        // Show this ♥ if the song is liked
+        // Show this the liked icon if the song is liked
         if let Some(liked_idx) = header.get_index(ColumnId::Liked) {
           if app.liked_song_ids_set.contains(item.id.as_str()) {
-            formatted_row[liked_idx] = " ♥".to_string();
+            formatted_row[liked_idx] = app.user_config.padded_liked_icon();
           }
         }
       }

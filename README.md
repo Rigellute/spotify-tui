@@ -7,7 +7,7 @@
 ![](https://img.shields.io/github/v/release/Rigellute/spotify-tui?color=%23c694ff)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-74-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-75-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Follow Alexander Keliris (Rigellute)](https://img.shields.io/twitter/follow/AlexKeliris?label=Follow%20Alexander%20Keliris%20%28Rigellute%29&style=social)](https://twitter.com/intent/follow?screen_name=AlexKeliris)
@@ -169,14 +169,17 @@ Instructions on how to set this up will be shown when you first run the app.
 But here they are again:
 
 1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
-1. Click `Create a Client ID` and create an app
+1. Click `Create an app`
+    - You now can see your `Client ID` and `Client Secret`
 1. Now click `Edit Settings`
 1. Add `http://localhost:8888/callback` to the Redirect URIs
+1. Scroll down and click `Save`
 1. You are now ready to authenticate with Spotify!
 1. Go back to the terminal
 1. Run `spt`
 1. Enter your `Client ID`
 1. Enter your `Client Secret`
+1. Press enter to confirm the default port (8888) or enter a custom port
 1. You will be redirected to an official Spotify webpage to ask you for permissions.
 1. After accepting the permissions, you'll be redirected to localhost. If all goes well, the redirect URL will be parsed automatically and now you're done. If the local webserver fails for some reason you'll be redirected to a blank webpage that might say something like "Connection Refused" since no server is running. Regardless, copy the URL and paste into the prompt in the terminal.
 
@@ -223,8 +226,11 @@ behavior:
   tick_rate_milliseconds: 250
   # Enable text emphasis (typically italic/bold text styling). Disabling this might be important if the terminal config is otherwise restricted and rendering text escapes interferes with the UI.
   enable_text_emphasis: true
-  # controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
+  # Controls whether to show a loading indicator in the top right of the UI whenever communicating with Spotify API
   show_loading_indicator: true
+  # Determines the text icon to display next to "liked" Spotify items, such as
+  # liked songs and albums, or followed artists. Can be any length string.
+  liked_icon: "♥"
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
@@ -398,6 +404,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://mucinoab.github.io/"><img src="https://avatars1.githubusercontent.com/u/28630268?v=4" width="100px;" alt=""/><br /><sub><b>Bruno A. Muciño</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=mucinoab" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/OrangeFran"><img src="https://avatars2.githubusercontent.com/u/55061632?v=4" width="100px;" alt=""/><br /><sub><b>Finn Hediger</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=OrangeFran" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/dp304"><img src="https://avatars1.githubusercontent.com/u/34493835?v=4" width="100px;" alt=""/><br /><sub><b>dp304</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=dp304" title="Code">💻</a></td>
+    <td align="center"><a href="http://marcomicera.github.io"><img src="https://avatars0.githubusercontent.com/u/13918587?v=4" width="100px;" alt=""/><br /><sub><b>Marco Micera</b></sub></a><br /><a href="https://github.com/Rigellute/spotify-tui/commits?author=marcomicera" title="Documentation">📖</a></td>
   </tr>
 </table>
 

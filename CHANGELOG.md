@@ -11,6 +11,8 @@
 - Fix use of incorrect playlist index when playing from an associated track table [#632](https://github.com/Rigellute/spotify-tui/pull/632)
 - Fix flickering help menu in small screens [#638](https://github.com/Rigellute/spotify-tui/pull/638)
 - Optimize seek [#640](https://github.com/Rigellute/spotify-tui/pull/640)
+- Make the liked icon configurable [#659](https://github.com/Rigellute/spotify-tui/pull/659)
+- Fix centering of basic_view [#664](https://github.com/Rigellute/spotify-tui/pull/664)
 
 ## [0.22.0] - 2020-10-05
 

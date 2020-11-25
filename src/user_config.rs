@@ -212,6 +212,7 @@ pub struct BehaviorConfigString {
   pub tick_rate_milliseconds: Option<u64>,
   pub enable_text_emphasis: Option<bool>,
   pub show_loading_indicator: Option<bool>,
+  pub liked_icon: Option<String>,
 }
 
 #[derive(Clone)]
@@ -221,6 +222,7 @@ pub struct BehaviorConfig {
   pub tick_rate_milliseconds: u64,
   pub enable_text_emphasis: bool,
   pub show_loading_indicator: bool,
+  pub liked_icon: String,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -276,6 +278,7 @@ impl UserConfig {
         tick_rate_milliseconds: 250,
         enable_text_emphasis: true,
         show_loading_indicator: true,
+        liked_icon: "♥".to_string(),
       },
       path_to_config: None,
     }
@@ -405,6 +408,10 @@ impl UserConfig {
       self.behavior.show_loading_indicator = loading_indicator;
     }
 
+    if let Some(liked_icon) = behavior_config.liked_icon {
+      self.behavior.liked_icon = liked_icon;
+    }
+
     Ok(())
   }
 
@@ -440,6 +447,10 @@ impl UserConfig {
     } else {
       Ok(())
     }
+  }
+
+  pub fn padded_liked_icon(&self) -> String {
+    format!("{} ", &self.behavior.liked_icon)
   }
 }
 
