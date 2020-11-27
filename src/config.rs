@@ -181,7 +181,7 @@ impl ClientConfig {
     }
   }
 
-  fn validate_client_key(key: &String) -> Result<()> {
+  fn validate_client_key(key: &str) -> Result<()> {
     const EXPECTED_LEN: usize = 32;
     if key.len() != EXPECTED_LEN {
       Err(Error::from(std::io::Error::new(
