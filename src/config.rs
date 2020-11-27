@@ -1,5 +1,5 @@
 use super::banner::BANNER;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use serde::{Deserialize, Serialize};
 use std::{
   fs,
@@ -158,30 +158,41 @@ impl ClientConfig {
 
   fn get_client_key_from_input(type_label: &'static str) -> Result<String> {
     let mut client_key = String::new();
+    const MAX_RETRIES: u8 = 5;
+    let mut num_retries = 0;
     loop {
       println!("\nEnter your {}: ", type_label);
       stdin().read_line(&mut client_key)?;
       client_key = client_key.trim().to_string();
-      match ClientConfig::is_client_key_valid(&client_key) {
+      match ClientConfig::validate_client_key(&client_key) {
         Ok(_) => return Ok(client_key),
         Err(error_string) => {
-          println!("Invalid {}: {}", type_label, error_string);
+          println!("{}", error_string);
           client_key.clear();
+          num_retries += 1;
+          if num_retries == MAX_RETRIES {
+            return Err(Error::from(std::io::Error::new(
+              std::io::ErrorKind::Other,
+              format!("Maximum retries ({}) exceeded.", MAX_RETRIES),
+            )));
+          }
         }
       };
     }
   }
 
-  fn is_client_key_valid(key: &String) -> Result<(), String> {
+  fn validate_client_key(key: &String) -> Result<()> {
     const EXPECTED_LEN: usize = 32;
     if key.len() != EXPECTED_LEN {
-      Err(format!(
-        "invalid length: {} (must be {})",
-        key.len(),
-        EXPECTED_LEN,
-      ))
+      Err(Error::from(std::io::Error::new(
+        std::io::ErrorKind::InvalidInput,
+        format!("invalid length: {} (must be {})", key.len(), EXPECTED_LEN,),
+      )))
     } else if !key.chars().all(|c| c.is_digit(16)) {
-      Err("invalid character found (must be hex digits)".to_string())
+      Err(Error::from(std::io::Error::new(
+        std::io::ErrorKind::InvalidInput,
+        "invalid character found (must be hex digits)",
+      )))
     } else {
       Ok(())
     }
