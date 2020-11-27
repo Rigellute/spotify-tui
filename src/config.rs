@@ -127,14 +127,33 @@ impl ClientConfig {
         number += 1;
       }
 
-      // TODO: Handle empty input?
       let mut client_id = String::new();
-      println!("\nEnter your Client ID: ");
-      stdin().read_line(&mut client_id)?;
+      loop {
+        println!("\nEnter your Client ID: ");
+        stdin().read_line(&mut client_id)?;
+        client_id = client_id.trim().to_string();
+        match ClientConfig::is_client_key_valid(&client_id) {
+          Ok(_) => break,
+          Err(error_string) => {
+            println!("Invalid Client ID: {}", error_string);
+            client_id.clear();
+          }
+        };
+      }
 
       let mut client_secret = String::new();
-      println!("\nEnter your Client Secret: ");
-      stdin().read_line(&mut client_secret)?;
+      loop {
+        println!("\nEnter your Client Secret: ");
+        stdin().read_line(&mut client_secret)?;
+        client_secret = client_secret.trim().to_string();
+        match ClientConfig::is_client_key_valid(&client_secret) {
+          Ok(_) => break,
+          Err(error_string) => {
+            println!("Invalid Client Secret: {}", error_string);
+            client_secret.clear();
+          }
+        };
+      }
 
       let mut port = String::new();
       println!("\nEnter port of redirect uri (default {}): ", DEFAULT_PORT);
@@ -142,8 +161,8 @@ impl ClientConfig {
       let port = port.trim().parse::<u16>().unwrap_or(DEFAULT_PORT);
 
       let config_yml = ClientConfig {
-        client_id: client_id.trim().to_string(),
-        client_secret: client_secret.trim().to_string(),
+        client_id,
+        client_secret,
         device_id: None,
         port: Some(port),
       };
@@ -159,6 +178,21 @@ impl ClientConfig {
       self.port = config_yml.port;
 
       Ok(())
+    }
+  }
+
+  fn is_client_key_valid(key: &String) -> Result<bool, String> {
+    const EXPECTED_LEN: usize = 32;
+    if key.len() != EXPECTED_LEN {
+      Err(format!(
+        "invalid length: {} (must be {})",
+        key.len(),
+        EXPECTED_LEN,
+      ))
+    } else if !key.chars().all(|c| c.is_digit(16)) {
+      Err("invalid character found (must be hex digits)".to_string())
+    } else {
+      Ok(true)
     }
   }
 }
