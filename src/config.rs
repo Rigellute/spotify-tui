@@ -127,33 +127,8 @@ impl ClientConfig {
         number += 1;
       }
 
-      let mut client_id = String::new();
-      loop {
-        println!("\nEnter your Client ID: ");
-        stdin().read_line(&mut client_id)?;
-        client_id = client_id.trim().to_string();
-        match ClientConfig::is_client_key_valid(&client_id) {
-          Ok(_) => break,
-          Err(error_string) => {
-            println!("Invalid Client ID: {}", error_string);
-            client_id.clear();
-          }
-        };
-      }
-
-      let mut client_secret = String::new();
-      loop {
-        println!("\nEnter your Client Secret: ");
-        stdin().read_line(&mut client_secret)?;
-        client_secret = client_secret.trim().to_string();
-        match ClientConfig::is_client_key_valid(&client_secret) {
-          Ok(_) => break,
-          Err(error_string) => {
-            println!("Invalid Client Secret: {}", error_string);
-            client_secret.clear();
-          }
-        };
-      }
+      let client_id = ClientConfig::get_client_key_from_input("Client ID");
+      let client_secret = ClientConfig::get_client_key_from_input("Client Secret");
 
       let mut port = String::new();
       println!("\nEnter port of redirect uri (default {}): ", DEFAULT_PORT);
@@ -178,6 +153,22 @@ impl ClientConfig {
       self.port = config_yml.port;
 
       Ok(())
+    }
+  }
+
+  fn get_client_key_from_input(type_label: &'static str) -> String {
+    let mut client_key = String::new();
+    loop {
+      println!("\nEnter your {}: ", type_label);
+      stdin().read_line(&mut client_key)?;
+      client_key = client_key.trim().to_string();
+      match ClientConfig::is_client_key_valid(&client_key) {
+        Ok(_) => return client_key,
+        Err(error_string) => {
+          println!("Invalid {}: {}", type_label, error_string);
+          client_key.clear();
+        }
+      };
     }
   }
 
