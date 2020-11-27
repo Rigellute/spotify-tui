@@ -127,8 +127,8 @@ impl ClientConfig {
         number += 1;
       }
 
-      let client_id = ClientConfig::get_client_key_from_input("Client ID");
-      let client_secret = ClientConfig::get_client_key_from_input("Client Secret");
+      let client_id = ClientConfig::get_client_key_from_input("Client ID")?;
+      let client_secret = ClientConfig::get_client_key_from_input("Client Secret")?;
 
       let mut port = String::new();
       println!("\nEnter port of redirect uri (default {}): ", DEFAULT_PORT);
@@ -156,14 +156,14 @@ impl ClientConfig {
     }
   }
 
-  fn get_client_key_from_input(type_label: &'static str) -> String {
+  fn get_client_key_from_input(type_label: &'static str) -> Result<String> {
     let mut client_key = String::new();
     loop {
       println!("\nEnter your {}: ", type_label);
       stdin().read_line(&mut client_key)?;
       client_key = client_key.trim().to_string();
       match ClientConfig::is_client_key_valid(&client_key) {
-        Ok(_) => return client_key,
+        Ok(_) => return Ok(client_key),
         Err(error_string) => {
           println!("Invalid {}: {}", type_label, error_string);
           client_key.clear();
@@ -172,7 +172,7 @@ impl ClientConfig {
     }
   }
 
-  fn is_client_key_valid(key: &String) -> Result<bool, String> {
+  fn is_client_key_valid(key: &String) -> Result<(), String> {
     const EXPECTED_LEN: usize = 32;
     if key.len() != EXPECTED_LEN {
       Err(format!(
@@ -183,7 +183,7 @@ impl ClientConfig {
     } else if !key.chars().all(|c| c.is_digit(16)) {
       Err("invalid character found (must be hex digits)".to_string())
     } else {
-      Ok(true)
+      Ok(())
     }
   }
 }
