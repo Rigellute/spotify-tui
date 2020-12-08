@@ -697,6 +697,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "MarcoIeni",
+      "name": "Marco Ieni",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/11428655?v=4",
+      "profile": "http://marcoieni.com",
+      "contributions": [
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,
