@@ -29,6 +29,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
           override: true
       - uses: actions-rs/cargo@v1
         with:
@@ -43,6 +44,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
           override: true
       # These dependencies are required for `clipboard`
       - run: sudo apt-get install -y -qq libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
@@ -59,8 +61,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
           override: true
-      - run: rustup component add rustfmt
+          components: rustfmt
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -72,12 +75,12 @@ jobs:
     needs: prepare
     steps:
       - uses: actions/checkout@master
-      # Temporarily downgrade Clippy until a new stable release includes a fix for CI breaking on 1.47 https://github.com/rust-lang/rust-clippy/issues/6147
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.46.0
+          toolchain: stable
+          profile: minimal
           override: true
-      - run: rustup component add clippy
+          components: clippy
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
