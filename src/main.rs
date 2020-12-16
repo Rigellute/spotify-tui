@@ -296,6 +296,7 @@ Example: spt pb -s -f 'playing on %d at %v%'",
                                .arg(Arg::with_name("list")
                                     .short("l")
                                     .long("list")
+                                    .requires("listable")
                                     .help("List devices and playlists"))
                                .arg(Arg::with_name("devices")
                                     .short("d")
