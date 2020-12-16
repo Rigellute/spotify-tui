@@ -321,6 +321,24 @@ impl<'a> CliApp<'a> {
     Ok(())
   }
 
+  // spt query ... --limit LIMIT (set max search limit)
+  async fn update_query_limits(&mut self, max: String) -> Result<()> {
+    let num = max
+      .parse::<u32>()
+      .map_err(|_e| anyhow!("failed to convert {} to u32", max))?;
+
+    // 50 seems to be the maximum limit
+    if num > 50 {
+      return Err(anyhow!("{} is too big, max limit is 50", num));
+    };
+    
+    self
+      .0
+      .handle_network_event(IoEvent::UpdateSearchLimits(num, num))
+      .await;
+    Ok(())
+  }
+
   async fn volume(&mut self, vol: String) -> Result<()> {
     let num = vol
       .parse::<u32>()
@@ -413,8 +431,8 @@ impl<'a> CliApp<'a> {
     }
   }
 
-  // spt playback -t DEVICE
-  async fn transfer_playback(&mut self, device: &str) -> String {
+  // spt playback --transfer DEVICE
+  async fn transfer_playback(&mut self, device: &str) -> Result<()> {
     // Get the device id by name
     let mut id = String::new();
     if let Some(devices) = &self.0.app.lock().await.devices {
@@ -427,13 +445,13 @@ impl<'a> CliApp<'a> {
     };
 
     if id.is_empty() {
-      format!("no device with name {}", device)
+      Err(anyhow!("no device with name {}", device))
     } else {
       self
         .0
         .handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string()))
         .await;
-      String::new()
+      Ok(())
     }
   }
 
@@ -759,10 +777,7 @@ pub async fn handle_matches(
       if matches.is_present("toggle") {
         cli.toggle_playback().await;
       } else if let Some(d) = matches.value_of("transfer") {
-        let output = cli.transfer_playback(d).await;
-        if !output.is_empty() {
-          return Ok(output);
-        }
+        cli.transfer_playback(d).await?;
       } else if matches.is_present("flags") {
         let flag = Flag::from_matches(matches);
         cli.mark(flag).await?;
@@ -772,6 +787,7 @@ pub async fn handle_matches(
       } else if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;
       }
+      // Print out the status if no errors were found
       cli.get_status(format.to_string()).await
     }
     "play" => {
@@ -783,27 +799,35 @@ pub async fn handle_matches(
           .play(name.to_string(), category, matches.is_present("queue"))
           .await?;
       }
+      // Could be made configurable in the future
       cli.get_status("%s %t - %a".to_string()).await
     }
     "query" => {
+      let format = matches.value_of("format").unwrap().to_string();
+      // Update the limits for the list and search functions
+      // I think the small and big search limits are very confusing
+      // so I just set them both to max, is this okay?
+      if let Some(max) = matches.value_of("limit") {
+        cli.update_query_limits(max.to_string()).await?;
+      }
       if matches.is_present("list") {
-        let format = matches.value_of("format").unwrap();
         let category = Type::list_from_matches(matches);
-        Ok(cli.list(category, format).await)
+        Ok(cli.list(category, &format).await)
       } else if let Some(search) = matches.value_of("search") {
-        let format = matches.value_of("format").unwrap().to_string();
-        let query_type = Type::search_from_matches(matches);
-        Ok(cli.query(search.to_string(), format, query_type).await)
+        let category = Type::search_from_matches(matches);
+        Ok(cli.query(search.to_string(), format, category).await)
       // Never called, just here for the compiler
+      // Clap enforces that one of the things above is specified
       } else {
         Ok(String::new())
       }
     }
     // Never called, just here for the compiler
+    // Clap enforces that one of the things above is specified
     _ => Ok(String::new()),
   };
 
-  // Check if there was an error
+  // Check if there was an API error
   let api_error = cli.0.app.lock().await.api_error.clone();
   if api_error.is_empty() {
     output
