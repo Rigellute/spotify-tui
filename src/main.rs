@@ -283,17 +283,19 @@ Example: spt pb -s -f 'playing on %d at %v%'",
                                .visible_alias("q")
                                .arg(format_arg
                                     .default_value_ifs(&[
-                                        // '--list' defaults to devices
-                                        ("list",        None, "%v% %d"      ),
-                                        // '--search' defaults to tracks
-                                        ("search",      None, "%t - %a (%u)"),
                                         ("devices",     None, "%v% %d"      ),
                                         ("liked",       None, "%t - %a (%u)"),
                                         ("tracks",      None, "%t - %a (%u)"),
                                         ("playlists",   None, "%p (%u)"     ),
                                         ("artists",     None, "%a (%u)"     ),
                                         ("albums",      None, "%l - %(%u)"  ),
-                                        ("shows",       None, "%h - %(%u)"  )
+                                        ("shows",       None, "%h - %(%u)"  ),
+                                        // These have to be at the end because clap
+                                        // just takes the first match
+                                        // '--list' defaults to devices
+                                        ("list",        None, "%v% %d"      ),
+                                        // '--search' defaults to tracks
+                                        ("search",      None, "%t - %a (%u)"),
                                     ]))
                                // Listing
                                .arg(Arg::with_name("list")
