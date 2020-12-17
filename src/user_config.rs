@@ -288,7 +288,7 @@ impl UserConfig {
         tick_rate_milliseconds: 250,
         enable_text_emphasis: true,
         show_loading_indicator: true,
-        liked_icon: "".to_string(),
+        liked_icon: " ".to_string(),
         shuffle_icon: "咽".to_string(),
         repeat_track_icon: "綾".to_string(),
         repeat_context_icon: "凌".to_string(),
@@ -486,26 +486,6 @@ impl UserConfig {
 
   pub fn padded_liked_icon(&self) -> String {
     format!("{} ", &self.behavior.liked_icon)
-  }
-
-  pub fn padded_playing_icon(&self) -> String {
-    format!("{} ", &self.behavior.playing_icon)
-  }
-
-  pub fn padded_paused_icon(&self) -> String {
-    format!("{} ", &self.behavior.paused_icon)
-  }
-
-  pub fn padded_shuffle_icon(&self) -> String {
-    format!("{} ", &self.behavior.shuffle_icon)
-  }
-
-  pub fn padded_repeat_track_icon(&self) -> String {
-    format!("{} ", &self.behavior.repeat_track_icon)
-  }
-
-  pub fn padded_repeat_context_icon(&self) -> String {
-    format!("{} ", &self.behavior.repeat_context_icon)
   }
 }
 

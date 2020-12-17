@@ -218,12 +218,12 @@ impl Format {
       // needs to return a &String I have to do it this way
       Self::Volume(s) => s.to_string(),
       Self::Flags((r, s, l)) => {
-        let like = if *l { conf.padded_liked_icon() } else { String::new() };
-        let shuffle = if *s { conf.padded_shuffle_icon() } else { String::new() };
+        let like = if *l { conf.behavior.liked_icon } else { String::new() };
+        let shuffle = if *s { conf.behavior.shuffle_icon } else { String::new() };
         let repeat = match r {
           RepeatState::Off => String::new(),
-          RepeatState::Track => conf.padded_repeat_track_icon(),
-          RepeatState::Context => conf.padded_repeat_context_icon(),
+          RepeatState::Track => conf.behavior.repeat_track_icon,
+          RepeatState::Context => conf.behavior.repeat_context_icon,
         };
 
         // Add them together (only those that aren't empty)
@@ -237,9 +237,9 @@ impl Format {
       }
       Self::Playing(s) => {
         if *s {
-          conf.padded_playing_icon()
+          conf.behavior.playing_icon
         } else {
-          conf.padded_paused_icon()
+          conf.behavior.paused_icon
         }
       }
     }
