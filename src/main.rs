@@ -397,7 +397,7 @@ Example: spt pb -s -f 'playing on %d at %v%'",
         token_expiry,
       )));
 
-      // Check if user asked to execute command
+      // Check if user asked to execute a command
       let mut sub_matches = None;
       let possible_cmds = ["play", "query", "playback"];
       for cmd in &possible_cmds {
@@ -409,8 +409,11 @@ Example: spt pb -s -f 'playing on %d at %v%'",
       // Work with the cli (not really async)
       if let Some((m, cmd)) = sub_matches {
         let network = Network::new(oauth, spotify, client_config, &app);
-        println!("{}", handle_matches(m, cmd.to_string(), network).await?);
-      // Launch the tui (async)
+        println!(
+          "{}",
+          handle_matches(m, cmd.to_string(), network, user_config.behavior).await?
+        );
+      // Launch the UI (async)
       } else {
         let cloned_app = Arc::clone(&app);
         std::thread::spawn(move || {

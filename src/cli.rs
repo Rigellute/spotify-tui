@@ -1,5 +1,6 @@
 use crate::network::IoEvent;
 use crate::network::Network;
+use crate::user_config::BehaviorConfig;
 
 use anyhow::{anyhow, Result};
 use clap::ArgMatches;
@@ -150,7 +151,7 @@ enum FormatType {
   Show(Box<SimplifiedShow>),
 }
 
-// Types that get formatted
+// Types that can be formatted
 #[derive(Clone)]
 enum Format {
   Album(String),
@@ -209,8 +210,9 @@ impl Format {
       ],
     }
   }
+
   // Is there a better way?
-  fn inner(&self) -> String {
+  fn inner(&self, conf: BehaviorConfig) -> String {
     match self {
       Self::Album(s) => s.clone(),
       Self::Artist(s) => s.clone(),
@@ -223,23 +225,30 @@ impl Format {
       // needs to return a &String I have to do it this way
       Self::Volume(s) => s.to_string(),
       Self::Flags((r, s, l)) => {
-        let like = if *l { LIKED_EMOJI } else { "" };
-        let shuffle = if *s { SHUFFLE_EMOJI } else { "" };
+        let like = if *l { conf.liked_icon } else { String::new() };
+        let shuffle = if *s { conf.shuffle_icon } else { String::new() };
         let repeat = match r {
-          RepeatState::Off => "",
-          RepeatState::Track => REPEAT_T_EMOJI,
-          RepeatState::Context => REPEAT_C_EMOJI,
+          RepeatState::Off => String::new(),
+          RepeatState::Track => conf.repeat_track_icon,
+          RepeatState::Context => conf.repeat_context_icon,
         };
 
+        // Add them together (only those that aren't empty)
         [shuffle, repeat, like]
           .iter()
           .filter(|a| !a.is_empty())
-          // Reduce the &&str to &str
-          .copied()
-          .collect::<Vec<&str>>()
+          // Convert &String to String to join them
+          .map(|s| s.to_string())
+          .collect::<Vec<String>>()
           .join(" ")
       }
-      Self::Playing(s) => if *s { PLAYING_EMOJI } else { PAUSED_EMOJI }.to_string(),
+      Self::Playing(s) => {
+        if *s {
+          conf.playing_icon
+        } else {
+          conf.paused_icon
+        }
+      }
     }
   }
 
@@ -259,39 +268,52 @@ impl Format {
   }
 }
 
-fn format_output(mut format: String, values: Vec<Format>) -> String {
-  for val in values {
-    format = format.replace(val.get_placeholder(), &val.inner());
-  }
-  // Replace unsupported flags with 'None'
-  for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s"] {
-    format = format.replace(p, "None");
-  }
-  format.trim().to_string()
-}
-
 //
 // Commands
 //
 
-struct CliApp<'a>(Network<'a>);
+struct CliApp<'a> {
+  net: Network<'a>,
+  behaviour_config: BehaviorConfig,
+}
 
 // Non-concurrent functions
 // I feel that async in a cli is not working
 // I just .await all processes and directly interact
-// by calling network.handle_network_event (network = self.0)
+// by calling network.handle_network_event
 impl<'a> CliApp<'a> {
+  pub fn new(net: Network<'a>, behaviour_config: BehaviorConfig) -> Self {
+    Self {
+      net,
+      behaviour_config,
+    }
+  }
+
+  fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
+    for val in values {
+      format = format.replace(
+        val.get_placeholder(),
+        &val.inner(self.behaviour_config.clone()),
+      );
+    }
+    // Replace unsupported flags with 'None'
+    for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s"] {
+      format = format.replace(p, "None");
+    }
+    format.trim().to_string()
+  }
+
   // spt playback -t
   async fn toggle_playback(&mut self) {
-    let context = self.0.app.lock().await.current_playback_context.clone();
+    let context = self.net.app.lock().await.current_playback_context.clone();
     if let Some(c) = context {
       if c.is_playing {
-        self.0.handle_network_event(IoEvent::PausePlayback).await;
+        self.net.handle_network_event(IoEvent::PausePlayback).await;
         return;
       }
     }
     self
-      .0
+      .net
       .handle_network_event(IoEvent::StartPlayback(None, None, None))
       .await;
   }
@@ -299,7 +321,7 @@ impl<'a> CliApp<'a> {
   // spt ... -d ... (specify device to control)
   async fn set_device(&mut self, name: String) -> Result<()> {
     // Change the device if specified by user
-    let mut app = self.0.app.lock().await;
+    let mut app = self.net.app.lock().await;
     let mut device_index = 0;
     if let Some(dp) = &app.devices {
       for (i, d) in dp.devices.iter().enumerate() {
@@ -307,7 +329,7 @@ impl<'a> CliApp<'a> {
           device_index = i;
           // Save the id of the device
           self
-            .0
+            .net
             .client_config
             .set_device_id(d.id.clone())
             .map_err(|_e| anyhow!("failed to set device with name '{}'", d.name))?;
@@ -331,9 +353,9 @@ impl<'a> CliApp<'a> {
     if num > 50 {
       return Err(anyhow!("{} is too big, max limit is 50", num));
     };
-    
+
     self
-      .0
+      .net
       .handle_network_event(IoEvent::UpdateSearchLimits(num, num))
       .await;
     Ok(())
@@ -350,7 +372,7 @@ impl<'a> CliApp<'a> {
     };
 
     self
-      .0
+      .net
       .handle_network_event(IoEvent::ChangeVolume(num as u8))
       .await;
     Ok(())
@@ -359,8 +381,8 @@ impl<'a> CliApp<'a> {
   // spt playback --next / --previous
   async fn jump(&mut self, d: JumpDirection) {
     match d {
-      JumpDirection::Next => self.0.handle_network_event(IoEvent::NextTrack).await,
-      JumpDirection::Previous => self.0.handle_network_event(IoEvent::PreviousTrack).await,
+      JumpDirection::Next => self.net.handle_network_event(IoEvent::NextTrack).await,
+      JumpDirection::Previous => self.net.handle_network_event(IoEvent::PreviousTrack).await,
     }
   }
 
@@ -368,12 +390,12 @@ impl<'a> CliApp<'a> {
   async fn list(&mut self, item: Type, format: &str) -> String {
     match item {
       Type::Device => {
-        if let Some(devices) = &self.0.app.lock().await.devices {
+        if let Some(devices) = &self.net.app.lock().await.devices {
           devices
             .devices
             .iter()
             .map(|d| {
-              format_output(
+              self.format_output(
                 format.to_string(),
                 vec![
                   Format::Device(d.name.clone()),
@@ -388,13 +410,13 @@ impl<'a> CliApp<'a> {
         }
       }
       Type::Playlist => {
-        self.0.handle_network_event(IoEvent::GetPlaylists).await;
-        if let Some(playlists) = &self.0.app.lock().await.playlists {
+        self.net.handle_network_event(IoEvent::GetPlaylists).await;
+        if let Some(playlists) = &self.net.app.lock().await.playlists {
           playlists
             .items
             .iter()
             .map(|p| {
-              format_output(
+              self.format_output(
                 format.to_string(),
                 Format::from_type(FormatType::Playlist(Box::new(p.clone()))),
               )
@@ -407,11 +429,11 @@ impl<'a> CliApp<'a> {
       }
       Type::Liked => {
         self
-          .0
+          .net
           .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
           .await;
         self
-          .0
+          .net
           .app
           .lock()
           .await
@@ -419,7 +441,7 @@ impl<'a> CliApp<'a> {
           .tracks
           .iter()
           .map(|t| {
-            format_output(
+            self.format_output(
               format.to_string(),
               Format::from_type(FormatType::Track(Box::new(t.clone()))),
             )
@@ -435,7 +457,7 @@ impl<'a> CliApp<'a> {
   async fn transfer_playback(&mut self, device: &str) -> Result<()> {
     // Get the device id by name
     let mut id = String::new();
-    if let Some(devices) = &self.0.app.lock().await.devices {
+    if let Some(devices) = &self.net.app.lock().await.devices {
       for d in &devices.devices {
         if d.name == device {
           id.push_str(d.id.as_str());
@@ -448,7 +470,7 @@ impl<'a> CliApp<'a> {
       Err(anyhow!("no device with name {}", device))
     } else {
       self
-        .0
+        .net
         .handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string()))
         .await;
       Ok(())
@@ -458,7 +480,7 @@ impl<'a> CliApp<'a> {
   // spt playback --like / --shuffle / --repeat
   async fn mark(&mut self, flag: Flag) -> Result<()> {
     let c = {
-      let app = self.0.app.lock().await;
+      let app = self.net.app.lock().await;
       app
         .current_playback_context
         .clone()
@@ -476,13 +498,13 @@ impl<'a> CliApp<'a> {
           None => Err(anyhow!("no item playing")),
         };
         self
-          .0
+          .net
           .handle_network_event(IoEvent::ToggleSaveTrack(id?))
           .await;
       }
       Flag::Shuffle => {
         self
-          .0
+          .net
           .handle_network_event(IoEvent::Shuffle(c.shuffle_state))
           .await
       }
@@ -491,7 +513,7 @@ impl<'a> CliApp<'a> {
       // This just toggles between RepeatState::Off and RepeatState::Context
       Flag::Repeat => {
         self
-          .0
+          .net
           .handle_network_event(IoEvent::Repeat(c.repeat_state))
           .await;
       }
@@ -504,16 +526,16 @@ impl<'a> CliApp<'a> {
   async fn get_status(&mut self, format: String) -> Result<String> {
     // Update info on current playback
     self
-      .0
+      .net
       .handle_network_event(IoEvent::GetCurrentPlayback)
       .await;
     self
-      .0
+      .net
       .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
       .await;
 
     let context = self
-      .0
+      .net
       .app
       .lock()
       .await
@@ -530,7 +552,7 @@ impl<'a> CliApp<'a> {
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,
-          self.0.app.lock().await.liked_song_ids_set.contains(&id),
+          self.net.app.lock().await.liked_song_ids_set.contains(&id),
         )));
         hs
       }
@@ -549,14 +571,14 @@ impl<'a> CliApp<'a> {
     hs.push(Format::Volume(context.device.volume_percent));
     hs.push(Format::Playing(context.is_playing));
 
-    Ok(format_output(format, hs))
+    Ok(self.format_output(format, hs))
   }
 
   // spt play -u URI
   async fn play_uri(&mut self, uri: String) {
     if uri.contains("spotify:track:") {
       self
-        .0
+        .net
         .handle_network_event(IoEvent::StartPlayback(
           None,
           Some(vec![uri.clone()]),
@@ -565,7 +587,7 @@ impl<'a> CliApp<'a> {
         .await;
     } else {
       self
-        .0
+        .net
         .handle_network_event(IoEvent::StartPlayback(Some(uri.clone()), None, None))
         .await;
     }
@@ -574,13 +596,13 @@ impl<'a> CliApp<'a> {
   // spt play -n NAME ...
   async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<()> {
     self
-      .0
+      .net
       .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
       .await;
     // Get the uri of the first found
     // item or return an error message
     let uri = {
-      let results = &self.0.app.lock().await.search_results;
+      let results = &self.net.app.lock().await.search_results;
       match item {
         Type::Track => {
           if let Some(r) = &results.tracks {
@@ -629,7 +651,7 @@ impl<'a> CliApp<'a> {
     // Play or queue the uri
     if queue {
       self
-        .0
+        .net
         .handle_network_event(IoEvent::AddItemToQueue(uri))
         .await;
     } else {
@@ -645,11 +667,11 @@ impl<'a> CliApp<'a> {
   // spt query -s SEARCH ...
   async fn query(&mut self, search: String, format: String, item: Type) -> String {
     self
-      .0
+      .net
       .handle_network_event(IoEvent::GetSearchResults(search.clone(), None))
       .await;
 
-    let app = self.0.app.lock().await;
+    let app = self.net.app.lock().await;
     match item {
       Type::Playlist => {
         if let Some(results) = &app.search_results.playlists {
@@ -657,7 +679,7 @@ impl<'a> CliApp<'a> {
             .items
             .iter()
             .map(|r| {
-              format_output(
+              self.format_output(
                 format.clone(),
                 Format::from_type(FormatType::Playlist(Box::new(r.clone()))),
               )
@@ -674,7 +696,7 @@ impl<'a> CliApp<'a> {
             .items
             .iter()
             .map(|r| {
-              format_output(
+              self.format_output(
                 format.clone(),
                 Format::from_type(FormatType::Track(Box::new(r.clone()))),
               )
@@ -691,7 +713,7 @@ impl<'a> CliApp<'a> {
             .items
             .iter()
             .map(|r| {
-              format_output(
+              self.format_output(
                 format.clone(),
                 Format::from_type(FormatType::Artist(Box::new(r.clone()))),
               )
@@ -708,7 +730,7 @@ impl<'a> CliApp<'a> {
             .items
             .iter()
             .map(|r| {
-              format_output(
+              self.format_output(
                 format.clone(),
                 Format::from_type(FormatType::Show(Box::new(r.clone()))),
               )
@@ -725,7 +747,7 @@ impl<'a> CliApp<'a> {
             .items
             .iter()
             .map(|r| {
-              format_output(
+              self.format_output(
                 format.clone(),
                 Format::from_type(FormatType::Album(Box::new(r.clone()))),
               )
@@ -746,21 +768,22 @@ pub async fn handle_matches(
   matches: &ArgMatches<'_>,
   cmd: String,
   net: Network<'_>,
+  behaviour_config: BehaviorConfig,
 ) -> Result<String> {
   // Tuple struct
-  let mut cli = CliApp(net);
+  let mut cli = CliApp::new(net, behaviour_config);
 
-  cli.0.handle_network_event(IoEvent::GetDevices).await;
+  cli.net.handle_network_event(IoEvent::GetDevices).await;
   cli
-    .0
+    .net
     .handle_network_event(IoEvent::GetCurrentPlayback)
     .await;
 
   // If the device_id is not specified, select the first avaible device
-  if cli.0.client_config.device_id.is_none() {
-    if let Some(p) = &cli.0.app.lock().await.devices {
+  if cli.net.client_config.device_id.is_none() {
+    if let Some(p) = &cli.net.app.lock().await.devices {
       if let Some(d) = p.devices.get(0) {
-        cli.0.client_config.set_device_id(d.id.clone())?;
+        cli.net.client_config.set_device_id(d.id.clone())?;
       }
     }
   }
@@ -827,8 +850,8 @@ pub async fn handle_matches(
     _ => Ok(String::new()),
   };
 
-  // Check if there was an API error
-  let api_error = cli.0.app.lock().await.api_error.clone();
+  // Check if there was an error
+  let api_error = cli.net.app.lock().await.api_error.clone();
   if api_error.is_empty() {
     output
   } else {
