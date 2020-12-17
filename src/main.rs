@@ -411,7 +411,7 @@ Example: spt pb -s -f 'playing on %d at %v%'",
         let network = Network::new(oauth, spotify, client_config, &app);
         println!(
           "{}",
-          handle_matches(m, cmd.to_string(), network, user_config.behavior).await?
+          handle_matches(m, cmd.to_string(), network, user_config).await?
         );
       // Launch the UI (async)
       } else {

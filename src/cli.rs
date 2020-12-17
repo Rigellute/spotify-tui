@@ -1,6 +1,6 @@
 use crate::network::IoEvent;
 use crate::network::Network;
-use crate::user_config::BehaviorConfig;
+use crate::user_config::UserConfig;
 
 use anyhow::{anyhow, Result};
 use clap::ArgMatches;
@@ -205,7 +205,7 @@ impl Format {
   }
 
   // Is there a better way?
-  fn inner(&self, conf: BehaviorConfig) -> String {
+  fn inner(&self, conf: UserConfig) -> String {
     match self {
       Self::Album(s) => s.clone(),
       Self::Artist(s) => s.clone(),
@@ -218,12 +218,12 @@ impl Format {
       // needs to return a &String I have to do it this way
       Self::Volume(s) => s.to_string(),
       Self::Flags((r, s, l)) => {
-        let like = if *l { conf.liked_icon } else { String::new() };
-        let shuffle = if *s { conf.shuffle_icon } else { String::new() };
+        let like = if *l { conf.padded_liked_icon() } else { String::new() };
+        let shuffle = if *s { conf.padded_shuffle_icon() } else { String::new() };
         let repeat = match r {
           RepeatState::Off => String::new(),
-          RepeatState::Track => conf.repeat_track_icon,
-          RepeatState::Context => conf.repeat_context_icon,
+          RepeatState::Track => conf.padded_repeat_track_icon(),
+          RepeatState::Context => conf.padded_repeat_context_icon(),
         };
 
         // Add them together (only those that aren't empty)
@@ -237,9 +237,9 @@ impl Format {
       }
       Self::Playing(s) => {
         if *s {
-          conf.playing_icon
+          conf.padded_playing_icon()
         } else {
-          conf.paused_icon
+          conf.padded_paused_icon()
         }
       }
     }
@@ -761,7 +761,7 @@ pub async fn handle_matches(
   matches: &ArgMatches<'_>,
   cmd: String,
   net: Network<'_>,
-  behaviour_config: BehaviorConfig,
+  config: UserConfig,
 ) -> Result<String> {
   // Tuple struct
   let mut cli = CliApp::new(net, behaviour_config);
