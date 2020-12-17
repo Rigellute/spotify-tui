@@ -288,7 +288,7 @@ impl UserConfig {
         tick_rate_milliseconds: 250,
         enable_text_emphasis: true,
         show_loading_indicator: true,
-        liked_icon: "♥".to_string(),
+        liked_icon: " ".to_string(),
         shuffle_icon: "咽".to_string(),
         repeat_track_icon: "綾".to_string(),
         repeat_context_icon: "凌".to_string(),

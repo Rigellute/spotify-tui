@@ -13,13 +13,6 @@ use rspotify::{
   senum::RepeatState,
 };
 
-const LIKED_EMOJI: &str = " ";
-const SHUFFLE_EMOJI: &str = "咽";
-const REPEAT_T_EMOJI: &str = "綾";
-const REPEAT_C_EMOJI: &str = "凌";
-const PLAYING_EMOJI: &str = "契";
-const PAUSED_EMOJI: &str = " ";
-
 //
 // Possible types to list or search
 //
