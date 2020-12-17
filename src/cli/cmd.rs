@@ -106,7 +106,6 @@ pub fn play_subcommand() -> App<'static, 'static> {
              .long("name")
              .takes_value(true)
              .value_name("NAME")
-             .requires("contexts")
              .help("Play first match with NAME from category"))
         .arg(Arg::with_name("queue")
              .short("q")
