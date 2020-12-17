@@ -218,8 +218,16 @@ impl Format {
       // needs to return a &String I have to do it this way
       Self::Volume(s) => s.to_string(),
       Self::Flags((r, s, l)) => {
-        let like = if *l { conf.behavior.liked_icon } else { String::new() };
-        let shuffle = if *s { conf.behavior.shuffle_icon } else { String::new() };
+        let like = if *l {
+          conf.behavior.liked_icon
+        } else {
+          String::new()
+        };
+        let shuffle = if *s {
+          conf.behavior.shuffle_icon
+        } else {
+          String::new()
+        };
         let repeat = match r {
           RepeatState::Off => String::new(),
           RepeatState::Track => conf.behavior.repeat_track_icon,
@@ -276,18 +284,12 @@ struct CliApp<'a> {
 // by calling network.handle_network_event
 impl<'a> CliApp<'a> {
   pub fn new(net: Network<'a>, config: UserConfig) -> Self {
-    Self {
-      net,
-      config,
-    }
+    Self { net, config }
   }
 
   fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
     for val in values {
-      format = format.replace(
-        val.get_placeholder(),
-        &val.inner(self.config.clone()),
-      );
+      format = format.replace(val.get_placeholder(), &val.inner(self.config.clone()));
     }
     // Replace unsupported flags with 'None'
     for p in &["%a", "%b", "%t", "%p", "%h", "%u", "%d", "%v", "%f", "%s"] {
