@@ -293,7 +293,7 @@ impl UserConfig {
         repeat_track_icon: "綾".to_string(),
         repeat_context_icon: "凌".to_string(),
         playing_icon: "契".to_string(),
-        paused_icon: "".to_string(),
+        paused_icon: " ".to_string(),
       },
       path_to_config: None,
     }
