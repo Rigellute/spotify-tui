@@ -267,7 +267,7 @@ impl Format {
 
 struct CliApp<'a> {
   net: Network<'a>,
-  behaviour_config: BehaviorConfig,
+  config: UserConfig,
 }
 
 // Non-concurrent functions
@@ -275,10 +275,10 @@ struct CliApp<'a> {
 // I just .await all processes and directly interact
 // by calling network.handle_network_event
 impl<'a> CliApp<'a> {
-  pub fn new(net: Network<'a>, behaviour_config: BehaviorConfig) -> Self {
+  pub fn new(net: Network<'a>, config: UserConfig) -> Self {
     Self {
       net,
-      behaviour_config,
+      config,
     }
   }
 
@@ -286,7 +286,7 @@ impl<'a> CliApp<'a> {
     for val in values {
       format = format.replace(
         val.get_placeholder(),
-        &val.inner(self.behaviour_config.clone()),
+        &val.inner(self.config.clone()),
       );
     }
     // Replace unsupported flags with 'None'
@@ -764,7 +764,7 @@ pub async fn handle_matches(
   config: UserConfig,
 ) -> Result<String> {
   // Tuple struct
-  let mut cli = CliApp::new(net, behaviour_config);
+  let mut cli = CliApp::new(net, config);
 
   cli.net.handle_network_event(IoEvent::GetDevices).await;
   cli
