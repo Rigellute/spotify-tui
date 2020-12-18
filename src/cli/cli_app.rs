@@ -287,6 +287,15 @@ impl<'a> CliApp<'a> {
     Self { net, config }
   }
 
+  async fn is_a_saved_track(&mut self, id: String) -> bool {
+    // Update the liked_song_ids_set
+    self
+      .net
+      .handle_network_event(IoEvent::CurrentUserSavedTracksContains(vec![id.clone()]))
+      .await;
+    self.net.app.lock().await.liked_song_ids_set.contains(&id)
+  }
+
   fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
     for val in values {
       format = format.replace(val.get_placeholder(), &val.inner(self.config.clone()));
@@ -547,7 +556,7 @@ impl<'a> CliApp<'a> {
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,
-          self.net.app.lock().await.liked_song_ids_set.contains(&id),
+          self.is_a_saved_track(id).await,
         )));
         hs
       }
