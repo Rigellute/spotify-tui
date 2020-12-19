@@ -351,11 +351,11 @@ impl<'a> CliApp<'a> {
   async fn update_query_limits(&mut self, max: String) -> Result<()> {
     let num = max
       .parse::<u32>()
-      .map_err(|_e| anyhow!("failed to convert {} to u32", max))?;
+      .map_err(|_e| anyhow!("limit must be between 1 and 50"))?;
 
     // 50 seems to be the maximum limit
-    if num > 50 {
-      return Err(anyhow!("{} is too big, max limit is 50", num));
+    if num > 50 || num == 0 {
+      return Err(anyhow!("limit must be between 1 and 50"));
     };
 
     self
@@ -368,11 +368,11 @@ impl<'a> CliApp<'a> {
   async fn volume(&mut self, vol: String) -> Result<()> {
     let num = vol
       .parse::<u32>()
-      .map_err(|_e| anyhow!("failed to convert {} to u32", vol))?;
+      .map_err(|_e| anyhow!("volume must be between 0 and 100"))?;
 
     // Check if it's in range
     if num > 100 {
-      return Err(anyhow!("{} is too big, max volume is 100", num));
+      return Err(anyhow!("volume must be between 0 and 100"));
     };
 
     self
