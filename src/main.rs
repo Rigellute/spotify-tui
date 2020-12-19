@@ -11,11 +11,11 @@ mod user_config;
 
 use crate::app::RouteId;
 use crate::event::Key;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
-use clap::{App as ClapApp, Arg};
+use clap::{App as ClapApp, Arg, Shell};
 use config::ClientConfig;
 use crossterm::{
   cursor::MoveTo,
@@ -124,7 +124,7 @@ async fn main() -> Result<()> {
     panic_hook(info);
   }));
 
-  let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
+  let mut clap_app = ClapApp::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
@@ -141,11 +141,31 @@ async fn main() -> Result<()> {
                                .long("config")
                                .help("Specify configuration file path.")
                                .takes_value(true))
+         .arg(Arg::with_name("completions")
+                               .long("completions")
+                               .help("Generate completions for your preferred shell")
+                               .takes_value(true)
+                               .value_name("SHELL"))
          // Control spotify from the command line
          .subcommand(cli::playback_subcommand())
          .subcommand(cli::play_subcommand())
-         .subcommand(cli::query_subcommand())
-        .get_matches();
+         .subcommand(cli::query_subcommand());
+
+  let matches = clap_app.clone().get_matches();
+
+  // Shell completions don't need any spotify work
+  if let Some(s) = matches.value_of("completions") {
+    let shell = match s {
+      "fish" => Shell::Fish,
+      "bash" => Shell::Bash,
+      "zsh" => Shell::Zsh,
+      "powershell" => Shell::PowerShell,
+      "elvish" => Shell::Elvish,
+      _ => return Err(anyhow!("no completions avaible for '{}'", s)),
+    };
+    clap_app.gen_completions_to("spt", shell, &mut io::stdout());
+    return Ok(());
+  }
 
   let mut user_config = UserConfig::new();
   if let Some(config_file_path) = matches.value_of("config") {

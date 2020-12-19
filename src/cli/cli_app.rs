@@ -800,6 +800,7 @@ pub async fn handle_matches(
   let output = match cmd.as_str() {
     "playback" => {
       let format = matches.value_of("format").unwrap();
+
       // Run the action, and print out the status
       if matches.is_present("toggle") {
         cli.toggle_playback().await;
@@ -814,6 +815,7 @@ pub async fn handle_matches(
       } else if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;
       }
+
       // Print out the status if no errors were found
       cli.get_status(format.to_string()).await
     }
@@ -826,17 +828,20 @@ pub async fn handle_matches(
           .play(name.to_string(), category, matches.is_present("queue"))
           .await?;
       }
+
       // Could be made configurable in the future
       cli.get_status("%s %t - %a".to_string()).await
     }
     "query" => {
       let format = matches.value_of("format").unwrap().to_string();
+
       // Update the limits for the list and search functions
       // I think the small and big search limits are very confusing
       // so I just set them both to max, is this okay?
       if let Some(max) = matches.value_of("limit") {
         cli.update_query_limits(max.to_string()).await?;
       }
+
       if matches.is_present("list") {
         let category = Type::list_from_matches(matches);
         Ok(cli.list(category, &format).await)

@@ -107,8 +107,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     .group(
       ArgGroup::with_name("actions")
         .args(&[
-          "toggle", "status", "transfer", "like", "shuffle", 
-          "repeat", "next", "previous", "volume",
+          "toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous", "volume",
         ])
         .multiple(false)
         .required(true),
@@ -204,8 +203,7 @@ pub fn query_subcommand() -> App<'static, 'static> {
       ("artists", None, "%a (%u)"),
       ("albums", None, "%l - %(%u)"),
       ("shows", None, "%h - %(%u)"),
-      // These have to be at the end because clap
-      // just takes the first match
+      // These have to be at the end because clap just takes the first match
       // '--list' defaults to devices
       ("list", None, "%v% %d"),
       // '--search' defaults to tracks
