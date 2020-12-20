@@ -1,281 +1,18 @@
-use crate::network::IoEvent;
-use crate::network::Network;
+use crate::network::{IoEvent, Network};
 use crate::user_config::UserConfig;
 
+use super::util::{Flag, Format, FormatType, JumpDirection, Type};
+
 use anyhow::{anyhow, Result};
-use clap::ArgMatches;
-use rspotify::{
-  model::{
-    album::SimplifiedAlbum, artist::FullArtist, artist::SimplifiedArtist,
-    playlist::SimplifiedPlaylist, show::FullEpisode, show::SimplifiedShow, track::FullTrack,
-    PlayingItem,
-  },
-  senum::RepeatState,
-};
-
-//
-// Possible types to list or search
-//
-
-#[derive(Debug)]
-enum Type {
-  Playlist,
-  Track,
-  Artist,
-  Album,
-  Show,
-  Device,
-  Liked,
-}
-
-impl Type {
-  fn play_from_matches(m: &ArgMatches<'_>) -> Self {
-    if m.is_present("playlist") {
-      Self::Playlist
-    } else if m.is_present("track") {
-      Self::Track
-    } else if m.is_present("artist") {
-      Self::Artist
-    } else if m.is_present("album") {
-      Self::Album
-    } else if m.is_present("show") {
-      Self::Show
-    }
-    // Default: track
-    else {
-      Self::Track
-    }
-  }
-  fn search_from_matches(m: &ArgMatches<'_>) -> Self {
-    if m.is_present("playlists") {
-      Self::Playlist
-    } else if m.is_present("tracks") {
-      Self::Track
-    } else if m.is_present("artists") {
-      Self::Artist
-    } else if m.is_present("albums") {
-      Self::Album
-    } else if m.is_present("shows") {
-      Self::Show
-    }
-    // Default: track
-    else {
-      Self::Track
-    }
-  }
-  fn list_from_matches(m: &ArgMatches<'_>) -> Self {
-    if m.is_present("playlists") {
-      Self::Playlist
-    } else if m.is_present("devices") {
-      Self::Device
-    } else if m.is_present("liked") {
-      Self::Liked
-    }
-    // Default: device
-    else {
-      Self::Device
-    }
-  }
-}
-
-//
-// Possible flags to set
-//
-
-enum Flag {
-  Like,
-  Shuffle,
-  Repeat,
-}
-
-impl Flag {
-  fn from_matches(m: &ArgMatches<'_>) -> Self {
-    if m.is_present("like") {
-      Self::Like
-    } else if m.is_present("shuffle") {
-      Self::Shuffle
-    } else if m.is_present("repeat") {
-      Self::Repeat
-    }
-    // No default, just placeholder (clap requires user to specify something)
-    else {
-      Self::Like
-    }
-  }
-}
-
-//
-// Possible directions to jump to
-//
-
-enum JumpDirection {
-  Next,
-  Previous,
-}
-
-impl JumpDirection {
-  fn from_matches(m: &ArgMatches<'_>) -> Self {
-    if m.is_present("next") {
-      Self::Next
-    } else if m.is_present("previous") {
-      Self::Previous
-    // Again: there is no default value
-    // If this function was called, one of these above
-    // has to be specified
-    } else {
-      Self::Next
-    }
-  }
-}
-
-//
-// For fomatting (-f / --format flag)
-//
-
-// Types to create a Format enum from
-// Boxing was proposed by cargo clippy
-// to reduce the size of this enum
-enum FormatType {
-  Album(Box<SimplifiedAlbum>),
-  Artist(Box<FullArtist>),
-  Playlist(Box<SimplifiedPlaylist>),
-  Track(Box<FullTrack>),
-  Episode(Box<FullEpisode>),
-  Show(Box<SimplifiedShow>),
-}
-
-// Types that can be formatted
-#[derive(Clone)]
-enum Format {
-  Album(String),
-  Artist(String),
-  Playlist(String),
-  Track(String),
-  Show(String),
-  Uri(String),
-  Device(String),
-  Volume(u32),
-  // This is a bit long, should it be splitted up?
-  Flags((RepeatState, bool, bool)),
-  Playing(bool),
-}
-
-fn join_artists(a: Vec<SimplifiedArtist>) -> String {
-  a.iter()
-    .map(|l| l.name.clone())
-    .collect::<Vec<String>>()
-    .join(", ")
-}
-
-impl Format {
-  // Extract important information from types
-  fn from_type(t: FormatType) -> Vec<Self> {
-    match t {
-      FormatType::Album(a) => {
-        let joined_artists = join_artists(a.artists.clone());
-        let mut vec = vec![Self::Album(a.name), Self::Artist(joined_artists)];
-        if let Some(uri) = a.uri {
-          vec.push(Self::Uri(uri));
-        }
-        vec
-      }
-      FormatType::Artist(a) => vec![Self::Artist(a.name), Self::Uri(a.uri)],
-      FormatType::Playlist(p) => vec![Self::Playlist(p.name), Self::Uri(p.uri)],
-      FormatType::Track(t) => {
-        let joined_artists = join_artists(t.artists.clone());
-        vec![
-          Self::Album(t.album.name),
-          Self::Artist(joined_artists),
-          Self::Track(t.name),
-          Self::Uri(t.uri),
-        ]
-      }
-      FormatType::Show(r) => vec![
-        Self::Artist(r.publisher),
-        Self::Show(r.name),
-        Self::Uri(r.uri),
-      ],
-      FormatType::Episode(e) => vec![
-        Self::Show(e.show.name),
-        Self::Artist(e.show.publisher),
-        Self::Track(e.name),
-        Self::Uri(e.uri),
-      ],
-    }
-  }
-
-  // Is there a better way?
-  fn inner(&self, conf: UserConfig) -> String {
-    match self {
-      Self::Album(s) => s.clone(),
-      Self::Artist(s) => s.clone(),
-      Self::Playlist(s) => s.clone(),
-      Self::Track(s) => s.clone(),
-      Self::Show(s) => s.clone(),
-      Self::Uri(s) => s.clone(),
-      Self::Device(s) => s.clone(),
-      // Because this match statements
-      // needs to return a &String I have to do it this way
-      Self::Volume(s) => s.to_string(),
-      Self::Flags((r, s, l)) => {
-        let like = if *l {
-          conf.behavior.liked_icon
-        } else {
-          String::new()
-        };
-        let shuffle = if *s {
-          conf.behavior.shuffle_icon
-        } else {
-          String::new()
-        };
-        let repeat = match r {
-          RepeatState::Off => String::new(),
-          RepeatState::Track => conf.behavior.repeat_track_icon,
-          RepeatState::Context => conf.behavior.repeat_context_icon,
-        };
-
-        // Add them together (only those that aren't empty)
-        [shuffle, repeat, like]
-          .iter()
-          .filter(|a| !a.is_empty())
-          // Convert &String to String to join them
-          .map(|s| s.to_string())
-          .collect::<Vec<String>>()
-          .join(" ")
-      }
-      Self::Playing(s) => {
-        if *s {
-          conf.behavior.playing_icon
-        } else {
-          conf.behavior.paused_icon
-        }
-      }
-    }
-  }
-
-  fn get_placeholder(&self) -> &str {
-    match self {
-      Self::Album(_) => "%b",
-      Self::Artist(_) => "%a",
-      Self::Playlist(_) => "%p",
-      Self::Track(_) => "%t",
-      Self::Show(_) => "%h",
-      Self::Uri(_) => "%u",
-      Self::Device(_) => "%d",
-      Self::Volume(_) => "%v",
-      Self::Flags(_) => "%f",
-      Self::Playing(_) => "%s",
-    }
-  }
-}
+use rspotify::model::PlayingItem;
 
 //
 // Commands
 //
 
-struct CliApp<'a> {
-  net: Network<'a>,
-  config: UserConfig,
+pub struct CliApp<'a> {
+  pub net: Network<'a>,
+  pub config: UserConfig,
 }
 
 // Non-concurrent functions
@@ -296,7 +33,7 @@ impl<'a> CliApp<'a> {
     self.net.app.lock().await.liked_song_ids_set.contains(&id)
   }
 
-  fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
+  pub fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
     for val in values {
       format = format.replace(val.get_placeholder(), &val.inner(self.config.clone()));
     }
@@ -308,7 +45,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback -t
-  async fn toggle_playback(&mut self) {
+  pub async fn toggle_playback(&mut self) {
     let context = self.net.app.lock().await.current_playback_context.clone();
     if let Some(c) = context {
       if c.is_playing {
@@ -323,7 +60,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt ... -d ... (specify device to control)
-  async fn set_device(&mut self, name: String) -> Result<()> {
+  pub async fn set_device(&mut self, name: String) -> Result<()> {
     // Change the device if specified by user
     let mut app = self.net.app.lock().await;
     let mut device_index = 0;
@@ -348,7 +85,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt query ... --limit LIMIT (set max search limit)
-  async fn update_query_limits(&mut self, max: String) -> Result<()> {
+  pub async fn update_query_limits(&mut self, max: String) -> Result<()> {
     let num = max
       .parse::<u32>()
       .map_err(|_e| anyhow!("limit must be between 1 and 50"))?;
@@ -365,7 +102,7 @@ impl<'a> CliApp<'a> {
     Ok(())
   }
 
-  async fn volume(&mut self, vol: String) -> Result<()> {
+  pub async fn volume(&mut self, vol: String) -> Result<()> {
     let num = vol
       .parse::<u32>()
       .map_err(|_e| anyhow!("volume must be between 0 and 100"))?;
@@ -383,7 +120,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback --next / --previous
-  async fn jump(&mut self, d: JumpDirection) {
+  pub async fn jump(&mut self, d: JumpDirection) {
     match d {
       JumpDirection::Next => self.net.handle_network_event(IoEvent::NextTrack).await,
       JumpDirection::Previous => self.net.handle_network_event(IoEvent::PreviousTrack).await,
@@ -391,7 +128,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt query -l ...
-  async fn list(&mut self, item: Type, format: &str) -> String {
+  pub async fn list(&mut self, item: Type, format: &str) -> String {
     match item {
       Type::Device => {
         if let Some(devices) = &self.net.app.lock().await.devices {
@@ -458,7 +195,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback --transfer DEVICE
-  async fn transfer_playback(&mut self, device: &str) -> Result<()> {
+  pub async fn transfer_playback(&mut self, device: &str) -> Result<()> {
     // Get the device id by name
     let mut id = String::new();
     if let Some(devices) = &self.net.app.lock().await.devices {
@@ -482,7 +219,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback --like / --shuffle / --repeat
-  async fn mark(&mut self, flag: Flag) -> Result<()> {
+  pub async fn mark(&mut self, flag: Flag) -> Result<()> {
     let c = {
       let app = self.net.app.lock().await;
       app
@@ -527,7 +264,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback -s
-  async fn get_status(&mut self, format: String) -> Result<String> {
+  pub async fn get_status(&mut self, format: String) -> Result<String> {
     // Update info on current playback
     self
       .net
@@ -579,7 +316,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt play -u URI
-  async fn play_uri(&mut self, uri: String) {
+  pub async fn play_uri(&mut self, uri: String) {
     if uri.contains("spotify:track:") {
       self
         .net
@@ -598,7 +335,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt play -n NAME ...
-  async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<()> {
+  pub async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<()> {
     self
       .net
       .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
@@ -665,11 +402,8 @@ impl<'a> CliApp<'a> {
     Ok(())
   }
 
-  // Query for a playlist, track, artist, shows and albums
-  // Returns result and their respective uris (to play them)
-  //
   // spt query -s SEARCH ...
-  async fn query(&mut self, search: String, format: String, item: Type) -> String {
+  pub async fn query(&mut self, search: String, format: String, item: Type) -> String {
     self
       .net
       .handle_network_event(IoEvent::GetSearchResults(search.clone(), None))
@@ -765,115 +499,5 @@ impl<'a> CliApp<'a> {
       // Never called, just here for compiler
       _ => String::new(),
     }
-  }
-}
-
-pub async fn handle_matches(
-  matches: &ArgMatches<'_>,
-  cmd: String,
-  net: Network<'_>,
-  config: UserConfig,
-) -> Result<String> {
-  // Tuple struct
-  let mut cli = CliApp::new(net, config);
-
-  cli.net.handle_network_event(IoEvent::GetDevices).await;
-  cli
-    .net
-    .handle_network_event(IoEvent::GetCurrentPlayback)
-    .await;
-
-  let devices_list = match &cli.net.app.lock().await.devices {
-    Some(p) => p
-      .devices
-      .iter()
-      .map(|d| d.id.clone())
-      .collect::<Vec<String>>(),
-    None => Vec::new(),
-  };
-
-  // If the device_id is not specified, select the first available device
-  let device_id = cli.net.client_config.device_id.clone();
-  if device_id.is_none() || !devices_list.contains(&device_id.unwrap()) {
-    // Select the first device available
-    if let Some(d) = devices_list.get(0) {
-      cli.net.client_config.set_device_id(d.clone())?;
-    }
-  }
-
-  if let Some(d) = matches.value_of("device") {
-    cli.set_device(d.to_string()).await?;
-  }
-
-  // Evalute the subcommand
-  let output = match cmd.as_str() {
-    "playback" => {
-      let format = matches.value_of("format").unwrap();
-
-      // Run the action, and print out the status
-      if matches.is_present("toggle") {
-        cli.toggle_playback().await;
-      } else if let Some(d) = matches.value_of("transfer") {
-        cli.transfer_playback(d).await?;
-      } else if matches.is_present("flags") {
-        let flag = Flag::from_matches(matches);
-        cli.mark(flag).await?;
-      } else if matches.is_present("jumps") {
-        let direction = JumpDirection::from_matches(matches);
-        cli.jump(direction).await;
-      } else if let Some(vol) = matches.value_of("volume") {
-        cli.volume(vol.to_string()).await?;
-      }
-
-      // Print out the status if no errors were found
-      cli.get_status(format.to_string()).await
-    }
-    "play" => {
-      let format = matches.value_of("format").unwrap();
-      if let Some(uri) = matches.value_of("uri") {
-        cli.play_uri(uri.to_string()).await;
-      } else if let Some(name) = matches.value_of("name") {
-        let category = Type::play_from_matches(matches);
-        cli
-          .play(name.to_string(), category, matches.is_present("queue"))
-          .await?;
-      }
-
-      // Could be made configurable in the future
-      cli.get_status(format.to_string()).await
-    }
-    "query" => {
-      let format = matches.value_of("format").unwrap().to_string();
-
-      // Update the limits for the list and search functions
-      // I think the small and big search limits are very confusing
-      // so I just set them both to max, is this okay?
-      if let Some(max) = matches.value_of("limit") {
-        cli.update_query_limits(max.to_string()).await?;
-      }
-
-      if matches.is_present("list") {
-        let category = Type::list_from_matches(matches);
-        Ok(cli.list(category, &format).await)
-      } else if let Some(search) = matches.value_of("search") {
-        let category = Type::search_from_matches(matches);
-        Ok(cli.query(search.to_string(), format, category).await)
-      // Never called, just here for the compiler
-      // Clap enforces that one of the things above is specified
-      } else {
-        Ok(String::new())
-      }
-    }
-    // Never called, just here for the compiler
-    // Clap enforces that one of the things above is specified
-    _ => Ok(String::new()),
-  };
-
-  // Check if there was an error
-  let api_error = cli.net.app.lock().await.api_error.clone();
-  if api_error.is_empty() {
-    output
-  } else {
-    Err(anyhow!("{}", api_error))
   }
 }
