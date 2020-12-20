@@ -118,7 +118,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
   SubCommand::with_name("play")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
-    .about("Play a uri (track, playlist, artist, album)")
+    .about("Play a uri or another spotify item by name")
     .visible_alias("p")
     .arg(device_arg())
     .arg(format_arg().default_value("%s %t - %a"))
