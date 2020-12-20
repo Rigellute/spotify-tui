@@ -784,8 +784,12 @@ pub async fn handle_matches(
     .await;
 
   let devices_list = match &cli.net.app.lock().await.devices {
-    Some(p) => p.devices.iter().map(|d| d.id.clone()).collect::<Vec<String>>(),
-    None => Vec::new()
+    Some(p) => p
+      .devices
+      .iter()
+      .map(|d| d.id.clone())
+      .collect::<Vec<String>>(),
+    None => Vec::new(),
   };
 
   // If the device_id is not specified, select the first available device
