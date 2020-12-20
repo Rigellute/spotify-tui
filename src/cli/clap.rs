@@ -150,31 +150,31 @@ pub fn play_subcommand() -> App<'static, 'static> {
       Arg::with_name("album")
         .short("b")
         .long("album")
-        .help("Look for albums"),
+        .help("Look for an album"),
     )
     .arg(
       Arg::with_name("artist")
         .short("a")
         .long("artist")
-        .help("Look for artists"),
+        .help("Look for an artist"),
     )
     .arg(
       Arg::with_name("track")
         .short("t")
         .long("track")
-        .help("Look for tracks"),
+        .help("Look for a track"),
     )
     .arg(
       Arg::with_name("show")
         .short("w")
         .long("show")
-        .help("Look for shows"),
+        .help("Look for a show"),
     )
     .arg(
       Arg::with_name("playlist")
         .short("p")
         .long("playlist")
-        .help("Look for playlists"),
+        .help("Look for a playlist"),
     )
     .group(
       ArgGroup::with_name("contexts")
@@ -214,24 +214,24 @@ pub fn query_subcommand() -> App<'static, 'static> {
       Arg::with_name("list")
         .short("l")
         .long("list")
-        .help("List devices and playlists"),
+        .help("List devices, playlists or liked songs"),
     )
     .arg(
       Arg::with_name("devices")
         .short("d")
         .long("devices")
-        .help("List the category 'devices'"),
+        .help("List devices"),
     )
     .arg(
       Arg::with_name("playlists")
         .short("p")
         .long("playlists")
-        .help("List / search the category 'playlists'"),
+        .help("List or look for playlists"),
     )
     .arg(
       Arg::with_name("liked")
         .long("liked")
-        .help("List the category 'liked songs'"),
+        .help("List liked songs"),
     )
     .group(
       ArgGroup::with_name("listable")
@@ -245,31 +245,31 @@ pub fn query_subcommand() -> App<'static, 'static> {
         .long("search")
         .takes_value(true)
         .value_name("SEARCH")
-        .help("Search for tracks etc."),
+        .help("Look for something on spotify"),
     )
     .arg(
       Arg::with_name("albums")
         .short("b")
         .long("albums")
-        .help("Search the category 'albums'"),
+        .help("Look for albums"),
     )
     .arg(
       Arg::with_name("artists")
         .short("a")
         .long("artists")
-        .help("Search the category 'artists'"),
+        .help("Look for artists"),
     )
     .arg(
       Arg::with_name("tracks")
         .short("t")
         .long("tracks")
-        .help("Search the category 'tracks'"),
+        .help("Look for tracks"),
     )
     .arg(
       Arg::with_name("shows")
         .short("w")
         .long("shows")
-        .help("Search the category 'shows'"),
+        .help("Look for shows"),
     )
     .arg(
       Arg::with_name("limit")
