@@ -215,17 +215,10 @@ async fn main() -> Result<()> {
         token_expiry,
       )));
 
-      // Check if user asked to execute a command
-      let mut sub_matches = None;
-      let possible_cmds = ["play", "query", "playback"];
-      for cmd in &possible_cmds {
-        if let Some(m) = matches.subcommand_matches(cmd) {
-          sub_matches = Some((m, cmd));
-        }
-      }
-
       // Work with the cli (not really async)
-      if let Some((m, cmd)) = sub_matches {
+      if let Some(cmd) = matches.subcommand_name() {
+        // Save, because we checked if the subcommand is present at runtime
+        let m = matches.subcommand_matches(cmd).unwrap();
         let network = Network::new(oauth, spotify, client_config, &app);
         println!(
           "{}",
