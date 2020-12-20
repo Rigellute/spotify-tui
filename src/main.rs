@@ -145,6 +145,7 @@ async fn main() -> Result<()> {
                                .long("completions")
                                .help("Generate completions for your preferred shell")
                                .takes_value(true)
+                               .possible_values(&["bash", "zsh", "fish", "powershell", "elvish"])
                                .value_name("SHELL"))
          // Control spotify from the command line
          .subcommand(cli::playback_subcommand())
