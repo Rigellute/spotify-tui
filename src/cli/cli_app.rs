@@ -340,8 +340,8 @@ impl<'a> CliApp<'a> {
         }
       }
     } else {
-      // Error out if no device is avaible
-      return Err(anyhow!("no device avaible"));
+      // Error out if no device is available
+      return Err(anyhow!("no device available"));
     }
     app.selected_device_index = Some(device_index);
     Ok(())
@@ -410,7 +410,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No devices avaible".to_string()
+          "No devices available".to_string()
         }
       }
       Type::Playlist => {
@@ -471,7 +471,7 @@ impl<'a> CliApp<'a> {
     };
 
     if id.is_empty() {
-      Err(anyhow!("no device with name {}", device))
+      Err(anyhow!("no device with name '{}'", device))
     } else {
       self
         .net
@@ -488,7 +488,7 @@ impl<'a> CliApp<'a> {
       app
         .current_playback_context
         .clone()
-        .ok_or_else(|| anyhow!("no context avaible"))?
+        .ok_or_else(|| anyhow!("no context available"))?
     };
 
     match flag {
@@ -545,7 +545,7 @@ impl<'a> CliApp<'a> {
       .await
       .current_playback_context
       .clone()
-      .ok_or_else(|| anyhow!("no context avaible"))?;
+      .ok_or_else(|| anyhow!("no context available"))?;
 
     let playing_item = context.item.ok_or_else(|| anyhow!("no track playing"))?;
 
@@ -612,7 +612,7 @@ impl<'a> CliApp<'a> {
           if let Some(r) = &results.tracks {
             r.items[0].uri.clone()
           } else {
-            return Err(anyhow!("no tracks with name {}", name));
+            return Err(anyhow!("no tracks with name '{}'", name));
           }
         }
         Type::Album => {
@@ -624,28 +624,28 @@ impl<'a> CliApp<'a> {
               return Err(anyhow!("album {} has no uri", album.name));
             }
           } else {
-            return Err(anyhow!("no albums with name {}", name));
+            return Err(anyhow!("no albums with name '{}'", name));
           }
         }
         Type::Artist => {
           if let Some(r) = &results.artists {
             r.items[0].uri.clone()
           } else {
-            return Err(anyhow!("no artists with name {}", name));
+            return Err(anyhow!("no artists with name '{}'", name));
           }
         }
         Type::Show => {
           if let Some(r) = &results.shows {
             r.items[0].uri.clone()
           } else {
-            return Err(anyhow!("no shows with name {}", name));
+            return Err(anyhow!("no shows with name '{}'", name));
           }
         }
         Type::Playlist => {
           if let Some(r) = &results.playlists {
             r.items[0].uri.clone()
           } else {
-            return Err(anyhow!("no playlists with name {}", name));
+            return Err(anyhow!("no playlists with name '{}'", name));
           }
         }
         _ => String::new(),
@@ -691,7 +691,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("no playlists with name {}", search)
+          format!("no playlists with name '{}'", search)
         }
       }
       Type::Track => {
@@ -708,7 +708,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("no tracks with name {}", search)
+          format!("no tracks with name '{}'", search)
         }
       }
       Type::Artist => {
@@ -725,7 +725,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("no artists with name {}", search)
+          format!("no artists with name '{}'", search)
         }
       }
       Type::Show => {
@@ -742,7 +742,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("no shows with name {}", search)
+          format!("no shows with name '{}'", search)
         }
       }
       Type::Album => {
@@ -759,7 +759,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          format!("no albums with name {}", search)
+          format!("no albums with name '{}'", search)
         }
       }
       // Never called, just here for compiler
@@ -788,7 +788,7 @@ pub async fn handle_matches(
     None => Vec::new()
   };
 
-  // If the device_id is not specified, select the first avaible device
+  // If the device_id is not specified, select the first available device
   let device_id = cli.net.client_config.device_id.clone();
   if device_id.is_none() || !devices_list.contains(&device_id.unwrap()) {
     // Select the first device available
