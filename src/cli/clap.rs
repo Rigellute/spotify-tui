@@ -17,11 +17,11 @@ fn format_arg() -> Arg<'static, 'static> {
     .value_name("FORMAT")
     .help("Specify output format")
     .long_help(
-      "There are multiple format specifiers you can use:
-%a: artist, %b: album, %p: playlist, %t: track, %h: show,
-%f: flags (shuffle, repeat, like), %s: playback status, 
-%v: volume, %d: current device.
-Example: spt pb -s -f 'playing on %d at %v%'",
+      "There are multiple format specifiers you can use: \
+%a: artist, %b: album, %p: playlist, %t: track, %h: show, \
+%f: flags (shuffle, repeat, like), %s: playback status, \
+%v: volume, %d: current device. Example: \
+spt pb -s -f 'playing on %d at %v%'",
     )
 }
 
@@ -128,7 +128,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .long("uri")
         .takes_value(true)
         .value_name("URI")
-        .help("Play URI"),
+        .help("Play the specified URI"),
     )
     .arg(
       Arg::with_name("name")
@@ -136,7 +136,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .long("name")
         .takes_value(true)
         .value_name("NAME")
-        .help("Play first match with NAME from category"),
+        .help("Play the first match with NAME from specified category"),
     )
     .arg(
       Arg::with_name("queue")
@@ -150,31 +150,31 @@ pub fn play_subcommand() -> App<'static, 'static> {
       Arg::with_name("album")
         .short("b")
         .long("album")
-        .help("Use category 'album'"),
+        .help("Look for albums"),
     )
     .arg(
       Arg::with_name("artist")
         .short("a")
         .long("artist")
-        .help("Use category 'artist'"),
+        .help("Look for artists"),
     )
     .arg(
       Arg::with_name("track")
         .short("t")
         .long("track")
-        .help("Use category 'track'"),
+        .help("Look for tracks"),
     )
     .arg(
       Arg::with_name("show")
         .short("w")
         .long("show")
-        .help("Use category 'show'"),
+        .help("Look for shows"),
     )
     .arg(
       Arg::with_name("playlist")
         .short("p")
         .long("playlist")
-        .help("Use category 'playlist'"),
+        .help("Look for playlists"),
     )
     .group(
       ArgGroup::with_name("contexts")
@@ -282,7 +282,6 @@ pub fn query_subcommand() -> App<'static, 'static> {
         .args(&["playlists", "tracks", "albums", "artists", "shows"])
         .multiple(false),
     )
-    // Actions
     .group(
       ArgGroup::with_name("actions")
         .args(&["list", "search"])
