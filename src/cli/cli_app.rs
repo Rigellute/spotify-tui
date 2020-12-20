@@ -783,17 +783,22 @@ pub async fn handle_matches(
     .handle_network_event(IoEvent::GetCurrentPlayback)
     .await;
 
+  let devices_list = match &cli.net.app.lock().await.devices {
+    Some(p) => p.devices.iter().map(|d| d.id.clone()).collect::<Vec<String>>(),
+    None => Vec::new()
+  };
+
   // If the device_id is not specified, select the first avaible device
-  if cli.net.client_config.device_id.is_none() {
-    if let Some(p) = &cli.net.app.lock().await.devices {
-      if let Some(d) = p.devices.get(0) {
-        cli.net.client_config.set_device_id(d.id.clone())?;
-      }
+  let device_id = cli.net.client_config.device_id.clone();
+  if device_id.is_none() || !devices_list.contains(&device_id.unwrap()) {
+    // Select the first device available
+    if let Some(d) = devices_list.get(0) {
+      cli.net.client_config.set_device_id(d.clone())?;
     }
   }
 
   if let Some(d) = matches.value_of("device") {
-    cli.set_device(d.to_string()).await?
+    cli.set_device(d.to_string()).await?;
   }
 
   // Evalute the subcommand
