@@ -820,6 +820,7 @@ pub async fn handle_matches(
       cli.get_status(format.to_string()).await
     }
     "play" => {
+      let format = matches.value_of("format").unwrap();
       if let Some(uri) = matches.value_of("uri") {
         cli.play_uri(uri.to_string()).await;
       } else if let Some(name) = matches.value_of("name") {
@@ -830,7 +831,7 @@ pub async fn handle_matches(
       }
 
       // Could be made configurable in the future
-      cli.get_status("%s %t - %a".to_string()).await
+      cli.get_status(format.to_string()).await
     }
     "query" => {
       let format = matches.value_of("format").unwrap().to_string();
