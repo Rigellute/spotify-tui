@@ -201,8 +201,8 @@ pub fn query_subcommand() -> App<'static, 'static> {
       ("tracks", None, "%t - %a (%u)"),
       ("playlists", None, "%p (%u)"),
       ("artists", None, "%a (%u)"),
-      ("albums", None, "%l - %(%u)"),
-      ("shows", None, "%h - %(%u)"),
+      ("albums", None, "%b - %a (%u)"),
+      ("shows", None, "%h - %a (%u)"),
       // These have to be at the end because clap just takes the first match
       // '--list' defaults to devices
       ("list", None, "%v% %d"),
