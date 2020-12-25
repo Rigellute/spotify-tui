@@ -6,7 +6,7 @@ fn device_arg() -> Arg<'static, 'static> {
     .long("device")
     .takes_value(true)
     .value_name("DEVICE")
-    .help("Specify device to use")
+    .help("Specifies the spotify device to use")
 }
 
 fn format_arg() -> Arg<'static, 'static> {
@@ -15,7 +15,7 @@ fn format_arg() -> Arg<'static, 'static> {
     .long("format")
     .takes_value(true)
     .value_name("FORMAT")
-    .help("Specify output format")
+    .help("Specifies the output format ('--help' for more information)")
     .long_help(
       "There are multiple format specifiers you can use: \
 %a: artist, %b: album, %p: playlist, %t: track, %h: show, \
@@ -29,7 +29,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
   SubCommand::with_name("playback")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
-    .about("Interact with playback of a device")
+    .about("Interacts with the playback of a device")
     .visible_alias("pb")
     .arg(device_arg())
     .arg(
@@ -44,47 +44,47 @@ pub fn playback_subcommand() -> App<'static, 'static> {
       Arg::with_name("toggle")
         .short("t")
         .long("toggle")
-        .help("Pause/resume playback of a device"),
+        .help("Pauses/resumes the playback of a device"),
     )
     .arg(
       Arg::with_name("status")
         .short("s")
         .long("status")
-        .help("Print out status of a device"),
+        .help("Prints out the current status of a device"),
     )
     .arg(
       Arg::with_name("transfer")
         .long("transfer")
         .takes_value(true)
         .value_name("DEVICE")
-        .help("Transfer playback to device"),
+        .help("Transfers the playback to new DEVICE"),
     )
     .arg(
       Arg::with_name("like")
         .long("like")
-        .help("Like the current song"),
+        .help("Likes the current song"),
     )
     .arg(
       Arg::with_name("shuffle")
         .long("shuffle")
-        .help("Toggle shuffle mode"),
+        .help("Toggles shuffle mode"),
     )
     .arg(
       Arg::with_name("repeat")
         .long("repeat")
-        .help("Toggle repeat mode"),
+        .help("Switches between repeat modes"),
     )
     .arg(
       Arg::with_name("next")
         .short("n")
         .long("next")
-        .help("Jump to next song"),
+        .help("Jumps to the next song"),
     )
     .arg(
       Arg::with_name("previous")
         .short("p")
         .long("previous")
-        .help("Jump to previous song"),
+        .help("Jumps to the previous song"),
     )
     .arg(
       Arg::with_name("volume")
@@ -92,7 +92,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .long("volume")
         .takes_value(true)
         .value_name("VOLUME")
-        .help("Turn volume up or down"),
+        .help("Sets the volume of a device to VOLUME"),
     )
     .group(
       ArgGroup::with_name("jumps")
@@ -128,7 +128,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .long("uri")
         .takes_value(true)
         .value_name("URI")
-        .help("Play the specified URI"),
+        .help("Plays the URI"),
     )
     .arg(
       Arg::with_name("name")
@@ -136,7 +136,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .long("name")
         .takes_value(true)
         .value_name("NAME")
-        .help("Play the first match with NAME from specified category"),
+        .help("Plays the first match with NAME from the specified category"),
     )
     .arg(
       Arg::with_name("queue")
@@ -144,37 +144,37 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .long("queue")
         // Only works with tracks
         .conflicts_with_all(&["album", "artist", "playlist", "show"])
-        .help("Add track to queue instead of playing"),
+        .help("Adds track to queue instead of playing it directly"),
     )
     .arg(
       Arg::with_name("album")
         .short("b")
         .long("album")
-        .help("Look for an album"),
+        .help("Looks for an album"),
     )
     .arg(
       Arg::with_name("artist")
         .short("a")
         .long("artist")
-        .help("Look for an artist"),
+        .help("Looks for an artist"),
     )
     .arg(
       Arg::with_name("track")
         .short("t")
         .long("track")
-        .help("Look for a track"),
+        .help("Looks for a track"),
     )
     .arg(
       Arg::with_name("show")
         .short("w")
         .long("show")
-        .help("Look for a show"),
+        .help("Looks for a show"),
     )
     .arg(
       Arg::with_name("playlist")
         .short("p")
         .long("playlist")
-        .help("Look for a playlist"),
+        .help("Looks for a playlist"),
     )
     .group(
       ArgGroup::with_name("contexts")
@@ -214,24 +214,24 @@ pub fn query_subcommand() -> App<'static, 'static> {
       Arg::with_name("list")
         .short("l")
         .long("list")
-        .help("List devices, playlists or liked songs"),
+        .help("Lists devices, playlists or liked songs"),
     )
     .arg(
       Arg::with_name("devices")
         .short("d")
         .long("devices")
-        .help("List devices"),
+        .help("Lists devices"),
     )
     .arg(
       Arg::with_name("playlists")
         .short("p")
         .long("playlists")
-        .help("List or look for playlists"),
+        .help("Lists or looks for playlists"),
     )
     .arg(
       Arg::with_name("liked")
         .long("liked")
-        .help("List liked songs"),
+        .help("Lists liked songs"),
     )
     .group(
       ArgGroup::with_name("listable")
@@ -245,37 +245,37 @@ pub fn query_subcommand() -> App<'static, 'static> {
         .long("search")
         .takes_value(true)
         .value_name("SEARCH")
-        .help("Look for something on spotify"),
+        .help("Looks for something on spotify"),
     )
     .arg(
       Arg::with_name("albums")
         .short("b")
         .long("albums")
-        .help("Look for albums"),
+        .help("Looks for albums"),
     )
     .arg(
       Arg::with_name("artists")
         .short("a")
         .long("artists")
-        .help("Look for artists"),
+        .help("Looks for artists"),
     )
     .arg(
       Arg::with_name("tracks")
         .short("t")
         .long("tracks")
-        .help("Look for tracks"),
+        .help("Looks for tracks"),
     )
     .arg(
       Arg::with_name("shows")
         .short("w")
         .long("shows")
-        .help("Look for shows"),
+        .help("Looks for shows"),
     )
     .arg(
       Arg::with_name("limit")
         .long("limit")
         .takes_value(true)
-        .help("Specify the max number of results"),
+        .help("Specifies the maximum number of search results"),
     )
     .group(
       ArgGroup::with_name("searchable")
