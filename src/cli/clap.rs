@@ -193,7 +193,7 @@ pub fn query_subcommand() -> App<'static, 'static> {
   SubCommand::with_name("query")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
-    .about("Searches for tracks, playlists and more")
+    .about("Lists devices, liked songs or searches for tracks, albums and more")
     .visible_alias("q")
     .arg(format_arg().default_value_ifs(&[
       ("devices", None, "%v% %d"),
