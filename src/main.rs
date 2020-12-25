@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
                                .long("completions")
                                .help("Generate completions for your preferred shell")
                                .takes_value(true)
-                               .possible_values(&["bash", "zsh", "fish", "powershell", "elvish"])
+                               .possible_values(&["bash", "zsh", "fish", "power-shell", "elvish"])
                                .value_name("SHELL"))
          // Control spotify from the command line
          .subcommand(cli::playback_subcommand())
@@ -160,7 +160,7 @@ async fn main() -> Result<()> {
       "fish" => Shell::Fish,
       "bash" => Shell::Bash,
       "zsh" => Shell::Zsh,
-      "powershell" => Shell::PowerShell,
+      "power-shell" => Shell::PowerShell,
       "elvish" => Shell::Elvish,
       _ => return Err(anyhow!("no completions avaible for '{}'", s)),
     };
