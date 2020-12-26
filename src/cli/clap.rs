@@ -102,14 +102,14 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     .group(
       ArgGroup::with_name("flags")
         .args(&["like", "shuffle", "repeat"])
-        .multiple(false),
+        .multiple(true),
     )
     .group(
       ArgGroup::with_name("actions")
         .args(&[
           "toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous", "volume",
         ])
-        .multiple(false)
+        .multiple(true)
         .required(true),
     )
 }

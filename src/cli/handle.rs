@@ -52,17 +52,18 @@ pub async fn handle_matches(
       let format = matches.value_of("format").unwrap();
 
       // Run the action, and print out the status
+      // No 'else if's because multiple different commands are possible
       if matches.is_present("toggle") {
         cli.toggle_playback().await;
-      } else if let Some(d) = matches.value_of("transfer") {
+      } if let Some(d) = matches.value_of("transfer") {
         cli.transfer_playback(d).await?;
-      } else if matches.is_present("flags") {
+      } if matches.is_present("flags") {
         let flag = Flag::from_matches(matches);
         cli.mark(flag).await?;
-      } else if matches.is_present("jumps") {
+      } if matches.is_present("jumps") {
         let direction = JumpDirection::from_matches(matches);
         cli.jump(direction).await;
-      } else if let Some(vol) = matches.value_of("volume") {
+      } if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;
       }
 
