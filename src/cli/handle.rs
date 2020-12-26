@@ -55,15 +55,19 @@ pub async fn handle_matches(
       // No 'else if's because multiple different commands are possible
       if matches.is_present("toggle") {
         cli.toggle_playback().await;
-      } if let Some(d) = matches.value_of("transfer") {
+      }
+      if let Some(d) = matches.value_of("transfer") {
         cli.transfer_playback(d).await?;
-      } if matches.is_present("flags") {
+      }
+      if matches.is_present("flags") {
         let flag = Flag::from_matches(matches);
         cli.mark(flag).await?;
-      } if matches.is_present("jumps") {
+      }
+      if matches.is_present("jumps") {
         let direction = JumpDirection::from_matches(matches);
         cli.jump(direction).await;
-      } if let Some(vol) = matches.value_of("volume") {
+      }
+      if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;
       }
 
