@@ -36,7 +36,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
       format_arg()
         .default_value("%f %s %t - %a")
         .default_value_ifs(&[
-          ("volume", None, "%v% %s %t - %a"),
+          ("volume", None, "%v% %f %s %t - %a"),
           ("transfer", None, "%f %s %t - %a on %d"),
         ]),
     )
@@ -121,7 +121,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
     .about("Plays a uri or another spotify item by name")
     .visible_alias("p")
     .arg(device_arg())
-    .arg(format_arg().default_value("%s %t - %a"))
+    .arg(format_arg().default_value("%f %s %t - %a"))
     .arg(
       Arg::with_name("uri")
         .short("u")
