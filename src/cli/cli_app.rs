@@ -73,7 +73,7 @@ impl<'a> CliApp<'a> {
             .net
             .client_config
             .set_device_id(d.id.clone())
-            .map_err(|_e| anyhow!("failed to set device with name '{}'", d.name))?;
+            .map_err(|_e| anyhow!("failed to use device with name '{}'", d.name))?;
         }
       }
     } else {
@@ -165,7 +165,7 @@ impl<'a> CliApp<'a> {
             .collect::<Vec<String>>()
             .join("\n")
         } else {
-          "No playlists".to_string()
+          "No playlists found".to_string()
         }
       }
       Type::Liked => {
@@ -173,7 +173,7 @@ impl<'a> CliApp<'a> {
           .net
           .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
           .await;
-        self
+        let liked_songs = self
           .net
           .app
           .lock()
@@ -187,8 +187,13 @@ impl<'a> CliApp<'a> {
               Format::from_type(FormatType::Track(Box::new(t.clone()))),
             )
           })
-          .collect::<Vec<String>>()
-          .join("\n")
+          .collect::<Vec<String>>();
+        // Check if there are any liked songs
+        if liked_songs.is_empty() {
+          "No liked songs found".to_string()
+        } else {
+          liked_songs.join("\n")
+        }
       }
       _ => String::new(),
     }
