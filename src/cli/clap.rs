@@ -92,7 +92,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .long("volume")
         .takes_value(true)
         .value_name("VOLUME")
-        .help("Sets the volume of a device to VOLUME"),
+        .help("Sets the volume of a device to VOLUME (1 - 100)"),
     )
     .group(
       ArgGroup::with_name("jumps")
@@ -275,7 +275,7 @@ pub fn query_subcommand() -> App<'static, 'static> {
       Arg::with_name("limit")
         .long("limit")
         .takes_value(true)
-        .help("Specifies the maximum number of search results"),
+        .help("Specifies the maximum number of results (1 - 50)"),
     )
     .group(
       ArgGroup::with_name("searchable")
