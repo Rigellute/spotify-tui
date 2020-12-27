@@ -6,10 +6,6 @@ use super::util::{Flag, Format, FormatType, JumpDirection, Type};
 use anyhow::{anyhow, Result};
 use rspotify::model::PlayingItem;
 
-//
-// Commands
-//
-
 pub struct CliApp<'a> {
   pub net: Network<'a>,
   pub config: UserConfig,

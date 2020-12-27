@@ -9,10 +9,7 @@ use rspotify::{
 
 use crate::user_config::UserConfig;
 
-//
 // Possible types to list or search
-//
-
 #[derive(Debug)]
 pub enum Type {
   Playlist,
@@ -103,10 +100,7 @@ impl Flag {
   }
 }
 
-//
 // Possible directions to jump to
-//
-
 pub enum JumpDirection {
   Next,
   Previous,
@@ -127,9 +121,7 @@ impl JumpDirection {
   }
 }
 
-//
 // For fomatting (-f / --format flag)
-//
 
 // Types to create a Format enum from
 // Boxing was proposed by cargo clippy
