@@ -59,14 +59,17 @@ pub async fn handle_matches(
       if let Some(d) = matches.value_of("transfer") {
         cli.transfer_playback(d).await?;
       }
+      // Multiple flags are possible
       if matches.is_present("flags") {
-        let flag = Flag::from_matches(matches);
-        cli.mark(flag).await?;
+        let flags = Flag::from_matches(matches);
+        for f in flags {
+          cli.mark(f).await?;
+        }
       }
       if matches.is_present("jumps") {
         let (direction, amount) = JumpDirection::from_matches(matches);
         for _ in 0..amount {
-            cli.jump(&direction).await;
+          cli.jump(&direction).await;
         }
       }
       if let Some(vol) = matches.value_of("volume") {

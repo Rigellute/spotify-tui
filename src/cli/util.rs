@@ -87,18 +87,19 @@ pub enum Flag {
 }
 
 impl Flag {
-  pub fn from_matches(m: &ArgMatches<'_>) -> Self {
+  pub fn from_matches(m: &ArgMatches<'_>) -> Vec<Self> {
+    // Multiple flags are possible
+    let mut flags = Vec::new();
     if m.is_present("like") {
-      Self::Like
-    } else if m.is_present("shuffle") {
-      Self::Shuffle
-    } else if m.is_present("repeat") {
-      Self::Repeat
+      flags.push(Self::Like);
     }
-    // No default, just placeholder (clap requires user to specify something)
-    else {
-      Self::Like
+    if m.is_present("shuffle") {
+      flags.push(Self::Shuffle);
     }
+    if m.is_present("repeat") {
+      flags.push(Self::Repeat);
+    }
+    flags
   }
 }
 
