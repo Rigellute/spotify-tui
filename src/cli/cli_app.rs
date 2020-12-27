@@ -4,7 +4,7 @@ use crate::user_config::UserConfig;
 use super::util::{Flag, Format, FormatType, JumpDirection, Type};
 
 use anyhow::{anyhow, Result};
-use rspotify::model::PlayingItem;
+use rspotify::model::{context::CurrentlyPlaybackContext, PlayingItem};
 
 pub struct CliApp<'a> {
   pub net: Network<'a>,
@@ -53,6 +53,56 @@ impl<'a> CliApp<'a> {
       .net
       .handle_network_event(IoEvent::StartPlayback(None, None, None))
       .await;
+  }
+
+  // spt pb --share-track (share the current playing song)
+  // Basically copy-pasted the 'copy_song_url' function
+  pub async fn share_track_or_episode(&mut self) -> Result<String> {
+    let app = self.net.app.lock().await;
+    if let Some(CurrentlyPlaybackContext {
+      item: Some(item), ..
+    }) = &app.current_playback_context
+    {
+      match item {
+        PlayingItem::Track(track) => Ok(format!(
+          "https://open.spotify.com/track/{}",
+          track.id.to_owned().unwrap_or_default()
+        )),
+        PlayingItem::Episode(episode) => Ok(format!(
+          "https://open.spotify.com/episode/{}",
+          episode.id.to_owned()
+        )),
+      }
+    } else {
+      Err(anyhow!(
+        "failed to generate a shareable url for the current song"
+      ))
+    }
+  }
+
+  // spt pb --share-album (share the current album)
+  // Basically copy-pasted the 'copy_album_url' function
+  pub async fn share_album_or_show(&mut self) -> Result<String> {
+    let app = self.net.app.lock().await;
+    if let Some(CurrentlyPlaybackContext {
+      item: Some(item), ..
+    }) = &app.current_playback_context
+    {
+      match item {
+        PlayingItem::Track(track) => Ok(format!(
+          "https://open.spotify.com/album/{}",
+          track.album.id.to_owned().unwrap_or_default()
+        )),
+        PlayingItem::Episode(episode) => Ok(format!(
+          "https://open.spotify.com/show/{}",
+          episode.show.id.to_owned()
+        )),
+      }
+    } else {
+      Err(anyhow!(
+        "failed to generate a shareable url for the current song"
+      ))
+    }
   }
 
   // spt ... -d ... (specify device to control)

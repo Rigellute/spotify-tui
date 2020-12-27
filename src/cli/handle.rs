@@ -51,6 +51,13 @@ pub async fn handle_matches(
     "playback" => {
       let format = matches.value_of("format").unwrap();
 
+      // Commands that are 'single'
+      if matches.is_present("share-track") {
+        return cli.share_track_or_episode().await;
+      } else if matches.is_present("share-album") {
+        return cli.share_album_or_show().await;
+      }
+
       // Run the action, and print out the status
       // No 'else if's because multiple different commands are possible
       if matches.is_present("toggle") {

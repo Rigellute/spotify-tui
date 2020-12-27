@@ -53,6 +53,18 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .help("Prints out the current status of a device"),
     )
     .arg(
+      Arg::with_name("share-track")
+        .long("share-track")
+        .help("Returns the url to the current track")
+        .conflicts_with("together"),
+    )
+    .arg(
+      Arg::with_name("share-album")
+        .long("share-album")
+        .help("Returns the url to the current track")
+        .conflicts_with("together"),
+    )
+    .arg(
       Arg::with_name("transfer")
         .long("transfer")
         .takes_value(true)
@@ -107,12 +119,18 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .multiple(true),
     )
     .group(
-      ArgGroup::with_name("actions")
+      ArgGroup::with_name("together")
         .args(&[
           "toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous", "volume",
         ])
         .multiple(true)
-        .required(true),
+        .conflicts_with("single"),
+    )
+    .group(
+      ArgGroup::with_name("single")
+        .args(&["share-track", "share-album"])
+        .multiple(false)
+        .conflicts_with("together"),
     )
 }
 
