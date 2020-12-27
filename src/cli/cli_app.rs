@@ -120,7 +120,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt playback --next / --previous
-  pub async fn jump(&mut self, d: JumpDirection) {
+  pub async fn jump(&mut self, d: &JumpDirection) {
     match d {
       JumpDirection::Next => self.net.handle_network_event(IoEvent::NextTrack).await,
       JumpDirection::Previous => self.net.handle_network_event(IoEvent::PreviousTrack).await,

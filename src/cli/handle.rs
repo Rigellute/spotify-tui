@@ -64,8 +64,10 @@ pub async fn handle_matches(
         cli.mark(flag).await?;
       }
       if matches.is_present("jumps") {
-        let direction = JumpDirection::from_matches(matches);
-        cli.jump(direction).await;
+        let (direction, amount) = JumpDirection::from_matches(matches);
+        for _ in 0..amount {
+            cli.jump(&direction).await;
+        }
       }
       if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;

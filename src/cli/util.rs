@@ -112,16 +112,16 @@ pub enum JumpDirection {
 }
 
 impl JumpDirection {
-  pub fn from_matches(m: &ArgMatches<'_>) -> Self {
+  pub fn from_matches(m: &ArgMatches<'_>) -> (Self, u64) {
     if m.is_present("next") {
-      Self::Next
+      (Self::Next, m.occurrences_of("next"))
     } else if m.is_present("previous") {
-      Self::Previous
+      (Self::Previous, m.occurrences_of("previous"))
     // Again: there is no default value
     // If this function was called, one of these above
     // has to be specified
     } else {
-      Self::Next
+      (Self::Next, 0)
     }
   }
 }
