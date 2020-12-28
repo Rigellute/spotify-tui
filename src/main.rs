@@ -125,38 +125,46 @@ async fn main() -> Result<()> {
   }));
 
   let mut clap_app = ClapApp::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .usage("Press `?` while running the app to see keybindings")
-        .before_help(BANNER)
-        .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
-         .arg(Arg::with_name("tick-rate")
-                               .short("t")
-                               .long("tick-rate")
-                               .help("Set the tick rate (milliseconds): the lower the number the higher the FPS.")
-                               .long_help(
-                                 "Specify the tick rate in milliseconds: the lower the number the \
+    .version(env!("CARGO_PKG_VERSION"))
+    .author(env!("CARGO_PKG_AUTHORS"))
+    .about(env!("CARGO_PKG_DESCRIPTION"))
+    .usage("Press `?` while running the app to see keybindings")
+    .before_help(BANNER)
+    .after_help(
+      "Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml",
+    )
+    .arg(
+      Arg::with_name("tick-rate")
+        .short("t")
+        .long("tick-rate")
+        .help("Set the tick rate (milliseconds): the lower the number the higher the FPS.")
+        .long_help(
+          "Specify the tick rate in milliseconds: the lower the number the \
 higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view \
 of the app. Beware that this comes at a CPU cost!",
-                               )
-                               .takes_value(true))
-         .arg(Arg::with_name("config")
-                               .short("c")
-                               .long("config")
-                               .help("Specify configuration file path.")
-                               .takes_value(true))
-         .arg(Arg::with_name("completions")
-                               .long("completions")
-                               .help("Generates completions for your preferred shell")
-                               .takes_value(true)
-                               .possible_values(&["bash", "zsh", "fish", "power-shell", "elvish"])
-                               .value_name("SHELL"))
-         // Control spotify from the command line
-         .subcommand(cli::playback_subcommand())
-         .subcommand(cli::play_subcommand())
-         .subcommand(cli::list_subcommand())
-         .subcommand(cli::search_subcommand());
+        )
+        .takes_value(true),
+    )
+    .arg(
+      Arg::with_name("config")
+        .short("c")
+        .long("config")
+        .help("Specify configuration file path.")
+        .takes_value(true),
+    )
+    .arg(
+      Arg::with_name("completions")
+        .long("completions")
+        .help("Generates completions for your preferred shell")
+        .takes_value(true)
+        .possible_values(&["bash", "zsh", "fish", "power-shell", "elvish"])
+        .value_name("SHELL"),
+    )
+    // Control spotify from the command line
+    .subcommand(cli::playback_subcommand())
+    .subcommand(cli::play_subcommand())
+    .subcommand(cli::list_subcommand())
+    .subcommand(cli::search_subcommand());
 
   let matches = clap_app.clone().get_matches();
 
