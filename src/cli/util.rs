@@ -34,9 +34,9 @@ impl Type {
     } else if m.is_present("show") {
       Self::Show
     }
-    // Default: track
+    // Enforced by clap 
     else {
-      Self::Track
+      unreachable!()
     }
   }
 
@@ -52,9 +52,9 @@ impl Type {
     } else if m.is_present("shows") {
       Self::Show
     }
-    // Default: track
+    // Enforced by clap 
     else {
-      Self::Track
+      unreachable!()
     }
   }
 
@@ -66,9 +66,9 @@ impl Type {
     } else if m.is_present("liked") {
       Self::Liked
     }
-    // Default: device
+    // Enforced by clap 
     else {
-      Self::Device
+      unreachable!()
     }
   }
 }

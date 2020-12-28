@@ -205,6 +205,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
     .group(
       ArgGroup::with_name("contexts")
         .args(&["track", "artist", "playlist", "album", "show"])
+        .required(true)
         .multiple(false),
     )
     .group(
@@ -215,33 +216,17 @@ pub fn play_subcommand() -> App<'static, 'static> {
     )
 }
 
-pub fn query_subcommand() -> App<'static, 'static> {
-  SubCommand::with_name("query")
+pub fn list_subcommand() -> App<'static, 'static> {
+  SubCommand::with_name("list")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
-    .about("Lists devices, liked songs or searches for tracks, albums and more")
-    .visible_alias("q")
+    .about("Lists devices, liked songs")
+    .visible_alias("l")
     .arg(format_arg().default_value_ifs(&[
       ("devices", None, "%v% %d"),
       ("liked", None, "%t - %a (%u)"),
-      ("tracks", None, "%t - %a (%u)"),
       ("playlists", None, "%p (%u)"),
-      ("artists", None, "%a (%u)"),
-      ("albums", None, "%b - %a (%u)"),
-      ("shows", None, "%h - %a (%u)"),
-      // These have to be at the end because clap just takes the first match
-      // '--list' defaults to devices
-      ("list", None, "%v% %d"),
-      // '--search' defaults to tracks
-      ("search", None, "%t - %a (%u)"),
     ]))
-    // Listing
-    .arg(
-      Arg::with_name("list")
-        .short("l")
-        .long("list")
-        .help("Lists devices, playlists or liked songs"),
-    )
     .arg(
       Arg::with_name("devices")
         .short("d")
@@ -252,26 +237,46 @@ pub fn query_subcommand() -> App<'static, 'static> {
       Arg::with_name("playlists")
         .short("p")
         .long("playlists")
-        .help("Lists or looks for playlists"),
+        .help("Lists playlists"),
     )
     .arg(
       Arg::with_name("liked")
         .long("liked")
         .help("Lists liked songs"),
     )
+    .arg(
+      Arg::with_name("limit")
+        .long("limit")
+        .takes_value(true)
+        .help("Specifies the maximum number of results (1 - 50)"),
+    )
     .group(
       ArgGroup::with_name("listable")
         .args(&["devices", "playlists", "liked"])
+        .required(true)
         .multiple(false),
     )
-    // Searching
+}
+
+pub fn search_subcommand() -> App<'static, 'static> {
+  SubCommand::with_name("search")
+    .version(env!("CARGO_PKG_VERSION"))
+    .author(env!("CARGO_PKG_AUTHORS"))
+    .about("Searches for tracks, albums and more")
+    .visible_alias("s")
+    .arg(format_arg().default_value_ifs(&[
+      ("tracks", None, "%t - %a (%u)"),
+      ("playlists", None, "%p (%u)"),
+      ("artists", None, "%a (%u)"),
+      ("albums", None, "%b - %a (%u)"),
+      ("shows", None, "%h - %a (%u)"),
+    ]))
     .arg(
       Arg::with_name("search")
-        .short("s")
-        .long("search")
+        .required(true)
         .takes_value(true)
         .value_name("SEARCH")
-        .help("Looks for something on spotify"),
+        .help("Specifies the search query"),
     )
     .arg(
       Arg::with_name("albums")
@@ -284,6 +289,12 @@ pub fn query_subcommand() -> App<'static, 'static> {
         .short("a")
         .long("artists")
         .help("Looks for artists"),
+    )
+    .arg(
+      Arg::with_name("playlists")
+        .short("p")
+        .long("playlists")
+        .help("Looks for playlists"),
     )
     .arg(
       Arg::with_name("tracks")
@@ -306,12 +317,7 @@ pub fn query_subcommand() -> App<'static, 'static> {
     .group(
       ArgGroup::with_name("searchable")
         .args(&["playlists", "tracks", "albums", "artists", "shows"])
+        .required(true)
         .multiple(false),
-    )
-    .group(
-      ArgGroup::with_name("actions")
-        .args(&["list", "search"])
-        .multiple(false)
-        .required(true),
     )
 }

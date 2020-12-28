@@ -150,7 +150,8 @@ async fn main() -> Result<()> {
          // Control spotify from the command line
          .subcommand(cli::playback_subcommand())
          .subcommand(cli::play_subcommand())
-         .subcommand(cli::query_subcommand());
+         .subcommand(cli::list_subcommand())
+         .subcommand(cli::search_subcommand());
 
   let matches = clap_app.clone().get_matches();
 

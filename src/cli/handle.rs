@@ -100,7 +100,7 @@ pub async fn handle_matches(
 
       cli.get_status(format.to_string()).await
     }
-    "query" => {
+    "list" => {
       let format = matches.value_of("format").unwrap().to_string();
 
       // Update the limits for the list and search functions
@@ -110,16 +110,21 @@ pub async fn handle_matches(
         cli.update_query_limits(max.to_string()).await?;
       }
 
-      if matches.is_present("list") {
-        let category = Type::list_from_matches(matches);
-        Ok(cli.list(category, &format).await)
-      } else if let Some(search) = matches.value_of("search") {
-        let category = Type::search_from_matches(matches);
-        Ok(cli.query(search.to_string(), format, category).await)
-      // Clap enforces that one of the things above is specified
-      } else {
-        unreachable!()
+      let category = Type::list_from_matches(matches);
+      Ok(cli.list(category, &format).await)
+    }
+    "search" => {
+      let format = matches.value_of("format").unwrap().to_string();
+
+      // Update the limits for the list and search functions
+      // I think the small and big search limits are very confusing
+      // so I just set them both to max, is this okay?
+      if let Some(max) = matches.value_of("limit") {
+        cli.update_query_limits(max.to_string()).await?;
       }
+
+      let category = Type::search_from_matches(matches);
+      Ok(cli.query(matches.value_of("search").unwrap().to_string(), format, category).await)
     }
     // Clap enforces that one of the things above is specified
     _ => unreachable!(),
