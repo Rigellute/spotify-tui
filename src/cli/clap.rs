@@ -56,13 +56,11 @@ pub fn playback_subcommand() -> App<'static, 'static> {
       Arg::with_name("share-track")
         .long("share-track")
         .help("Returns the url to the current track")
-        .conflicts_with("together"),
     )
     .arg(
       Arg::with_name("share-album")
         .long("share-album")
-        .help("Returns the url to the current track")
-        .conflicts_with("together"),
+        .help("Returns the url to the album of the current track")
     )
     .arg(
       Arg::with_name("transfer")
@@ -111,26 +109,28 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     .group(
       ArgGroup::with_name("jumps")
         .args(&["next", "previous"])
-        .multiple(false),
+        .multiple(false)
+        .conflicts_with_all(&["single", "flags", "actions"]),
     )
     .group(
       ArgGroup::with_name("flags")
         .args(&["like", "shuffle", "repeat"])
-        .multiple(true),
+        .multiple(true)
+        .conflicts_with_all(&["single", "jumps"]),
     )
     .group(
-      ArgGroup::with_name("together")
+      ArgGroup::with_name("actions")
         .args(&[
-          "toggle", "status", "transfer", "like", "shuffle", "repeat", "next", "previous", "volume",
+          "toggle", "status", "transfer", "volume",
         ])
         .multiple(true)
-        .conflicts_with("single"),
+        .conflicts_with_all(&["single", "jumps"]),
     )
     .group(
       ArgGroup::with_name("single")
         .args(&["share-track", "share-album"])
         .multiple(false)
-        .conflicts_with("together"),
+        .conflicts_with_all(&["actions", "flags", "jumps"]),
     )
 }
 
