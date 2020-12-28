@@ -89,14 +89,14 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .short("n")
         .long("next")
         .multiple(true)
-        .help("Jumps to the next song"),
+        .help("Jumps to the next song (can be chained: -n -n -n ...)"),
     )
     .arg(
       Arg::with_name("previous")
         .short("p")
         .long("previous")
         .multiple(true)
-        .help("Jumps to the previous song"),
+        .help("Jumps to the previous song (can be chained: -p -p -p ...)"),
     )
     .arg(
       Arg::with_name("volume")
