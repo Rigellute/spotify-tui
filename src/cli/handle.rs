@@ -97,7 +97,6 @@ pub async fn handle_matches(
           .await?;
       }
 
-      // Could be made configurable in the future
       cli.get_status(format.to_string()).await
     }
     "query" => {
@@ -116,15 +115,13 @@ pub async fn handle_matches(
       } else if let Some(search) = matches.value_of("search") {
         let category = Type::search_from_matches(matches);
         Ok(cli.query(search.to_string(), format, category).await)
-      // Never called, just here for the compiler
       // Clap enforces that one of the things above is specified
       } else {
-        Ok(String::new())
+        unreachable!()
       }
     }
-    // Never called, just here for the compiler
     // Clap enforces that one of the things above is specified
-    _ => Ok(String::new()),
+    _ => unreachable!()
   };
 
   // Check if there was an error

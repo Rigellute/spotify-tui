@@ -112,11 +112,9 @@ impl JumpDirection {
       (Self::Next, m.occurrences_of("next"))
     } else if m.is_present("previous") {
       (Self::Previous, m.occurrences_of("previous"))
-    // Again: there is no default value
-    // If this function was called, one of these above
-    // has to be specified
+    // Enforced by clap
     } else {
-      (Self::Next, 0)
+      unreachable!()
     }
   }
 }
@@ -206,7 +204,7 @@ impl Format {
       Self::Uri(s) => s.clone(),
       Self::Device(s) => s.clone(),
       // Because this match statements
-      // needs to return a &String I have to do it this way
+      // needs to return a &String, I have to do it this way
       Self::Volume(s) => s.to_string(),
       Self::Flags((r, s, l)) => {
         let like = if *l {

@@ -241,7 +241,8 @@ impl<'a> CliApp<'a> {
           liked_songs.join("\n")
         }
       }
-      _ => String::new(),
+      // Enforced by clap
+      _ => unreachable!(),
     }
   }
 
@@ -547,8 +548,8 @@ impl<'a> CliApp<'a> {
           format!("no albums with name '{}'", search)
         }
       }
-      // Never called, just here for compiler
-      _ => String::new(),
+      // Enforced by clap 
+      _ => unreachable!(),
     }
   }
 }
