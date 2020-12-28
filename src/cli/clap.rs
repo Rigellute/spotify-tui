@@ -15,13 +15,11 @@ fn format_arg() -> Arg<'static, 'static> {
     .long("format")
     .takes_value(true)
     .value_name("FORMAT")
-    .help("Specifies the output format ('--help' for more information)")
+    .help("Specifies the output format (`--help` for more information)")
     .long_help(
-      "There are multiple format specifiers you can use: \
-%a: artist, %b: album, %p: playlist, %t: track, %h: show, \
-%f: flags (shuffle, repeat, like), %s: playback status, \
-%v: volume, %d: current device. Example: \
-spt pb -s -f 'playing on %d at %v%'",
+      "There are multiple format specifiers you can use: %a: artist, %b: album, %p: playlist, \
+%t: track, %h: show, %f: flags (shuffle, repeat, like), %s: playback status, %v: volume, %d: current device. \
+Example: spt pb -s -f 'playing on %d at %v%'",
     )
 }
 
@@ -30,6 +28,20 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
     .about("Interacts with the playback of a device")
+    .long_about(
+      "Use `playback` to interact with the playback of the current or any other device. \
+You can specify another device with `--device`. If no options were provided, spt \
+will default to just displaying the current playback. Actually, after every action \
+spt will display the updated playback. The output format is configurable with the \
+`--format` flag. Some options can be used together, other options have to be alone.
+
+Here's a list:
+
+* `--next` and `--previous` cannot be used with other options
+* `--status`, `--toggle`, `--transfer`, `--volume`, `--like`, `--repeat` and `--shuffle` \
+can be used together
+* `--share-track` and `--share-album` cannot be used with other options",
+    )
     .visible_alias("pb")
     .arg(device_arg())
     .arg(
@@ -89,14 +101,23 @@ pub fn playback_subcommand() -> App<'static, 'static> {
         .short("n")
         .long("next")
         .multiple(true)
-        .help("Jumps to the next song (can be chained: -n -n -n ...)"),
+        .help("Jumps to the next song (can be chained: -n -n -n ...)")
+        .long_help(
+          "This jumps to the next song if specied once. If you want to jump, let's say 3 songs \
+forward, you can use `--next` 3 times: `spt pb -nnn`.",
+        ),
     )
     .arg(
       Arg::with_name("previous")
         .short("p")
         .long("previous")
         .multiple(true)
-        .help("Jumps to the previous song (can be chained: -p -p -p ...)"),
+        .help("Jumps to the previous song (can be chained: -p -p -p ...)")
+        .long_help(
+          "This jumps to the beginning of the current song if specied once. You probably want to \
+really jump to the previous song though, so you can use the previous flag twice: `spt pb -pp`. \
+To jump two songs back, you can use `spt pb -ppp` and so on.",
+        ),
     )
     .arg(
       Arg::with_name("volume")
@@ -137,6 +158,14 @@ pub fn play_subcommand() -> App<'static, 'static> {
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
     .about("Plays a uri or another spotify item by name")
+    .long_about(
+      "If you specify a uri, the type can be inferred. If you want to play something by \
+name, you have to specify the type: `--track`, `--album`, `--artist`, `--playlist`, \
+or `--show`. The first item which was found will be played without confirmation. \
+To add a track to the queue, use `--queue`. To play a random song from a playlist, \
+use `--random`. Again, with `--format` you can specify how the output will look. \
+The same function as found in `playback` will be called.",
+    )
     .visible_alias("p")
     .arg(device_arg())
     .arg(format_arg().default_value("%f %s %t - %a"))
@@ -220,7 +249,13 @@ pub fn list_subcommand() -> App<'static, 'static> {
   SubCommand::with_name("list")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
-    .about("Lists devices, liked songs")
+    .about("Lists devices, liked songs and playlists")
+    .long_about(
+      "This will list devices, liked songs or playlists. With the `--limit` flag you are \
+able to specify the amount of results (between 1 and 50). Here, the `--format` is \
+even more awesome, get your output exactly the way you want. The format option will \
+be applied to every item found.",
+    )
     .visible_alias("l")
     .arg(format_arg().default_value_ifs(&[
       ("devices", None, "%v% %d"),
@@ -263,6 +298,12 @@ pub fn search_subcommand() -> App<'static, 'static> {
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
     .about("Searches for tracks, albums and more")
+    .long_about(
+      "This will search for something on spotify and displays you the items. The output \
+format can be changed with the `--format` flag and the limit can be changed with \
+the `--limit` flag (between 1 and 50). The type can't be inferred, so you have to \
+specify it.",
+    )
     .visible_alias("s")
     .arg(format_arg().default_value_ifs(&[
       ("tracks", None, "%t - %a (%u)"),
