@@ -34,7 +34,7 @@ impl Type {
     } else if m.is_present("show") {
       Self::Show
     }
-    // Enforced by clap 
+    // Enforced by clap
     else {
       unreachable!()
     }
@@ -52,7 +52,7 @@ impl Type {
     } else if m.is_present("shows") {
       Self::Show
     }
-    // Enforced by clap 
+    // Enforced by clap
     else {
       unreachable!()
     }
@@ -66,7 +66,7 @@ impl Type {
     } else if m.is_present("liked") {
       Self::Liked
     }
-    // Enforced by clap 
+    // Enforced by clap
     else {
       unreachable!()
     }

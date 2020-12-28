@@ -124,7 +124,15 @@ pub async fn handle_matches(
       }
 
       let category = Type::search_from_matches(matches);
-      Ok(cli.query(matches.value_of("search").unwrap().to_string(), format, category).await)
+      Ok(
+        cli
+          .query(
+            matches.value_of("search").unwrap().to_string(),
+            format,
+            category,
+          )
+          .await,
+      )
     }
     // Clap enforces that one of the things above is specified
     _ => unreachable!(),
