@@ -62,7 +62,7 @@ can be used together
       Arg::with_name("status")
         .short("s")
         .long("status")
-        .help("Prints out the current status of a device"),
+        .help("Prints out the current status of a device (default)"),
     )
     .arg(
       Arg::with_name("share-track")
