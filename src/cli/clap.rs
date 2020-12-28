@@ -55,12 +55,12 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     .arg(
       Arg::with_name("share-track")
         .long("share-track")
-        .help("Returns the url to the current track")
+        .help("Returns the url to the current track"),
     )
     .arg(
       Arg::with_name("share-album")
         .long("share-album")
-        .help("Returns the url to the album of the current track")
+        .help("Returns the url to the album of the current track"),
     )
     .arg(
       Arg::with_name("transfer")
@@ -120,9 +120,7 @@ pub fn playback_subcommand() -> App<'static, 'static> {
     )
     .group(
       ArgGroup::with_name("actions")
-        .args(&[
-          "toggle", "status", "transfer", "volume",
-        ])
+        .args(&["toggle", "status", "transfer", "volume"])
         .multiple(true)
         .conflicts_with_all(&["single", "jumps"]),
     )
