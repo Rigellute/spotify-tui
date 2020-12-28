@@ -87,14 +87,15 @@ pub async fn handle_matches(
       cli.get_status(format.to_string()).await
     }
     "play" => {
+      let queue = matches.is_present("queue");
+      let random = matches.is_present("random");
       let format = matches.value_of("format").unwrap();
+
       if let Some(uri) = matches.value_of("uri") {
-        cli.play_uri(uri.to_string()).await;
+        cli.play_uri(uri.to_string(), queue, random).await;
       } else if let Some(name) = matches.value_of("name") {
         let category = Type::play_from_matches(matches);
-        cli
-          .play(name.to_string(), category, matches.is_present("queue"))
-          .await?;
+        cli.play(name.to_string(), category, queue, random).await?;
       }
 
       cli.get_status(format.to_string()).await
@@ -121,7 +122,7 @@ pub async fn handle_matches(
       }
     }
     // Clap enforces that one of the things above is specified
-    _ => unreachable!()
+    _ => unreachable!(),
   };
 
   // Check if there was an error

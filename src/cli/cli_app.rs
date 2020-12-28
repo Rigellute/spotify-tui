@@ -4,6 +4,7 @@ use crate::user_config::UserConfig;
 use super::util::{Flag, Format, FormatType, JumpDirection, Type};
 
 use anyhow::{anyhow, Result};
+use rand::{thread_rng, Rng};
 use rspotify::model::{context::CurrentlyPlaybackContext, PlayingItem};
 
 pub struct CliApp<'a> {
@@ -368,32 +369,65 @@ impl<'a> CliApp<'a> {
   }
 
   // spt play -u URI
-  pub async fn play_uri(&mut self, uri: String) {
+  pub async fn play_uri(&mut self, uri: String, queue: bool, random: bool) {
+    let offset = if random {
+      // Only works with playlists for now
+      if uri.contains("spotify:playlist:") {
+        let id = uri.split(':').last().unwrap();
+        match self.net.spotify.playlist(id, None, None).await {
+          Ok(p) => {
+            let num = p.tracks.total;
+            Some(thread_rng().gen_range(0, num) as usize)
+          }
+          Err(e) => {
+            self
+              .net
+              .app
+              .lock()
+              .await
+              .handle_error(anyhow!(e.to_string()));
+            return;
+          }
+        }
+      } else {
+        None
+      }
+    } else {
+      None
+    };
+
     if uri.contains("spotify:track:") {
-      self
-        .net
-        .handle_network_event(IoEvent::StartPlayback(
-          None,
-          Some(vec![uri.clone()]),
-          Some(0),
-        ))
-        .await;
+      if queue {
+        self
+          .net
+          .handle_network_event(IoEvent::AddItemToQueue(uri))
+          .await;
+      } else {
+        self
+          .net
+          .handle_network_event(IoEvent::StartPlayback(
+            None,
+            Some(vec![uri.clone()]),
+            Some(0),
+          ))
+          .await;
+      }
     } else {
       self
         .net
-        .handle_network_event(IoEvent::StartPlayback(Some(uri.clone()), None, None))
+        .handle_network_event(IoEvent::StartPlayback(Some(uri.clone()), None, offset))
         .await;
     }
   }
 
   // spt play -n NAME ...
-  pub async fn play(&mut self, name: String, item: Type, queue: bool) -> Result<()> {
+  pub async fn play(&mut self, name: String, item: Type, queue: bool, random: bool) -> Result<()> {
     self
       .net
       .handle_network_event(IoEvent::GetSearchResults(name.clone(), None))
       .await;
     // Get the uri of the first found
-    // item or return an error message
+    // item + the offset or return an error message
     let uri = {
       let results = &self.net.app.lock().await.search_results;
       match item {
@@ -432,24 +466,19 @@ impl<'a> CliApp<'a> {
         }
         Type::Playlist => {
           if let Some(r) = &results.playlists {
-            r.items[0].uri.clone()
+            let p = &r.items[0];
+            // For a random song, create a random offset
+            p.uri.clone()
           } else {
             return Err(anyhow!("no playlists with name '{}'", name));
           }
         }
-        _ => String::new(),
+        _ => unreachable!(),
       }
     };
 
     // Play or queue the uri
-    if queue {
-      self
-        .net
-        .handle_network_event(IoEvent::AddItemToQueue(uri))
-        .await;
-    } else {
-      self.play_uri(uri).await;
-    }
+    self.play_uri(uri, queue, random).await;
 
     Ok(())
   }
@@ -548,7 +577,7 @@ impl<'a> CliApp<'a> {
           format!("no albums with name '{}'", search)
         }
       }
-      // Enforced by clap 
+      // Enforced by clap
       _ => unreachable!(),
     }
   }

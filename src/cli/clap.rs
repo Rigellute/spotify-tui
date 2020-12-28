@@ -165,6 +165,14 @@ pub fn play_subcommand() -> App<'static, 'static> {
         .help("Adds track to queue instead of playing it directly"),
     )
     .arg(
+      Arg::with_name("random")
+        .short("r")
+        .long("random")
+        // Only works with playlists
+        .conflicts_with_all(&["track", "album", "artist", "show"])
+        .help("Plays a random track (only works with playlists)"),
+    )
+    .arg(
       Arg::with_name("album")
         .short("b")
         .long("album")

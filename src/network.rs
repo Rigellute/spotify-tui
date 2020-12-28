@@ -108,7 +108,7 @@ pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
 #[derive(Clone)]
 pub struct Network<'a> {
   oauth: SpotifyOAuth,
-  spotify: Spotify,
+  pub spotify: Spotify,
   large_search_limit: u32,
   small_search_limit: u32,
   pub client_config: ClientConfig,
