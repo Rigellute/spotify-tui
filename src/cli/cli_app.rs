@@ -302,9 +302,6 @@ impl<'a> CliApp<'a> {
           .handle_network_event(IoEvent::Shuffle(c.shuffle_state))
           .await
       }
-      // Very weird behavior
-      // For some reason you can't set RepeatState::Track
-      // This just toggles between RepeatState::Off and RepeatState::Context
       Flag::Repeat => {
         self
           .net

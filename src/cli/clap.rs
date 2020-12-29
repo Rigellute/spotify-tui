@@ -15,7 +15,7 @@ fn format_arg() -> Arg<'static, 'static> {
     .long("format")
     .takes_value(true)
     .value_name("FORMAT")
-    .help("Specifies the output format (`--help` for more information)")
+    .help("Specifies the output format")
     .long_help(
       "There are multiple format specifiers you can use: %a: artist, %b: album, %p: playlist, \
 %t: track, %h: show, %f: flags (shuffle, repeat, like), %s: playback status, %v: volume, %d: current device. \
@@ -101,7 +101,7 @@ can be used together
         .short("n")
         .long("next")
         .multiple(true)
-        .help("Jumps to the next song (can be chained: -n -n -n ...)")
+        .help("Jumps to the next song")
         .long_help(
           "This jumps to the next song if specied once. If you want to jump, let's say 3 songs \
 forward, you can use `--next` 3 times: `spt pb -nnn`.",
@@ -160,7 +160,7 @@ pub fn play_subcommand() -> App<'static, 'static> {
     .about("Plays a uri or another spotify item by name")
     .long_about(
       "If you specify a uri, the type can be inferred. If you want to play something by \
-name, you have to specify the type: `--track`, `--album`, `--artist`, `--playlist`, \
+name, you have to specify the type: `--track`, `--album`, `--artist`, `--playlist` \
 or `--show`. The first item which was found will be played without confirmation. \
 To add a track to the queue, use `--queue`. To play a random song from a playlist, \
 use `--random`. Again, with `--format` you can specify how the output will look. \
