@@ -692,7 +692,7 @@ impl App {
         PlayingItem::Track(track) => {
           if let Err(e) = clipboard.set_contents(format!(
             "https://open.spotify.com/album/{}",
-            track.id.to_owned().unwrap_or_default()
+            track.album.id.to_owned().unwrap_or_default()
           )) {
             self.handle_error(anyhow!("failed to set clipboard content: {}", e));
           }
