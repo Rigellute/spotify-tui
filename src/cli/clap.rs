@@ -183,6 +183,7 @@ The same function as found in `playback` will be called.",
         .long("name")
         .takes_value(true)
         .value_name("NAME")
+        .requires("contexts")
         .help("Plays the first match with NAME from the specified category"),
     )
     .arg(
@@ -234,7 +235,6 @@ The same function as found in `playback` will be called.",
     .group(
       ArgGroup::with_name("contexts")
         .args(&["track", "artist", "playlist", "album", "show"])
-        .required(true)
         .multiple(false),
     )
     .group(
