@@ -112,11 +112,11 @@ forward, you can use `--next` 3 times: `spt pb -nnn`.",
         .short("p")
         .long("previous")
         .multiple(true)
-        .help("Jumps to the previous song (can be chained: -p -p -p ...)")
+        .help("Jumps to the previous song")
         .long_help(
           "This jumps to the beginning of the current song if specied once. You probably want to \
-really jump to the previous song though, so you can use the previous flag twice: `spt pb -pp`. \
-To jump two songs back, you can use `spt pb -ppp` and so on.",
+jump to the previous song though, so you can use the previous flag twice: `spt pb -pp`. To jump \
+two songs back, you can use `spt pb -ppp` and so on.",
         ),
     )
     .arg(
