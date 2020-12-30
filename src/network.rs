@@ -108,11 +108,11 @@ pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
 #[derive(Clone)]
 pub struct Network<'a> {
   oauth: SpotifyOAuth,
-  spotify: Spotify,
+  pub spotify: Spotify,
   large_search_limit: u32,
   small_search_limit: u32,
-  client_config: ClientConfig,
-  app: &'a Arc<Mutex<App>>,
+  pub client_config: ClientConfig,
+  pub app: &'a Arc<Mutex<App>>,
 }
 
 impl<'a> Network<'a> {

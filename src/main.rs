@@ -1,5 +1,6 @@
 mod app;
 mod banner;
+mod cli;
 mod config;
 mod event;
 mod handlers;
@@ -10,11 +11,11 @@ mod user_config;
 
 use crate::app::RouteId;
 use crate::event::Key;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use app::{ActiveBlock, App};
 use backtrace::Backtrace;
 use banner::BANNER;
-use clap::{App as ClapApp, Arg};
+use clap::{App as ClapApp, Arg, Shell};
 use config::ClientConfig;
 use crossterm::{
   cursor::MoveTo,
@@ -123,24 +124,63 @@ async fn main() -> Result<()> {
     panic_hook(info);
   }));
 
-  let matches = ClapApp::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .usage("Press `?` while running the app to see keybindings")
-        .before_help(BANNER)
-        .after_help("Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml")
-         .arg(Arg::with_name("tick-rate")
-                               .short("t")
-                               .long("tick-rate")
-                               .help("Set the tick rate (milliseconds): the lower the number the higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view of the app. Beware that this comes at a CPU cost!")
-                               .takes_value(true))
-         .arg(Arg::with_name("config")
-                               .short("c")
-                               .long("config")
-                               .help("Specify configuration file path.")
-                               .takes_value(true))
-        .get_matches();
+  let mut clap_app = ClapApp::new(env!("CARGO_PKG_NAME"))
+    .version(env!("CARGO_PKG_VERSION"))
+    .author(env!("CARGO_PKG_AUTHORS"))
+    .about(env!("CARGO_PKG_DESCRIPTION"))
+    .usage("Press `?` while running the app to see keybindings")
+    .before_help(BANNER)
+    .after_help(
+      "Your spotify Client ID and Client Secret are stored in $HOME/.config/spotify-tui/client.yml",
+    )
+    .arg(
+      Arg::with_name("tick-rate")
+        .short("t")
+        .long("tick-rate")
+        .help("Set the tick rate (milliseconds): the lower the number the higher the FPS.")
+        .long_help(
+          "Specify the tick rate in milliseconds: the lower the number the \
+higher the FPS. It can be nicer to have a lower value when you want to use the audio analysis view \
+of the app. Beware that this comes at a CPU cost!",
+        )
+        .takes_value(true),
+    )
+    .arg(
+      Arg::with_name("config")
+        .short("c")
+        .long("config")
+        .help("Specify configuration file path.")
+        .takes_value(true),
+    )
+    .arg(
+      Arg::with_name("completions")
+        .long("completions")
+        .help("Generates completions for your preferred shell")
+        .takes_value(true)
+        .possible_values(&["bash", "zsh", "fish", "power-shell", "elvish"])
+        .value_name("SHELL"),
+    )
+    // Control spotify from the command line
+    .subcommand(cli::playback_subcommand())
+    .subcommand(cli::play_subcommand())
+    .subcommand(cli::list_subcommand())
+    .subcommand(cli::search_subcommand());
+
+  let matches = clap_app.clone().get_matches();
+
+  // Shell completions don't need any spotify work
+  if let Some(s) = matches.value_of("completions") {
+    let shell = match s {
+      "fish" => Shell::Fish,
+      "bash" => Shell::Bash,
+      "zsh" => Shell::Zsh,
+      "power-shell" => Shell::PowerShell,
+      "elvish" => Shell::Elvish,
+      _ => return Err(anyhow!("no completions avaible for '{}'", s)),
+    };
+    clap_app.gen_completions_to("spt", shell, &mut io::stdout());
+    return Ok(());
+  }
 
   let mut user_config = UserConfig::new();
   if let Some(config_file_path) = matches.value_of("config") {
@@ -189,14 +229,25 @@ async fn main() -> Result<()> {
         token_expiry,
       )));
 
-      let cloned_app = Arc::clone(&app);
-      std::thread::spawn(move || {
-        let mut network = Network::new(oauth, spotify, client_config, &app);
-        start_tokio(sync_io_rx, &mut network);
-      });
-
-      // The UI must run in the "main" thread
-      start_ui(user_config, &cloned_app).await?;
+      // Work with the cli (not really async)
+      if let Some(cmd) = matches.subcommand_name() {
+        // Save, because we checked if the subcommand is present at runtime
+        let m = matches.subcommand_matches(cmd).unwrap();
+        let network = Network::new(oauth, spotify, client_config, &app);
+        println!(
+          "{}",
+          cli::handle_matches(m, cmd.to_string(), network, user_config).await?
+        );
+      // Launch the UI (async)
+      } else {
+        let cloned_app = Arc::clone(&app);
+        std::thread::spawn(move || {
+          let mut network = Network::new(oauth, spotify, client_config, &app);
+          start_tokio(sync_io_rx, &mut network);
+        });
+        // The UI must run in the "main" thread
+        start_ui(user_config, &cloned_app).await?;
+      }
     }
     None => println!("\nSpotify auth failed"),
   }

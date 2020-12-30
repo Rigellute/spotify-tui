@@ -230,7 +230,12 @@ behavior:
   show_loading_indicator: true
   # Determines the text icon to display next to "liked" Spotify items, such as
   # liked songs and albums, or followed artists. Can be any length string.
-  liked_icon: "♥"
+  liked_icon: " "
+  shuffle_icon: "咽"
+  repeat_track_icon: "綾"
+  repeat_context_icon: "凌"
+  playing_icon: "契"
+  paused_icon: ""
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
