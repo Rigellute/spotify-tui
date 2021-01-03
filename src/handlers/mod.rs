@@ -31,7 +31,7 @@ pub use input::handler as input_handler;
 
 // takes a Key struct and returns the matching key according to the keymap.
 fn remap_key(key: Key, app: &mut App) -> Key {
-  match key{
+  match key {
     _ if key == app.user_config.keymap.q => Key::Char('q'),
     _ if key == app.user_config.keymap.w => Key::Char('w'),
     _ if key == app.user_config.keymap.e => Key::Char('e'),
@@ -84,7 +84,7 @@ fn remap_key(key: Key, app: &mut App) -> Key {
     _ if key == app.user_config.keymap.B => Key::Char('B'),
     _ if key == app.user_config.keymap.N => Key::Char('N'),
     _ if key == app.user_config.keymap.M => Key::Char('M'),
-    _ => key
+    _ => key,
   }
 }
 
@@ -154,9 +154,7 @@ pub fn handle_app(key: Key, app: &mut App) {
     _ if remapped_key == app.user_config.keys.basic_view => {
       app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
     }
-    _ => {
-      handle_block_events(remapped_key, app)
-    },
+    _ => handle_block_events(remapped_key, app),
   }
 }
 

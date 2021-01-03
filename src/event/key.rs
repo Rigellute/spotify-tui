@@ -98,9 +98,7 @@ impl Key {
 impl fmt::Display for Key {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match *self {
-
-      //todo: swap out keys with rebound keys
-      
+      //TODO: Swap out keys with rebound keys
       Key::Alt(' ') => write!(f, "<Alt+Space>"),
       Key::Ctrl(' ') => write!(f, "<Ctrl+Space>"),
       Key::Char(' ') => write!(f, "<Space>"),

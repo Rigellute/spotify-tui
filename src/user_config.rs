@@ -127,7 +127,9 @@ fn parse_keymap(key: String) -> Result<Key> {
     1 => Ok(Key::Char(get_single_char(key.as_str()))),
     _ => {
       return Err(anyhow!(
-        "Keymap can only rebind single keys. \"{}\" has {} characters.", key, key.len() 
+        "Keymap can only rebind single keys. \"{}\" has {} characters.",
+        key,
+        key.len() 
       ));
     }
   }
@@ -419,7 +421,7 @@ impl UserConfig {
         basic_view: Key::Char('B'),
         add_item_to_queue: Key::Char('z'),
       },
-      
+
       // default keymap
       keymap: Keymap {
         q: Key::Char('q'),
@@ -620,7 +622,6 @@ impl UserConfig {
     to_keymap!(B);
     to_keymap!(N);
     to_keymap!(M);
-
 
     Ok(())
   }
