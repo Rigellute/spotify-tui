@@ -316,7 +316,7 @@ impl<'a> CliApp<'a> {
       seconds * 1000
     };
 
-    // Check if position_to_seek is greater than 
+    // Check if position_to_seek is greater than
     // duration (next track) or negative (previous track)
     if position_to_seek > duration {
       self.jump(&JumpDirection::Next).await;
