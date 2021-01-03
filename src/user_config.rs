@@ -257,32 +257,32 @@ pub struct KeymapString {
   pub n: Option<String>,
   pub m: Option<String>,
   // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
-  pub Q: Option<String>,
-  pub W: Option<String>,
-  pub E: Option<String>,
-  pub R: Option<String>,
-  pub T: Option<String>,
-  pub Y: Option<String>,
-  pub U: Option<String>,
-  pub I: Option<String>,
-  pub O: Option<String>,
-  pub P: Option<String>,
-  pub A: Option<String>,
-  pub S: Option<String>,
-  pub D: Option<String>,
-  pub F: Option<String>,
-  pub G: Option<String>,
-  pub H: Option<String>,
-  pub J: Option<String>,
-  pub K: Option<String>,
-  pub L: Option<String>,
-  pub Z: Option<String>,
-  pub X: Option<String>,
-  pub C: Option<String>,
-  pub V: Option<String>,
-  pub B: Option<String>,
-  pub N: Option<String>,
-  pub M: Option<String>,
+  pub shift_q: Option<String>,
+  pub shift_w: Option<String>,
+  pub shift_e: Option<String>,
+  pub shift_r: Option<String>,
+  pub shift_t: Option<String>,
+  pub shift_y: Option<String>,
+  pub shift_u: Option<String>,
+  pub shift_i: Option<String>,
+  pub shift_o: Option<String>,
+  pub shift_p: Option<String>,
+  pub shift_a: Option<String>,
+  pub shift_s: Option<String>,
+  pub shift_d: Option<String>,
+  pub shift_f: Option<String>,
+  pub shift_g: Option<String>,
+  pub shift_h: Option<String>,
+  pub shift_j: Option<String>,
+  pub shift_k: Option<String>,
+  pub shift_l: Option<String>,
+  pub shift_z: Option<String>,
+  pub shift_x: Option<String>,
+  pub shift_c: Option<String>,
+  pub shift_v: Option<String>,
+  pub shift_b: Option<String>,
+  pub shift_n: Option<String>,
+  pub shift_m: Option<String>,
 }
 
 #[derive(Clone)]
@@ -314,32 +314,32 @@ pub struct Keymap {
   pub n: Key,
   pub m: Key,
   // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
-  pub Q: Key,
-  pub W: Key,
-  pub E: Key,
-  pub R: Key,
-  pub T: Key,
-  pub Y: Key,
-  pub U: Key,
-  pub I: Key,
-  pub O: Key,
-  pub P: Key,
-  pub A: Key,
-  pub S: Key,
-  pub D: Key,
-  pub F: Key,
-  pub G: Key,
-  pub H: Key,
-  pub J: Key,
-  pub K: Key,
-  pub L: Key,
-  pub Z: Key,
-  pub X: Key,
-  pub C: Key,
-  pub V: Key,
-  pub B: Key,
-  pub N: Key,
-  pub M: Key,
+  pub shift_q: Key,
+  pub shift_w: Key,
+  pub shift_e: Key,
+  pub shift_r: Key,
+  pub shift_t: Key,
+  pub shift_y: Key,
+  pub shift_u: Key,
+  pub shift_i: Key,
+  pub shift_o: Key,
+  pub shift_p: Key,
+  pub shift_a: Key,
+  pub shift_s: Key,
+  pub shift_d: Key,
+  pub shift_f: Key,
+  pub shift_g: Key,
+  pub shift_h: Key,
+  pub shift_j: Key,
+  pub shift_k: Key,
+  pub shift_l: Key,
+  pub shift_z: Key,
+  pub shift_x: Key,
+  pub shift_c: Key,
+  pub shift_v: Key,
+  pub shift_b: Key,
+  pub shift_n: Key,
+  pub shift_m: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -450,32 +450,32 @@ impl UserConfig {
         b: Key::Char('b'),
         n: Key::Char('n'),
         m: Key::Char('m'),
-        Q: Key::Char('Q'),
-        W: Key::Char('W'),
-        E: Key::Char('E'),
-        R: Key::Char('R'),
-        T: Key::Char('T'),
-        Y: Key::Char('Y'),
-        U: Key::Char('U'),
-        I: Key::Char('I'),
-        O: Key::Char('O'),
-        P: Key::Char('P'),
-        A: Key::Char('A'),
-        S: Key::Char('S'),
-        D: Key::Char('D'),
-        F: Key::Char('F'),
-        G: Key::Char('G'),
-        H: Key::Char('H'),
-        J: Key::Char('J'),
-        K: Key::Char('K'),
-        L: Key::Char('L'),
-        Z: Key::Char('Z'),
-        X: Key::Char('X'),
-        C: Key::Char('C'),
-        V: Key::Char('V'),
-        B: Key::Char('B'),
-        N: Key::Char('N'),
-        M: Key::Char('M'),
+        shift_q: Key::Char('Q'),
+        shift_w: Key::Char('W'),
+        shift_e: Key::Char('E'),
+        shift_r: Key::Char('R'),
+        shift_t: Key::Char('T'),
+        shift_y: Key::Char('Y'),
+        shift_u: Key::Char('U'),
+        shift_i: Key::Char('I'),
+        shift_o: Key::Char('O'),
+        shift_p: Key::Char('P'),
+        shift_a: Key::Char('A'),
+        shift_s: Key::Char('S'),
+        shift_d: Key::Char('D'),
+        shift_f: Key::Char('F'),
+        shift_g: Key::Char('G'),
+        shift_h: Key::Char('H'),
+        shift_j: Key::Char('J'),
+        shift_k: Key::Char('K'),
+        shift_l: Key::Char('L'),
+        shift_z: Key::Char('Z'),
+        shift_x: Key::Char('X'),
+        shift_c: Key::Char('C'),
+        shift_v: Key::Char('V'),
+        shift_b: Key::Char('B'),
+        shift_n: Key::Char('N'),
+        shift_m: Key::Char('M'),
       },
 
       behavior: BehaviorConfig {
@@ -596,32 +596,32 @@ impl UserConfig {
     to_keymap!(b);
     to_keymap!(n);
     to_keymap!(m);
-    to_keymap!(Q);
-    to_keymap!(W);
-    to_keymap!(E);
-    to_keymap!(R);
-    to_keymap!(T);
-    to_keymap!(Y);
-    to_keymap!(U);
-    to_keymap!(I);
-    to_keymap!(O);
-    to_keymap!(P);
-    to_keymap!(A);
-    to_keymap!(S);
-    to_keymap!(D);
-    to_keymap!(F);
-    to_keymap!(G);
-    to_keymap!(H);
-    to_keymap!(J);
-    to_keymap!(K);
-    to_keymap!(L);
-    to_keymap!(Z);
-    to_keymap!(X);
-    to_keymap!(C);
-    to_keymap!(V);
-    to_keymap!(B);
-    to_keymap!(N);
-    to_keymap!(M);
+    to_keymap!(shift_q);
+    to_keymap!(shift_w);
+    to_keymap!(shift_e);
+    to_keymap!(shift_r);
+    to_keymap!(shift_t);
+    to_keymap!(shift_y);
+    to_keymap!(shift_u);
+    to_keymap!(shift_i);
+    to_keymap!(shift_o);
+    to_keymap!(shift_p);
+    to_keymap!(shift_a);
+    to_keymap!(shift_s);
+    to_keymap!(shift_d);
+    to_keymap!(shift_f);
+    to_keymap!(shift_g);
+    to_keymap!(shift_h);
+    to_keymap!(shift_j);
+    to_keymap!(shift_k);
+    to_keymap!(shift_l);
+    to_keymap!(shift_z);
+    to_keymap!(shift_x);
+    to_keymap!(shift_c);
+    to_keymap!(shift_v);
+    to_keymap!(shift_b);
+    to_keymap!(shift_n);
+    to_keymap!(shift_m);
 
     Ok(())
   }
