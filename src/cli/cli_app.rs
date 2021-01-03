@@ -278,7 +278,10 @@ impl<'a> CliApp<'a> {
     };
 
     let current_pos = {
-      self.net.handle_network_event(IoEvent::GetCurrentPlayback).await;
+      self
+        .net
+        .handle_network_event(IoEvent::GetCurrentPlayback)
+        .await;
       let app = self.net.app.lock().await;
       if let Some(CurrentlyPlaybackContext {
         progress_ms: Some(ms),
@@ -287,7 +290,7 @@ impl<'a> CliApp<'a> {
       {
         (ms / 1000) as u32
       } else {
-        return Err(anyhow!("no context available"))
+        return Err(anyhow!("no context available"));
       }
     };
 
@@ -302,7 +305,10 @@ impl<'a> CliApp<'a> {
     };
 
     // This seeks to a position in the current song
-    self.net.handle_network_event(IoEvent::Seek(position_to_seek)).await;
+    self
+      .net
+      .handle_network_event(IoEvent::Seek(position_to_seek))
+      .await;
     Ok(())
   }
 
