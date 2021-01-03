@@ -277,7 +277,7 @@ impl<'a> CliApp<'a> {
       Err(_) => return Err(anyhow!("failed to convert seconds to i32")),
     };
 
-    let current_pos = {
+    let (current_pos, duration) = {
       self
         .net
         .handle_network_event(IoEvent::GetCurrentPlayback)
@@ -285,30 +285,49 @@ impl<'a> CliApp<'a> {
       let app = self.net.app.lock().await;
       if let Some(CurrentlyPlaybackContext {
         progress_ms: Some(ms),
+        item: Some(item),
         ..
-      }) = app.current_playback_context
+      }) = &app.current_playback_context
       {
-        (ms / 1000) as u32
+        let duration = match item {
+          PlayingItem::Track(track) => track.duration_ms,
+          PlayingItem::Episode(episode) => episode.duration_ms,
+        };
+
+        (*ms as u32, duration)
       } else {
         return Err(anyhow!("no context available"));
       }
     };
 
-    // Convert the new position to ms
+    // Convert secs to ms
+    let ms = seconds * 1000;
+    // Calculate new positon
     let position_to_seek = if seconds_str.starts_with("+") {
-      (current_pos + seconds) * 1000
+      current_pos + ms
     } else if seconds_str.starts_with("-") {
-      (current_pos - seconds) * 1000
+      if ms > current_pos {
+        0u32
+      } else {
+        current_pos - ms
+      }
     } else {
       // Absolute value of the track
       seconds * 1000
     };
 
-    // This seeks to a position in the current song
-    self
-      .net
-      .handle_network_event(IoEvent::Seek(position_to_seek))
-      .await;
+    // Check if position_to_seek is greater than 
+    // duration (next track) or negative (previous track)
+    if position_to_seek > duration {
+      self.jump(&JumpDirection::Next).await;
+    } else {
+      // This seeks to a position in the current song
+      self
+        .net
+        .handle_network_event(IoEvent::Seek(position_to_seek))
+        .await;
+    }
+
     Ok(())
   }
 
