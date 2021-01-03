@@ -271,6 +271,41 @@ impl<'a> CliApp<'a> {
     }
   }
 
+  pub async fn seek(&mut self, seconds_str: String) -> Result<()> {
+    let seconds = match seconds_str.parse::<i32>() {
+      Ok(s) => s.abs() as u32,
+      Err(_) => return Err(anyhow!("failed to convert seconds to i32")),
+    };
+
+    let current_pos = {
+      self.net.handle_network_event(IoEvent::GetCurrentPlayback).await;
+      let app = self.net.app.lock().await;
+      if let Some(CurrentlyPlaybackContext {
+        progress_ms: Some(ms),
+        ..
+      }) = app.current_playback_context
+      {
+        (ms / 1000) as u32
+      } else {
+        return Err(anyhow!("no context available"))
+      }
+    };
+
+    // Convert the new position to ms
+    let position_to_seek = if seconds_str.starts_with("+") {
+      (current_pos + seconds) * 1000
+    } else if seconds_str.starts_with("-") {
+      (current_pos - seconds) * 1000
+    } else {
+      // Absolute value of the track
+      seconds * 1000
+    };
+
+    // This seeks to a position in the current song
+    self.net.handle_network_event(IoEvent::Seek(position_to_seek)).await;
+    Ok(())
+  }
+
   // spt playback --like / --shuffle / --repeat
   pub async fn mark(&mut self, flag: Flag) -> Result<()> {
     let c = {

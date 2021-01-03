@@ -120,6 +120,14 @@ two songs back, you can use `spt pb -ppp` and so on.",
         ),
     )
     .arg(
+      Arg::with_name("seek")
+        .long("seek")
+        .takes_value(true)
+        .value_name("±SECONDS")
+        .allow_hyphen_values(true)
+        .help("Jumps SECONDS forwards (+) or backwards (-)"),
+    )
+    .arg(
       Arg::with_name("volume")
         .short("v")
         .long("volume")
