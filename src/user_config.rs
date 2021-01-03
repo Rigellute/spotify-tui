@@ -125,13 +125,12 @@ fn parse_keymap(key: String) -> Result<Key> {
   // key.chars.count() still returns 1 for a single unicode caracter.
   match key.chars().count() {
     1 => Ok(Key::Char(get_single_char(key.as_str()))),
-    _ => {
-      Err(anyhow!(
+    _ => Err(anyhow!(
         "Keymap can only rebind single keys. \"{}\" has {} characters.",
         key,
         key.len()
-      ))
-    }
+      )),
+    
   }
 }
 
