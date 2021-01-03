@@ -129,7 +129,7 @@ fn parse_keymap(key: String) -> Result<Key> {
       return Err(anyhow!(
         "Keymap can only rebind single keys. \"{}\" has {} characters.",
         key,
-        key.len() 
+        key.len()
       ));
     }
   }
@@ -625,7 +625,7 @@ impl UserConfig {
 
     Ok(())
   }
-  
+
   pub fn load_theme(&mut self, theme: UserTheme) -> Result<()> {
     macro_rules! to_theme_item {
       ($name: ident) => {
