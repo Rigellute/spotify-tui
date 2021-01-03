@@ -15,3 +15,6 @@ secrets.tar
 
 *.swp
 tags
+
+.vscode
+config.yml

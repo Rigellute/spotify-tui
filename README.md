@@ -238,6 +238,13 @@ behavior:
   paused_icon: ""
 
 keybindings:
+  # Note: these take keymap into account. Example:
+  #   keybindings:
+  #     next_track: "n"
+  #   keymap:
+  #     n: k
+  # To go to the next track you have to press k and not n.
+  #
   # Key stroke can be used if it only uses two keys:
   # ctrl-q works,
   # ctrl-alt-q doesn't.
@@ -267,6 +274,67 @@ keybindings:
   jump_to_context: "o"
   basic_view: "B"
   add_item_to_queue: "z"
+
+keymap:
+  # Swap out one key with another one when using keyboard showtcuts. Example:
+  #   n: "k"
+  # When you press 'k' on your keyboard, it gets treated like if you had pressed 'n'. 
+  #
+  # When using the search function this is ignored.
+  q: "q"
+  w: "w"
+  e: "e"
+  r: "r"
+  t: "t"
+  y: "y"
+  u: "u"
+  i: "i"
+  o: "o"
+  p: "p"
+  a: "a"
+  s: "s"
+  d: "d"
+  f: "f"
+  g: "g"
+  h: "h"
+  j: "j"
+  k: "k"
+  l: "l"
+  z: "z"
+  x: "x"
+  c: "c"
+  v: "v"
+  b: "b"
+  n: "n"
+  m: "m"
+  
+  # Use capital letters for the shift modifier.
+  Q: "Q"
+  W: "W"
+  E: "E"
+  R: "R"
+  T: "T"
+  Y: "Y"
+  U: "U"
+  I: "I"
+  O: "O"
+  P: "P"
+  A: "A"
+  S: "S"
+  D: "D"
+  F: "F"
+  G: "G"
+  H: "H"
+  J: "J"
+  K: "K"
+  L: "L"
+  Z: "Z"
+  X: "X"
+  C: "C"
+  V: "V"
+  B: "B"
+  N: "N"
+  M: "M"
 ```
 
 ## Limitations

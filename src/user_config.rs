@@ -112,6 +112,27 @@ fn parse_key(key: String) -> Result<Key> {
   }
 }
 
+// Swaps out single character strings with Key structs.
+fn parse_keymap(key: String) -> Result<Key> {
+  fn get_single_char(string: &str) -> char {
+    match string.chars().next() {
+      Some(c) => c,
+      None => panic!(),
+    }
+  }
+
+  // .len() counts number of bytes, some unicode caracters concist of multiple bytes.
+  // key.chars.count() still returns 1 for a single unicode caracter.
+  match key.chars().count() {
+    1 => Ok(Key::Char(get_single_char(key.as_str()))),
+    _ => {
+      return Err(anyhow!(
+        "Keymap can only rebind single keys. \"{}\" has {} characters.", key, key.len() 
+      ));
+    }
+  }
+}
+
 fn check_reserved_keys(key: Key) -> Result<()> {
   let reserved = [
     Key::Char('h'),
@@ -206,6 +227,120 @@ pub struct KeyBindings {
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct KeymapString {
+  pub q: Option<String>,
+  pub w: Option<String>,
+  pub e: Option<String>,
+  pub r: Option<String>,
+  pub t: Option<String>,
+  pub y: Option<String>,
+  pub u: Option<String>,
+  pub i: Option<String>,
+  pub o: Option<String>,
+  pub p: Option<String>,
+  pub a: Option<String>,
+  pub s: Option<String>,
+  pub d: Option<String>,
+  pub f: Option<String>,
+  pub g: Option<String>,
+  pub h: Option<String>,
+  pub j: Option<String>,
+  pub k: Option<String>,
+  pub l: Option<String>,
+  pub z: Option<String>,
+  pub x: Option<String>,
+  pub c: Option<String>,
+  pub v: Option<String>,
+  pub b: Option<String>,
+  pub n: Option<String>,
+  pub m: Option<String>,
+  // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
+  pub Q: Option<String>,
+  pub W: Option<String>,
+  pub E: Option<String>,
+  pub R: Option<String>,
+  pub T: Option<String>,
+  pub Y: Option<String>,
+  pub U: Option<String>,
+  pub I: Option<String>,
+  pub O: Option<String>,
+  pub P: Option<String>,
+  pub A: Option<String>,
+  pub S: Option<String>,
+  pub D: Option<String>,
+  pub F: Option<String>,
+  pub G: Option<String>,
+  pub H: Option<String>,
+  pub J: Option<String>,
+  pub K: Option<String>,
+  pub L: Option<String>,
+  pub Z: Option<String>,
+  pub X: Option<String>,
+  pub C: Option<String>,
+  pub V: Option<String>,
+  pub B: Option<String>,
+  pub N: Option<String>,
+  pub M: Option<String>,
+}
+
+#[derive(Clone)]
+pub struct Keymap {
+  pub q: Key,
+  pub w: Key,
+  pub e: Key,
+  pub r: Key,
+  pub t: Key,
+  pub y: Key,
+  pub u: Key,
+  pub i: Key,
+  pub o: Key,
+  pub p: Key,
+  pub a: Key,
+  pub s: Key,
+  pub d: Key,
+  pub f: Key,
+  pub g: Key,
+  pub h: Key,
+  pub j: Key,
+  pub k: Key,
+  pub l: Key,
+  pub z: Key,
+  pub x: Key,
+  pub c: Key,
+  pub v: Key,
+  pub b: Key,
+  pub n: Key,
+  pub m: Key,
+  // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
+  pub Q: Key,
+  pub W: Key,
+  pub E: Key,
+  pub R: Key,
+  pub T: Key,
+  pub Y: Key,
+  pub U: Key,
+  pub I: Key,
+  pub O: Key,
+  pub P: Key,
+  pub A: Key,
+  pub S: Key,
+  pub D: Key,
+  pub F: Key,
+  pub G: Key,
+  pub H: Key,
+  pub J: Key,
+  pub K: Key,
+  pub L: Key,
+  pub Z: Key,
+  pub X: Key,
+  pub C: Key,
+  pub V: Key,
+  pub B: Key,
+  pub N: Key,
+  pub M: Key,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BehaviorConfigString {
   pub seek_milliseconds: Option<u32>,
   pub volume_increment: Option<u8>,
@@ -238,6 +373,7 @@ pub struct BehaviorConfig {
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserConfigString {
   keybindings: Option<KeyBindingsString>,
+  keymap: Option<KeymapString>,
   behavior: Option<BehaviorConfigString>,
   theme: Option<UserTheme>,
 }
@@ -245,6 +381,7 @@ pub struct UserConfigString {
 #[derive(Clone)]
 pub struct UserConfig {
   pub keys: KeyBindings,
+  pub keymap: Keymap,
   pub theme: Theme,
   pub behavior: BehaviorConfig,
   pub path_to_config: Option<UserConfigPaths>,
@@ -282,6 +419,63 @@ impl UserConfig {
         basic_view: Key::Char('B'),
         add_item_to_queue: Key::Char('z'),
       },
+      
+      // default keymap
+      keymap: Keymap {
+        q: Key::Char('q'),
+        w: Key::Char('w'),
+        e: Key::Char('e'),
+        r: Key::Char('r'),
+        t: Key::Char('t'),
+        y: Key::Char('y'),
+        u: Key::Char('u'),
+        i: Key::Char('i'),
+        o: Key::Char('o'),
+        p: Key::Char('p'),
+        a: Key::Char('a'),
+        s: Key::Char('s'),
+        d: Key::Char('d'),
+        f: Key::Char('f'),
+        g: Key::Char('g'),
+        h: Key::Char('h'),
+        j: Key::Char('j'),
+        k: Key::Char('k'),
+        l: Key::Char('l'),
+        z: Key::Char('z'),
+        x: Key::Char('x'),
+        c: Key::Char('c'),
+        v: Key::Char('v'),
+        b: Key::Char('b'),
+        n: Key::Char('n'),
+        m: Key::Char('m'),
+        Q: Key::Char('Q'),
+        W: Key::Char('W'),
+        E: Key::Char('E'),
+        R: Key::Char('R'),
+        T: Key::Char('T'),
+        Y: Key::Char('Y'),
+        U: Key::Char('U'),
+        I: Key::Char('I'),
+        O: Key::Char('O'),
+        P: Key::Char('P'),
+        A: Key::Char('A'),
+        S: Key::Char('S'),
+        D: Key::Char('D'),
+        F: Key::Char('F'),
+        G: Key::Char('G'),
+        H: Key::Char('H'),
+        J: Key::Char('J'),
+        K: Key::Char('K'),
+        L: Key::Char('L'),
+        Z: Key::Char('Z'),
+        X: Key::Char('X'),
+        C: Key::Char('C'),
+        V: Key::Char('V'),
+        B: Key::Char('B'),
+        N: Key::Char('N'),
+        M: Key::Char('M'),
+      },
+
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
@@ -366,6 +560,71 @@ impl UserConfig {
     Ok(())
   }
 
+  pub fn load_keymap(&mut self, keymap: KeymapString) -> Result<()> {
+    macro_rules! to_keymap {
+      ($name: ident) => {
+        if let Some(key_string) = keymap.$name {
+          self.keymap.$name = parse_keymap(key_string)?;
+        }
+      };
+    };
+    to_keymap!(q);
+    to_keymap!(w);
+    to_keymap!(e);
+    to_keymap!(r);
+    to_keymap!(t);
+    to_keymap!(y);
+    to_keymap!(u);
+    to_keymap!(i);
+    to_keymap!(o);
+    to_keymap!(p);
+    to_keymap!(a);
+    to_keymap!(s);
+    to_keymap!(d);
+    to_keymap!(f);
+    to_keymap!(g);
+    to_keymap!(h);
+    to_keymap!(j);
+    to_keymap!(k);
+    to_keymap!(l);
+    to_keymap!(z);
+    to_keymap!(x);
+    to_keymap!(c);
+    to_keymap!(v);
+    to_keymap!(b);
+    to_keymap!(n);
+    to_keymap!(m);
+    to_keymap!(Q);
+    to_keymap!(W);
+    to_keymap!(E);
+    to_keymap!(R);
+    to_keymap!(T);
+    to_keymap!(Y);
+    to_keymap!(U);
+    to_keymap!(I);
+    to_keymap!(O);
+    to_keymap!(P);
+    to_keymap!(A);
+    to_keymap!(S);
+    to_keymap!(D);
+    to_keymap!(F);
+    to_keymap!(G);
+    to_keymap!(H);
+    to_keymap!(J);
+    to_keymap!(K);
+    to_keymap!(L);
+    to_keymap!(Z);
+    to_keymap!(X);
+    to_keymap!(C);
+    to_keymap!(V);
+    to_keymap!(B);
+    to_keymap!(N);
+    to_keymap!(M);
+
+
+    Ok(())
+  }
+  
   pub fn load_theme(&mut self, theme: UserTheme) -> Result<()> {
     macro_rules! to_theme_item {
       ($name: ident) => {
@@ -476,6 +735,9 @@ impl UserConfig {
       }
       if let Some(theme) = config_yml.theme {
         self.load_theme(theme)?;
+      }
+      if let Some(keymap) = config_yml.keymap.clone() {
+        self.load_keymap(keymap)?;
       }
 
       Ok(())
