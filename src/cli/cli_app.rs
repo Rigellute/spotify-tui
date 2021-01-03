@@ -306,6 +306,9 @@ impl<'a> CliApp<'a> {
     let position_to_seek = if seconds_str.starts_with('+') {
       current_pos + ms
     } else if seconds_str.starts_with('-') {
+      // Jump to the beginning if the position_to_seek would be
+      // negative, must be checked before the calculation to avoid
+      // an 'underflow'
       if ms > current_pos {
         0u32
       } else {
@@ -316,8 +319,7 @@ impl<'a> CliApp<'a> {
       seconds * 1000
     };
 
-    // Check if position_to_seek is greater than
-    // duration (next track) or negative (previous track)
+    // Check if position_to_seek is greater than duration (next track)
     if position_to_seek > duration {
       self.jump(&JumpDirection::Next).await;
     } else {
