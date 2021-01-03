@@ -48,6 +48,7 @@ can be used together
       format_arg()
         .default_value("%f %s %t - %a")
         .default_value_ifs(&[
+          ("seek", None, "%f %s %t - %a %r"),
           ("volume", None, "%v% %f %s %t - %a"),
           ("transfer", None, "%f %s %t - %a on %d"),
         ]),

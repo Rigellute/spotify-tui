@@ -374,7 +374,10 @@ impl<'a> CliApp<'a> {
     let mut hs = match playing_item {
       PlayingItem::Track(track) => {
         let id = track.id.clone().unwrap_or_default();
-        let mut hs = Format::from_type(FormatType::Track(Box::new(track)));
+        let mut hs = Format::from_type(FormatType::Track(Box::new(track.clone())));
+        if let Some(ms) = context.progress_ms {
+          hs.push(Format::Position((ms, track.duration_ms)))
+        }
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,
@@ -383,7 +386,10 @@ impl<'a> CliApp<'a> {
         hs
       }
       PlayingItem::Episode(episode) => {
-        let mut hs = Format::from_type(FormatType::Episode(Box::new(episode)));
+        let mut hs = Format::from_type(FormatType::Episode(Box::new(episode.clone())));
+        if let Some(ms) = context.progress_ms {
+          hs.push(Format::Position((ms, episode.duration_ms)))
+        }
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,
