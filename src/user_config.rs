@@ -126,11 +126,10 @@ fn parse_keymap(key: String) -> Result<Key> {
   match key.chars().count() {
     1 => Ok(Key::Char(get_single_char(key.as_str()))),
     _ => Err(anyhow!(
-        "Keymap can only rebind single keys. \"{}\" has {} characters.",
-        key,
-        key.len()
-      )),
-    
+      "Keymap can only rebind single keys. \"{}\" has {} characters.",
+      key,
+      key.len()
+    )),
   }
 }
 
