@@ -126,7 +126,11 @@ two songs back, you can use `spt pb -ppp` and so on.",
         .takes_value(true)
         .value_name("±SECONDS")
         .allow_hyphen_values(true)
-        .help("Jumps SECONDS forwards (+) or backwards (-)"),
+        .help("Jumps SECONDS forwards (+) or backwards (-)")
+        .long_help(
+          "For example: `spt pb --seek +10` jumps ten second forwards, `spt pb --seek -10` ten \
+seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
+        ),
     )
     .arg(
       Arg::with_name("volume")
