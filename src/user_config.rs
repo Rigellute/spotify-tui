@@ -254,7 +254,6 @@ pub struct KeymapString {
   pub b: Option<String>,
   pub n: Option<String>,
   pub m: Option<String>,
-  // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
   pub shift_q: Option<String>,
   pub shift_w: Option<String>,
   pub shift_e: Option<String>,
@@ -311,7 +310,6 @@ pub struct Keymap {
   pub b: Key,
   pub n: Key,
   pub m: Key,
-  // The compiler spits out some warnings here about snake case, but I think this is more readable than caps_q or other alternatives.
   pub shift_q: Key,
   pub shift_w: Key,
   pub shift_e: Key,
