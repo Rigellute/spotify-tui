@@ -3,8 +3,8 @@ pub mod help;
 pub mod util;
 use super::{
   app::{
-    ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
-    SearchResultBlock, LIBRARY_OPTIONS,
+    ActiveBlock, AlbumTableContext, App, ArtistBlock, EpisodeTableContext, RecommendationsContext,
+    RouteId, SearchResultBlock, LIBRARY_OPTIONS,
   },
   banner::BANNER,
 };
@@ -1478,15 +1478,27 @@ where
     })
     .collect::<Vec<TableItem>>();
 
-  let title = match &app.selected_show_simplified {
-    Some(selected_show) => {
-      format!(
-        "{} by {}",
-        selected_show.show.name.to_owned(),
-        selected_show.show.publisher
-      )
-    }
-    None => "Episodes".to_owned(),
+  let title = match &app.episode_table_context {
+    EpisodeTableContext::Simplified => match &app.selected_show_simplified {
+      Some(selected_show) => {
+        format!(
+          "{} by {}",
+          selected_show.show.name.to_owned(),
+          selected_show.show.publisher
+        )
+      }
+      None => "Episodes".to_owned(),
+    },
+    EpisodeTableContext::Full => match &app.selected_show_full {
+      Some(selected_show) => {
+        format!(
+          "{} by {}",
+          selected_show.show.name.to_owned(),
+          selected_show.show.publisher
+        )
+      }
+      None => "Episodes".to_owned(),
+    },
   };
 
   draw_table(

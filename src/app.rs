@@ -184,6 +184,12 @@ pub enum AlbumTableContext {
   Full,
 }
 
+#[derive(Clone, PartialEq, Debug, Copy)]
+pub enum EpisodeTableContext {
+  Simplified,
+  Full,
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum RecommendationsContext {
   Artist,
@@ -304,6 +310,7 @@ pub struct App {
   pub seek_ms: Option<u128>,
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
+  pub episode_table_context: EpisodeTableContext,
   pub selected_show_simplified: Option<SelectedShow>,
   pub selected_show_full: Option<SelectedFullShow>,
   pub user: Option<PrivateUser>,
@@ -392,6 +399,7 @@ impl Default for App {
       active_playlist_index: None,
       track_table: Default::default(),
       episode_table: Default::default(),
+      episode_table_context: EpisodeTableContext::Full,
       selected_show_simplified: None,
       selected_show_full: None,
       user: None,

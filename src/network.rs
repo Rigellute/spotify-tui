@@ -1,6 +1,6 @@
 use crate::app::{
-  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
-  SelectedFullAlbum, SelectedFullShow, SelectedShow, TrackTableContext,
+  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, EpisodeTableContext, RouteId,
+  SelectedAlbum, SelectedFullAlbum, SelectedFullShow, SelectedShow, TrackTableContext,
 };
 use crate::config::ClientConfig;
 use anyhow::anyhow;
@@ -516,6 +516,8 @@ impl<'a> Network<'a> {
 
         app.selected_show_simplified = Some(SelectedShow { show: *show });
 
+        app.episode_table_context = EpisodeTableContext::Simplified;
+
         app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
       }
       Err(e) => {
@@ -532,6 +534,9 @@ impl<'a> Network<'a> {
         let mut app = self.app.lock().await;
 
         app.selected_show_full = Some(selected_show);
+
+        app.episode_table_context = EpisodeTableContext::Full;
+        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
