@@ -1478,11 +1478,22 @@ where
     })
     .collect::<Vec<TableItem>>();
 
+  let title = match &app.selected_show_simplified {
+    Some(selected_show) => {
+      format!(
+        "{} by {}",
+        selected_show.show.name.to_owned(),
+        selected_show.show.publisher
+      )
+    }
+    None => "Episodes".to_owned(),
+  };
+
   draw_table(
     f,
     app,
     layout_chunk,
-    ("Episodes", &header),
+    (&title, &header),
     &items,
     app.episode_table.selected_index,
     highlight_state,

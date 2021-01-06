@@ -336,10 +336,9 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
         app.search_results.selected_shows_index,
         &app.search_results.shows,
       ) {
-        if let Some(show) = shows_result.items.get(index) {
+        if let Some(show) = shows_result.items.get(index).cloned() {
           // Go to show tracks table
-          let show_id = show.id.to_owned();
-          app.dispatch(IoEvent::GetShowEpisodes(show_id));
+          app.dispatch(IoEvent::GetShowEpisodes(Box::new(show)));
         };
       }
     }

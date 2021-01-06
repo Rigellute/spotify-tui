@@ -155,7 +155,7 @@ fn attempt_process_uri(app: &mut App, input: &str, base: &str, sep: &str) -> boo
 
   let (show_id, matched) = spotify_resource_id(base, input, sep, "show");
   if matched {
-    app.dispatch(IoEvent::GetShowEpisodes(show_id));
+    app.dispatch(IoEvent::GetShow(show_id));
     return true;
   }
 

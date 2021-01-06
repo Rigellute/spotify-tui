@@ -11,7 +11,7 @@ use rspotify::{
     page::{CursorBasedPage, Page},
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
-    show::{Show, SimplifiedEpisode, SimplifiedShow},
+    show::{FullShow, Show, SimplifiedEpisode, SimplifiedShow},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
     user::PrivateUser,
     PlayingItem,
@@ -220,6 +220,16 @@ pub struct EpisodeTable {
 }
 
 #[derive(Clone)]
+pub struct SelectedShow {
+  pub show: SimplifiedShow,
+}
+
+#[derive(Clone)]
+pub struct SelectedFullShow {
+  pub show: FullShow,
+}
+
+#[derive(Clone)]
 pub struct SelectedAlbum {
   pub album: SimplifiedAlbum,
   pub tracks: Page<SimplifiedTrack>,
@@ -294,6 +304,8 @@ pub struct App {
   pub seek_ms: Option<u128>,
   pub track_table: TrackTable,
   pub episode_table: EpisodeTable,
+  pub selected_show_simplified: Option<SelectedShow>,
+  pub selected_show_full: Option<SelectedFullShow>,
   pub user: Option<PrivateUser>,
   pub album_list_index: usize,
   pub made_for_you_index: usize,
@@ -380,6 +392,8 @@ impl Default for App {
       active_playlist_index: None,
       track_table: Default::default(),
       episode_table: Default::default(),
+      selected_show_simplified: None,
+      selected_show_full: None,
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
       clipboard_context: clipboard::ClipboardProvider::new().ok(),
