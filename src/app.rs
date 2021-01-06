@@ -11,7 +11,7 @@ use rspotify::{
     page::{CursorBasedPage, Page},
     playing::PlayHistory,
     playlist::{PlaylistTrack, SimplifiedPlaylist},
-    show::{SimplifiedEpisode, SimplifiedShow},
+    show::{Show, SimplifiedEpisode, SimplifiedShow},
     track::{FullTrack, SavedTrack, SimplifiedTrack},
     user::PrivateUser,
     PlayingItem,
@@ -85,6 +85,7 @@ pub struct Library {
   pub saved_tracks: ScrollableResultPages<Page<SavedTrack>>,
   pub made_for_you_playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
   pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
+  pub saved_shows: ScrollableResultPages<Page<Show>>,
   pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
 }
 
@@ -260,7 +261,7 @@ pub struct App {
   // Inputs:
   // input is the string for input;
   // input_idx is the index of the cursor in terms of character;
-  // input_cursor_position is the sum of the width of charaters preceding the cursor.
+  // input_cursor_position is the sum of the width of characters preceding the cursor.
   // Reason for this complication is due to non-ASCII characters, they may
   // take more than 1 bytes to store and more than 1 character width to display.
   pub input: Vec<char>,
@@ -269,6 +270,7 @@ pub struct App {
   pub liked_song_ids_set: HashSet<String>,
   pub followed_artist_ids_set: HashSet<String>,
   pub saved_album_ids_set: HashSet<String>,
+  pub saved_show_ids_set: HashSet<String>,
   pub large_search_limit: u32,
   pub library: Library,
   pub playlist_offset: u32,
@@ -296,6 +298,7 @@ pub struct App {
   pub album_list_index: usize,
   pub made_for_you_index: usize,
   pub artists_list_index: usize,
+  pub shows_list_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
@@ -317,6 +320,7 @@ impl Default for App {
       album_list_index: 0,
       made_for_you_index: 0,
       artists_list_index: 0,
+      shows_list_index: 0,
       artists: vec![],
       artist: None,
       user_config: UserConfig::new(),
@@ -330,12 +334,14 @@ impl Default for App {
         saved_tracks: ScrollableResultPages::new(),
         made_for_you_playlists: ScrollableResultPages::new(),
         saved_albums: ScrollableResultPages::new(),
+        saved_shows: ScrollableResultPages::new(),
         saved_artists: ScrollableResultPages::new(),
         selected_index: 0,
       },
       liked_song_ids_set: HashSet::new(),
       followed_artist_ids_set: HashSet::new(),
       saved_album_ids_set: HashSet::new(),
+      saved_show_ids_set: HashSet::new(),
       navigation_stack: vec![DEFAULT_ROUTE],
       large_search_limit: 20,
       small_search_limit: 4,
@@ -878,6 +884,29 @@ impl App {
     }
   }
 
+  pub fn get_current_user_saved_shows_next(&mut self) {
+    match self
+      .library
+      .saved_shows
+      .get_results(Some(self.library.saved_shows.index + 1))
+      .cloned()
+    {
+      Some(_) => self.library.saved_shows.index += 1,
+      None => {
+        if let Some(saved_shows) = &self.library.saved_shows.get_results(None) {
+          let offset = Some(saved_shows.offset + saved_shows.limit);
+          self.dispatch(IoEvent::GetCurrentUserSavedShows(offset));
+        }
+      }
+    }
+  }
+
+  pub fn get_current_user_saved_shows_previous(&mut self) {
+    if self.library.saved_shows.index > 0 {
+      self.library.saved_shows.index -= 1;
+    }
+  }
+
   pub fn user_unfollow_artists(&mut self, block: ActiveBlock) {
     match block {
       ActiveBlock::SearchResultBlock => {
@@ -973,12 +1002,47 @@ impl App {
     }
   }
 
-  pub fn user_follow_show(&mut self) {
-    unimplemented!();
+  pub fn user_follow_show(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::SearchResultBlock => {
+        if let Some(shows) = &self.search_results.shows {
+          if let Some(selected_index) = self.search_results.selected_shows_index {
+            if let Some(show_id) = shows.items.get(selected_index).map(|item| item.id.clone()) {
+              self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+            }
+          }
+        }
+      }
+      ActiveBlock::EpisodeTable => {
+        unimplemented!();
+      }
+      _ => (),
+    }
   }
 
-  pub fn user_unfollow_show(&mut self) {
-    unimplemented!();
+  pub fn user_unfollow_show(&mut self, block: ActiveBlock) {
+    match block {
+      ActiveBlock::Podcasts => {
+        if let Some(shows) = self.library.saved_shows.get_results(None) {
+          if let Some(selected_show) = shows.items.get(self.shows_list_index) {
+            let show_id = selected_show.show.id.clone();
+            self.dispatch(IoEvent::CurrentUserSavedShowDelete(show_id));
+          }
+        }
+      }
+      ActiveBlock::SearchResultBlock => {
+        if let Some(shows) = &self.search_results.shows {
+          if let Some(selected_index) = self.search_results.selected_shows_index {
+            let show_id = shows.items[selected_index].id.to_owned();
+            self.dispatch(IoEvent::CurrentUserSavedShowDelete(show_id));
+          }
+        }
+      }
+      ActiveBlock::EpisodeTable => {
+        unimplemented!();
+      }
+      _ => (),
+    }
   }
 
   pub fn get_made_for_you(&mut self) {

@@ -511,9 +511,7 @@ pub fn handler(key: Key, app: &mut App) {
       SearchResultBlock::PlaylistSearch => {
         app.user_follow_playlist();
       }
-      SearchResultBlock::ShowSearch => {
-        app.user_follow_show();
-      }
+      SearchResultBlock::ShowSearch => app.user_follow_show(ActiveBlock::SearchResultBlock),
       SearchResultBlock::Empty => {}
     },
     Key::Char('D') => match app.search_results.selected_block {
@@ -535,7 +533,7 @@ pub fn handler(key: Key, app: &mut App) {
           app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistSearch));
         }
       }
-      SearchResultBlock::ShowSearch => app.user_unfollow_show(),
+      SearchResultBlock::ShowSearch => app.user_unfollow_show(ActiveBlock::SearchResultBlock),
       SearchResultBlock::Empty => {}
     },
     Key::Char('r') => handle_recommended_tracks(app),

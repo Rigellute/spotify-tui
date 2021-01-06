@@ -30,6 +30,7 @@ pub enum TableId {
   Album,
   AlbumList,
   Artist,
+  Podcast,
   Song,
   RecentlyPlayed,
   MadeForYou,
@@ -258,7 +259,7 @@ where
       draw_artist_table(f, app, chunks[1]);
     }
     RouteId::Podcasts => {
-      draw_not_implemented_yet(f, app, chunks[1], ActiveBlock::Podcasts, "Podcasts");
+      draw_podcast_table(f, app, chunks[1]);
     }
     RouteId::Recommendations => {
       draw_recommendations_table(f, app, chunks[1]);
@@ -510,7 +511,14 @@ where
       Some(podcasts) => podcasts
         .items
         .iter()
-        .map(|item| format!("{:} - {}", item.name, item.publisher))
+        .map(|item| {
+          let mut show_name = String::new();
+          if app.saved_show_ids_set.contains(&item.id.to_owned()) {
+            show_name.push_str(&app.user_config.padded_liked_icon());
+          }
+          show_name.push_str(&format!("{:} - {}", item.name, item.publisher));
+          show_name
+        })
         .collect(),
       None => vec![],
     };
@@ -568,6 +576,58 @@ where
     app.artists_list_index,
     highlight_state,
   )
+}
+
+pub fn draw_podcast_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let header = TableHeader {
+    id: TableId::Podcast,
+    items: vec![
+      TableHeaderItem {
+        text: "Name",
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        ..Default::default()
+      },
+      TableHeaderItem {
+        text: "Publisher(s)",
+        width: get_percentage_width(layout_chunk.width, 2.0 / 5.0),
+        ..Default::default()
+      },
+    ],
+  };
+
+  let current_route = app.get_current_route();
+
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::Podcasts,
+    current_route.hovered_block == ActiveBlock::Podcasts,
+  );
+
+  if let Some(saved_shows) = app.library.saved_shows.get_results(None) {
+    let items = saved_shows
+      .items
+      .iter()
+      .map(|show_page| TableItem {
+        id: show_page.show.id.to_owned(),
+        format: vec![
+          show_page.show.name.to_owned(),
+          show_page.show.publisher.to_owned(),
+        ],
+      })
+      .collect::<Vec<TableItem>>();
+
+    draw_table(
+      f,
+      app,
+      layout_chunk,
+      ("Podcasts", &header),
+      &items,
+      app.shows_list_index,
+      highlight_state,
+    )
+  };
 }
 
 pub fn draw_album_table<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
@@ -1105,37 +1165,6 @@ where
     .wrap(Wrap { trim: false })
     .scroll((app.home_scroll, 0));
   f.render_widget(bottom_text, chunks[1]);
-}
-
-fn draw_not_implemented_yet<B>(
-  f: &mut Frame<B>,
-  app: &App,
-  layout_chunk: Rect,
-  block: ActiveBlock,
-  title: &str,
-) where
-  B: Backend,
-{
-  let current_route = app.get_current_route();
-  let highlight_state = (
-    current_route.active_block == block,
-    current_route.hovered_block == block,
-  );
-  let display_block = Block::default()
-    .title(Span::styled(
-      title,
-      get_color(highlight_state, app.user_config.theme),
-    ))
-    .borders(Borders::ALL)
-    .border_style(get_color(highlight_state, app.user_config.theme));
-
-  let text = Text::from("Not implemented yet!");
-
-  let not_implemented = Paragraph::new(text)
-    .style(Style::default().fg(app.user_config.theme.text))
-    .block(display_block)
-    .wrap(Wrap { trim: true });
-  f.render_widget(not_implemented, layout_chunk);
 }
 
 fn draw_artist_albums<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

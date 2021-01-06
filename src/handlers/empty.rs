@@ -19,6 +19,8 @@ pub fn handler(key: Key, app: &mut App) {
       | ActiveBlock::AlbumList
       | ActiveBlock::AlbumTracks
       | ActiveBlock::Artists
+      | ActiveBlock::Podcasts
+      | ActiveBlock::EpisodeTable
       | ActiveBlock::Home
       | ActiveBlock::MadeForYou
       | ActiveBlock::MyPlaylists
@@ -42,6 +44,8 @@ pub fn handler(key: Key, app: &mut App) {
       | ActiveBlock::AlbumList
       | ActiveBlock::AlbumTracks
       | ActiveBlock::Artists
+      | ActiveBlock::Podcasts
+      | ActiveBlock::EpisodeTable
       | ActiveBlock::Home
       | ActiveBlock::MadeForYou
       | ActiveBlock::RecentlyPlayed
