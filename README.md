@@ -191,7 +191,24 @@ You can edit the config at anytime at `${HOME}/.config/spotify-tui/client.yml`.
 
 The binary is named `spt`.
 
-When running `spotify-tui` press `?` to bring up a help menu that shows currently implemented key events and their actions.
+Running `spt` with no arguments will bring up the UI. Press `?` to bring up a help menu that shows currently implemented key events and their actions.
+There is also a CLI that is able to do most of the stuff the UI does. Use `spt --help` to learn more.
+
+Here are some example to get you excited.
+```
+spt --completions zsh # Prints shell completions for zsh to stdout (bash, power-shell and more are supported)
+
+spt play --name "Your Playlist" --playlist --random # Plays a random song from "Your Playlist"
+spt play --name "A cool song" --track # Plays 'A cool song'
+
+spt playback --like --shuffle # Likes the current song and toggles shuffle mode
+spt playback --toggle # Plays/pauses the current playback
+
+spt list --liked --limit 50 # See your liked songs (50 is the max limit)
+
+# Looks for 'An even cooler song' and gives you the '{name} from {album}' of up to 30 matches
+spt search "An even cooler song" --tracks --format "%t from %b" --limit 30
+```
 
 # Configuration
 
@@ -230,6 +247,7 @@ behavior:
   show_loading_indicator: true
   # Determines the text icon to display next to "liked" Spotify items, such as
   # liked songs and albums, or followed artists. Can be any length string.
+  # These icons require a patched nerd font.
   liked_icon: " "
   shuffle_icon: "咽"
   repeat_track_icon: "綾"

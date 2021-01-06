@@ -6,7 +6,7 @@ documentation = "https://github.com/Rigellute/spotify-tui"
 repository = "https://github.com/Rigellute/spotify-tui"
 keywords = ["spotify", "tui", "cli", "terminal"]
 categories = ["command-line-utilities"]
-version = "0.22.0"
+version = "0.23.0"
 authors = ["Alexander Keliris <rigellute@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -27,7 +27,7 @@ arboard = "1.1.0"
 crossterm = "0.18"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.7.3"
-anyhow = "1.0.34"
+anyhow = "1.0.37"
 
 [[bin]]
 bench = false
