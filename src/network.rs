@@ -85,6 +85,7 @@ pub enum IoEvent {
   CurrentUserSavedShowAdd(String),
   GetShowEpisodes(Box<SimplifiedShow>),
   GetShow(String),
+  GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
 }
 
@@ -293,6 +294,9 @@ impl<'a> Network<'a> {
       }
       IoEvent::GetShow(show_id) => {
         self.get_show(show_id).await;
+      }
+      IoEvent::GetCurrentShowEpisodes(show_id, offset) => {
+        self.get_current_show_episodes(show_id, offset).await;
       }
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
@@ -510,15 +514,16 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(episodes) => {
-        let mut app = self.app.lock().await;
-        app.episode_table.episodes = episodes.items;
-        app.episode_table.reversed = false;
+        if !episodes.items.is_empty() {
+          let mut app = self.app.lock().await;
+          app.library.show_episodes.add_pages(episodes);
 
-        app.selected_show_simplified = Some(SelectedShow { show: *show });
+          app.selected_show_simplified = Some(SelectedShow { show: *show });
 
-        app.episode_table_context = EpisodeTableContext::Simplified;
+          app.episode_table_context = EpisodeTableContext::Simplified;
 
-        app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+        }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -537,6 +542,24 @@ impl<'a> Network<'a> {
 
         app.episode_table_context = EpisodeTableContext::Full;
         app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
+  async fn get_current_show_episodes(&mut self, show_id: String, offset: Option<u32>) {
+    match self
+      .spotify
+      .get_shows_episodes(show_id, self.large_search_limit, offset, None)
+      .await
+    {
+      Ok(episodes) => {
+        if !episodes.items.is_empty() {
+          let mut app = self.app.lock().await;
+          app.library.show_episodes.add_pages(episodes);
+        }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

@@ -87,6 +87,7 @@ pub struct Library {
   pub saved_albums: ScrollableResultPages<Page<SavedAlbum>>,
   pub saved_shows: ScrollableResultPages<Page<Show>>,
   pub saved_artists: ScrollableResultPages<CursorBasedPage<FullArtist>>,
+  pub show_episodes: ScrollableResultPages<Page<SimplifiedEpisode>>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -218,13 +219,6 @@ pub struct TrackTable {
   pub context: Option<TrackTableContext>,
 }
 
-#[derive(Default)]
-pub struct EpisodeTable {
-  pub episodes: Vec<SimplifiedEpisode>,
-  pub selected_index: usize,
-  pub reversed: bool,
-}
-
 #[derive(Clone)]
 pub struct SelectedShow {
   pub show: SimplifiedShow,
@@ -309,7 +303,6 @@ pub struct App {
   pub song_progress_ms: u128,
   pub seek_ms: Option<u128>,
   pub track_table: TrackTable,
-  pub episode_table: EpisodeTable,
   pub episode_table_context: EpisodeTableContext,
   pub selected_show_simplified: Option<SelectedShow>,
   pub selected_show_full: Option<SelectedFullShow>,
@@ -318,6 +311,7 @@ pub struct App {
   pub made_for_you_index: usize,
   pub artists_list_index: usize,
   pub shows_list_index: usize,
+  pub episode_list_index: usize,
   pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
@@ -340,6 +334,7 @@ impl Default for App {
       made_for_you_index: 0,
       artists_list_index: 0,
       shows_list_index: 0,
+      episode_list_index: 0,
       artists: vec![],
       artist: None,
       user_config: UserConfig::new(),
@@ -355,6 +350,7 @@ impl Default for App {
         saved_albums: ScrollableResultPages::new(),
         saved_shows: ScrollableResultPages::new(),
         saved_artists: ScrollableResultPages::new(),
+        show_episodes: ScrollableResultPages::new(),
         selected_index: 0,
       },
       liked_song_ids_set: HashSet::new(),
@@ -398,7 +394,6 @@ impl Default for App {
       selected_playlist_index: None,
       active_playlist_index: None,
       track_table: Default::default(),
-      episode_table: Default::default(),
       episode_table_context: EpisodeTableContext::Full,
       selected_show_simplified: None,
       selected_show_full: None,
@@ -926,6 +921,29 @@ impl App {
   pub fn get_current_user_saved_shows_previous(&mut self) {
     if self.library.saved_shows.index > 0 {
       self.library.saved_shows.index -= 1;
+    }
+  }
+
+  pub fn get_episode_table_next(&mut self, show_id: String) {
+    match self
+      .library
+      .show_episodes
+      .get_results(Some(self.library.show_episodes.index + 1))
+      .cloned()
+    {
+      Some(_) => self.library.show_episodes.index += 1,
+      None => {
+        if let Some(show_episodes) = &self.library.show_episodes.get_results(None) {
+          let offset = Some(show_episodes.offset + show_episodes.limit);
+          self.dispatch(IoEvent::GetCurrentShowEpisodes(show_id, offset));
+        }
+      }
+    }
+  }
+
+  pub fn get_episode_table_previous(&mut self) {
+    if self.library.show_episodes.index > 0 {
+      self.library.show_episodes.index -= 1;
     }
   }
 
