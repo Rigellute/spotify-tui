@@ -350,46 +350,31 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
 fn handle_enter_event_on_hovered_block(app: &mut App) {
   match app.search_results.hovered_block {
     SearchResultBlock::AlbumSearch => {
-      let next_index = match app.search_results.selected_album_index {
-        Some(index) => index,
-        None => 0,
-      };
+      let next_index = app.search_results.selected_album_index.unwrap_or(0);
 
       app.search_results.selected_album_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::AlbumSearch;
     }
     SearchResultBlock::SongSearch => {
-      let next_index = match app.search_results.selected_tracks_index {
-        Some(index) => index,
-        None => 0,
-      };
+      let next_index = app.search_results.selected_tracks_index.unwrap_or(0);
 
       app.search_results.selected_tracks_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::SongSearch;
     }
     SearchResultBlock::ArtistSearch => {
-      let next_index = match app.search_results.selected_artists_index {
-        Some(index) => index,
-        None => 0,
-      };
+      let next_index = app.search_results.selected_artists_index.unwrap_or(0);
 
       app.search_results.selected_artists_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::ArtistSearch;
     }
     SearchResultBlock::PlaylistSearch => {
-      let next_index = match app.search_results.selected_playlists_index {
-        Some(index) => index,
-        None => 0,
-      };
+      let next_index = app.search_results.selected_playlists_index.unwrap_or(0);
 
       app.search_results.selected_playlists_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::PlaylistSearch;
     }
     SearchResultBlock::ShowSearch => {
-      let next_index = match app.search_results.selected_shows_index {
-        Some(index) => index,
-        None => 0,
-      };
+      let next_index = app.search_results.selected_shows_index.unwrap_or(0);
 
       app.search_results.selected_shows_index = Some(next_index);
       app.search_results.selected_block = SearchResultBlock::ShowSearch;
