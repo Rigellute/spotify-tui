@@ -776,7 +776,7 @@ impl<'a> Network<'a> {
       Some(self.large_search_limit),
       Some(0),
     );
-    let artist_name = if input_artist_name == "" {
+    let artist_name = if input_artist_name.is_empty() {
       self
         .spotify
         .artist(&artist_id)
