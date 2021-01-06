@@ -13,6 +13,7 @@
 - Optimize seek [#640](https://github.com/Rigellute/spotify-tui/pull/640)
 - Make the liked icon configurable [#659](https://github.com/Rigellute/spotify-tui/pull/659)
 - Fix centering of basic_view [#664](https://github.com/Rigellute/spotify-tui/pull/664)
+- Add CLI for controlling Spotify [#645](https://github.com/Rigellute/spotify-tui/pull/645)
 
 ## [0.22.0] - 2020-10-05
 
