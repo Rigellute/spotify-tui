@@ -1053,9 +1053,20 @@ impl App {
           }
         }
       }
-      ActiveBlock::EpisodeTable => {
-        unimplemented!();
-      }
+      ActiveBlock::EpisodeTable => match self.episode_table_context {
+        EpisodeTableContext::Full => {
+          if let Some(selected_episode) = self.selected_show_full.clone() {
+            let show_id = selected_episode.show.id;
+            self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+          }
+        }
+        EpisodeTableContext::Simplified => {
+          if let Some(selected_episode) = self.selected_show_simplified.clone() {
+            let show_id = selected_episode.show.id;
+            self.dispatch(IoEvent::CurrentUserSavedShowAdd(show_id));
+          }
+        }
+      },
       _ => (),
     }
   }
@@ -1078,9 +1089,20 @@ impl App {
           }
         }
       }
-      ActiveBlock::EpisodeTable => {
-        unimplemented!();
-      }
+      ActiveBlock::EpisodeTable => match self.episode_table_context {
+        EpisodeTableContext::Full => {
+          if let Some(selected_episode) = self.selected_show_full.clone() {
+            let show_id = selected_episode.show.id;
+            self.dispatch(IoEvent::CurrentUserSavedShowDelete(show_id));
+          }
+        }
+        EpisodeTableContext::Simplified => {
+          if let Some(selected_episode) = self.selected_show_simplified.clone() {
+            let show_id = selected_episode.show.id;
+            self.dispatch(IoEvent::CurrentUserSavedShowDelete(show_id));
+          }
+        }
+      },
       _ => (),
     }
   }
