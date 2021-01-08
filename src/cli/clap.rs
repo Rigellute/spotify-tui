@@ -48,6 +48,7 @@ can be used together
       format_arg()
         .default_value("%f %s %t - %a")
         .default_value_ifs(&[
+          ("seek", None, "%f %s %t - %a %r"),
           ("volume", None, "%v% %f %s %t - %a"),
           ("transfer", None, "%f %s %t - %a on %d"),
         ]),
@@ -117,6 +118,18 @@ forward, you can use `--next` 3 times: `spt pb -nnn`.",
           "This jumps to the beginning of the current song if specied once. You probably want to \
 jump to the previous song though, so you can use the previous flag twice: `spt pb -pp`. To jump \
 two songs back, you can use `spt pb -ppp` and so on.",
+        ),
+    )
+    .arg(
+      Arg::with_name("seek")
+        .long("seek")
+        .takes_value(true)
+        .value_name("±SECONDS")
+        .allow_hyphen_values(true)
+        .help("Jumps SECONDS forwards (+) or backwards (-)")
+        .long_help(
+          "For example: `spt pb --seek +10` jumps ten second forwards, `spt pb --seek -10` ten \
+seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
         ),
     )
     .arg(

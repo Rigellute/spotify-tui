@@ -144,6 +144,8 @@ pub enum Format {
   Uri(String),
   Device(String),
   Volume(u32),
+  // Current position, duration
+  Position((u32, u32)),
   // This is a bit long, should it be splitted up?
   Flags((RepeatState, bool, bool)),
   Playing(bool),
@@ -206,6 +208,9 @@ impl Format {
       // Because this match statements
       // needs to return a &String, I have to do it this way
       Self::Volume(s) => s.to_string(),
+      Self::Position((curr, duration)) => {
+        crate::ui::util::display_track_progress(*curr as u128, *duration)
+      }
       Self::Flags((r, s, l)) => {
         let like = if *l {
           conf.behavior.liked_icon
@@ -252,6 +257,7 @@ impl Format {
       Self::Uri(_) => "%u",
       Self::Device(_) => "%d",
       Self::Volume(_) => "%v",
+      Self::Position(_) => "%r",
       Self::Flags(_) => "%f",
       Self::Playing(_) => "%s",
     }
