@@ -248,12 +248,12 @@ behavior:
   # Determines the text icon to display next to "liked" Spotify items, such as
   # liked songs and albums, or followed artists. Can be any length string.
   # These icons require a patched nerd font.
-  liked_icon: " "
-  shuffle_icon: "咽"
-  repeat_track_icon: "綾"
-  repeat_context_icon: "凌"
-  playing_icon: "契"
-  paused_icon: ""
+  liked_icon: ♥
+  shuffle_icon: 🔀
+  repeat_track_icon: 🔂
+  repeat_context_icon: 🔁
+  playing_icon: ▶
+  paused_icon: ⏸
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
