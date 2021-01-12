@@ -285,7 +285,7 @@ impl UserConfig {
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
         volume_increment: 10,
-        tick_rate_milliseconds: 250,
+        tick_rate_milliseconds: 16,
         enable_text_emphasis: true,
         show_loading_indicator: true,
         liked_icon: " ".to_string(),
