@@ -231,7 +231,7 @@ theme:
   inactive: Gray # borders of inactive panes
   playbar_background: Black # background of progress bar
   playbar_progress: LightCyan # filled-in part of the progress bar
-  playbar_progress_text: Cyan # track length indicator in the progress bar
+  playbar_progress_text: Cyan # song length and time played/left indicator in the progress bar
   playbar_text: White # artist name in player pane
   selected: LightCyan # a) selected pane border, b) hovered item in list, & c) track title in player
   text: "255, 255, 255" # text in panes
