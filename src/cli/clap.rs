@@ -85,7 +85,12 @@ can be used together
     .arg(
       Arg::with_name("like")
         .long("like")
-        .help("Likes the current song"),
+        .help("Likes the current song if possible"),
+    )
+    .arg(
+      Arg::with_name("dislike")
+        .long("dislike")
+        .help("Dislikes the current song if possible"),
     )
     .arg(
       Arg::with_name("shuffle")
@@ -147,8 +152,13 @@ seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
         .conflicts_with_all(&["single", "flags", "actions"]),
     )
     .group(
+      ArgGroup::with_name("likes")
+        .args(&["like", "dislike"])
+        .multiple(false)
+    )
+    .group(
       ArgGroup::with_name("flags")
-        .args(&["like", "shuffle", "repeat"])
+        .args(&["like", "dislike", "shuffle", "repeat"])
         .multiple(true)
         .conflicts_with_all(&["single", "jumps"]),
     )
