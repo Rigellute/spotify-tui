@@ -90,7 +90,7 @@ impl Flag {
   pub fn from_matches(m: &ArgMatches<'_>) -> Vec<Self> {
     // Multiple flags are possible
     let mut flags = Vec::new();
-    
+
     // Only one of these two
     if m.is_present("like") {
       flags.push(Self::Like(true));

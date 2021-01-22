@@ -154,7 +154,7 @@ seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
     .group(
       ArgGroup::with_name("likes")
         .args(&["like", "dislike"])
-        .multiple(false)
+        .multiple(false),
     )
     .group(
       ArgGroup::with_name("flags")

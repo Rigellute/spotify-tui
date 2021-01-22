@@ -21,11 +21,13 @@ impl<'a> CliApp<'a> {
     Self { net, config }
   }
 
-  async fn is_a_saved_track(&mut self, id: &String) -> bool {
+  async fn is_a_saved_track(&mut self, id: &str) -> bool {
     // Update the liked_song_ids_set
     self
       .net
-      .handle_network_event(IoEvent::CurrentUserSavedTracksContains(vec![id.clone()]))
+      .handle_network_event(IoEvent::CurrentUserSavedTracksContains(
+        vec![id.to_string()],
+      ))
       .await;
     self.net.app.lock().await.liked_song_ids_set.contains(id)
   }
