@@ -715,6 +715,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "aokellermann",
+      "name": "Antony Kellermann",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26678747?v=4",
+      "profile": "https://github.com/aokellermann",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
