@@ -1,6 +1,7 @@
 use crate::app::{
   ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, EpisodeTableContext, RouteId,
-  SelectedAlbum, SelectedFullAlbum, SelectedFullShow, SelectedShow, TrackTableContext,
+  ScrollableResultPages, SelectedAlbum, SelectedFullAlbum, SelectedFullShow, SelectedShow,
+  TrackTableContext,
 };
 use crate::config::ClientConfig;
 use anyhow::anyhow;
@@ -516,6 +517,7 @@ impl<'a> Network<'a> {
       Ok(episodes) => {
         if !episodes.items.is_empty() {
           let mut app = self.app.lock().await;
+          app.library.show_episodes = ScrollableResultPages::new();
           app.library.show_episodes.add_pages(episodes);
 
           app.selected_show_simplified = Some(SelectedShow { show: *show });
