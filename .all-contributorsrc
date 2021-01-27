@@ -733,6 +733,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "noir-Z",
+      "name": "noir-Z",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45096516?v=4",
+      "profile": "https://github.com/noir-Z",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
