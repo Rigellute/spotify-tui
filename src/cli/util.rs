@@ -78,7 +78,10 @@ impl Type {
 //
 
 pub enum Flag {
-  Like,
+  // Does not get toggled
+  // * User chooses like -> Flag::Like(true)
+  // * User chooses dislike -> Flag::Like(false)
+  Like(bool),
   Shuffle,
   Repeat,
 }
@@ -87,9 +90,14 @@ impl Flag {
   pub fn from_matches(m: &ArgMatches<'_>) -> Vec<Self> {
     // Multiple flags are possible
     let mut flags = Vec::new();
+
+    // Only one of these two
     if m.is_present("like") {
-      flags.push(Self::Like);
+      flags.push(Self::Like(true));
+    } else if m.is_present("dislike") {
+      flags.push(Self::Like(false));
     }
+
     if m.is_present("shuffle") {
       flags.push(Self::Shuffle);
     }
