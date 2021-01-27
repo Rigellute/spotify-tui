@@ -27,7 +27,7 @@ use std::{
 };
 use tui::layout::Rect;
 
-use clipboard::{ClipboardContext, ClipboardProvider};
+use arboard::Clipboard;
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
   "Made For You",
@@ -310,9 +310,9 @@ pub struct App {
   pub album_list_index: usize,
   pub made_for_you_index: usize,
   pub artists_list_index: usize,
+  pub clipboard: Option<Clipboard>,
   pub shows_list_index: usize,
   pub episode_list_index: usize,
-  pub clipboard_context: Option<ClipboardContext>,
   pub help_docs_size: u32,
   pub help_menu_page: u32,
   pub help_menu_max_lines: u32,
@@ -399,7 +399,7 @@ impl Default for App {
       selected_show_full: None,
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
-      clipboard_context: clipboard::ClipboardProvider::new().ok(),
+      clipboard: Clipboard::new().ok(),
       help_docs_size: 0,
       help_menu_page: 0,
       help_menu_max_lines: 0,
@@ -665,7 +665,7 @@ impl App {
   }
 
   pub fn copy_song_url(&mut self) {
-    let clipboard = match &mut self.clipboard_context {
+    let clipboard = match &mut self.clipboard {
       Some(ctx) => ctx,
       None => return,
     };
@@ -676,7 +676,7 @@ impl App {
     {
       match item {
         PlayingItem::Track(track) => {
-          if let Err(e) = clipboard.set_contents(format!(
+          if let Err(e) = clipboard.set_text(format!(
             "https://open.spotify.com/track/{}",
             track.id.to_owned().unwrap_or_default()
           )) {
@@ -684,7 +684,7 @@ impl App {
           }
         }
         PlayingItem::Episode(episode) => {
-          if let Err(e) = clipboard.set_contents(format!(
+          if let Err(e) = clipboard.set_text(format!(
             "https://open.spotify.com/episode/{}",
             episode.id.to_owned()
           )) {
@@ -696,7 +696,7 @@ impl App {
   }
 
   pub fn copy_album_url(&mut self) {
-    let clipboard = match &mut self.clipboard_context {
+    let clipboard = match &mut self.clipboard {
       Some(ctx) => ctx,
       None => return,
     };
@@ -707,7 +707,7 @@ impl App {
     {
       match item {
         PlayingItem::Track(track) => {
-          if let Err(e) = clipboard.set_contents(format!(
+          if let Err(e) = clipboard.set_text(format!(
             "https://open.spotify.com/album/{}",
             track.album.id.to_owned().unwrap_or_default()
           )) {
@@ -715,7 +715,7 @@ impl App {
           }
         }
         PlayingItem::Episode(episode) => {
-          if let Err(e) = clipboard.set_contents(format!(
+          if let Err(e) = clipboard.set_text(format!(
             "https://open.spotify.com/show/{}",
             episode.show.id.to_owned()
           )) {

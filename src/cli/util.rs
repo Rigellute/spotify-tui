@@ -78,7 +78,10 @@ impl Type {
 //
 
 pub enum Flag {
-  Like,
+  // Does not get toggled
+  // * User chooses like -> Flag::Like(true)
+  // * User chooses dislike -> Flag::Like(false)
+  Like(bool),
   Shuffle,
   Repeat,
 }
@@ -87,9 +90,14 @@ impl Flag {
   pub fn from_matches(m: &ArgMatches<'_>) -> Vec<Self> {
     // Multiple flags are possible
     let mut flags = Vec::new();
+
+    // Only one of these two
     if m.is_present("like") {
-      flags.push(Self::Like);
+      flags.push(Self::Like(true));
+    } else if m.is_present("dislike") {
+      flags.push(Self::Like(false));
     }
+
     if m.is_present("shuffle") {
       flags.push(Self::Shuffle);
     }
@@ -144,6 +152,8 @@ pub enum Format {
   Uri(String),
   Device(String),
   Volume(u32),
+  // Current position, duration
+  Position((u32, u32)),
   // This is a bit long, should it be splitted up?
   Flags((RepeatState, bool, bool)),
   Playing(bool),
@@ -206,6 +216,9 @@ impl Format {
       // Because this match statements
       // needs to return a &String, I have to do it this way
       Self::Volume(s) => s.to_string(),
+      Self::Position((curr, duration)) => {
+        crate::ui::util::display_track_progress(*curr as u128, *duration)
+      }
       Self::Flags((r, s, l)) => {
         let like = if *l {
           conf.behavior.liked_icon
@@ -252,6 +265,7 @@ impl Format {
       Self::Uri(_) => "%u",
       Self::Device(_) => "%d",
       Self::Volume(_) => "%v",
+      Self::Position(_) => "%r",
       Self::Flags(_) => "%f",
       Self::Playing(_) => "%s",
     }

@@ -48,6 +48,7 @@ can be used together
       format_arg()
         .default_value("%f %s %t - %a")
         .default_value_ifs(&[
+          ("seek", None, "%f %s %t - %a %r"),
           ("volume", None, "%v% %f %s %t - %a"),
           ("transfer", None, "%f %s %t - %a on %d"),
         ]),
@@ -84,7 +85,12 @@ can be used together
     .arg(
       Arg::with_name("like")
         .long("like")
-        .help("Likes the current song"),
+        .help("Likes the current song if possible"),
+    )
+    .arg(
+      Arg::with_name("dislike")
+        .long("dislike")
+        .help("Dislikes the current song if possible"),
     )
     .arg(
       Arg::with_name("shuffle")
@@ -120,6 +126,18 @@ two songs back, you can use `spt pb -ppp` and so on.",
         ),
     )
     .arg(
+      Arg::with_name("seek")
+        .long("seek")
+        .takes_value(true)
+        .value_name("±SECONDS")
+        .allow_hyphen_values(true)
+        .help("Jumps SECONDS forwards (+) or backwards (-)")
+        .long_help(
+          "For example: `spt pb --seek +10` jumps ten second forwards, `spt pb --seek -10` ten \
+seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
+        ),
+    )
+    .arg(
       Arg::with_name("volume")
         .short("v")
         .long("volume")
@@ -134,8 +152,13 @@ two songs back, you can use `spt pb -ppp` and so on.",
         .conflicts_with_all(&["single", "flags", "actions"]),
     )
     .group(
+      ArgGroup::with_name("likes")
+        .args(&["like", "dislike"])
+        .multiple(false),
+    )
+    .group(
       ArgGroup::with_name("flags")
-        .args(&["like", "shuffle", "repeat"])
+        .args(&["like", "dislike", "shuffle", "repeat"])
         .multiple(true)
         .conflicts_with_all(&["single", "jumps"]),
     )

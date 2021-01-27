@@ -21,13 +21,15 @@ impl<'a> CliApp<'a> {
     Self { net, config }
   }
 
-  async fn is_a_saved_track(&mut self, id: String) -> bool {
+  async fn is_a_saved_track(&mut self, id: &str) -> bool {
     // Update the liked_song_ids_set
     self
       .net
-      .handle_network_event(IoEvent::CurrentUserSavedTracksContains(vec![id.clone()]))
+      .handle_network_event(IoEvent::CurrentUserSavedTracksContains(
+        vec![id.to_string()],
+      ))
       .await;
-    self.net.app.lock().await.liked_song_ids_set.contains(&id)
+    self.net.app.lock().await.liked_song_ids_set.contains(id)
   }
 
   pub fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
@@ -271,7 +273,69 @@ impl<'a> CliApp<'a> {
     }
   }
 
-  // spt playback --like / --shuffle / --repeat
+  pub async fn seek(&mut self, seconds_str: String) -> Result<()> {
+    let seconds = match seconds_str.parse::<i32>() {
+      Ok(s) => s.abs() as u32,
+      Err(_) => return Err(anyhow!("failed to convert seconds to i32")),
+    };
+
+    let (current_pos, duration) = {
+      self
+        .net
+        .handle_network_event(IoEvent::GetCurrentPlayback)
+        .await;
+      let app = self.net.app.lock().await;
+      if let Some(CurrentlyPlaybackContext {
+        progress_ms: Some(ms),
+        item: Some(item),
+        ..
+      }) = &app.current_playback_context
+      {
+        let duration = match item {
+          PlayingItem::Track(track) => track.duration_ms,
+          PlayingItem::Episode(episode) => episode.duration_ms,
+        };
+
+        (*ms as u32, duration)
+      } else {
+        return Err(anyhow!("no context available"));
+      }
+    };
+
+    // Convert secs to ms
+    let ms = seconds * 1000;
+    // Calculate new positon
+    let position_to_seek = if seconds_str.starts_with('+') {
+      current_pos + ms
+    } else if seconds_str.starts_with('-') {
+      // Jump to the beginning if the position_to_seek would be
+      // negative, must be checked before the calculation to avoid
+      // an 'underflow'
+      if ms > current_pos {
+        0u32
+      } else {
+        current_pos - ms
+      }
+    } else {
+      // Absolute value of the track
+      seconds * 1000
+    };
+
+    // Check if position_to_seek is greater than duration (next track)
+    if position_to_seek > duration {
+      self.jump(&JumpDirection::Next).await;
+    } else {
+      // This seeks to a position in the current song
+      self
+        .net
+        .handle_network_event(IoEvent::Seek(position_to_seek))
+        .await;
+    }
+
+    Ok(())
+  }
+
+  // spt playback --like / --dislike / --shuffle / --repeat
   pub async fn mark(&mut self, flag: Flag) -> Result<()> {
     let c = {
       let app = self.net.app.lock().await;
@@ -282,7 +346,7 @@ impl<'a> CliApp<'a> {
     };
 
     match flag {
-      Flag::Like => {
+      Flag::Like(s) => {
         // Get the id of the current song
         let id = match c.item {
           Some(i) => match i {
@@ -290,11 +354,23 @@ impl<'a> CliApp<'a> {
             PlayingItem::Episode(_) => Err(anyhow!("saving episodes not yet implemented")),
           },
           None => Err(anyhow!("no item playing")),
-        };
-        self
-          .net
-          .handle_network_event(IoEvent::ToggleSaveTrack(id?))
-          .await;
+        }?;
+
+        // Want to like but is already liked -> do nothing
+        // Want to like and is not liked yet -> like
+        if s && !self.is_a_saved_track(&id).await {
+          self
+            .net
+            .handle_network_event(IoEvent::ToggleSaveTrack(id))
+            .await;
+        // Want to dislike but is already disliked -> do nothing
+        // Want to dislike and is liked currently -> remove like
+        } else if !s && self.is_a_saved_track(&id).await {
+          self
+            .net
+            .handle_network_event(IoEvent::ToggleSaveTrack(id))
+            .await;
+        }
       }
       Flag::Shuffle => {
         self
@@ -339,16 +415,22 @@ impl<'a> CliApp<'a> {
     let mut hs = match playing_item {
       PlayingItem::Track(track) => {
         let id = track.id.clone().unwrap_or_default();
-        let mut hs = Format::from_type(FormatType::Track(Box::new(track)));
+        let mut hs = Format::from_type(FormatType::Track(Box::new(track.clone())));
+        if let Some(ms) = context.progress_ms {
+          hs.push(Format::Position((ms, track.duration_ms)))
+        }
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,
-          self.is_a_saved_track(id).await,
+          self.is_a_saved_track(&id).await,
         )));
         hs
       }
       PlayingItem::Episode(episode) => {
-        let mut hs = Format::from_type(FormatType::Episode(Box::new(episode)));
+        let mut hs = Format::from_type(FormatType::Episode(Box::new(episode.clone())));
+        if let Some(ms) = context.progress_ms {
+          hs.push(Format::Position((ms, episode.duration_ms)))
+        }
         hs.push(Format::Flags((
           context.repeat_state,
           context.shuffle_state,

@@ -706,6 +706,42 @@
       "contributions": [
         "infra"
       ]
+    },
+    {
+      "login": "ArturKovacs",
+      "name": "Artúr Kovács",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8320264?v=4",
+      "profile": "https://github.com/ArturKovacs",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "aokellermann",
+      "name": "Antony Kellermann",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26678747?v=4",
+      "profile": "https://github.com/aokellermann",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "rasmuspeders1",
+      "name": "Rasmus Pedersen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1898960?v=4",
+      "profile": "https://github.com/rasmuspeders1",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "noir-Z",
+      "name": "noir-Z",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45096516?v=4",
+      "profile": "https://github.com/noir-Z",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

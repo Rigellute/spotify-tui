@@ -82,6 +82,9 @@ pub async fn handle_matches(
       if let Some(vol) = matches.value_of("volume") {
         cli.volume(vol.to_string()).await?;
       }
+      if let Some(secs) = matches.value_of("seek") {
+        cli.seek(secs.to_string()).await?;
+      }
 
       // Print out the status if no errors were found
       cli.get_status(format.to_string()).await
