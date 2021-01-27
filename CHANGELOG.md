@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- Add ability to seek from the CLI [#692](https://github.com/Rigellute/spotify-tui/pull/692)
+- Replace `clipboard` with `arboard` [#691](https://github.com/Rigellute/spotify-tui/pull/691)
+- Handle invalid Client ID/Secret [#668](https://github.com/Rigellute/spotify-tui/pull/668)
+- Implement some episode table functions [#698](https://github.com/Rigellute/spotify-tui/pull/698)
+- Fix default liked, shuffle, etc. icons to more recognizable symbols [#702](https://github.com/Rigellute/spotify-tui/pull/702)
+- Change `--like` that toggled the liked-state to explicit `--like` and `--dislike` flags [#717](https://github.com/Rigellute/spotify-tui/pull/717)
+
 ## [0.23.0] - 2021-01-06
 
 ### Fixed
