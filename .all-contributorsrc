@@ -724,6 +724,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "rasmuspeders1",
+      "name": "Rasmus Pedersen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1898960?v=4",
+      "profile": "https://github.com/rasmuspeders1",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
