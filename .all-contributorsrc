@@ -742,6 +742,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "davidbailey00",
+      "name": "David Bailey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4248177?v=4",
+      "profile": "https://davidbailey.codes/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
