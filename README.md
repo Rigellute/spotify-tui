@@ -124,11 +124,7 @@ cargo install spotify-tui
 
 This method will build the binary from source.
 
-To update, run
-
-```bash
-cargo install spotify-tui --force
-```
+To update, run the same command again.
 
 #### Note on Linux
 
