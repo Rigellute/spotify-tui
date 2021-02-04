@@ -1,6 +1,7 @@
 use crate::app::{
-  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, RouteId, SelectedAlbum,
-  SelectedFullAlbum, TrackTableContext,
+  ActiveBlock, AlbumTableContext, App, Artist, ArtistBlock, EpisodeTableContext, RouteId,
+  ScrollableResultPages, SelectedAlbum, SelectedFullAlbum, SelectedFullShow, SelectedShow,
+  TrackTableContext,
 };
 use crate::config::ClientConfig;
 use anyhow::anyhow;
@@ -14,6 +15,7 @@ use rspotify::{
     playlist::{PlaylistTrack, SimplifiedPlaylist},
     recommend::Recommendations,
     search::SearchResult,
+    show::SimplifiedShow,
     track::FullTrack,
     PlayingItem,
   },
@@ -82,7 +84,9 @@ pub enum IoEvent {
   CurrentUserSavedShowsContains(Vec<String>),
   CurrentUserSavedShowDelete(String),
   CurrentUserSavedShowAdd(String),
-  GetShowEpisodes(String),
+  GetShowEpisodes(Box<SimplifiedShow>),
+  GetShow(String),
+  GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
 }
 
@@ -286,8 +290,14 @@ impl<'a> Network<'a> {
       IoEvent::CurrentUserSavedShowAdd(show_id) => {
         self.current_user_saved_shows_add(show_id).await;
       }
-      IoEvent::GetShowEpisodes(show_id) => {
-        self.get_show_episodes(show_id).await;
+      IoEvent::GetShowEpisodes(show) => {
+        self.get_show_episodes(show).await;
+      }
+      IoEvent::GetShow(show_id) => {
+        self.get_show(show_id).await;
+      }
+      IoEvent::GetCurrentShowEpisodes(show_id, offset) => {
+        self.get_current_show_episodes(show_id, offset).await;
       }
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
@@ -498,18 +508,60 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_show_episodes(&mut self, show_id: String) {
+  async fn get_show_episodes(&mut self, show: Box<SimplifiedShow>) {
     match self
       .spotify
-      .get_shows_episodes(show_id, self.large_search_limit, 0, None)
+      .get_shows_episodes(show.id.clone(), self.large_search_limit, 0, None)
       .await
     {
       Ok(episodes) => {
-        let mut app = self.app.lock().await;
-        app.episode_table.episodes = episodes.items;
-        app.episode_table.reversed = false;
+        if !episodes.items.is_empty() {
+          let mut app = self.app.lock().await;
+          app.library.show_episodes = ScrollableResultPages::new();
+          app.library.show_episodes.add_pages(episodes);
 
+          app.selected_show_simplified = Some(SelectedShow { show: *show });
+
+          app.episode_table_context = EpisodeTableContext::Simplified;
+
+          app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+        }
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
+  async fn get_show(&mut self, show_id: String) {
+    match self.spotify.get_a_show(show_id, None).await {
+      Ok(show) => {
+        let selected_show = SelectedFullShow { show };
+
+        let mut app = self.app.lock().await;
+
+        app.selected_show_full = Some(selected_show);
+
+        app.episode_table_context = EpisodeTableContext::Full;
         app.push_navigation_stack(RouteId::PodcastEpisodes, ActiveBlock::EpisodeTable);
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    }
+  }
+
+  async fn get_current_show_episodes(&mut self, show_id: String, offset: Option<u32>) {
+    match self
+      .spotify
+      .get_shows_episodes(show_id, self.large_search_limit, offset, None)
+      .await
+    {
+      Ok(episodes) => {
+        if !episodes.items.is_empty() {
+          let mut app = self.app.lock().await;
+          app.library.show_episodes.add_pages(episodes);
+        }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

@@ -3,8 +3,8 @@ pub mod help;
 pub mod util;
 use super::{
   app::{
-    ActiveBlock, AlbumTableContext, App, ArtistBlock, RecommendationsContext, RouteId,
-    SearchResultBlock, LIBRARY_OPTIONS,
+    ActiveBlock, AlbumTableContext, App, ArtistBlock, EpisodeTableContext, RecommendationsContext,
+    RouteId, SearchResultBlock, LIBRARY_OPTIONS,
   },
   banner::BANNER,
 };
@@ -1440,53 +1440,77 @@ where
     current_route.hovered_block == ActiveBlock::EpisodeTable,
   );
 
-  let items = app
-    .episode_table
-    .episodes
-    .iter()
-    .map(|episode| {
-      let (played_str, time_str) = match episode.resume_point {
-        Some(ResumePoint {
-          fully_played,
-          resume_position_ms,
-        }) => (
-          if fully_played {
-            " ✔".to_owned()
-          } else {
-            "".to_owned()
-          },
-          format!(
-            "{} / {}",
-            millis_to_minutes(u128::from(resume_position_ms)),
-            millis_to_minutes(u128::from(episode.duration_ms))
+  if let Some(episodes) = app.library.show_episodes.get_results(None) {
+    let items = episodes
+      .items
+      .iter()
+      .map(|episode| {
+        let (played_str, time_str) = match episode.resume_point {
+          Some(ResumePoint {
+            fully_played,
+            resume_position_ms,
+          }) => (
+            if fully_played {
+              " ✔".to_owned()
+            } else {
+              "".to_owned()
+            },
+            format!(
+              "{} / {}",
+              millis_to_minutes(u128::from(resume_position_ms)),
+              millis_to_minutes(u128::from(episode.duration_ms))
+            ),
           ),
-        ),
-        None => (
-          "".to_owned(),
-          millis_to_minutes(u128::from(episode.duration_ms)),
-        ),
-      };
-      TableItem {
-        id: episode.id.to_owned(),
-        format: vec![
-          played_str,
-          episode.release_date.to_owned(),
-          episode.name.to_owned(),
-          time_str,
-        ],
-      }
-    })
-    .collect::<Vec<TableItem>>();
+          None => (
+            "".to_owned(),
+            millis_to_minutes(u128::from(episode.duration_ms)),
+          ),
+        };
+        TableItem {
+          id: episode.id.to_owned(),
+          format: vec![
+            played_str,
+            episode.release_date.to_owned(),
+            episode.name.to_owned(),
+            time_str,
+          ],
+        }
+      })
+      .collect::<Vec<TableItem>>();
 
-  draw_table(
-    f,
-    app,
-    layout_chunk,
-    ("Episodes", &header),
-    &items,
-    app.episode_table.selected_index,
-    highlight_state,
-  );
+    let title = match &app.episode_table_context {
+      EpisodeTableContext::Simplified => match &app.selected_show_simplified {
+        Some(selected_show) => {
+          format!(
+            "{} by {}",
+            selected_show.show.name.to_owned(),
+            selected_show.show.publisher
+          )
+        }
+        None => "Episodes".to_owned(),
+      },
+      EpisodeTableContext::Full => match &app.selected_show_full {
+        Some(selected_show) => {
+          format!(
+            "{} by {}",
+            selected_show.show.name.to_owned(),
+            selected_show.show.publisher
+          )
+        }
+        None => "Episodes".to_owned(),
+      },
+    };
+
+    draw_table(
+      f,
+      app,
+      layout_chunk,
+      (&title, &header),
+      &items,
+      app.episode_list_index,
+      highlight_state,
+    );
+  };
 }
 
 pub fn draw_made_for_you<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

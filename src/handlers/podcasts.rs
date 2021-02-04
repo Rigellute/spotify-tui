@@ -42,10 +42,8 @@ pub fn handler(key: Key, app: &mut App) {
     }
     Key::Enter => {
       if let Some(shows) = app.library.saved_shows.get_results(None) {
-        if let Some(selected_show) = shows.items.get(app.shows_list_index) {
-          // Go to show tracks table
-          let show_id = selected_show.show.id.to_owned();
-          app.dispatch(IoEvent::GetShowEpisodes(show_id));
+        if let Some(selected_show) = shows.items.get(app.shows_list_index).cloned() {
+          app.dispatch(IoEvent::GetShowEpisodes(Box::new(selected_show.show)));
         };
       }
     }
