@@ -122,7 +122,7 @@ where
   // Check for the width and change the contraints accordingly
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
-    .constraints(if app.size.width >= SMALL_TERMINAL_WIDTH {
+    .constraints(if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.show_big_search {
       [Constraint::Percentage(65), Constraint::Percentage(35)].as_ref()
     } else {
       [Constraint::Percentage(90), Constraint::Percentage(10)].as_ref()
@@ -174,7 +174,7 @@ where
 {
   let margin = util::get_main_layout_margin(app);
   // Responsive layout: new one kicks in at width 150 or higher
-  if app.size.width >= SMALL_TERMINAL_WIDTH {
+  if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.show_big_search {
     let parent_layout = Layout::default()
       .direction(Direction::Vertical)
       .constraints([Constraint::Min(1), Constraint::Length(6)].as_ref())
@@ -323,7 +323,7 @@ where
   B: Backend,
 {
   // Check for width to make a responsive layout
-  if app.size.width >= SMALL_TERMINAL_WIDTH {
+  if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.show_big_search {
     let chunks = Layout::default()
       .direction(Direction::Vertical)
       .constraints(
