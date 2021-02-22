@@ -53,7 +53,7 @@ impl Default for Theme {
   fn default() -> Self {
     Theme {
       analysis_bar: Color::LightCyan,
-      analysis_bar_text: Color::Black,
+      analysis_bar_text: Color::Reset,
       active: Color::Cyan,
       banner: Color::LightCyan,
       error_border: Color::Red,
@@ -64,10 +64,10 @@ impl Default for Theme {
       playbar_background: Color::Black,
       playbar_progress: Color::LightCyan,
       playbar_progress_text: Color::LightCyan,
-      playbar_text: Color::White,
+      playbar_text: Color::Reset,
       selected: Color::LightCyan,
-      text: Color::White,
-      header: Color::White,
+      text: Color::Reset,
+      header: Color::Reset,
     }
   }
 }
