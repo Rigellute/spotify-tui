@@ -1113,6 +1113,7 @@ impl App {
     const RELEASE_RADAR: &str = "Release Radar";
     const ON_REPEAT: &str = "On Repeat";
     const REPEAT_REWIND: &str = "Repeat Rewind";
+    const DAILY_DRIVE: &str = "Daily Drive";
 
     if self.library.made_for_you_playlists.pages.is_empty() {
       // We shouldn't be fetching all the results immediately - only load the data when the
@@ -1121,6 +1122,7 @@ impl App {
       self.made_for_you_search_and_add(RELEASE_RADAR);
       self.made_for_you_search_and_add(ON_REPEAT);
       self.made_for_you_search_and_add(REPEAT_REWIND);
+      self.made_for_you_search_and_add(DAILY_DRIVE);
     }
   }
 
