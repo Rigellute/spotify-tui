@@ -122,11 +122,14 @@ where
   // Check for the width and change the contraints accordingly
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
-    .constraints(if app.size.width >= SMALL_TERMINAL_WIDTH {
-      [Constraint::Percentage(65), Constraint::Percentage(35)].as_ref()
-    } else {
-      [Constraint::Percentage(90), Constraint::Percentage(10)].as_ref()
-    })
+    .constraints(
+      if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.enforce_wide_search_bar
+      {
+        [Constraint::Percentage(65), Constraint::Percentage(35)].as_ref()
+      } else {
+        [Constraint::Percentage(90), Constraint::Percentage(10)].as_ref()
+      },
+    )
     .split(layout_chunk);
 
   let current_route = app.get_current_route();
@@ -174,7 +177,7 @@ where
 {
   let margin = util::get_main_layout_margin(app);
   // Responsive layout: new one kicks in at width 150 or higher
-  if app.size.width >= SMALL_TERMINAL_WIDTH {
+  if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.enforce_wide_search_bar {
     let parent_layout = Layout::default()
       .direction(Direction::Vertical)
       .constraints([Constraint::Min(1), Constraint::Length(6)].as_ref())
@@ -323,7 +326,7 @@ where
   B: Backend,
 {
   // Check for width to make a responsive layout
-  if app.size.width >= SMALL_TERMINAL_WIDTH {
+  if app.size.width >= SMALL_TERMINAL_WIDTH && !app.user_config.behavior.enforce_wide_search_bar {
     let chunks = Layout::default()
       .direction(Direction::Vertical)
       .constraints(

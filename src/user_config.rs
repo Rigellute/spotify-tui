@@ -212,6 +212,7 @@ pub struct BehaviorConfigString {
   pub tick_rate_milliseconds: Option<u64>,
   pub enable_text_emphasis: Option<bool>,
   pub show_loading_indicator: Option<bool>,
+  pub enforce_wide_search_bar: Option<bool>,
   pub liked_icon: Option<String>,
   pub shuffle_icon: Option<String>,
   pub repeat_track_icon: Option<String>,
@@ -227,6 +228,7 @@ pub struct BehaviorConfig {
   pub tick_rate_milliseconds: u64,
   pub enable_text_emphasis: bool,
   pub show_loading_indicator: bool,
+  pub enforce_wide_search_bar: bool,
   pub liked_icon: String,
   pub shuffle_icon: String,
   pub repeat_track_icon: String,
@@ -288,6 +290,7 @@ impl UserConfig {
         tick_rate_milliseconds: 250,
         enable_text_emphasis: true,
         show_loading_indicator: true,
+        enforce_wide_search_bar: false,
         liked_icon: "♥".to_string(),
         shuffle_icon: "🔀".to_string(),
         repeat_track_icon: "🔂".to_string(),
@@ -421,6 +424,10 @@ impl UserConfig {
 
     if let Some(loading_indicator) = behavior_config.show_loading_indicator {
       self.behavior.show_loading_indicator = loading_indicator;
+    }
+
+    if let Some(wide_search_bar) = behavior_config.enforce_wide_search_bar {
+      self.behavior.enforce_wide_search_bar = wide_search_bar;
     }
 
     if let Some(liked_icon) = behavior_config.liked_icon {
