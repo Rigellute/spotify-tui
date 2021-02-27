@@ -28,7 +28,6 @@ crossterm = "0.19"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.8.3"
 anyhow = "1.0.38"
-spotify-tui = { path = "." }
 
 [[bin]]
 bench = false
