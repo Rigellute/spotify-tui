@@ -456,7 +456,7 @@ impl<'a> CliApp<'a> {
         match self.net.spotify.playlist(id, None, None).await {
           Ok(p) => {
             let num = p.tracks.total;
-            Some(thread_rng().gen_range(0, num) as usize)
+            Some(thread_rng().gen_range(0..num) as usize)
           }
           Err(e) => {
             self
