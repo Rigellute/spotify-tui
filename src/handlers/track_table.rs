@@ -178,7 +178,7 @@ fn play_random_song(app: &mut App) {
           app.dispatch(IoEvent::StartPlayback(
             context_uri,
             None,
-            Some(thread_rng().gen_range(0, num_tracks)),
+            Some(thread_rng().gen_range(0..num_tracks)),
           ));
         }
       }
@@ -190,7 +190,7 @@ fn play_random_song(app: &mut App) {
             .iter()
             .map(|item| item.track.uri.to_owned())
             .collect();
-          let rand_idx = thread_rng().gen_range(0, track_uris.len());
+          let rand_idx = thread_rng().gen_range(0..track_uris.len());
           app.dispatch(IoEvent::StartPlayback(
             None,
             Some(track_uris),
@@ -224,7 +224,7 @@ fn play_random_song(app: &mut App) {
           app.dispatch(IoEvent::StartPlayback(
             context_uri,
             None,
-            Some(thread_rng().gen_range(0, num_tracks)),
+            Some(thread_rng().gen_range(0..num_tracks)),
           ))
         }
       }
@@ -244,7 +244,7 @@ fn play_random_song(app: &mut App) {
             app.dispatch(IoEvent::StartPlayback(
               uri,
               None,
-              Some(thread_rng().gen_range(0, num_tracks)),
+              Some(thread_rng().gen_range(0..*num_tracks)),
             ))
           };
         };
