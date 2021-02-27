@@ -33,7 +33,7 @@ use rspotify::{
 };
 use std::{
   cmp::{max, min},
-  io::{self, stdout, Write},
+  io::{self, stdout},
   panic::{self, PanicInfo},
   path::PathBuf,
   sync::Arc,
