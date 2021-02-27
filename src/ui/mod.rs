@@ -85,21 +85,26 @@ where
 
   // Create a one-column table to avoid flickering due to non-determinism when
   // resolving constraints on widths of table columns.
-  let format_row = |r: Vec<String>| vec![format!("{:50}{:40}{:20}", r[0], r[1], r[2])];
+  let format_row =
+    |r: Vec<String>| -> Vec<String> { vec![format!("{:50}{:40}{:20}", r[0], r[1], r[2])] };
 
   let help_menu_style = Style::default().fg(app.user_config.theme.text);
   let header = ["Description", "Event", "Context"];
   let header = format_row(header.iter().map(|s| s.to_string()).collect());
 
   let help_docs = get_help_docs(&app.user_config.keys);
-  let help_docs = help_docs.into_iter().map(format_row).collect::<Vec<_>>();
+  let help_docs = help_docs
+    .into_iter()
+    .map(format_row)
+    .collect::<Vec<Vec<String>>>();
   let help_docs = &help_docs[app.help_menu_offset as usize..];
 
   let rows = help_docs
     .iter()
-    .map(|item| Row::StyledData(item.iter(), help_menu_style));
+    .map(|item| Row::new(item.clone()).style(help_menu_style));
 
-  let help_menu = Table::new(header.iter(), rows)
+  let help_menu = Table::new(rows)
+    .header(Row::new(header))
     .block(
       Block::default()
         .borders(Borders::ALL)
@@ -1824,7 +1829,7 @@ fn draw_table<B>(
     }
 
     // Return row styled data
-    Row::StyledData(formatted_row.into_iter(), style)
+    Row::new(formatted_row).style(style)
   });
 
   let widths = header
@@ -1833,7 +1838,11 @@ fn draw_table<B>(
     .map(|h| Constraint::Length(h.width))
     .collect::<Vec<tui::layout::Constraint>>();
 
-  let table = Table::new(header.items.iter().map(|h| h.text), rows)
+  let table = Table::new(rows)
+    .header(
+      Row::new(header.items.iter().map(|h| h.text))
+        .style(Style::default().fg(app.user_config.theme.header)),
+    )
     .block(
       Block::default()
         .borders(Borders::ALL)
@@ -1845,7 +1854,6 @@ fn draw_table<B>(
         .border_style(get_color(highlight_state, app.user_config.theme)),
     )
     .style(Style::default().fg(app.user_config.theme.text))
-    .header_style(Style::default().fg(app.user_config.theme.header))
     .widths(&widths);
   f.render_widget(table, layout_chunk);
 }
