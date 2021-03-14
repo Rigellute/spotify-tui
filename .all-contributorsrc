@@ -778,6 +778,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "hantatsang",
+      "name": "Sang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11912225?v=4",
+      "profile": "https://github.com/hantatsang",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
