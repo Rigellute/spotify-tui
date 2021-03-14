@@ -278,7 +278,7 @@ keybindings:
   copy_song_url: "c"
   copy_album_url: "C"
   help: "?"
-  shuffle: "s"
+  shuffle: "ctrl-s"
   repeat: "r"
   search: "/"
   audio_analysis: "v"
