@@ -14,8 +14,11 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.devices {
         Some(p) => {
           if let Some(selected_device_index) = app.selected_device_index {
-            let next_index =
-              common_key_events::on_down_press_handler(&p.devices, Some(selected_device_index));
+            let next_index = common_key_events::on_down_press_handler(
+              &p.devices,
+              Some(selected_device_index),
+              &mut app.movement_count,
+            );
             app.selected_device_index = Some(next_index);
           }
         }
@@ -26,8 +29,11 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.devices {
         Some(p) => {
           if let Some(selected_device_index) = app.selected_device_index {
-            let next_index =
-              common_key_events::on_up_press_handler(&p.devices, Some(selected_device_index));
+            let next_index = common_key_events::on_up_press_handler(
+              &p.devices,
+              Some(selected_device_index),
+              &mut app.movement_count,
+            );
             app.selected_device_index = Some(next_index);
           }
         }

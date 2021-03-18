@@ -10,6 +10,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &artist.top_tracks,
           Some(artist.selected_top_track_index),
+          &mut app.movement_count,
         );
         artist.selected_top_track_index = next_index;
       }
@@ -17,6 +18,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &artist.albums.items,
           Some(artist.selected_album_index),
+          &mut app.movement_count,
         );
         artist.selected_album_index = next_index;
       }
@@ -24,6 +26,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &artist.related_artists,
           Some(artist.selected_related_artist_index),
+          &mut app.movement_count,
         );
         artist.selected_related_artist_index = next_index;
       }
@@ -56,6 +59,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &artist.top_tracks,
           Some(artist.selected_top_track_index),
+          &mut app.movement_count,
         );
         artist.selected_top_track_index = next_index;
       }
@@ -63,6 +67,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &artist.albums.items,
           Some(artist.selected_album_index),
+          &mut app.movement_count,
         );
         artist.selected_album_index = next_index;
       }
@@ -70,6 +75,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &artist.related_artists,
           Some(artist.selected_related_artist_index),
+          &mut app.movement_count,
         );
         artist.selected_related_artist_index = next_index;
       }
@@ -284,6 +290,7 @@ pub fn handler(key: Key, app: &mut App) {
           handle_low_press_on_selected_block(app);
         }
       }
+      k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
       Key::Enter => {
         if artist.artist_selected_block != ArtistBlock::Empty {
           handle_enter_event_on_selected_block(app);

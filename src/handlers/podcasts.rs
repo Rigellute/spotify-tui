@@ -10,15 +10,21 @@ pub fn handler(key: Key, app: &mut App) {
     k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
     k if common_key_events::down_event(k) => {
       if let Some(shows) = &mut app.library.saved_shows.get_results(None) {
-        let next_index =
-          common_key_events::on_down_press_handler(&shows.items, Some(app.shows_list_index));
+        let next_index = common_key_events::on_down_press_handler(
+          &shows.items,
+          Some(app.shows_list_index),
+          &mut app.movement_count,
+        );
         app.shows_list_index = next_index;
       }
     }
     k if common_key_events::up_event(k) => {
       if let Some(shows) = &mut app.library.saved_shows.get_results(None) {
-        let next_index =
-          common_key_events::on_up_press_handler(&shows.items, Some(app.shows_list_index));
+        let next_index = common_key_events::on_up_press_handler(
+          &shows.items,
+          Some(app.shows_list_index),
+          &mut app.movement_count,
+        );
         app.shows_list_index = next_index;
       }
     }
@@ -40,6 +46,7 @@ pub fn handler(key: Key, app: &mut App) {
         app.shows_list_index = next_index;
       }
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Enter => {
       if let Some(shows) = app.library.saved_shows.get_results(None) {
         if let Some(selected_show) = shows.items.get(app.shows_list_index).cloned() {

@@ -16,6 +16,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &result.items,
           app.search_results.selected_album_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_album_index = Some(next_index);
       }
@@ -25,6 +26,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &result.items,
           app.search_results.selected_tracks_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_tracks_index = Some(next_index);
       }
@@ -34,6 +36,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &result.items,
           app.search_results.selected_artists_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_artists_index = Some(next_index);
       }
@@ -43,6 +46,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &result.items,
           app.search_results.selected_playlists_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_playlists_index = Some(next_index);
       }
@@ -52,6 +56,7 @@ fn handle_down_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &result.items,
           app.search_results.selected_shows_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_shows_index = Some(next_index);
       }
@@ -89,6 +94,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &result.items,
           app.search_results.selected_album_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_album_index = Some(next_index);
       }
@@ -98,6 +104,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &result.items,
           app.search_results.selected_tracks_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_tracks_index = Some(next_index);
       }
@@ -107,6 +114,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &result.items,
           app.search_results.selected_artists_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_artists_index = Some(next_index);
       }
@@ -116,6 +124,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &result.items,
           app.search_results.selected_playlists_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_playlists_index = Some(next_index);
       }
@@ -125,6 +134,7 @@ fn handle_up_press_on_selected_block(app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &result.items,
           app.search_results.selected_shows_index,
+          &mut app.movement_count,
         );
         app.search_results.selected_shows_index = Some(next_index);
       }
@@ -492,6 +502,7 @@ pub fn handler(key: Key, app: &mut App) {
         handle_low_press_on_selected_block(app)
       }
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     // Handle pressing enter when block is selected to start playing track
     Key::Enter => match app.search_results.selected_block {
       SearchResultBlock::Empty => handle_enter_event_on_hovered_block(app),

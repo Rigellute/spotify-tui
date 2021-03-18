@@ -337,7 +337,7 @@ impl UserConfig {
           check_reserved_keys(self.keys.$name)?;
         }
       };
-    };
+    }
 
     to_keys!(back);
     to_keys!(next_page);
@@ -376,7 +376,7 @@ impl UserConfig {
           self.theme.$name = parse_theme_item(&theme_item)?;
         }
       };
-    };
+    }
 
     to_theme_item!(active);
     to_theme_item!(banner);

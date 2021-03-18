@@ -9,15 +9,21 @@ pub fn handler(key: Key, app: &mut App) {
     k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
     k if common_key_events::down_event(k) => {
       if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
-        let next_index =
-          common_key_events::on_down_press_handler(&albums.items, Some(app.album_list_index));
+        let next_index = common_key_events::on_down_press_handler(
+          &albums.items,
+          Some(app.album_list_index),
+          &mut app.movement_count,
+        );
         app.album_list_index = next_index;
       }
     }
     k if common_key_events::up_event(k) => {
       if let Some(albums) = &mut app.library.saved_albums.get_results(None) {
-        let next_index =
-          common_key_events::on_up_press_handler(&albums.items, Some(app.album_list_index));
+        let next_index = common_key_events::on_up_press_handler(
+          &albums.items,
+          Some(app.album_list_index),
+          &mut app.movement_count,
+        );
         app.album_list_index = next_index;
       }
     }
@@ -39,6 +45,7 @@ pub fn handler(key: Key, app: &mut App) {
         app.album_list_index = next_index;
       }
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Enter => {
       if let Some(albums) = app.library.saved_albums.get_results(None) {
         if let Some(selected_album) = albums.items.get(app.album_list_index) {

@@ -10,15 +10,21 @@ pub fn handler(key: Key, app: &mut App) {
     k if common_key_events::left_event(k) => common_key_events::handle_left_event(app),
     k if common_key_events::up_event(k) => {
       if let Some(playlists) = &mut app.library.made_for_you_playlists.get_results(None) {
-        let next_index =
-          common_key_events::on_up_press_handler(&playlists.items, Some(app.made_for_you_index));
+        let next_index = common_key_events::on_up_press_handler(
+          &playlists.items,
+          Some(app.made_for_you_index),
+          &mut app.movement_count,
+        );
         app.made_for_you_index = next_index;
       }
     }
     k if common_key_events::down_event(k) => {
       if let Some(playlists) = &mut app.library.made_for_you_playlists.get_results(None) {
-        let next_index =
-          common_key_events::on_down_press_handler(&playlists.items, Some(app.made_for_you_index));
+        let next_index = common_key_events::on_down_press_handler(
+          &playlists.items,
+          Some(app.made_for_you_index),
+          &mut app.movement_count,
+        );
         app.made_for_you_index = next_index;
       }
     }
@@ -40,6 +46,7 @@ pub fn handler(key: Key, app: &mut App) {
         app.made_for_you_index = next_index;
       }
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Enter => {
       if let (Some(playlists), selected_playlist_index) = (
         &app.library.made_for_you_playlists.get_results(Some(0)),

@@ -12,6 +12,7 @@ pub fn handler(key: Key, app: &mut App) {
                 let next_index = common_key_events::on_down_press_handler(
                     &artist_albums.albums.items,
                     Some(artist_albums.selected_index),
+                    &mut app.movement_count,
                 );
                 artist_albums.selected_index = next_index;
             }
@@ -25,6 +26,7 @@ pub fn handler(key: Key, app: &mut App) {
                 artist_albums.selected_index = next_index;
             }
         }
+        k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
         Key::Enter => {
             if let Some(artist_albums) = &mut app.artist_albums {
                 if let Some(selected_album) = artist_albums
