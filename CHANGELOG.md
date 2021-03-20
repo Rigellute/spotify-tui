@@ -8,6 +8,9 @@
 - Implement some episode table functions [#698](https://github.com/Rigellute/spotify-tui/pull/698)
 - Fix default liked, shuffle, etc. icons to more recognizable symbols [#702](https://github.com/Rigellute/spotify-tui/pull/702)
 - Change `--like` that toggled the liked-state to explicit `--like` and `--dislike` flags [#717](https://github.com/Rigellute/spotify-tui/pull/717)
+- Add to config: `enforce_wide_search_bar` to make search bar bigger [#738](https://github.com/Rigellute/spotify-tui/pull/738)
+- Add Daily Drive to Made For You lists search [#743](https://github.com/Rigellute/spotify-tui/pull/743)
+- Replace black and white default colors with reset [#742](https://github.com/Rigellute/spotify-tui/pull/742)
 
 ## [0.23.0] - 2021-01-06
 
