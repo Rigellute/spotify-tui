@@ -351,16 +351,19 @@ impl<'a> Network<'a> {
       app.current_playback_context = Some(c.clone());
       app.instant_since_last_current_playback_poll = Instant::now();
 
-      if let Some(item) = c.item {
-        match item {
-          PlayingItem::Track(track) => {
-            if let Some(track_id) = track.id {
-              app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
-            };
+      match c.item {
+        Some(item) => {
+          match item {
+            PlayingItem::Track(track) => {
+              if let Some(track_id) = track.id {
+                app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
+              };
+            }
+            PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
           }
-          PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
-        }
-      };
+        },
+        None => app.current_playback_context = None,
+      }
     }
 
     let mut app = self.app.lock().await;
