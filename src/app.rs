@@ -600,13 +600,11 @@ impl App {
 
   pub fn handle_error(&mut self, e: anyhow::Error) {
     match &self.user_config.behavior.error_log {
-      Some(file) => {
-        std::fs::write(file, e.to_string()).expect(&format!(
-          "Failed to write {} to {}",
-          e.to_string(),
-          file
-        ));
-      }
+      Some(file) => std::fs::write(file, e.to_string()).expect(&format!(
+        "Failed to write {} to {}",
+        e.to_string(),
+        file
+      )),
       None => {
         self.push_navigation_stack(RouteId::Error, ActiveBlock::Error);
         self.api_error = e.to_string();
