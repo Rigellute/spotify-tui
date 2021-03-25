@@ -457,6 +457,10 @@ impl UserConfig {
       self.behavior.repeat_context_icon = repeat_context_icon;
     }
 
+    if let Some(error_log) = behavior_config.error_log {
+      self.behavior.error_log = Some(error_log);
+    }
+
     Ok(())
   }
 
