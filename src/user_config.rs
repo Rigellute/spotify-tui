@@ -113,7 +113,7 @@ fn parse_key(key: String) -> Result<Key> {
 }
 
 fn check_reserved_keys(key: Key) -> Result<()> {
-  let reserved = [
+  const RESERVED: [Key; 13] = [
     Key::Char('h'),
     Key::Char('j'),
     Key::Char('k'),
@@ -128,14 +128,26 @@ fn check_reserved_keys(key: Key) -> Result<()> {
     Key::Backspace,
     Key::Enter,
   ];
-  for item in reserved.iter() {
-    if key == *item {
-      // TODO: Add pretty print for key
-      return Err(anyhow!(
-        "The key {:?} is reserved and cannot be remapped",
-        key
-      ));
-    }
+  if RESERVED.contains(&key) {
+    return Err(anyhow!(
+      "The key {} is reserved and cannot be remapped",
+      match key {
+        Key::Char('h') => "h",
+        Key::Char('j') => "j",
+        Key::Char('k') => "k",
+        Key::Char('l') => "l",
+        Key::Char('H') => "H",
+        Key::Char('M') => "M",
+        Key::Char('L') => "L",
+        Key::Up => "up arrow",
+        Key::Down => "down arrow",
+        Key::Left => "left arrow",
+        Key::Right => "right arrow",
+        Key::Backspace => "backspace",
+        Key::Enter => "enter",
+        _ => unreachable!()
+      }
+    ));
   }
   Ok(())
 }
