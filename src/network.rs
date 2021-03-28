@@ -361,9 +361,12 @@ impl<'a> Network<'a> {
             }
             PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
           }
-        },
+        }
         None => app.current_playback_context = None,
       }
+    } else {
+      let mut app = self.app.lock().await;
+      app.current_playback_context = None;
     }
 
     let mut app = self.app.lock().await;
