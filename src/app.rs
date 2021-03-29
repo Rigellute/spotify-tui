@@ -27,7 +27,11 @@ use std::{
 };
 use tui::layout::Rect;
 
+#[cfg(feature = "x11")]
 use arboard::Clipboard;
+
+#[cfg(feature = "wayland")]
+use wl_clipboard_rs::copy::{MimeType, Options, Source};
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
   "Made For You",
@@ -310,7 +314,10 @@ pub struct App {
   pub album_list_index: usize,
   pub made_for_you_index: usize,
   pub artists_list_index: usize,
+  #[cfg(feature = "x11")]
   pub clipboard: Option<Clipboard>,
+  #[cfg(feature = "wayland")]
+  pub clipboard_options: Options,
   pub shows_list_index: usize,
   pub episode_list_index: usize,
   pub help_docs_size: u32,
@@ -399,7 +406,10 @@ impl Default for App {
       selected_show_full: None,
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
+      #[cfg(feature = "x11")]
       clipboard: Clipboard::new().ok(),
+      #[cfg(feature = "wayland")]
+      clipboard_options: Options::new(),
       help_docs_size: 0,
       help_menu_page: 0,
       help_menu_max_lines: 0,
@@ -664,6 +674,10 @@ impl App {
     }
   }
 
+  #[cfg(feature = "wayland")]
+  pub fn copy_song_url(&mut self) {}
+
+  #[cfg(feature = "x11")]
   pub fn copy_song_url(&mut self) {
     let clipboard = match &mut self.clipboard {
       Some(ctx) => ctx,
@@ -674,55 +688,56 @@ impl App {
       item: Some(item), ..
     }) = &self.current_playback_context
     {
-      match item {
-        PlayingItem::Track(track) => {
-          if let Err(e) = clipboard.set_text(format!(
-            "https://open.spotify.com/track/{}",
-            track.id.to_owned().unwrap_or_default()
-          )) {
-            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
-          }
-        }
+      let value = match item {
+        PlayingItem::Track(track) => format!(
+          "https://open.spotify.com/track/{}",
+          track.id.to_owned().unwrap_or_default()
+        ),
         PlayingItem::Episode(episode) => {
-          if let Err(e) = clipboard.set_text(format!(
-            "https://open.spotify.com/episode/{}",
-            episode.id.to_owned()
-          )) {
-            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
-          }
+          format!("https://open.spotify.com/episode/{}", episode.id.to_owned())
         }
-      }
+      };
+      self.copy_to_clipboard(value);
     }
   }
 
   pub fn copy_album_url(&mut self) {
-    let clipboard = match &mut self.clipboard {
-      Some(ctx) => ctx,
-      None => return,
-    };
-
     if let Some(CurrentlyPlaybackContext {
       item: Some(item), ..
     }) = &self.current_playback_context
     {
-      match item {
-        PlayingItem::Track(track) => {
-          if let Err(e) = clipboard.set_text(format!(
-            "https://open.spotify.com/album/{}",
-            track.album.id.to_owned().unwrap_or_default()
-          )) {
-            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
-          }
-        }
-        PlayingItem::Episode(episode) => {
-          if let Err(e) = clipboard.set_text(format!(
-            "https://open.spotify.com/show/{}",
-            episode.show.id.to_owned()
-          )) {
-            self.handle_error(anyhow!("failed to set clipboard content: {}", e));
-          }
-        }
+      let value = match item {
+        PlayingItem::Track(track) => format!(
+          "https://open.spotify.com/album/{}",
+          track.album.id.to_owned().unwrap_or_default()
+        ),
+        PlayingItem::Episode(episode) => format!(
+          "https://open.spotify.com/show/{}",
+          episode.show.id.to_owned()
+        ),
+      };
+      self.copy_to_clipboard(value);
+    }
+  }
+
+  fn copy_to_clipboard(&mut self, value: String) {
+    #[cfg(feature = "x11")]
+    {
+      let clipboard = match &mut self.clipboard {
+        Some(ctx) => ctx,
+        None => return,
+      };
+      if let Err(e) = clipboard.set_text(value) {
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
       }
+    }
+    #[cfg(feature = "wayland")]
+    {
+      let opts = self.clipboard_options.clone();
+      let source = Source::Bytes(value.as_bytes().into());
+      if let Err(e) = opts.copy(source, MimeType::Autodetect) {
+        self.handle_error(anyhow!("failed to set clipboard content: {}", e));
+      };
     }
   }
 
