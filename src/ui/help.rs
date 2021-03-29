@@ -72,11 +72,13 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
       key_bindings.shuffle.to_string(),
       String::from("General"),
     ],
+    #[cfg(feature = "x11")]
     vec![
       String::from("Copy url to currently playing song/episode"),
       key_bindings.copy_song_url.to_string(),
       String::from("General"),
     ],
+    #[cfg(feature = "x11")]
     vec![
       String::from("Copy url to currently playing album/show"),
       key_bindings.copy_album_url.to_string(),

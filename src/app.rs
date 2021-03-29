@@ -1,5 +1,7 @@
 use super::user_config::UserConfig;
 use crate::network::IoEvent;
+// this create in only used in coping the album/song url to the clipboard
+#[cfg(feature = "x11")]
 use anyhow::anyhow;
 use rspotify::{
   model::{
@@ -27,6 +29,7 @@ use std::{
 };
 use tui::layout::Rect;
 
+#[cfg(feature = "x11")]
 use arboard::Clipboard;
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
@@ -310,6 +313,7 @@ pub struct App {
   pub album_list_index: usize,
   pub made_for_you_index: usize,
   pub artists_list_index: usize,
+  #[cfg(feature = "x11")]
   pub clipboard: Option<Clipboard>,
   pub shows_list_index: usize,
   pub episode_list_index: usize,
@@ -399,6 +403,7 @@ impl Default for App {
       selected_show_full: None,
       user: None,
       instant_since_last_current_playback_poll: Instant::now(),
+      #[cfg(feature = "x11")]
       clipboard: Clipboard::new().ok(),
       help_docs_size: 0,
       help_menu_page: 0,
@@ -664,6 +669,10 @@ impl App {
     }
   }
 
+  #[cfg(feature = "wayland")]
+  pub fn copy_song_url(&mut self) {}
+
+  #[cfg(feature = "x11")]
   pub fn copy_song_url(&mut self) {
     let clipboard = match &mut self.clipboard {
       Some(ctx) => ctx,
@@ -695,6 +704,10 @@ impl App {
     }
   }
 
+  #[cfg(feature = "wayland")]
+  pub fn copy_album_url(&mut self) {}
+
+  #[cfg(feature = "x11")]
   pub fn copy_album_url(&mut self) {
     let clipboard = match &mut self.clipboard {
       Some(ctx) => ctx,
