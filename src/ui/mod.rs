@@ -542,7 +542,7 @@ where
   }
 }
 
-struct AlbumUI {
+struct AlbumUi {
   selected_index: usize,
   items: Vec<TableItem>,
   title: String,
@@ -681,7 +681,7 @@ where
 
   let album_ui = match &app.album_table_context {
     AlbumTableContext::Simplified => match &app.selected_album_simplified {
-      Some(selected_album_simplified) => Some(AlbumUI {
+      Some(selected_album_simplified) => Some(AlbumUi {
         items: selected_album_simplified
           .tracks
           .items
@@ -707,7 +707,7 @@ where
       None => None,
     },
     AlbumTableContext::Full => match app.selected_album_full.clone() {
-      Some(selected_album) => Some(AlbumUI {
+      Some(selected_album) => Some(AlbumUi {
         items: selected_album
           .album
           .tracks
