@@ -251,26 +251,38 @@ impl<'a> CliApp<'a> {
 
   // spt playback --transfer DEVICE
   pub async fn transfer_playback(&mut self, device: &str) -> Result<()> {
-    // Get the device id by name
-    let mut id = String::new();
-    if let Some(devices) = &self.net.app.lock().await.devices {
-      for d in &devices.devices {
-        if d.name == device {
-          id.push_str(d.id.as_str());
-          break;
+    let selected_device = {
+      let guard = &self.net.app.lock().await;
+
+      let devices = guard
+        .devices
+        .clone()
+        .ok_or_else(|| anyhow!("no device matching prefix '{}'", device))?
+        .devices;
+
+      let mut prefix_matches = devices
+        .into_iter()
+        .filter(|dev| dev.name.starts_with(device));
+
+      let exact_match = prefix_matches.clone().find(|dev| dev.name == device);
+
+      if let Some(exact_match) = exact_match {
+        exact_match
+      } else if let Some(prefix_match) = prefix_matches.next() {
+        if prefix_matches.next().is_some() {
+          return Err(anyhow!("more than one device matches prefix '{}'", device));
         }
+        prefix_match
+      } else {
+        return Err(anyhow!("no device matching prefix '{}'", device));
       }
     };
 
-    if id.is_empty() {
-      Err(anyhow!("no device with name '{}'", device))
-    } else {
-      self
-        .net
-        .handle_network_event(IoEvent::TransferPlaybackToDevice(id.to_string()))
-        .await;
-      Ok(())
-    }
+    self
+      .net
+      .handle_network_event(IoEvent::TransferPlaybackToDevice(selected_device.id))
+      .await;
+    Ok(())
   }
 
   pub async fn seek(&mut self, seconds_str: String) -> Result<()> {
