@@ -23,7 +23,7 @@ dirs = "3.0.1"
 clap = "2.33.3"
 unicode-width = "0.1.8"
 backtrace = "0.3.56"
-arboard = "1.1.0"
+arboard = "1.2.0"
 crossterm = "0.19"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.8.3"
