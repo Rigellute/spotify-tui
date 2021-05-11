@@ -1025,9 +1025,12 @@ impl<'a> Network<'a> {
       .into_iter()
       .map(|item| item.uri)
       .collect::<Vec<String>>();
-      self
+    self
       .spotify
-      .tracks(tracks.iter().map(|x| x.as_str()).collect::<Vec<&str>>(), None)
+      .tracks(
+        tracks.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
+        None,
+      )
       .await
       .ok()
       .map(|result| result.tracks)
