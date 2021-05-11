@@ -680,34 +680,38 @@ where
   );
 
   let album_ui = match &app.album_table_context {
-    AlbumTableContext::Simplified => match &app.selected_album_simplified {
-      Some(selected_album_simplified) => Some(AlbumUi {
-        items: selected_album_simplified
-          .tracks
-          .items
-          .iter()
-          .map(|item| TableItem {
-            id: item.id.clone().unwrap_or_else(|| "".to_string()),
-            format: vec![
-              "".to_string(),
-              item.track_number.to_string(),
-              item.name.to_owned(),
-              create_artist_string(&item.artists),
-              millis_to_minutes(u128::from(item.duration_ms)),
-            ],
-          })
-          .collect::<Vec<TableItem>>(),
-        title: format!(
-          "{} by {}",
-          selected_album_simplified.album.name,
-          create_artist_string(&selected_album_simplified.album.artists)
-        ),
-        selected_index: selected_album_simplified.selected_index,
-      }),
-      None => None,
-    },
-    AlbumTableContext::Full => match app.selected_album_full.clone() {
-      Some(selected_album) => Some(AlbumUi {
+    AlbumTableContext::Simplified => {
+      app
+        .selected_album_simplified
+        .as_ref()
+        .map(|selected_album_simplified| AlbumUi {
+          items: selected_album_simplified
+            .tracks
+            .items
+            .iter()
+            .map(|item| TableItem {
+              id: item.id.clone().unwrap_or_else(|| "".to_string()),
+              format: vec![
+                "".to_string(),
+                item.track_number.to_string(),
+                item.name.to_owned(),
+                create_artist_string(&item.artists),
+                millis_to_minutes(u128::from(item.duration_ms)),
+              ],
+            })
+            .collect::<Vec<TableItem>>(),
+          title: format!(
+            "{} by {}",
+            selected_album_simplified.album.name,
+            create_artist_string(&selected_album_simplified.album.artists)
+          ),
+          selected_index: selected_album_simplified.selected_index,
+        })
+    }
+    AlbumTableContext::Full => app
+      .selected_album_full
+      .as_ref()
+      .map(|selected_album| AlbumUi {
         items: selected_album
           .album
           .tracks
@@ -731,8 +735,6 @@ where
         ),
         selected_index: app.saved_album_tracks_index,
       }),
-      None => None,
-    },
   };
 
   if let Some(album_ui) = album_ui {
