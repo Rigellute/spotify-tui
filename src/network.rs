@@ -1025,23 +1025,17 @@ impl<'a> Network<'a> {
       .into_iter()
       .map(|item| item.uri)
       .collect::<Vec<String>>();
-    if let Ok(result) = self
+      self
       .spotify
-      .tracks(tracks.iter().map(|x| &x[..]).collect::<Vec<&str>>(), None)
+      .tracks(tracks.iter().map(|x| x.as_str()).collect::<Vec<&str>>(), None)
       .await
-    {
-      return Some(result.tracks);
-    }
-
-    None
+      .ok()
+      .map(|result| result.tracks)
   }
 
   async fn get_recommendations_for_track_id(&mut self, id: String, country: Option<Country>) {
     if let Ok(track) = self.spotify.track(&id).await {
-      let track_id_list: Option<Vec<String>> = match &track.id {
-        Some(id) => Some(vec![id.to_string()]),
-        None => None,
-      };
+      let track_id_list: Option<Vec<String>> = track.id.as_ref().map(|id| vec![id.to_string()]);
       self
         .get_recommendations_for_seed(None, track_id_list, Box::new(Some(track)), country)
         .await;

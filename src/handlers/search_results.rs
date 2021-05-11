@@ -389,10 +389,7 @@ fn handle_recommended_tracks(app: &mut App) {
       if let Some(index) = &app.search_results.selected_tracks_index {
         if let Some(result) = app.search_results.tracks.clone() {
           if let Some(track) = result.items.get(index.to_owned()) {
-            let track_id_list: Option<Vec<String>> = match &track.id {
-              Some(id) => Some(vec![id.to_string()]),
-              None => None,
-            };
+            let track_id_list: Option<Vec<String>> = track.id.as_ref().map(|id| vec![id.to_string()]);
             app.recommendations_context = Some(RecommendationsContext::Song);
             app.recommendations_seed = track.name.clone();
             app.get_recommendations_for_seed(None, track_id_list, Some(track.clone()));
