@@ -145,7 +145,7 @@ fn check_reserved_keys(key: Key) -> Result<()> {
         Key::Right => "right arrow",
         Key::Backspace => "backspace",
         Key::Enter => "enter",
-        _ => unreachable!()
+        _ => unreachable!(),
       }
     ));
   }
