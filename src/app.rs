@@ -28,6 +28,7 @@ use std::{
 use tui::layout::Rect;
 
 use arboard::Clipboard;
+use crate::app::RouteId::SelectedDevice;
 
 pub const LIBRARY_OPTIONS: [&str; 6] = [
   "Made For You",
@@ -634,6 +635,8 @@ impl App {
   }
 
   pub fn pop_navigation_stack(&mut self) -> Option<Route> {
+    self.navigation_stack.dedup_by_key(|x| x.id == SelectedDevice);
+
     if self.navigation_stack.len() == 1 {
       None
     } else {
