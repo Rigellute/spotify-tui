@@ -25,7 +25,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [AUR](#aur)
     - [Nix](#nix)
     - [Void Linux](#void-linux)
-    - [Fedora/CentOS](#fedora-centos)
+    - [Fedora/CentOS](#fedoracentos)
     - [Cargo](#cargo)
       - [Note on Linux](#note-on-linux)
     - [Windows](#windows-10)
