@@ -626,19 +626,18 @@ impl App {
   // The navigation_stack actually only controls the large block to the right of `library` and
   // `playlists`
   pub fn push_navigation_stack(&mut self, next_route_id: RouteId, next_active_block: ActiveBlock) {
-    if self
+    if !self
       .navigation_stack
       .last()
       .map(|last_route_id| last_route_id.id == next_route_id)
       .unwrap_or(false)
     {
-      return;
+      self.navigation_stack.push(Route {
+        id: next_route_id,
+        active_block: next_active_block,
+        hovered_block: next_active_block,
+      });
     }
-    self.navigation_stack.push(Route {
-      id: next_route_id,
-      active_block: next_active_block,
-      hovered_block: next_active_block,
-    });
   }
 
   pub fn pop_navigation_stack(&mut self) -> Option<Route> {
