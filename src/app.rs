@@ -629,7 +629,7 @@ impl App {
     if !self
       .navigation_stack
       .last()
-      .map(|last_route_id| last_route_id.id == next_route_id)
+      .map(|last_route| last_route.id == next_route_id)
       .unwrap_or(false)
     {
       self.navigation_stack.push(Route {
