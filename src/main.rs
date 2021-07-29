@@ -22,7 +22,9 @@ use crossterm::{
   event::{DisableMouseCapture, EnableMouseCapture},
   execute,
   style::Print,
-  terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+  terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
+  },
   ExecutableCommand,
 };
 use network::{get_spotify, IoEvent, Network};
@@ -268,7 +270,12 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
   execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
   enable_raw_mode()?;
 
-  let backend = CrosstermBackend::new(stdout);
+  let mut backend = CrosstermBackend::new(stdout);
+
+  if user_config.behavior.set_window_title {
+    backend.execute(SetTitle("spt - Spotify TUI"))?;
+  }
+
   let mut terminal = Terminal::new(backend)?;
   terminal.hide_cursor()?;
 
