@@ -355,6 +355,9 @@ impl<'a> Network<'a> {
         match item {
           PlayingItem::Track(track) => {
             if let Some(track_id) = track.id {
+              if let Some(pos) = app.song_queue.iter().position(|t| t.id.clone().unwrap_or(String::from("")) == track_id) {
+                app.song_queue.remove(pos);
+              }
               app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
             };
           }
@@ -777,6 +780,7 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(()) => {
+        
         self.get_current_playback().await;
       }
       Err(e) => {
