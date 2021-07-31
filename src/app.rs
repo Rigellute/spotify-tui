@@ -137,6 +137,7 @@ pub enum ActiveBlock {
   MadeForYou,
   Artists,
   BasicView,
+  Queue,
   Dialog(DialogContext),
 }
 
@@ -317,12 +318,15 @@ pub struct App {
   pub help_menu_page: u32,
   pub help_menu_max_lines: u32,
   pub help_menu_offset: u32,
+  pub queue_menu_offset: u32,
+  pub queue_menu_page: u32,
   pub is_loading: bool,
   io_tx: Option<Sender<IoEvent>>,
   pub is_fetching_current_playback: bool,
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
+  pub song_queue: Vec<FullTrack>,
 }
 
 impl Default for App {
@@ -404,12 +408,15 @@ impl Default for App {
       help_menu_page: 0,
       help_menu_max_lines: 0,
       help_menu_offset: 0,
+      queue_menu_offset: 0,
+      queue_menu_page: 8,
       is_loading: false,
       io_tx: None,
       is_fetching_current_playback: false,
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
+      song_queue: Vec::new(),
     }
   }
 }
@@ -1187,6 +1194,17 @@ impl App {
     if self.help_menu_offset > self.help_docs_size {
       self.help_menu_offset = old_offset;
       self.help_menu_page -= 1;
+    }
+  }
+
+  pub fn calculate_queue_menu_offset(&mut self) {
+    let old_offset = self.queue_menu_offset;
+    if self.help_menu_max_lines < self.song_queue.len() as u32 {
+      self.queue_menu_offset = self.queue_menu_page * self.help_menu_max_lines;
+    }
+    if self.queue_menu_offset > self.help_docs_size {
+      self.queue_menu_offset = old_offset;
+      self.queue_menu_page -= 1;
     }
   }
 }

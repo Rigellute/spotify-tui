@@ -10,6 +10,7 @@ mod empty;
 mod episode_table;
 mod error_screen;
 mod help_menu;
+mod queue_menu;
 mod home;
 mod input;
 mod library;
@@ -71,6 +72,10 @@ pub fn handle_app(key: Key, app: &mut App) {
     }
     _ if key == app.user_config.keys.help => {
       app.set_current_route_state(Some(ActiveBlock::HelpMenu), None);
+    }
+
+    _ if key == Key::Char('`') => {
+      app.set_current_route_state(Some(ActiveBlock::Queue), None);
     }
 
     _ if key == app.user_config.keys.shuffle => {
@@ -164,6 +169,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::BasicView => {
       basic_view::handler(key, app);
+    }
+    ActiveBlock::Queue => {
+      queue_menu::handler(key, app);
     }
     ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);

@@ -73,6 +73,54 @@ pub struct TableItem {
   format: Vec<String>,
 }
 
+pub fn draw_queue_menu<B>(f: &mut Frame<B>, app: &App)
+where
+  B: Backend,
+{
+  let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints([Constraint::Percentage(100)].as_ref())
+    .margin(2)
+    .split(f.size());
+
+  // Create a one-column table to avoid flickering due to non-determinism when
+  // resolving constraints on widths of table columns.
+  let format_row =
+    |r: Vec<String>| -> Vec<String> { vec![format!("{:50}{:50}{:40}", r[0], r[1], r[2])] };
+
+  let queue_style = Style::default().fg(app.user_config.theme.text);
+  let header = ["Song", "Artist", "Album"];
+  let header = format_row(header.iter().map(|s| s.to_string()).collect());
+
+  let queue = app.song_queue.clone();
+  let queue_rows = queue
+    .into_iter()
+    .map(|t| vec![t.name, t.artists[0].name.clone(), t.album.name])
+    .map(format_row)
+    .collect::<Vec<Vec<String>>>();
+  let queue_rows = &queue_rows[app.help_menu_offset as usize..];
+
+  let rows = queue_rows
+    .iter()
+    .map(|item| Row::new(item.clone()).style(queue_style));
+
+  let queue_menu = Table::new(rows)
+    .header(Row::new(header))
+    .block(
+      Block::default()
+        .borders(Borders::ALL)
+        .style(queue_style)
+        .title(Span::styled(
+          "Song Queue (press <Esc> to go back)",
+          queue_style,
+        ))
+        .border_style(queue_style),
+    )
+    .style(queue_style)
+    .widths(&[Constraint::Max(140)]);
+  f.render_widget(queue_menu, chunks[0]);
+}
+
 pub fn draw_help_menu<B>(f: &mut Frame<B>, app: &App)
 where
   B: Backend,

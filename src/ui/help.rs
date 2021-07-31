@@ -158,6 +158,11 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
       String::from("General"),
     ],
     vec![
+      String::from("Show queued tracks"),
+      String::from("`"),
+      String::from("General"),
+    ],
+    vec![
       String::from("Enter hover mode"),
       String::from("<Esc>"),
       String::from("Selected block"),

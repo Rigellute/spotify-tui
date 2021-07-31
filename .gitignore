@@ -15,3 +15,5 @@ secrets.tar
 
 *.swp
 tags
+
+/.vscode
