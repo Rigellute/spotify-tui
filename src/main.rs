@@ -313,6 +313,9 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
 
     let current_route = app.get_current_route();
     terminal.draw(|mut f| match current_route.active_block {
+      ActiveBlock::Queue => {
+        ui::draw_queue_menu(&mut f, &app);
+      }
       ActiveBlock::HelpMenu => {
         ui::draw_help_menu(&mut f, &app);
       }

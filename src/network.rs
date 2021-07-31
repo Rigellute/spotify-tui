@@ -1472,12 +1472,26 @@ impl<'a> Network<'a> {
   }
 
   async fn add_item_to_queue(&mut self, item: String) {
+    let itm = item.clone();
     match self
       .spotify
       .add_item_to_queue(item, self.client_config.device_id.clone())
       .await
     {
-      Ok(()) => (),
+      Ok(()) => {
+        match self
+          .spotify
+          .track(&itm)
+          .await {
+            Ok(res) => {
+              let mut app = self.app.lock().await;
+              app.song_queue.push(res);
+            },
+            Err(e) => {
+              self.handle_error(anyhow!(e)).await;
+            }
+          }
+      },
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
       }
