@@ -346,21 +346,30 @@ impl<'a> Network<'a> {
       )
       .await;
 
-    if let Ok(Some(c)) = context {
-      let mut app = self.app.lock().await;
-      app.current_playback_context = Some(c.clone());
-      app.instant_since_last_current_playback_poll = Instant::now();
+    match context {
+      Ok(Some(c)) => {
+        let mut app = self.app.lock().await;
+        app.current_playback_context = Some(c.clone());
+        app.instant_since_last_current_playback_poll = Instant::now();
 
-      if let Some(item) = c.item {
-        match item {
-          PlayingItem::Track(track) => {
-            if let Some(track_id) = track.id {
-              app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
-            };
+        if let Some(item) = c.item {
+          match item {
+            PlayingItem::Track(track) => {
+              if let Some(track_id) = track.id {
+                app.dispatch(IoEvent::CurrentUserSavedTracksContains(vec![track_id]));
+              };
+            }
+            PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
           }
-          PlayingItem::Episode(_episode) => { /*should map this to following the podcast show*/ }
-        }
-      };
+        };
+      }
+      Ok(None) => {
+        let mut app = self.app.lock().await;
+        app.instant_since_last_current_playback_poll = Instant::now();
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
     }
 
     let mut app = self.app.lock().await;
