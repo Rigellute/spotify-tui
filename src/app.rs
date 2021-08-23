@@ -779,7 +779,7 @@ impl App {
     }
 
     if let Some(saved_artists) = &self.library.saved_artists.get_results(None).cloned() {
-      self.set_saved_artists_to_table(&saved_artists);
+      self.set_saved_artists_to_table(saved_artists);
     }
   }
 
@@ -810,7 +810,7 @@ impl App {
     }
 
     if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None).cloned() {
-      self.set_saved_tracks_to_table(&saved_tracks);
+      self.set_saved_tracks_to_table(saved_tracks);
     }
   }
 
