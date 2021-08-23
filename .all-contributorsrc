@@ -814,6 +814,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "JSextonn",
+      "name": "Justin Sexton",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20236003?v=4",
+      "profile": "https://justinsexton.net",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
