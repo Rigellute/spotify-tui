@@ -823,6 +823,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lejiati",
+      "name": "Jiati Le",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6442124?v=4",
+      "profile": "https://github.com/lejiati",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
