@@ -302,7 +302,7 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
         ));
 
         // Based on the size of the terminal, adjust how many lines are
-        // dislayed in the help menu
+        // displayed in the help menu
         if app.size.height > 8 {
           app.help_menu_max_lines = (app.size.height as u32) - 8;
         } else {
