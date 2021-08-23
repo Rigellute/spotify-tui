@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fixed rate limiting issue [#852](https://github.com/Rigellute/spotify-tui/pull/852)
+
 ## [0.24.0] - 2021-04-26
 
 ### Fixed
