@@ -832,6 +832,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "cobbinma",
+      "name": "Matthew Cobbing",
+      "avatar_url": "https://avatars.githubusercontent.com/u/578718?v=4",
+      "profile": "https://github.com/cobbinma",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
