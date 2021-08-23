@@ -1035,10 +1035,7 @@ impl<'a> Network<'a> {
 
   async fn get_recommendations_for_track_id(&mut self, id: String, country: Option<Country>) {
     if let Ok(track) = self.spotify.track(&id).await {
-      let track_id_list: Option<Vec<String>> = match &track.id {
-        Some(id) => Some(vec![id.to_string()]),
-        None => None,
-      };
+      let track_id_list = track.id.as_ref().map(|id| vec![id.to_string()]);
       self
         .get_recommendations_for_seed(None, track_id_list, Box::new(Some(track)), country)
         .await;

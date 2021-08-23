@@ -267,10 +267,8 @@ fn handle_recommended_tracks(app: &mut App) {
   let (selected_index, tracks) = (&app.track_table.selected_index, &app.track_table.tracks);
   if let Some(track) = tracks.get(*selected_index) {
     let first_track = track.clone();
-    let track_id_list: Option<Vec<String>> = match &track.id {
-      Some(id) => Some(vec![id.to_string()]),
-      None => None,
-    };
+    let track_id_list = track.id.as_ref().map(|id| vec![id.to_string()]);
+
     app.recommendations_context = Some(RecommendationsContext::Song);
     app.recommendations_seed = first_track.name.clone();
     app.get_recommendations_for_seed(None, track_id_list, Some(first_track));
@@ -321,14 +319,10 @@ fn on_enter(app: &mut App) {
       TrackTableContext::MyPlaylists => {
         if let Some(_track) = tracks.get(*selected_index) {
           let context_uri = match (&app.active_playlist_index, &app.playlists) {
-            (Some(active_playlist_index), Some(playlists)) => {
-              if let Some(selected_playlist) = playlists.items.get(active_playlist_index.to_owned())
-              {
-                Some(selected_playlist.uri.to_owned())
-              } else {
-                None
-              }
-            }
+            (Some(active_playlist_index), Some(playlists)) => playlists
+              .items
+              .get(active_playlist_index.to_owned())
+              .map(|selected_playlist| selected_playlist.uri.to_owned()),
             _ => None,
           };
 
@@ -379,16 +373,10 @@ fn on_enter(app: &mut App) {
             &app.search_results.selected_playlists_index,
             &app.search_results.playlists,
           ) {
-            (Some(selected_playlist_index), Some(playlist_result)) => {
-              if let Some(selected_playlist) = playlist_result
-                .items
-                .get(selected_playlist_index.to_owned())
-              {
-                Some(selected_playlist.uri.to_owned())
-              } else {
-                None
-              }
-            }
+            (Some(selected_playlist_index), Some(playlist_result)) => playlist_result
+              .items
+              .get(selected_playlist_index.to_owned())
+              .map(|selected_playlist| selected_playlist.uri.to_owned()),
             _ => None,
           };
 
