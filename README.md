@@ -254,6 +254,8 @@ behavior:
   repeat_context_icon: 🔁
   playing_icon: ▶
   paused_icon: ⏸
+  # Sets the window title to "spt - Spotify TUI" via ANSI escape code.
+  set_window_title: true
 
 keybindings:
   # Key stroke can be used if it only uses two keys:
