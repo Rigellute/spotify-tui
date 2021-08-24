@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.25.0] - 2021-08-24
+
+### Fixed
+
 - Fixed rate limiting issue [#852](https://github.com/Rigellute/spotify-tui/pull/852)
 - Fix double navigation to same route [#826](https://github.com/Rigellute/spotify-tui/pull/826)
 
