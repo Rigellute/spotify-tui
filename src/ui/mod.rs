@@ -116,7 +116,7 @@ where
         .border_style(help_menu_style),
     )
     .style(help_menu_style)
-    .widths(&[Constraint::Max(110)]);
+    .widths(&[Constraint::Percentage(100)]);
   f.render_widget(help_menu, chunks[0]);
 }
 
