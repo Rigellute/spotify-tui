@@ -470,9 +470,10 @@ where
             }
           }
           album_artist.push_str(&format!(
-            "{} - {}",
+            "{} - {} ({})",
             item.name.to_owned(),
-            create_artist_string(&item.artists)
+            create_artist_string(&item.artists),
+            item.album_type.as_deref().unwrap()
           ));
           album_artist
         })
@@ -1237,9 +1238,10 @@ where
           }
         }
         album_artist.push_str(&format!(
-          "{} - {}",
+          "{} - {} ({})",
           item.name.to_owned(),
-          create_artist_string(&item.artists)
+          create_artist_string(&item.artists),
+          item.album_type.as_deref().unwrap()
         ));
         album_artist
       })
