@@ -14,6 +14,7 @@ pub fn handler(key: Key, app: &mut App) {
       let next_index = common_key_events::on_down_press_handler(
         &app.track_table.tracks,
         Some(app.track_table.selected_index),
+        &mut app.movement_count,
       );
       app.track_table.selected_index = next_index;
     }
@@ -21,6 +22,7 @@ pub fn handler(key: Key, app: &mut App) {
       let next_index = common_key_events::on_up_press_handler(
         &app.track_table.tracks,
         Some(app.track_table.selected_index),
+        &mut app.movement_count,
       );
       app.track_table.selected_index = next_index;
     }
@@ -36,6 +38,7 @@ pub fn handler(key: Key, app: &mut App) {
       let next_index = common_key_events::on_low_press_handler(&app.track_table.tracks);
       app.track_table.selected_index = next_index;
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Enter => {
       on_enter(app);
     }

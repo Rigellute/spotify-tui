@@ -9,6 +9,7 @@ pub fn handler(key: Key, app: &mut App) {
         let next_index = common_key_events::on_down_press_handler(
           &recently_played_result.items,
           Some(app.recently_played.index),
+          &mut app.movement_count,
         );
         app.recently_played.index = next_index;
       }
@@ -18,6 +19,7 @@ pub fn handler(key: Key, app: &mut App) {
         let next_index = common_key_events::on_up_press_handler(
           &recently_played_result.items,
           Some(app.recently_played.index),
+          &mut app.movement_count,
         );
         app.recently_played.index = next_index;
       }
@@ -49,6 +51,7 @@ pub fn handler(key: Key, app: &mut App) {
         };
       };
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Enter => {
       if let Some(recently_played_result) = &app.recently_played.result.clone() {
         let track_uris: Vec<String> = recently_played_result

@@ -12,12 +12,16 @@ pub fn handler(key: Key, app: &mut App) {
       let next_index = common_key_events::on_down_press_handler(
         &LIBRARY_OPTIONS,
         Some(app.library.selected_index),
+        &mut app.movement_count,
       );
       app.library.selected_index = next_index;
     }
     k if common_key_events::up_event(k) => {
-      let next_index =
-        common_key_events::on_up_press_handler(&LIBRARY_OPTIONS, Some(app.library.selected_index));
+      let next_index = common_key_events::on_up_press_handler(
+        &LIBRARY_OPTIONS,
+        Some(app.library.selected_index),
+        &mut app.movement_count,
+      );
       app.library.selected_index = next_index;
     }
     k if common_key_events::high_event(k) => {
@@ -32,6 +36,7 @@ pub fn handler(key: Key, app: &mut App) {
       let next_index = common_key_events::on_low_press_handler(&LIBRARY_OPTIONS);
       app.library.selected_index = next_index
     }
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     // `library` should probably be an array of structs with enums rather than just using indexes
     // like this
     Key::Enter => match app.library.selected_index {

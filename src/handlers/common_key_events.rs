@@ -1,6 +1,5 @@
 use super::super::app::{ActiveBlock, App, RouteId};
 use crate::event::Key;
-
 pub fn down_event(key: Key) -> bool {
   matches!(key, Key::Down | Key::Char('j') | Key::Ctrl('n'))
 }
@@ -29,16 +28,50 @@ pub fn low_event(key: Key) -> bool {
   matches!(key, Key::Char('L'))
 }
 
-pub fn on_down_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
+pub fn count_event(key: Key) -> bool {
+  matches!(
+    key,
+    Key::Char('0')
+      | Key::Char('1')
+      | Key::Char('2')
+      | Key::Char('3')
+      | Key::Char('4')
+      | Key::Char('5')
+      | Key::Char('6')
+      | Key::Char('7')
+      | Key::Char('8')
+      | Key::Char('9')
+  )
+}
+
+fn read_movement_count(movement_count: &mut Option<String>) -> usize {
+  let count = match movement_count {
+    Some(count) => count.parse::<usize>().unwrap_or(1),
+    None => 1,
+  };
+  *movement_count = None;
+  count
+}
+
+pub fn on_down_press_handler<T>(
+  selection_data: &[T],
+  selection_index: Option<usize>,
+  movement_count: &mut Option<String>,
+) -> usize {
   match selection_index {
     Some(selection_index) => {
       if !selection_data.is_empty() {
-        let next_index = selection_index + 1;
-        if next_index > selection_data.len() - 1 {
+        let movement_count = read_movement_count(movement_count);
+
+        if selection_index == selection_data.len() - 1 && movement_count == 1 {
           return 0;
-        } else {
-          return next_index;
         }
+
+        if selection_index + movement_count > selection_data.len() - 1 {
+          return selection_data.len() - 1;
+        }
+
+        return selection_index + movement_count;
       }
       0
     }
@@ -46,15 +79,25 @@ pub fn on_down_press_handler<T>(selection_data: &[T], selection_index: Option<us
   }
 }
 
-pub fn on_up_press_handler<T>(selection_data: &[T], selection_index: Option<usize>) -> usize {
+pub fn on_up_press_handler<T>(
+  selection_data: &[T],
+  selection_index: Option<usize>,
+  movement_count: &mut Option<String>,
+) -> usize {
   match selection_index {
     Some(selection_index) => {
       if !selection_data.is_empty() {
-        if selection_index > 0 {
-          return selection_index - 1;
-        } else {
+        let movement_count = read_movement_count(movement_count);
+
+        if selection_index == 0 && movement_count == 1 {
           return selection_data.len() - 1;
         }
+
+        if selection_index < movement_count {
+          return 0;
+        }
+
+        return selection_index - movement_count;
       }
       0
     }
@@ -76,6 +119,19 @@ pub fn on_middle_press_handler<T>(selection_data: &[T]) -> usize {
 
 pub fn on_low_press_handler<T>(selection_data: &[T]) -> usize {
   selection_data.len() - 1
+}
+
+pub fn handle_count_event(k: Key, app: &mut App) {
+  if let Key::Char(digit) = k {
+    if let Some(count) = &mut app.movement_count {
+      count.push(digit)
+    } else {
+      if digit == '0' {
+        return;
+      }
+      app.movement_count = Some(String::from(digit));
+    }
+  }
 }
 
 pub fn handle_right_event(app: &mut App) {
@@ -153,14 +209,26 @@ mod tests {
     let data = vec!["Choice 1", "Choice 2", "Choice 3"];
 
     let index = 0;
-    let next_index = on_down_press_handler(&data, Some(index));
+    let next_index = on_down_press_handler(&data, Some(index), &mut None);
 
     assert_eq!(next_index, 1);
 
     // Selection wrap if on last item
     let index = data.len() - 1;
-    let next_index = on_down_press_handler(&data, Some(index));
+    let next_index = on_down_press_handler(&data, Some(index), &mut None);
     assert_eq!(next_index, 0);
+
+    // Movement count, if present, is used to determine next index
+    let index = 0;
+    let mut movement_count = Some(String::from("2"));
+    let next_index = on_down_press_handler(&data, Some(index), &mut movement_count);
+    assert_eq!(next_index, 2);
+
+    // Movement count that results in out-of-bounds index leaves index at last element
+    let index = 0;
+    let mut movement_count = Some(String::from("3"));
+    let next_index = on_down_press_handler(&data, Some(index), &mut movement_count);
+    assert_eq!(next_index, 2);
   }
 
   #[test]
@@ -168,13 +236,25 @@ mod tests {
     let data = vec!["Choice 1", "Choice 2", "Choice 3"];
 
     let index = data.len() - 1;
-    let next_index = on_up_press_handler(&data, Some(index));
+    let next_index = on_up_press_handler(&data, Some(index), &mut None);
 
     assert_eq!(next_index, index - 1);
 
     // Selection wrap if on first item
     let index = 0;
-    let next_index = on_up_press_handler(&data, Some(index));
+    let next_index = on_up_press_handler(&data, Some(index), &mut None);
     assert_eq!(next_index, data.len() - 1);
+
+    // Movement count, if present, is used to determine next index
+    let index = 2;
+    let mut movement_count = Some(String::from("2"));
+    let next_index = on_up_press_handler(&data, Some(index), &mut movement_count);
+    assert_eq!(next_index, 0);
+
+    // Movement count that results in out-of-bounds index leaves index at first element
+    let index = 2;
+    let mut movement_count = Some(String::from("3"));
+    let next_index = on_up_press_handler(&data, Some(index), &mut movement_count);
+    assert_eq!(next_index, 0);
   }
 }

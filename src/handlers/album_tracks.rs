@@ -14,6 +14,7 @@ pub fn handler(key: Key, app: &mut App) {
           let next_index = common_key_events::on_down_press_handler(
             &selected_album.album.tracks.items,
             Some(app.saved_album_tracks_index),
+            &mut app.movement_count,
           );
           app.saved_album_tracks_index = next_index;
         };
@@ -23,6 +24,7 @@ pub fn handler(key: Key, app: &mut App) {
           let next_index = common_key_events::on_down_press_handler(
             &selected_album_simplified.tracks.items,
             Some(selected_album_simplified.selected_index),
+            &mut app.movement_count,
           );
           selected_album_simplified.selected_index = next_index;
         }
@@ -34,6 +36,7 @@ pub fn handler(key: Key, app: &mut App) {
           let next_index = common_key_events::on_up_press_handler(
             &selected_album.album.tracks.items,
             Some(app.saved_album_tracks_index),
+            &mut app.movement_count,
           );
           app.saved_album_tracks_index = next_index;
         };
@@ -43,6 +46,7 @@ pub fn handler(key: Key, app: &mut App) {
           let next_index = common_key_events::on_up_press_handler(
             &selected_album_simplified.tracks.items,
             Some(selected_album_simplified.selected_index),
+            &mut app.movement_count,
           );
           selected_album_simplified.selected_index = next_index;
         }
@@ -51,6 +55,7 @@ pub fn handler(key: Key, app: &mut App) {
     k if common_key_events::high_event(k) => handle_high_event(app),
     k if common_key_events::middle_event(k) => handle_middle_event(app),
     k if common_key_events::low_event(k) => handle_low_event(app),
+    k if common_key_events::count_event(k) => common_key_events::handle_count_event(k, app),
     Key::Char('s') => handle_save_event(app),
     Key::Char('w') => handle_save_album_event(app),
     Key::Enter => match app.album_table_context {

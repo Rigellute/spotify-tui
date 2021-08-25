@@ -323,6 +323,7 @@ pub struct App {
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
+  pub movement_count: Option<String>,
 }
 
 impl Default for App {
@@ -410,6 +411,7 @@ impl Default for App {
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
+      movement_count: None,
     }
   }
 }
