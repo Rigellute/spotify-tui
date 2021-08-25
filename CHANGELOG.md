@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Show `album_type` in Search panes [#868](https://github.com/Rigellute/spotify-tui/pull/868)
+
 ## [0.25.0] - 2021-08-24
 
 ### Fixed
