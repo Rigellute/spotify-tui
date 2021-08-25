@@ -219,6 +219,7 @@ pub struct BehaviorConfigString {
   pub repeat_context_icon: Option<String>,
   pub playing_icon: Option<String>,
   pub paused_icon: Option<String>,
+  pub error_log: Option<String>,
 }
 
 #[derive(Clone)]
@@ -235,6 +236,7 @@ pub struct BehaviorConfig {
   pub repeat_context_icon: String,
   pub playing_icon: String,
   pub paused_icon: String,
+  pub error_log: Option<String>,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -297,6 +299,7 @@ impl UserConfig {
         repeat_context_icon: "🔁".to_string(),
         playing_icon: "▶".to_string(),
         paused_icon: "⏸".to_string(),
+        error_log: None,
       },
       path_to_config: None,
     }
@@ -452,6 +455,10 @@ impl UserConfig {
 
     if let Some(repeat_context_icon) = behavior_config.repeat_context_icon {
       self.behavior.repeat_context_icon = repeat_context_icon;
+    }
+
+    if let Some(error_log) = behavior_config.error_log {
+      self.behavior.error_log = Some(error_log);
     }
 
     Ok(())
