@@ -22,7 +22,7 @@ serde_yaml = "0.8"
 dirs = "3.0.1"
 clap = "2.33.3"
 unicode-width = "0.1.8"
-backtrace = "0.3.56"
+backtrace = "0.3.57"
 arboard = "1.2.0"
 crossterm = "0.20"
 tokio = { version = "0.2", features = ["full"] }
