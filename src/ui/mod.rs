@@ -473,7 +473,7 @@ where
             "{} - {} ({})",
             item.name.to_owned(),
             create_artist_string(&item.artists),
-            item.album_type.as_deref().unwrap()
+            item.album_type.as_deref().unwrap_or("unknown")
           ));
           album_artist
         })
@@ -1241,7 +1241,7 @@ where
           "{} - {} ({})",
           item.name.to_owned(),
           create_artist_string(&item.artists),
-          item.album_type.as_deref().unwrap()
+          item.album_type.as_deref().unwrap_or("unknown")
         ));
         album_artist
       })
