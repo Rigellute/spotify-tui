@@ -841,6 +841,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Milo123459",
+      "name": "Milo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50248166?v=4",
+      "profile": "https://milo123459.vercel.app",
+      "contributions": [
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,
