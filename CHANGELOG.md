@@ -5,6 +5,7 @@
 ### Added
 
 - Show `album_type` in Search panes [#868](https://github.com/Rigellute/spotify-tui/pull/868)
+- Add option to set window title to "spt - Spotify TUI" on startup [#844](https://github.com/Rigellute/spotify-tui/pull/844)
 
 ## [0.25.0] - 2021-08-24
 
