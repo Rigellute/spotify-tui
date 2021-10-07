@@ -181,7 +181,7 @@ But here they are again:
 
 And now you are ready to use the `spotify-tui` 🎉
 
-You can edit the config at anytime at `${HOME}/.config/spotify-tui/client.yml`. (for snap `${HOME}/snap/spt/current/.config/spotify-tui/client.yml`)
+You can edit the config at anytime at `${HOME}/.config/spotify-tui/client.yml` (respects `XDG_CONFIG_HOME`). (for snap `${HOME}/snap/spt/current/.config/spotify-tui/client.yml`)
 
 ## Usage
 
@@ -208,7 +208,7 @@ spt search "An even cooler song" --tracks --format "%t from %b" --limit 30
 
 # Configuration
 
-A configuration file is located at `${HOME}/.config/spotify-tui/config.yml`, for snap `${HOME}/snap/spt/current/.config/spotify-tui/config.yml`
+A configuration file is located at `${HOME}/.config/spotify-tui/config.yml` (respects `XDG_CONFIG_HOME`), for snap `${HOME}/snap/spt/current/.config/spotify-tui/config.yml`
 (not to be confused with client.yml which handles spotify authentication)
 
 The following is a sample config.yml file:

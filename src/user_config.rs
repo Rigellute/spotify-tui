@@ -2,7 +2,7 @@ use crate::event::Key;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::{
-  fs,
+  env, fs,
   path::{Path, PathBuf},
 };
 use tui::style::Color;
@@ -309,7 +309,10 @@ impl UserConfig {
     match dirs::home_dir() {
       Some(home) => {
         let path = Path::new(&home);
-        let home_config_dir = path.join(CONFIG_DIR);
+        let home_config_dir = match env::var("XDG_CONFIG_HOME") {
+          Ok(val) => Path::new(&val).to_path_buf(),
+          Err(_e) => path.join(CONFIG_DIR),
+        };
         let app_config_dir = home_config_dir.join(APP_CONFIG_DIR);
 
         if !home_config_dir.exists() {
