@@ -158,6 +158,7 @@ pub enum RouteId {
   Podcasts,
   PodcastEpisodes,
   Recommendations,
+  Dialog,
 }
 
 #[derive(Debug)]
