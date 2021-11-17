@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix confirmation dialog handling on playlist delete [#910](https://github.com/Rigellute/spotify-tui/pull/910)
+
 ### Added
 
 - Show `album_type` in Search panes [#868](https://github.com/Rigellute/spotify-tui/pull/868)
