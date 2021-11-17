@@ -768,13 +768,8 @@ impl App {
       }
       None => {
         if let Some(saved_artists) = &self.library.saved_artists.clone().get_results(None) {
-          match saved_artists.items.last() {
-            Some(last_artist) => {
-              self.dispatch(IoEvent::GetFollowedArtists(Some(last_artist.id.clone())));
-            }
-            None => {
-              return;
-            }
+          if let Some(last_artist) = saved_artists.items.last() {
+            self.dispatch(IoEvent::GetFollowedArtists(Some(last_artist.id.clone())));
           }
         }
       }
