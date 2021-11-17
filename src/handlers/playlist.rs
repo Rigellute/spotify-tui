@@ -2,7 +2,7 @@ use super::{
   super::app::{App, DialogContext, TrackTableContext},
   common_key_events,
 };
-use crate::app::ActiveBlock;
+use crate::app::{ActiveBlock, RouteId};
 use crate::event::Key;
 use crate::network::IoEvent;
 
@@ -78,8 +78,10 @@ pub fn handler(key: Key, app: &mut App) {
         app.dialog = Some(selected_playlist.clone());
         app.confirm = false;
 
-        let route = app.get_current_route().id.clone();
-        app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistWindow));
+        app.push_navigation_stack(
+          RouteId::Dialog,
+          ActiveBlock::Dialog(DialogContext::PlaylistWindow),
+        );
       }
     }
     _ => {}

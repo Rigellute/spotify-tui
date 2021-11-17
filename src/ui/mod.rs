@@ -276,6 +276,7 @@ where
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
     RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
     RouteId::BasicView => {} // This is handled as a "full screen" route in main.rs
+    RouteId::Dialog => {} // This is handled in the draw_dialog function in mod.rs
   };
 }
 

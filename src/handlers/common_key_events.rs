@@ -134,6 +134,7 @@ pub fn handle_right_event(app: &mut App) {
       RouteId::Error => {}
       RouteId::Analysis => {}
       RouteId::BasicView => {}
+      RouteId::Dialog => {}
     },
     _ => {}
   };

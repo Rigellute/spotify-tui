@@ -527,8 +527,10 @@ pub fn handler(key: Key, app: &mut App) {
           app.dialog = Some(selected_playlist.clone());
           app.confirm = false;
 
-          let route = app.get_current_route().id.clone();
-          app.push_navigation_stack(route, ActiveBlock::Dialog(DialogContext::PlaylistSearch));
+          app.push_navigation_stack(
+            RouteId::Dialog,
+            ActiveBlock::Dialog(DialogContext::PlaylistSearch),
+          );
         }
       }
       SearchResultBlock::ShowSearch => app.user_unfollow_show(ActiveBlock::SearchResultBlock),
