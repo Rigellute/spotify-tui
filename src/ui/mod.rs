@@ -26,6 +26,9 @@ use util::{
   millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
+// new: for file logging
+use std::io::Write;
+
 pub enum TableId {
   Album,
   AlbumList,
@@ -271,6 +274,10 @@ where
     }
     RouteId::Recommendations => {
       draw_recommendations_table(f, app, chunks[1]);
+    }
+    // new: lyrics route
+    RouteId::Lyrics => {
+      draw_lyrics_box(f, app, chunks[1])
     }
     RouteId::Error => {} // This is handled as a "full screen" route in main.rs
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
@@ -1349,6 +1356,79 @@ where
         .add_modifier(Modifier::BOLD),
     );
   f.render_stateful_widget(list, chunks[1], &mut state);
+}
+
+// new: added a function to draw the lyrics box
+pub fn draw_lyrics_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints([Constraint::Length(7), Constraint::Length(93)].as_ref())
+    .margin(2)
+    .split(layout_chunk);
+
+  let current_route = app.get_current_route();
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::Lyrics,
+    current_route.hovered_block == ActiveBlock::Lyrics,
+  );
+
+
+  let lyrics = Block::default()
+    .title(Span::styled(
+      "Lyrics",
+      get_color(highlight_state, app.user_config.theme),
+    ))
+    .borders(Borders::ALL)
+    .border_style(get_color(highlight_state, app.user_config.theme));
+  f.render_widget(lyrics, layout_chunk);
+
+  // let lyrics_text = "Work it Harder, Make it Better\nDo it Faster, Makes us Stronger";
+
+  
+  let lyrics_text = match &app.current_lyrics {
+    Some(x) => x,
+    // The division was invalid
+    None    => "",
+  };
+  // let input_string = String::from(lyrics_text);
+  // let split = input_string.split("\n");
+  // let mut file = std::fs::File::create("out.txt").expect("create failed");
+  // file.write_all(new_string.as_bytes()).expect("write failed");
+
+  // file.write_all("\n\nprova\n\nprova\r\n..".as_bytes()).expect("write failed");
+  // let text = Text::from(new_string);
+
+  let new_string = lyrics_text.replace("\\n", "\n");
+
+
+
+
+  let mut top_text = Text::from("Lyrics powered by Giorgioskij");
+  top_text.patch_style(Style::default().fg(app.user_config.theme.banner));
+
+  let bottom_text_raw = format!(
+    "{}{}",
+    "\nLyrics: \n\n",
+    new_string
+  );
+  let bottom_text = Text::from(bottom_text_raw.as_str());
+
+  // lyrics title
+  let top_text = Paragraph::new(top_text)
+    .style(Style::default().fg(app.user_config.theme.text))
+    .block(Block::default());
+  f.render_widget(top_text, chunks[0]);
+
+  // actual lyrics
+  let bottom_text = Paragraph::new(bottom_text)
+    .style(Style::default().fg(app.user_config.theme.text))
+    .block(Block::default())
+    .wrap(Wrap { trim: false })
+    .scroll((app.home_scroll, 0));
+  f.render_widget(bottom_text, chunks[1]);
 }
 
 pub fn draw_album_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)

@@ -173,6 +173,8 @@ pub struct KeyBindingsString {
   audio_analysis: Option<String>,
   basic_view: Option<String>,
   add_item_to_queue: Option<String>,
+  //new: add keybinding string show_lyrics
+  show_lyrics: Option<String>,
 }
 
 #[derive(Clone)]
@@ -203,6 +205,8 @@ pub struct KeyBindings {
   pub audio_analysis: Key,
   pub basic_view: Key,
   pub add_item_to_queue: Key,
+  // new: define show_lyrics keybinding
+  pub show_lyrics: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -285,6 +289,8 @@ impl UserConfig {
         audio_analysis: Key::Char('v'),
         basic_view: Key::Char('B'),
         add_item_to_queue: Key::Char('z'),
+        // new: added key to view lyrics
+        show_lyrics: Key::Ctrl('l'),
       },
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
@@ -368,6 +374,8 @@ impl UserConfig {
     to_keys!(audio_analysis);
     to_keys!(basic_view);
     to_keys!(add_item_to_queue);
+    //new: for some reason add lyrics key here
+    to_keys!(show_lyrics);
 
     Ok(())
   }

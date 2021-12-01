@@ -21,6 +21,8 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
+// new: added (i think) import to module lyrics
+mod lyrics;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
@@ -93,6 +95,11 @@ pub fn handle_app(key: Key, app: &mut App) {
     }
     _ if key == app.user_config.keys.basic_view => {
       app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
+    }
+    // new: added handler for show_lyrics shortcut TOCHANGE
+    _ if key == app.user_config.keys.show_lyrics => {
+      // app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
+      handle_show_lyrics(app);
     }
     _ => handle_block_events(key, app),
   }
@@ -168,6 +175,10 @@ fn handle_block_events(key: Key, app: &mut App) {
     ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);
     }
+    // new: added activeblock handler lyrics
+    ActiveBlock::Lyrics => {
+      lyrics::handler(key, app);
+    }
   }
 }
 
@@ -207,6 +218,17 @@ fn handle_jump_to_context(app: &mut App) {
         _ => {}
       }
     }
+  }
+}
+
+// new: function to handle the show_lyrics event- currently almost copypasted from handle_jump_to_album TOCHANGE
+fn handle_show_lyrics(app: &mut App) {
+  // TOCHANGE - no clue what this does
+  // if let Some(CurrentlyPlaybackContext {
+  //   item: Some(item), ..
+  // }) = app.current_playback_context.to_owned()
+  {
+    app.dispatch(IoEvent::GetLyrics);
   }
 }
 
