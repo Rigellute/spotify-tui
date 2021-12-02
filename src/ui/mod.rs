@@ -1388,7 +1388,7 @@ where
   };
 
   let mut top_text = Text::from("\nPowered by Lyrics.ovh");
-  top_text.patch_style(Style::default().fg(app.user_config.theme.banner));
+  top_text.patch_style(Style::default().fg(app.user_config.theme.text));
 
   let bottom_text_raw = format!(
     "{}",

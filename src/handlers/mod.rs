@@ -220,7 +220,7 @@ fn handle_jump_to_context(app: &mut App) {
   }
 }
 
-// new: function to handle the show_lyrics event- currently almost copypasted from handle_jump_to_album TOCHANGE
+// new: function to handle the show_lyrics event
 fn handle_show_lyrics(app: &mut App) {
   if let Some(CurrentlyPlaybackContext {
     item: Some(item), ..

@@ -1,4 +1,4 @@
-//new: new module for the lyrics - currently copypasting home.rs TOCHANGE
+//new: new module for the lyrics
 use super::{super::app::App, common_key_events};
 use crate::event::Key;
 
