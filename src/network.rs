@@ -32,20 +32,6 @@ use std::{
 use tokio::sync::Mutex;
 use tokio::try_join;
 
-// new: TOCHANGE do request right here
-// use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
-// use reqwest::Client;
-// use reqwest::Method;
-// use reqwest::StatusCode;
-use std::io::Write;
-use ureq::Error;
-// use serde::de::Deserialize;
-// use isahc::prelude::*;
-
-
-
-// new: try to add import of lyrics client TOCHANGE
-// use crate::lyrics_client::LyricsOvh;
 
 #[derive(Debug)]
 pub enum IoEvent {
@@ -104,7 +90,7 @@ pub enum IoEvent {
   GetShow(String),
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
-  // new: added GetLyrics event
+  // new: added GetLyrics event - takes artist name and song name
   GetLyrics(String, String),
 }
 
@@ -135,8 +121,6 @@ pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
 pub struct Network<'a> {
   oauth: SpotifyOAuth,
   pub spotify: Spotify,
-  // new: added lyricsovh client TOCHANGE
-  // pub lyrics_finder: LyricsOvh
   large_search_limit: u32,
   small_search_limit: u32,
   pub client_config: ClientConfig,
@@ -1514,148 +1498,47 @@ impl<'a> Network<'a> {
     }
   }
 
+  // new: function to get the lyrics for a song - relies on a separate function to be api-independent
   async fn get_lyrics(&mut self, artist: String, song: String) {
-
     let mut app = self.app.lock().await;
-
     match self.send_lyrics_request(artist, song).await {
-      Ok(lyrics) => {
+      Some(lyrics) => {
         app.current_lyrics = Some(lyrics);
         app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
       }
-      Err(e) => {
-        // self.handle_error(anyhow!(e)).await;
-        app.current_lyrics = Some("Lyrics not available for this song".to_string());
+      None => {
+        app.current_lyrics = None;
         app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
       }
     }
- 
   }
 
-
-  async fn send_lyrics_request(&mut self, artist: String, song: String) -> Result<String, ureq::Error> {
-    
-    // let client = Client::new();
-    // let url = "https://api.lyrics.ovh/v1/Yuna/Blank Marquee";
-    // let builder = client.request(Method::GET, url);
-
-    // let response = builder.send().await?;
-
-
-    // with REQWEST
-    // match reqwest::get("https://www.rust-lang.org").await {
-    //   Ok(r) => Ok(r.text().await?),
-    //   Err(e)   => Err(e),
-    // }
-    
-    let mut file = std::fs::File::create("out.txt").expect("create failed");
-    file.write_all(format!("artist: {}, song: {}", artist, song).as_bytes()).expect("write failed");
-
-
-    // with ISAHC 
-    // let mut response = isahc::get("https://api.lyrics.ovh/v1/Yuna/Blank Marquee")?;
-    // let client = reqwest::Client::new();
-    // let body = reqwest::get("https://www.rust-lang.org").await?
-    //   .text()
-    //   .await?;
-
-    
-    // file.write_all(format!("body = {:?}", body).as_bytes()).expect("write failed");
-
-    // file.write_all(format!("Status: {}\nbody: {:?}", response.status(), response.text()?).as_bytes()).expect("write failed");
-
-    // match ureq::get("https://api.lyrics.ovh/v1/Yuna/Blank Marquee").call() {
-    //   Ok(response) => {
-    //     file.write_all(format!("\nresponse: {:?}", response).as_bytes()).expect("write failed");
-    //   }
-    //   Err(Error::Status(code, response)) => {
-    //     file.write_all(format!("\ncode: {}, response: {:?}", code, response).as_bytes()).expect("write failed");
-    //   }
-    //   Err(_) => {
-    //     file.write_all("\nsome other error".as_bytes()).expect("write failed");
-    //   }
-    // }
-
-    // THIS KINDA WORKS OMGGGG
-    // let body: String = ureq::get("https://api.lyrics.ovh/v1/Yuna/Blank Marquee")
-    //   .call()?
-    //   .into_string()?;
-    // Ok(body)
-
-    
-
-    // LESSGO BABYYYYIFYASDFIOPYASD HGUIOHAGS SDAGJHNKL; JHKL; DFASHKL;ASKL;DG ASD        THIS  IS IT 
+  // new: send a request to the lyrics provider
+  // returns lyrics if found, None if an error happens with the request or the parsing 
+  // this is the only function that needs to be changed to change lyrics provider 
+  async fn send_lyrics_request(&mut self, artist: String, song: String) -> Option<String> {
     let url = String::from("https://api.lyrics.ovh/v1/");
     let url_with_params = url + &artist + "/" + &song;
-    // url.push_str(artist);
-    // url.push_str("/");
-    // url.push_str(song);
-    // let json: serde_json::Value = 
     let response = ureq::get(&url_with_params)
-      .call();//?;
-      // .into_json()?;
+      .call();
 
     #[derive(Deserialize)]
     struct LyricsResponse {
         lyrics: String,
-    };
-
-    match response {
-      Ok(response) => {
-        // let json: serde_json::Value = response.into_json()?;
-        // let json = response.into_json()?;
-        let p:LyricsResponse = serde_json::from_str(&response.into_string().unwrap()).unwrap();
-        // Ok(json["lyrics"].to_string())
-        Ok(p.lyrics)
-      },
-      Err(e) => {
-        // eprintln!("error with request");
-        Err(e)
-      },
     }
 
-
-
-    // let mut file = std::fs::File::create("out.txt").expect("create failed");
-    // file.write_all(format!("lyrics found: {}", json["lyrics"].to_string()).as_bytes()).expect("write failed");
-  
-  
-
-    // Ok(json["lyrics"].to_string())
-    
-    
-
-    // match response {
-    //   Ok(body) => file.write_all("request ok".as_bytes()).expect("write failed"),
-    //   Err(e) =>  file.write_all("error with the request".as_bytes()).expect("write failed"),
-    // };
-
-    // println!("response: {}", response.body());
-    
-    
-    // Ok(String::from("never gonna .."))
-    // Ok(response.text()?)
-
-
-    // if response.status().is_success() {
-    //   match response.text().await {
-    //       Ok(text) => Ok(text),
-    //       // Err(e) => Err(failure::err_msg(format!(
-    //       //     "Error getting text out of response {}",
-    //       //     e
-    //       // ))),
-    //       Err(e) => Err(e),
-    //   }
-    // } else {
-    //     // Err(failure::Error::from(
-    //     //     ApiError::from_response(response).await,
-    //     // ))
-    //     panic!("Problem retrieving lyrics");
-    // }
-
-    // let s = String::from("today is gonna be the day...");
-    // Ok(s)
-    
-
+    // parse the json from the http response.
+    // lyrics may start with an introductory line like "Paroles de la chanson ...":
+    // in that case, remove the first line.
+    match response {
+      Ok(x) => {
+        let json: LyricsResponse = serde_json::from_str(&x.into_string().ok()?).ok()?;
+        let mut lyrics = json.lyrics;
+        let first_word = lyrics.split(" ").next()?;
+        if first_word == "Paroles" {lyrics = lyrics.split_once("\n")?.1.to_owned();}
+        Some(lyrics)
+      }
+      Err(_) => None,
+    } 
   }
 }

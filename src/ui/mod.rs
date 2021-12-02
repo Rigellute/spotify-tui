@@ -26,8 +26,6 @@ use util::{
   millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
-// new: for file logging
-use std::io::Write;
 
 pub enum TableId {
   Album,
@@ -1358,7 +1356,7 @@ where
   f.render_stateful_widget(list, chunks[1], &mut state);
 }
 
-// new: added a function to draw the lyrics box
+// new: function to draw the lyrics box
 pub fn draw_lyrics_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
@@ -1375,7 +1373,6 @@ where
     current_route.hovered_block == ActiveBlock::Lyrics,
   );
 
-
   let lyrics = Block::default()
     .title(Span::styled(
       "Lyrics",
@@ -1385,43 +1382,10 @@ where
     .border_style(get_color(highlight_state, app.user_config.theme));
   f.render_widget(lyrics, layout_chunk);
 
-  
-  let mut lyrics_text = match &app.current_lyrics {
+  let lyrics_text = match &app.current_lyrics {
     Some(x) => x,
-    None    => "",
+    None    => "Lyrics not available for this song",
   };
-  // let input_string = String::from(lyrics_text);
-  // let split = input_string.split("\n");
-  // file.write_all(new_string.as_bytes()).expect("write failed");
-  
-  let mut file = std::fs::File::create("out.txt").expect("create failed");
-  
-  // let reparsed_string = lyrics_text.replace("\\n", "\n");
-  // let index = reparsed_string.find("\\r");
-  // file.write_all(format!("reparsed string: {}", reparsed_string).as_bytes()).expect("write failed");
-  // let new_string = match index {
-  //   Some(x) => {
-  //     file.write_all(format!("index: {}", x).as_bytes()).expect("write failed");
-  //     &reparsed_string[x+3..]
-  //   }
-  //   None => {
-  //     file.write_all(format!("not found").as_bytes()).expect("write failed");
-  //     &reparsed_string
-  //   }
-  // };
-  let first_word = lyrics_text.split(" ").next().unwrap();
-  if first_word == "Paroles" {
-    lyrics_text = match lyrics_text.split_once("\n") {
-      Some((a, b)) => b,
-      None => "",
-    };
-  }
-  // else {
-  //   let new_string = lyrics_text;
-  // }
-  
-  
-
 
   let mut top_text = Text::from("\nPowered by Lyrics.ovh");
   top_text.patch_style(Style::default().fg(app.user_config.theme.banner));
