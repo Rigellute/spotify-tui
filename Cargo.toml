@@ -28,6 +28,7 @@ crossterm = "0.20"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.8.4"
 anyhow = "1.0.43"
+ureq = {version = "2.0.0", features = ["json"] }
 
 [[bin]]
 bench = false

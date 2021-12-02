@@ -21,6 +21,7 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
+mod lyrics;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
 use crate::event::Key;
@@ -93,6 +94,9 @@ pub fn handle_app(key: Key, app: &mut App) {
     }
     _ if key == app.user_config.keys.basic_view => {
       app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
+    }
+    _ if key == app.user_config.keys.show_lyrics => {
+      handle_show_lyrics(app);
     }
     _ => handle_block_events(key, app),
   }
@@ -168,6 +172,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);
     }
+    ActiveBlock::Lyrics => {
+      lyrics::handler(key, app);
+    }
   }
 }
 
@@ -205,6 +212,24 @@ fn handle_jump_to_context(app: &mut App) {
           app.dispatch(IoEvent::GetPlaylistTracks(play_context.uri, 0))
         }
         _ => {}
+      }
+    }
+  }
+}
+
+fn handle_show_lyrics(app: &mut App) {
+  if let Some(CurrentlyPlaybackContext {
+    item: Some(item), ..
+  }) = app.current_playback_context.to_owned()
+  {
+    match item {
+      PlayingItem::Track(track) => {
+        if let Some(artist) = track.artists.first() {
+            app.dispatch(IoEvent::GetLyrics(artist.name.clone(), track.name.clone()));
+        }
+      }
+      PlayingItem::Episode(_episode) => {
+        // Do nothing for episode (yet!)
       }
     }
   }

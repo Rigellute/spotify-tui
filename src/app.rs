@@ -138,6 +138,7 @@ pub enum ActiveBlock {
   Artists,
   BasicView,
   Dialog(DialogContext),
+  Lyrics,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -159,6 +160,7 @@ pub enum RouteId {
   PodcastEpisodes,
   Recommendations,
   Dialog,
+  Lyrics,
 }
 
 #[derive(Debug)]
@@ -324,6 +326,7 @@ pub struct App {
   pub spotify_token_expiry: SystemTime,
   pub dialog: Option<String>,
   pub confirm: bool,
+  pub current_lyrics: Option<String>,
 }
 
 impl Default for App {
@@ -411,6 +414,7 @@ impl Default for App {
       spotify_token_expiry: SystemTime::now(),
       dialog: None,
       confirm: false,
+      current_lyrics: None,
     }
   }
 }

@@ -26,6 +26,7 @@ use util::{
   millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
+
 pub enum TableId {
   Album,
   AlbumList,
@@ -271,6 +272,9 @@ where
     }
     RouteId::Recommendations => {
       draw_recommendations_table(f, app, chunks[1]);
+    }
+    RouteId::Lyrics => {
+      draw_lyrics_box(f, app, chunks[1])
     }
     RouteId::Error => {} // This is handled as a "full screen" route in main.rs
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
@@ -1349,6 +1353,60 @@ where
         .add_modifier(Modifier::BOLD),
     );
   f.render_stateful_widget(list, chunks[1], &mut state);
+}
+
+pub fn draw_lyrics_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints([Constraint::Length(7), Constraint::Length(93)].as_ref())
+    .margin(1)
+    .split(layout_chunk);
+
+  let current_route = app.get_current_route();
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::Lyrics,
+    current_route.hovered_block == ActiveBlock::Lyrics,
+  );
+
+  let lyrics = Block::default()
+    .title(Span::styled(
+      "Lyrics",
+      get_color(highlight_state, app.user_config.theme),
+    ))
+    .borders(Borders::ALL)
+    .border_style(get_color(highlight_state, app.user_config.theme));
+  f.render_widget(lyrics, layout_chunk);
+
+  let lyrics_text = match &app.current_lyrics {
+    Some(x) => x,
+    None    => "Lyrics not available for this song",
+  };
+
+  let mut top_text = Text::from("\nPowered by Lyrics.ovh");
+  top_text.patch_style(Style::default().fg(app.user_config.theme.text));
+
+  let bottom_text_raw = format!(
+    "{}",
+    lyrics_text
+  );
+  let bottom_text = Text::from(bottom_text_raw.as_str());
+
+  // lyrics header
+  let top_text = Paragraph::new(top_text)
+    .style(Style::default().fg(app.user_config.theme.text))
+    .block(Block::default());
+  f.render_widget(top_text, chunks[0]);
+
+  // actual lyrics
+  let bottom_text = Paragraph::new(bottom_text)
+    .style(Style::default().fg(app.user_config.theme.text))
+    .block(Block::default())
+    .wrap(Wrap { trim: false })
+    .scroll((app.home_scroll, 0));
+  f.render_widget(bottom_text, chunks[1]);
 }
 
 pub fn draw_album_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
