@@ -1366,7 +1366,7 @@ where
   let chunks = Layout::default()
     .direction(Direction::Vertical)
     .constraints([Constraint::Length(7), Constraint::Length(93)].as_ref())
-    .margin(2)
+    .margin(1)
     .split(layout_chunk);
 
   let current_route = app.get_current_route();
@@ -1385,34 +1385,50 @@ where
     .border_style(get_color(highlight_state, app.user_config.theme));
   f.render_widget(lyrics, layout_chunk);
 
-  // let lyrics_text = "Work it Harder, Make it Better\nDo it Faster, Makes us Stronger";
-
   
-  let lyrics_text = match &app.current_lyrics {
+  let mut lyrics_text = match &app.current_lyrics {
     Some(x) => x,
-    // The division was invalid
     None    => "",
   };
   // let input_string = String::from(lyrics_text);
   // let split = input_string.split("\n");
-  // let mut file = std::fs::File::create("out.txt").expect("create failed");
   // file.write_all(new_string.as_bytes()).expect("write failed");
+  
+  let mut file = std::fs::File::create("out.txt").expect("create failed");
+  
+  // let reparsed_string = lyrics_text.replace("\\n", "\n");
+  // let index = reparsed_string.find("\\r");
+  // file.write_all(format!("reparsed string: {}", reparsed_string).as_bytes()).expect("write failed");
+  // let new_string = match index {
+  //   Some(x) => {
+  //     file.write_all(format!("index: {}", x).as_bytes()).expect("write failed");
+  //     &reparsed_string[x+3..]
+  //   }
+  //   None => {
+  //     file.write_all(format!("not found").as_bytes()).expect("write failed");
+  //     &reparsed_string
+  //   }
+  // };
+  let first_word = lyrics_text.split(" ").next().unwrap();
+  if first_word == "Paroles" {
+    lyrics_text = match lyrics_text.split_once("\n") {
+      Some((a, b)) => b,
+      None => "",
+    };
+  }
+  // else {
+  //   let new_string = lyrics_text;
+  // }
+  
+  
 
-  // file.write_all("\n\nprova\n\nprova\r\n..".as_bytes()).expect("write failed");
-  // let text = Text::from(new_string);
 
-  let new_string = lyrics_text.replace("\\n", "\n");
-
-
-
-
-  let mut top_text = Text::from("Lyrics powered by Giorgioskij");
+  let mut top_text = Text::from("\nPowered by Lyrics.ovh");
   top_text.patch_style(Style::default().fg(app.user_config.theme.banner));
 
   let bottom_text_raw = format!(
-    "{}{}",
-    "\nLyrics: \n\n",
-    new_string
+    "{}",
+    lyrics_text
   );
   let bottom_text = Text::from(bottom_text_raw.as_str());
 

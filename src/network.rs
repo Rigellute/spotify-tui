@@ -23,6 +23,7 @@ use rspotify::{
   senum::{AdditionalType, Country, RepeatState, SearchType},
   util::get_token,
 };
+use serde::Deserialize;
 use serde_json::{map::Map, Value};
 use std::{
   sync::Arc,
@@ -38,6 +39,7 @@ use tokio::try_join;
 // use reqwest::StatusCode;
 use std::io::Write;
 use ureq::Error;
+// use serde::de::Deserialize;
 // use isahc::prelude::*;
 
 
@@ -103,7 +105,7 @@ pub enum IoEvent {
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
   // new: added GetLyrics event
-  GetLyrics,
+  GetLyrics(String, String),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -321,8 +323,8 @@ impl<'a> Network<'a> {
         self.add_item_to_queue(item).await;
       }
       // new: define a handler for the GetLyrics event
-      IoEvent::GetLyrics => {
-        self.get_lyrics().await;
+      IoEvent::GetLyrics(artist, song) => {
+        self.get_lyrics(artist, song).await;
       } 
     };
 
@@ -1512,24 +1514,26 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_lyrics(&mut self) {
+  async fn get_lyrics(&mut self, artist: String, song: String) {
 
     let mut app = self.app.lock().await;
 
-    match self.send_lyrics_request().await {
+    match self.send_lyrics_request(artist, song).await {
       Ok(lyrics) => {
         app.current_lyrics = Some(lyrics);
         app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
       }
       Err(e) => {
-        self.handle_error(anyhow!(e)).await;
+        // self.handle_error(anyhow!(e)).await;
+        app.current_lyrics = Some("Lyrics not available for this song".to_string());
+        app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
       }
     }
  
   }
 
 
-  async fn send_lyrics_request(&mut self) -> Result<String, ureq::Error> {
+  async fn send_lyrics_request(&mut self, artist: String, song: String) -> Result<String, ureq::Error> {
     
     // let client = Client::new();
     // let url = "https://api.lyrics.ovh/v1/Yuna/Blank Marquee";
@@ -1544,8 +1548,8 @@ impl<'a> Network<'a> {
     //   Err(e)   => Err(e),
     // }
     
-    // let mut file = std::fs::File::create("out.txt").expect("create failed");
-    // file.write_all("about to send request\n".as_bytes()).expect("write failed");
+    let mut file = std::fs::File::create("out.txt").expect("create failed");
+    file.write_all(format!("artist: {}, song: {}", artist, song).as_bytes()).expect("write failed");
 
 
     // with ISAHC 
@@ -1578,12 +1582,46 @@ impl<'a> Network<'a> {
     //   .into_string()?;
     // Ok(body)
 
-    // LESSGO BABYYYYIFYASDFIOPYASD HGUIOHAGS SDAGJHNKL; JHKL; DFASHKL;ASKL;DG ASD        THIS  IS IT 
-    let json: serde_json::Value = ureq::get("https://api.lyrics.ovh/v1/Yuna/Blank Marquee")
-      .call()?
-      .into_json()?;
+    
 
-    Ok(json["lyrics"].to_string())
+    // LESSGO BABYYYYIFYASDFIOPYASD HGUIOHAGS SDAGJHNKL; JHKL; DFASHKL;ASKL;DG ASD        THIS  IS IT 
+    let url = String::from("https://api.lyrics.ovh/v1/");
+    let url_with_params = url + &artist + "/" + &song;
+    // url.push_str(artist);
+    // url.push_str("/");
+    // url.push_str(song);
+    // let json: serde_json::Value = 
+    let response = ureq::get(&url_with_params)
+      .call();//?;
+      // .into_json()?;
+
+    #[derive(Deserialize)]
+    struct LyricsResponse {
+        lyrics: String,
+    };
+
+    match response {
+      Ok(response) => {
+        // let json: serde_json::Value = response.into_json()?;
+        // let json = response.into_json()?;
+        let p:LyricsResponse = serde_json::from_str(&response.into_string().unwrap()).unwrap();
+        // Ok(json["lyrics"].to_string())
+        Ok(p.lyrics)
+      },
+      Err(e) => {
+        // eprintln!("error with request");
+        Err(e)
+      },
+    }
+
+
+
+    // let mut file = std::fs::File::create("out.txt").expect("create failed");
+    // file.write_all(format!("lyrics found: {}", json["lyrics"].to_string()).as_bytes()).expect("write failed");
+  
+  
+
+    // Ok(json["lyrics"].to_string())
     
     
 
