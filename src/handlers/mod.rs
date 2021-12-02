@@ -21,7 +21,6 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
-// new: added import to module lyrics
 mod lyrics;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
@@ -96,7 +95,6 @@ pub fn handle_app(key: Key, app: &mut App) {
     _ if key == app.user_config.keys.basic_view => {
       app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
     }
-    // new: added handler for show_lyrics shortcut
     _ if key == app.user_config.keys.show_lyrics => {
       handle_show_lyrics(app);
     }
@@ -174,7 +172,6 @@ fn handle_block_events(key: Key, app: &mut App) {
     ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);
     }
-    // new: added activeblock handler lyrics
     ActiveBlock::Lyrics => {
       lyrics::handler(key, app);
     }
@@ -220,7 +217,6 @@ fn handle_jump_to_context(app: &mut App) {
   }
 }
 
-// new: function to handle the show_lyrics event
 fn handle_show_lyrics(app: &mut App) {
   if let Some(CurrentlyPlaybackContext {
     item: Some(item), ..

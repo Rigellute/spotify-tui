@@ -273,7 +273,6 @@ where
     RouteId::Recommendations => {
       draw_recommendations_table(f, app, chunks[1]);
     }
-    // new: lyrics route
     RouteId::Lyrics => {
       draw_lyrics_box(f, app, chunks[1])
     }
@@ -1356,7 +1355,6 @@ where
   f.render_stateful_widget(list, chunks[1], &mut state);
 }
 
-// new: function to draw the lyrics box
 pub fn draw_lyrics_box<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,

@@ -130,7 +130,6 @@ pub fn handle_right_event(app: &mut App) {
       RouteId::Home => {
         app.set_current_route_state(Some(ActiveBlock::Home), Some(ActiveBlock::Home));
       }
-      // new: added lyrics route
       RouteId::Lyrics => {
         app.set_current_route_state(Some(ActiveBlock::Lyrics), Some(ActiveBlock::Lyrics));
       }

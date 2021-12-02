@@ -1,4 +1,3 @@
-//new: new module for the lyrics
 use super::{super::app::App, common_key_events};
 use crate::event::Key;
 

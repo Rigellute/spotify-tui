@@ -90,7 +90,6 @@ pub enum IoEvent {
   GetShow(String),
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
-  // new: added GetLyrics event - takes artist name and song name
   GetLyrics(String, String),
 }
 
@@ -306,7 +305,6 @@ impl<'a> Network<'a> {
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
       }
-      // new: define a handler for the GetLyrics event
       IoEvent::GetLyrics(artist, song) => {
         self.get_lyrics(artist, song).await;
       } 
@@ -1498,7 +1496,6 @@ impl<'a> Network<'a> {
     }
   }
 
-  // new: function to get the lyrics for a song - relies on a separate function to be api-independent
   async fn get_lyrics(&mut self, artist: String, song: String) {
     let mut app = self.app.lock().await;
     match self.send_lyrics_request(artist, song).await {
@@ -1513,8 +1510,7 @@ impl<'a> Network<'a> {
     }
   }
 
-  // new: send a request to the lyrics provider
-  // returns lyrics if found, None if an error happens with the request or the parsing 
+  // return lyrics if found, None if an error happens with the request or the parsing 
   // this is the only function that needs to be changed to change lyrics provider 
   async fn send_lyrics_request(&mut self, artist: String, song: String) -> Option<String> {
     let url = String::from("https://api.lyrics.ovh/v1/");
