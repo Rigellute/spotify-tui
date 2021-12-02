@@ -26,14 +26,10 @@ backtrace = "0.3.57"
 arboard = "1.2.0"
 crossterm = "0.20"
 tokio = { version = "0.2", features = ["full"] }
-# new: tokio 1.0
-# tokio = { version = "1.2.0", features = ["full"] }
 rand = "0.8.4"
 anyhow = "1.0.43"
 
 # new: dependency for http requests
-# reqwest = "0.11"
-# isahc = "1.6.0"
 ureq = {version = "2.0.0", features = ["json"] }
 
 [[bin]]

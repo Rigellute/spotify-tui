@@ -374,7 +374,7 @@ impl UserConfig {
     to_keys!(audio_analysis);
     to_keys!(basic_view);
     to_keys!(add_item_to_queue);
-    //new: for some reason add lyrics key here
+    //new: add lyrics key here as well
     to_keys!(show_lyrics);
 
     Ok(())

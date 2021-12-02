@@ -21,7 +21,7 @@ mod recently_played;
 mod search_results;
 mod select_device;
 mod track_table;
-// new: added (i think) import to module lyrics
+// new: added import to module lyrics
 mod lyrics;
 
 use super::app::{ActiveBlock, App, ArtistBlock, RouteId, SearchResultBlock};
@@ -96,9 +96,8 @@ pub fn handle_app(key: Key, app: &mut App) {
     _ if key == app.user_config.keys.basic_view => {
       app.push_navigation_stack(RouteId::BasicView, ActiveBlock::BasicView);
     }
-    // new: added handler for show_lyrics shortcut TOCHANGE
+    // new: added handler for show_lyrics shortcut
     _ if key == app.user_config.keys.show_lyrics => {
-      // app.push_navigation_stack(RouteId::Lyrics, ActiveBlock::Lyrics);
       handle_show_lyrics(app);
     }
     _ => handle_block_events(key, app),
@@ -223,7 +222,6 @@ fn handle_jump_to_context(app: &mut App) {
 
 // new: function to handle the show_lyrics event- currently almost copypasted from handle_jump_to_album TOCHANGE
 fn handle_show_lyrics(app: &mut App) {
-  // TOCHANGE - no clue what this does
   if let Some(CurrentlyPlaybackContext {
     item: Some(item), ..
   }) = app.current_playback_context.to_owned()
@@ -231,11 +229,7 @@ fn handle_show_lyrics(app: &mut App) {
     match item {
       PlayingItem::Track(track) => {
         if let Some(artist) = track.artists.first() {
-          // if let Some(artist_id) = artist.id.clone() {
             app.dispatch(IoEvent::GetLyrics(artist.name.clone(), track.name.clone()));
-    
-
-          // }
         }
       }
       PlayingItem::Episode(_episode) => {
@@ -243,9 +237,6 @@ fn handle_show_lyrics(app: &mut App) {
       }
     }
   }
-  // {
-  //   app.dispatch(IoEvent::GetLyrics);
-  // }
 }
 
 fn handle_jump_to_album(app: &mut App) {

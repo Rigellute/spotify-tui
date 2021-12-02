@@ -1396,7 +1396,7 @@ where
   );
   let bottom_text = Text::from(bottom_text_raw.as_str());
 
-  // lyrics title
+  // lyrics header
   let top_text = Paragraph::new(top_text)
     .style(Style::default().fg(app.user_config.theme.text))
     .block(Block::default());
