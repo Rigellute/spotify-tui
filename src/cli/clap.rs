@@ -303,6 +303,12 @@ be applied to every item found.",
         .help("Lists liked songs"),
     )
     .arg(
+      Arg::with_name("offset")
+        .long("offset")
+        .takes_value(true)
+        .help("Specifies the number of items to skip from start of the list"),
+    )
+    .arg(
       Arg::with_name("limit")
         .long("limit")
         .takes_value(true)

@@ -177,7 +177,7 @@ impl<'a> CliApp<'a> {
   }
 
   // spt query -l ...
-  pub async fn list(&mut self, item: Type, format: &str) -> String {
+  pub async fn list(&mut self, item: Type, format: &str, offset: Option<u32>) -> String {
     match item {
       Type::Device => {
         if let Some(devices) = &self.net.app.lock().await.devices {
@@ -220,7 +220,7 @@ impl<'a> CliApp<'a> {
       Type::Liked => {
         self
           .net
-          .handle_network_event(IoEvent::GetCurrentSavedTracks(None))
+          .handle_network_event(IoEvent::GetCurrentSavedTracks(offset))
           .await;
         let liked_songs = self
           .net

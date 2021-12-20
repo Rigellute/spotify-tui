@@ -113,8 +113,11 @@ pub async fn handle_matches(
         cli.update_query_limits(max.to_string()).await?;
       }
 
+      let offset = matches.value_of("offset").unwrap_or("None")
+      .parse::<u32>().map_or(None, |u| Some(u));
+
       let category = Type::list_from_matches(matches);
-      Ok(cli.list(category, &format).await)
+      Ok(cli.list(category, &format, offset).await)
     }
     "search" => {
       let format = matches.value_of("format").unwrap().to_string();
