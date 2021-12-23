@@ -200,7 +200,7 @@ impl<'a> CliApp<'a> {
         }
       }
       Type::Playlist => {
-        self.net.handle_network_event(IoEvent::GetPlaylists).await;
+        self.net.handle_network_event(IoEvent::GetPlaylists(offset)).await;
         if let Some(playlists) = &self.net.app.lock().await.playlists {
           playlists
             .items
