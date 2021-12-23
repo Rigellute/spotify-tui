@@ -35,7 +35,7 @@ use tokio::try_join;
 pub enum IoEvent {
   GetCurrentPlayback,
   RefreshAuthentication,
-  GetPlaylists,
+  GetPlaylists(Option<u32>),
   GetDevices,
   GetSearchResults(String, Option<Country>),
   SetTracksToTable(Vec<FullTrack>),
@@ -146,8 +146,8 @@ impl<'a> Network<'a> {
       IoEvent::RefreshAuthentication => {
         self.refresh_authentication().await;
       }
-      IoEvent::GetPlaylists => {
-        self.get_current_user_playlists().await;
+      IoEvent::GetPlaylists(offset) => {
+        self.get_current_user_playlists(offset).await;
       }
       IoEvent::GetUser => {
         self.get_user().await;
@@ -1264,7 +1264,7 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(_) => {
-        self.get_current_user_playlists().await;
+        self.get_current_user_playlists(None).await;
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -1279,7 +1279,7 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(_) => {
-        self.get_current_user_playlists().await;
+        self.get_current_user_playlists(None).await;
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -1346,10 +1346,10 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_current_user_playlists(&mut self) {
+  async fn get_current_user_playlists(&mut self, offset: Option<u32>) {
     let playlists = self
       .spotify
-      .current_user_playlists(self.large_search_limit, None)
+      .current_user_playlists(self.large_search_limit, offset)
       .await;
 
     match playlists {
