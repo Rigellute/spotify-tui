@@ -83,8 +83,9 @@ impl ClientConfig {
     config_yml.device_id = Some(device_id);
 
     let new_config = serde_yaml::to_string(&config_yml)?;
-    let mut config_file = fs::File::create(&paths.config_file_path)?;
-    write!(config_file, "{}", new_config)?;
+    if let Ok(mut config_file) = fs::File::create(&paths.config_file_path) {
+      write!(config_file, "{}", new_config)?
+    }
     Ok(())
   }
 
