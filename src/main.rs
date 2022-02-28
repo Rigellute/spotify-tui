@@ -178,7 +178,7 @@ of the app. Beware that this comes at a CPU cost!",
       "zsh" => Shell::Zsh,
       "power-shell" => Shell::PowerShell,
       "elvish" => Shell::Elvish,
-      _ => return Err(anyhow!("no completions avaible for '{}'", s)),
+      _ => return Err(anyhow!("no completions available for '{}'", s)),
     };
     clap_app.gen_completions_to("spt", shell, &mut io::stdout());
     return Ok(());
