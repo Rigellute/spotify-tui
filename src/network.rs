@@ -751,6 +751,11 @@ impl<'a> Network<'a> {
       Ok(()) => {
         let mut app = self.app.lock().await;
         app.song_progress_ms = 0;
+        if let Some(current_playback_context) = &app.current_playback_context {
+            if current_playback_context.shuffle_state {
+                app.dispatch(IoEvent::Shuffle(false))
+            }
+        }
         app.dispatch(IoEvent::GetCurrentPlayback);
       }
       Err(e) => {
