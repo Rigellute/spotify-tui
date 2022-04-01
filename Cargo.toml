@@ -27,7 +27,7 @@ arboard = "1.2.0"
 crossterm = "0.20"
 tokio = { version = "0.2", features = ["full"] }
 rand = "0.8.4"
-anyhow = "1.0.43"
+anyhow = "1.0.56"
 
 [[bin]]
 bench = false
