@@ -28,8 +28,8 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
       - [Note on Linux](#note-on-linux)
-    - [Windows](#windows-10)
-      - [Scoop installer](#scoop-installer)
+    - [Windows](#windows)
+      - [Scoop](#scoop)
     - [Manual](#manual)
   - [Connecting to Spotify’s API](#connecting-to-spotifys-api)
   - [Usage](#usage)
@@ -134,16 +134,15 @@ In order to locate dependencies, the compilation also requires `pkg-config` to b
 
 If you are using the Windows Subsystem for Linux, you'll need to [install additional dependencies](#windows-subsystem-for-linux).
 
-### Windows 10
+### Windows
 
-#### Scoop installer
+#### Scoop
 
-First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
+First, make sure Scoop is installed; for instruction please visit [scoop.sh](https://scoop.sh)
 
-Then open powershell and run following two commands:
+Then open a terminal and run following:
 
 ```bash
-scoop bucket add scoop-bucket https://github.com/Rigellute/scoop-bucket
 scoop install spotify-tui
 ```
 
