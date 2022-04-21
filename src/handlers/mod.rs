@@ -79,6 +79,9 @@ pub fn handle_app(key: Key, app: &mut App) {
     _ if key == app.user_config.keys.repeat => {
       app.repeat();
     }
+    _ if key == app.user_config.keys.playlist_random_song => {
+      app.playlist_random_song();
+    }
     _ if key == app.user_config.keys.search => {
       app.set_current_route_state(Some(ActiveBlock::Input), Some(ActiveBlock::Input));
     }

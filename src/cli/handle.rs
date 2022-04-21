@@ -8,7 +8,6 @@ use super::{
 
 use anyhow::{anyhow, Result};
 use clap::ArgMatches;
-
 // Handle the different subcommands
 pub async fn handle_matches(
   matches: &ArgMatches<'_>,
@@ -97,8 +96,9 @@ pub async fn handle_matches(
       if let Some(uri) = matches.value_of("uri") {
         cli.play_uri(uri.to_string(), queue, random).await;
       } else if let Some(name) = matches.value_of("name") {
+
         let category = Type::play_from_matches(matches);
-        cli.play(name.to_string(), category, queue, random).await?;
+        cli.play(name.to_string(), category, queue, random).await?; // play function?
       }
 
       cli.get_status(format.to_string()).await

@@ -37,6 +37,7 @@ pub enum IoEvent {
   RefreshAuthentication,
   GetPlaylists,
   GetDevices,
+  PlayPlaylistRandomSong,
   GetSearchResults(String, Option<Country>),
   SetTracksToTable(Vec<FullTrack>),
   GetMadeForYouPlaylistTracks(String, u32),
@@ -202,6 +203,9 @@ impl<'a> Network<'a> {
       }
       IoEvent::GetArtist(artist_id, input_artist_name, country) => {
         self.get_artist(artist_id, input_artist_name, country).await;
+      }
+      IoEvent::PlayPlaylistRandomSong => {
+        self.play_playlist_random_song().await;
       }
       IoEvent::GetAlbumTracks(album) => {
         self.get_album_tracks(album).await;
@@ -883,6 +887,30 @@ impl<'a> Network<'a> {
         self.handle_error(anyhow!(e)).await;
       }
     };
+  }
+
+  async fn play_playlist_random_song(&mut self) {
+    let playlists = self
+      .spotify
+      .current_user_playlists(self.large_search_limit, None)
+      .await;
+
+    match playlists {
+      Ok(p) => {
+        let mut app = self.app.lock().await;
+        app.playlists = Some(p);
+        // Select the first playlist
+        // app.selected_playlist_index = Some(0);
+      }
+      Err(e) => {
+        self.handle_error(anyhow!(e)).await;
+      }
+    };
+
+
+    self.shuffle(true).await;
+    self.next_track().await;
+
   }
 
   async fn get_artist(

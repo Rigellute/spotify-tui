@@ -173,6 +173,7 @@ pub struct KeyBindingsString {
   audio_analysis: Option<String>,
   basic_view: Option<String>,
   add_item_to_queue: Option<String>,
+  playlist_random_song: Option<String>,
 }
 
 #[derive(Clone)]
@@ -203,6 +204,7 @@ pub struct KeyBindings {
   pub audio_analysis: Key,
   pub basic_view: Key,
   pub add_item_to_queue: Key,
+  pub playlist_random_song: Key,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -285,6 +287,7 @@ impl UserConfig {
         audio_analysis: Key::Char('v'),
         basic_view: Key::Char('B'),
         add_item_to_queue: Key::Char('z'),
+        playlist_random_song: Key::Char('f'),
       },
       behavior: BehaviorConfig {
         seek_milliseconds: 5 * 1000,
@@ -368,6 +371,7 @@ impl UserConfig {
     to_keys!(audio_analysis);
     to_keys!(basic_view);
     to_keys!(add_item_to_queue);
+    to_keys!(playlist_random_song);
 
     Ok(())
   }
@@ -551,6 +555,7 @@ mod tests {
     assert_eq!(parse_key(String::from("ctrl-j")).unwrap(), Key::Ctrl('j'));
     assert_eq!(parse_key(String::from("ctrl-J")).unwrap(), Key::Ctrl('J'));
     assert_eq!(parse_key(String::from("-")).unwrap(), Key::Char('-'));
+    assert_eq!(parse_key(String::from("f")).unwrap(), Key::Char('f'));
     assert_eq!(parse_key(String::from("esc")).unwrap(), Key::Esc);
     assert_eq!(parse_key(String::from("del")).unwrap(), Key::Delete);
   }
