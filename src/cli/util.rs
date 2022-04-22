@@ -18,7 +18,7 @@ pub enum Type {
   Album,
   Show,
   Device,
-  Liked,
+  Liked,   // add Liked type when we try to play random song in Liked
 }
 
 impl Type {

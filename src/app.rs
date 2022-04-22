@@ -29,6 +29,9 @@ use tui::layout::Rect;
 
 use arboard::Clipboard;
 
+use rand::{thread_rng, Rng};
+use serde_json::from_value;
+
 pub const LIBRARY_OPTIONS: [&str; 6] = [
   "Made For You",
   "Recently Played",
@@ -823,6 +826,114 @@ impl App {
     };
   }
 
+  // uses algorithm from handlers track_table as inspiration
+  pub fn playlist_random_song(&mut self) {
+    if let (Some(_playlists), Some(_selected_index)) =
+      (&self.playlists, &self.selected_playlist_index)
+    {
+      if self.playlists.is_some() {
+        self.dispatch(IoEvent::PlayPlaylistRandomSong);
+        if let Some(context) = &self.track_table.context {
+          match context {
+            TrackTableContext::MyPlaylists => {
+
+              let (context_uri, track_json) = match (&self.selected_playlist_index, &self.playlists) {
+                (Some(selected_playlist_index), Some(playlists)) => {
+                  if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned())
+                  {
+                    (
+                      Some(selected_playlist.uri.to_owned()),
+                      selected_playlist.tracks.get("total"),
+                    )
+                  } else {
+                    (None, None)
+                  }
+                }
+                _ => (None, None),
+              };
+
+              if let Some(val) = track_json {
+                let num_tracks: usize = from_value(val.clone()).unwrap();
+                self.dispatch(IoEvent::StartPlayback(
+                  context_uri,
+                  None,
+                  Some(thread_rng().gen_range(0..num_tracks)),
+                ));
+              }
+            }
+            TrackTableContext::RecommendedTracks => {}
+            TrackTableContext::SavedTracks => {
+              if let Some(saved_tracks) = &self.library.saved_tracks.get_results(None) {
+                let track_uris: Vec<String> = saved_tracks
+                  .items
+                  .iter()
+                  .map(|item| item.track.uri.to_owned())
+                  .collect();
+                let rand_idx = thread_rng().gen_range(0..track_uris.len());
+                self.dispatch(IoEvent::StartPlayback(
+                  None,
+                  Some(track_uris),
+                  Some(rand_idx),
+                ))
+              }
+            }
+            TrackTableContext::AlbumSearch => {}
+            TrackTableContext::PlaylistSearch => {
+              let (context_uri, playlist_track_json) = match (
+                &self.search_results.selected_playlists_index,
+                &self.search_results.playlists,
+              ) {
+                (Some(selected_playlist_index), Some(playlist_result)) => {
+                  if let Some(selected_playlist) = playlist_result
+                    .items
+                    .get(selected_playlist_index.to_owned())
+                  {
+                    (
+                      Some(selected_playlist.uri.to_owned()),
+                      selected_playlist.tracks.get("total"),
+                    )
+                  } else {
+                    (None, None)
+                  }
+                }
+                _ => (None, None),
+              };
+              if let Some(val) = playlist_track_json {
+                let num_tracks: usize = from_value(val.clone()).unwrap();
+                self.dispatch(IoEvent::StartPlayback(
+                  context_uri,
+                  None,
+                  Some(thread_rng().gen_range(0..num_tracks)),
+                ))
+              }
+            }
+            TrackTableContext::MadeForYou => {
+              if let Some(playlist) = &self
+                .library
+                .made_for_you_playlists
+                .get_results(Some(0))
+                .and_then(|playlist| playlist.items.get(self.made_for_you_index))
+              {
+                if let Some(num_tracks) = &playlist
+                  .tracks
+                  .get("total")
+                  .and_then(|total| -> Option<usize> { from_value(total.clone()).ok() })
+                {
+                  let uri = Some(playlist.uri.clone());
+                  self.dispatch(IoEvent::StartPlayback(
+                    uri,
+                    None,
+                    Some(thread_rng().gen_range(0..*num_tracks)),
+                  ))
+                };
+              };
+            }
+          }
+        };
+      }
+    };
+  }
+
   pub fn get_current_user_saved_albums_next(&mut self) {
     match self
       .library
@@ -1192,4 +1303,10 @@ impl App {
       self.help_menu_page -= 1;
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test() {}
 }

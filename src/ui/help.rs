@@ -267,5 +267,12 @@ pub fn get_help_docs(key_bindings: &KeyBindings) -> Vec<Vec<String>> {
       key_bindings.add_item_to_queue.to_string(),
       String::from("Hovered over track"),
     ],
+    vec![
+      String::from("Play a random song from a Random Playlist"),
+      String::from('f'),
+      String::from("General"),
+    ],
   ]
 }
+
+

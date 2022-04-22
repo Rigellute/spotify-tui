@@ -536,6 +536,15 @@ impl<'a> CliApp<'a> {
             return Err(anyhow!("no artists with name '{}'", name));
           }
         }
+        Type::Liked => {    // Add a Liked option here to retrieve the random liked song
+          if let Some(r) = &results.playlists {
+            let p = &r.items[0];
+            // For a random song, create a random offset
+            p.uri.clone()
+          } else {
+            return Err(anyhow!("no Liked lists with name '{}'", name));
+          }
+        }
         Type::Show => {
           if let Some(r) = &results.shows {
             r.items[0].uri.clone()
