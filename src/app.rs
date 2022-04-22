@@ -826,11 +826,7 @@ impl App {
     };
   }
 
-
-  // pub fn play_random_song_from_playlist(app: &mut App) {
-
-  // }
-
+  // uses algorithm from handlers track_table as inspiration
   pub fn playlist_random_song(&mut self) {
     if let (Some(_playlists), Some(_selected_index)) =
       (&self.playlists, &self.selected_playlist_index)
