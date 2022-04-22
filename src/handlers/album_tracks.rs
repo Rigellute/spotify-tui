@@ -276,3 +276,32 @@ mod tests {
     assert_eq!(current_route.active_block, ActiveBlock::Empty);
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn () {
+    let mut app = App::default();
+    app.set_current_route_state(
+      Some(ActiveBlock::AlbumTracks),
+      Some(ActiveBlock::AlbumTracks),
+    );
+
+    handler(Key::Left, &mut app);
+    let current_route = app.get_current_route();
+    assert_eq!(current_route.active_block, ActiveBlock::Empty);
+    assert_eq!(current_route.hovered_block, ActiveBlock::Library);
+  }
+
+  #[test]
+  fn on_esc() {
+    let mut app = App::default();
+
+    handler(Key::Esc, &mut app);
+
+    let current_route = app.get_current_route();
+    assert_eq!(current_route.active_block, ActiveBlock::Empty);
+  }
+}
