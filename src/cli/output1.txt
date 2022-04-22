@@ -1,0 +1,81 @@
+🔁 ⏸ Pirate - EVERGLOW
+🔁 ▶ Unbelievable - Why Don't We
+24 Hr Drive-Thru - Origami Angel (spotify:track:0ZwS03v4euiMztP9xDLgoO)
+Elder Goose - Dance Gavin Dance (spotify:track:16NYUGnNu5HaoHTJsNge7b)
+American Money - BØRNS (spotify:track:4AewKenHXKBt643p473xCk)
+Cold Cold Man - Saint Motel (spotify:track:6RKGBcDtgzXx21zUjpeu6F)
+Disco - Surf Curse (spotify:track:2Lumsra3kuU61wXkEKzKaK)
+Four Leaf Clover - Destine (spotify:track:2t111IYbzQHicOXKta31yt)
+Born To Be Wild - Single Version - Steppenwolf (spotify:track:3lN8PP6R2IxbLP05QpYXng)
+Light Up The Night - The Protomen (spotify:track:0b4KsOdnrZlfE5VUAAzxv1)
+A Decade Under The Influence - Taking Back Sunday (spotify:track:6um5ccNzX7k3SRsVnLupvI)
+TEST DRIVE - Joji (spotify:track:1DMEzmAoQIikcL52psptQL)
+デート・ア・ライブ - sweet ARMS (spotify:track:4lHhlaay5sKaj3rcAHuwxb)
+After Dark - Mr.Kitty (spotify:track:2LKOHdMsL0K9KwcPRlJK2v)
+Copines Slowed - Remix - Eduardo Luzquiños, RH Music (spotify:track:2r7YJCbuW3wf3DNjJHkEqO)
+Dance, Baby! - boy pablo (spotify:track:5EV4bGHxVN0kHpcAFvgnTt)
+Mario Judah - Rherherherh (spotify:track:4vpK0dQ7z6ttBGAGcjteLe)
+Thank God It's Friday - Ice Nine Kills (spotify:track:6eHkHIGGcGatFhhqeuRWFN)
+bloody valentine - Machine Gun Kelly (spotify:track:6mADjHs6FXdroPzEGW6KVJ)
+What You Know - Two Door Cinema Club (spotify:track:3UjtIALeg72qmJiKPWBvM3)
+Lean Wit Me - Juice WRLD (spotify:track:3oDkdAySo1VQQG0ptV7uwa)
+Deception - Dance Gavin Dance (spotify:track:4NuFrArppAgXPZKCbImtiF)
+Error: no track playing
+🔁 ▶ 러시안 룰렛 Russian Roulette - Red Velvet
+error: Found argument '--liked' which wasn't expected, or isn't valid in this context
+
+USAGE:
+    spt play <--uri <URI>|--name <NAME>> <--track|--artist|--playlist|--album|--show>
+
+For more information try --help
+🔁 ▶ 러시안 룰렛 Russian Roulette - Red Velvet
+error: The following required arguments were not provided:
+    <--track|--artist|--playlist|--album|--show>
+
+USAGE:
+    spt play --format <FORMAT> <--uri <URI>|--name <NAME>> <--track|--artist|--playlist|--album|--show>
+
+For more information try --help
+🔁 ▶ Anymore - JEON SOMI
+🔁 ▶ Anymore - JEON SOMI
+
+🔁 ⏸ After School - Weeekly
+🔁 ▶ SCIENTIST - TWICE
+24 Hr Drive-Thru - Origami Angel (spotify:track:0ZwS03v4euiMztP9xDLgoO)
+Elder Goose - Dance Gavin Dance (spotify:track:16NYUGnNu5HaoHTJsNge7b)
+American Money - BØRNS (spotify:track:4AewKenHXKBt643p473xCk)
+Cold Cold Man - Saint Motel (spotify:track:6RKGBcDtgzXx21zUjpeu6F)
+Disco - Surf Curse (spotify:track:2Lumsra3kuU61wXkEKzKaK)
+Four Leaf Clover - Destine (spotify:track:2t111IYbzQHicOXKta31yt)
+Born To Be Wild - Single Version - Steppenwolf (spotify:track:3lN8PP6R2IxbLP05QpYXng)
+Light Up The Night - The Protomen (spotify:track:0b4KsOdnrZlfE5VUAAzxv1)
+A Decade Under The Influence - Taking Back Sunday (spotify:track:6um5ccNzX7k3SRsVnLupvI)
+TEST DRIVE - Joji (spotify:track:1DMEzmAoQIikcL52psptQL)
+デート・ア・ライブ - sweet ARMS (spotify:track:4lHhlaay5sKaj3rcAHuwxb)
+After Dark - Mr.Kitty (spotify:track:2LKOHdMsL0K9KwcPRlJK2v)
+Copines Slowed - Remix - Eduardo Luzquiños, RH Music (spotify:track:2r7YJCbuW3wf3DNjJHkEqO)
+Dance, Baby! - boy pablo (spotify:track:5EV4bGHxVN0kHpcAFvgnTt)
+Mario Judah - Rherherherh (spotify:track:4vpK0dQ7z6ttBGAGcjteLe)
+Thank God It's Friday - Ice Nine Kills (spotify:track:6eHkHIGGcGatFhhqeuRWFN)
+bloody valentine - Machine Gun Kelly (spotify:track:6mADjHs6FXdroPzEGW6KVJ)
+What You Know - Two Door Cinema Club (spotify:track:3UjtIALeg72qmJiKPWBvM3)
+Lean Wit Me - Juice WRLD (spotify:track:3oDkdAySo1VQQG0ptV7uwa)
+Deception - Dance Gavin Dance (spotify:track:4NuFrArppAgXPZKCbImtiF)
+Error: no track playing
+🔁 ▶ Liked You Better - good problem, Boy In Space
+error: Found argument '--liked' which wasn't expected, or isn't valid in this context
+
+USAGE:
+    spt play <--uri <URI>|--name <NAME>> <--track|--artist|--playlist|--album|--show>
+
+For more information try --help
+🔁 ▶ WA DA DA - Kep1er
+error: The following required arguments were not provided:
+    <--track|--artist|--playlist|--album|--show>
+
+USAGE:
+    spt play --format <FORMAT> <--uri <URI>|--name <NAME>> <--track|--artist|--playlist|--album|--show>
+
+For more information try --help
+🔁 ▶ Between Us - Little Mix
+🔁 ▶ MORE & MORE - TWICE

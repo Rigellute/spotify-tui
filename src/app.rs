@@ -832,7 +832,7 @@ impl App {
   // }
 
   pub fn playlist_random_song(&mut self) {
-    if let (Some(playlists), Some(selected_index)) =
+    if let (Some(_playlists), Some(_selected_index)) =
       (&self.playlists, &self.selected_playlist_index)
     {
       if self.playlists.is_some() {
@@ -1307,4 +1307,10 @@ impl App {
       self.help_menu_page -= 1;
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test() {}
 }

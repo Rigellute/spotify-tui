@@ -414,3 +414,9 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
 
   Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test() {}
+}

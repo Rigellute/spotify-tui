@@ -1518,3 +1518,9 @@ impl<'a> Network<'a> {
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test() {}
+}

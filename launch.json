@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["play","--name","liked","--liked","--random"],
+            "args": ["play","--name","liked","--likes","--random"],
             "cwd": "${workspaceFolder}"
         },
         {

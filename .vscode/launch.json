@@ -5,12 +5,41 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(OSX) Debug",
             "type": "lldb",
             "request": "launch",
-            "program": "${spotify-tui}/src/handlers/album_list.rs",
+            "name": "Debug executable 'spt'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=spt",
+                    "--package=spotify-tui"
+                ],
+                "filter": {
+                    "name": "spt",
+                    "kind": "bin"
+                }
+            },
+            "args": ["play","--name","liked","--liked","--random"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'spt'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=spt",
+                    "--package=spotify-tui"
+                ],
+                "filter": {
+                    "name": "spt",
+                    "kind": "bin"
+                }
+            },
             "args": [],
-            "cwd": "${spotify-tui}"
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
