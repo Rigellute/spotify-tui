@@ -21,9 +21,9 @@ use tui::{
   Frame,
 };
 use util::{
-  create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
-  get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
-  millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
+  create_artist_string, display_track_progress, fix_rtl_string, get_artist_highlight_state,
+  get_color, get_percentage_width, get_search_results_highlight_state,
+  get_track_progress_percentage, millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
 
 pub enum TableId {
@@ -145,7 +145,7 @@ where
   );
 
   let input_string: String = app.input.iter().collect();
-  let lines = Text::from((&input_string).as_str());
+  let lines = Text::from(fix_rtl_string((&input_string).as_str()));
   let input = Paragraph::new(lines).block(
     Block::default()
       .borders(Borders::ALL)
@@ -305,7 +305,11 @@ where
   B: Backend,
 {
   let playlist_items = match &app.playlists {
-    Some(p) => p.items.iter().map(|item| item.name.to_owned()).collect(),
+    Some(p) => p
+      .items
+      .iter()
+      .map(|item| fix_rtl_string(&item.name.to_owned()))
+      .collect(),
     None => vec![],
   };
 
@@ -410,7 +414,7 @@ where
 
           song_name += &item.name;
           song_name += &format!(" - {}", &create_artist_string(&item.artists));
-          song_name
+          fix_rtl_string(&song_name)
         })
         .collect(),
       None => vec![],
@@ -435,7 +439,7 @@ where
           if app.followed_artist_ids_set.contains(&item.id.to_owned()) {
             artist.push_str(&app.user_config.padded_liked_icon());
           }
-          artist.push_str(&item.name.to_owned());
+          artist.push_str(&fix_rtl_string(&item.name.to_owned()));
           artist
         })
         .collect(),
@@ -472,7 +476,7 @@ where
           }
           album_artist.push_str(&format!(
             "{} - {} ({})",
-            item.name.to_owned(),
+            fix_rtl_string(&item.name.to_owned()),
             create_artist_string(&item.artists),
             item.album_type.as_deref().unwrap_or("unknown")
           ));
@@ -496,7 +500,7 @@ where
       Some(playlists) => playlists
         .items
         .iter()
-        .map(|item| item.name.to_owned())
+        .map(|item| fix_rtl_string(&item.name.to_owned()))
         .collect(),
       None => vec![],
     };
@@ -527,7 +531,7 @@ where
             show_name.push_str(&app.user_config.padded_liked_icon());
           }
           show_name.push_str(&format!("{:} - {}", item.name, item.publisher));
-          show_name
+          fix_rtl_string(&show_name)
         })
         .collect(),
       None => vec![],
@@ -702,11 +706,11 @@ where
               ],
             })
             .collect::<Vec<TableItem>>(),
-          title: format!(
+          title: fix_rtl_string(&format!(
             "{} by {}",
             selected_album_simplified.album.name,
             create_artist_string(&selected_album_simplified.album.artists)
-          ),
+          )),
           selected_index: selected_album_simplified.selected_index,
         })
     }
@@ -728,11 +732,11 @@ where
             ],
           })
           .collect::<Vec<TableItem>>(),
-        title: format!(
+        title: fix_rtl_string(&format!(
           "{} by {}",
           selected_album.album.name,
           create_artist_string(&selected_album.album.artists)
-        ),
+        )),
         selected_index: app.saved_album_tracks_index,
       }),
       None => None,
@@ -812,11 +816,11 @@ where
   let recommendations_ui = match &app.recommendations_context {
     Some(RecommendationsContext::Song) => format!(
       "Recommendations based on Song \'{}\'",
-      &app.recommendations_seed
+      &fix_rtl_string(&app.recommendations_seed)
     ),
     Some(RecommendationsContext::Artist) => format!(
       "Recommendations based on Artist \'{}\'",
-      &app.recommendations_seed
+      &fix_rtl_string(&app.recommendations_seed)
     ),
     None => "Recommendations".to_string(),
   };
@@ -989,12 +993,12 @@ where
       let (item_id, name, duration_ms) = match track_item {
         PlayingItem::Track(track) => (
           track.id.to_owned().unwrap_or_else(|| "".to_string()),
-          track.name.to_owned(),
+          fix_rtl_string(&track.name.to_owned()),
           track.duration_ms,
         ),
         PlayingItem::Episode(episode) => (
           episode.id.to_owned(),
-          episode.name.to_owned(),
+          fix_rtl_string(&episode.name.to_owned()),
           episode.duration_ms,
         ),
       };
@@ -1006,8 +1010,10 @@ where
       };
 
       let play_bar_text = match track_item {
-        PlayingItem::Track(track) => create_artist_string(&track.artists),
-        PlayingItem::Episode(episode) => format!("{} - {}", episode.name, episode.show.name),
+        PlayingItem::Track(track) => fix_rtl_string(&create_artist_string(&track.artists)),
+        PlayingItem::Episode(episode) => {
+          fix_rtl_string(&format!("{} - {}", episode.name, episode.show.name))
+        }
       };
 
       let lines = Text::from(Span::styled(
@@ -1213,7 +1219,7 @@ where
           }
         };
         name.push_str(&top_track.name);
-        name
+        fix_rtl_string(&name)
       })
       .collect::<Vec<String>>();
 
@@ -1221,7 +1227,7 @@ where
       f,
       app,
       chunks[0],
-      &format!("{} - Top Tracks", &artist.artist_name),
+      &fix_rtl_string(&format!("{} - Top Tracks", &artist.artist_name)),
       &top_tracks,
       get_artist_highlight_state(app, ArtistBlock::TopTracks),
       Some(artist.selected_top_track_index),
@@ -1244,7 +1250,7 @@ where
           create_artist_string(&item.artists),
           item.album_type.as_deref().unwrap_or("unknown")
         ));
-        album_artist
+        fix_rtl_string(&album_artist)
       })
       .collect::<Vec<String>>();
 
@@ -1267,7 +1273,7 @@ where
           artist.push_str(&app.user_config.padded_liked_icon());
         }
         artist.push_str(&item.name.to_owned());
-        artist
+        fix_rtl_string(&artist)
       })
       .collect::<Vec<String>>();
 
@@ -1323,7 +1329,7 @@ where
         items
           .devices
           .iter()
-          .map(|device| ListItem::new(Span::raw(&device.name)))
+          .map(|device| ListItem::new(Span::raw(fix_rtl_string(&device.name))))
           .collect()
       }
     }
@@ -1493,23 +1499,19 @@ where
 
     let title = match &app.episode_table_context {
       EpisodeTableContext::Simplified => match &app.selected_show_simplified {
-        Some(selected_show) => {
-          format!(
-            "{} by {}",
-            selected_show.show.name.to_owned(),
-            selected_show.show.publisher
-          )
-        }
+        Some(selected_show) => fix_rtl_string(&format!(
+          "{} by {}",
+          selected_show.show.name.to_owned(),
+          selected_show.show.publisher
+        )),
         None => "Episodes".to_owned(),
       },
       EpisodeTableContext::Full => match &app.selected_show_full {
-        Some(selected_show) => {
-          format!(
-            "{} by {}",
-            selected_show.show.name.to_owned(),
-            selected_show.show.publisher
-          )
-        }
+        Some(selected_show) => fix_rtl_string(&format!(
+          "{} by {}",
+          selected_show.show.name.to_owned(),
+          selected_show.show.publisher
+        )),
         None => "Episodes".to_owned(),
       },
     };
@@ -1784,7 +1786,12 @@ fn draw_table<B>(
     .unwrap_or(0);
 
   let rows = items.iter().skip(offset).enumerate().map(|(i, item)| {
-    let mut formatted_row = item.format.clone();
+    let mut formatted_row: Vec<String> = item
+      .format
+      .clone()
+      .into_iter()
+      .map(|x| fix_rtl_string(&x))
+      .collect();
     let mut style = Style::default().fg(app.user_config.theme.text); // default styling
 
     // if table displays songs

@@ -2,6 +2,7 @@ use super::super::app::{ActiveBlock, App, ArtistBlock, SearchResultBlock};
 use crate::user_config::Theme;
 use rspotify::model::artist::SimplifiedArtist;
 use tui::style::Style;
+use unicode_bidi::BidiInfo;
 
 pub const BASIC_VIEW_HEIGHT: u16 = 6;
 pub const SMALL_TERMINAL_WIDTH: u16 = 150;
@@ -37,6 +38,19 @@ pub fn get_color((is_active, is_hovered): (bool, bool), theme: Theme) -> Style {
     (false, true) => Style::default().fg(theme.hovered),
     _ => Style::default().fg(theme.inactive),
   }
+}
+
+pub fn fix_rtl_string(text: &str) -> String {
+  let bidi_info = BidiInfo::new(&text, None);
+  bidi_info
+    .paragraphs
+    .iter()
+    .map(|para| {
+      bidi_info
+        .reorder_line(&para, para.range.clone())
+        .to_string()
+    })
+    .collect::<String>()
 }
 
 pub fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
