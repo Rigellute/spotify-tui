@@ -1040,18 +1040,26 @@ where
       } else {
         Modifier::empty()
       };
-      let song_progress = Gauge::default()
+      let mut song_progress = Gauge::default()
         .gauge_style(
           Style::default()
             .fg(app.user_config.theme.playbar_progress)
             .bg(app.user_config.theme.playbar_background)
             .add_modifier(modifier),
         )
-        .percent(perc)
-        .label(Span::styled(
-          &song_progress_label,
-          Style::default().fg(app.user_config.theme.playbar_progress_text),
-        ));
+        .percent(perc);
+        
+        // If playbar text color matches the playbar progress color, don't explicitely set its foreground color.
+        // The text color will be set by the playbar's foreground color, and automatically invert to ensure it stays visiable.
+        song_progress = if app.user_config.theme.playbar_progress == app.user_config.theme.playbar_progress_text {
+          song_progress.label(song_progress_label)
+        } else {
+          song_progress.label(Span::styled(
+            &song_progress_label,
+            Style::default().fg(app.user_config.theme.playbar_progress_text),
+          ))
+        };
+      
       f.render_widget(song_progress, chunks[2]);
     }
   }
