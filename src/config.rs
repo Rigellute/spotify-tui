@@ -112,7 +112,7 @@ impl ClientConfig {
 
       let instructions = [
         "Go to the Spotify dashboard - https://developer.spotify.com/dashboard/applications",
-        "Click `Create a Client ID` and create an app",
+        "Click `CREATE AN APP` to create an app",
         "Now click `Edit Settings`",
         &format!(
           "Add `http://localhost:{}/callback` to the Redirect URIs",
