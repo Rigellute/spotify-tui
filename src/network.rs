@@ -35,7 +35,7 @@ use tokio::try_join;
 pub enum IoEvent {
   GetCurrentPlayback,
   RefreshAuthentication,
-  GetPlaylists,
+  GetPlaylists(Option<u32>),
   GetDevices,
   GetSearchResults(String, Option<Country>),
   SetTracksToTable(Vec<FullTrack>),
@@ -146,8 +146,8 @@ impl<'a> Network<'a> {
       IoEvent::RefreshAuthentication => {
         self.refresh_authentication().await;
       }
-      IoEvent::GetPlaylists => {
-        self.get_current_user_playlists().await;
+      IoEvent::GetPlaylists(offset) => {
+        self.get_current_user_playlists(offset).await;
       }
       IoEvent::GetUser => {
         self.get_user().await;
@@ -169,8 +169,10 @@ impl<'a> Network<'a> {
           .get_made_for_you_playlist_tracks(playlist_id, made_for_you_offset)
           .await;
       }
-      IoEvent::GetPlaylistTracks(playlist_id, playlist_offset) => {
-        self.get_playlist_tracks(playlist_id, playlist_offset).await;
+      IoEvent::GetPlaylistTracks(playlist_id, playlist_track_offset) => {
+        self
+          .get_playlist_tracks(playlist_id, playlist_track_offset)
+          .await;
       }
       IoEvent::GetCurrentSavedTracks(offset) => {
         self.get_current_user_saved_tracks(offset).await;
@@ -400,7 +402,7 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_playlist_tracks(&mut self, playlist_id: String, playlist_offset: u32) {
+  async fn get_playlist_tracks(&mut self, playlist_id: String, playlist_track_offset: u32) {
     if let Ok(playlist_tracks) = self
       .spotify
       .user_playlist_tracks(
@@ -408,7 +410,7 @@ impl<'a> Network<'a> {
         &playlist_id,
         None,
         Some(self.large_search_limit),
-        Some(playlist_offset),
+        Some(playlist_track_offset),
         None,
       )
       .await
@@ -1264,7 +1266,7 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(_) => {
-        self.get_current_user_playlists().await;
+        self.get_current_user_playlists(None).await;
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -1279,7 +1281,7 @@ impl<'a> Network<'a> {
       .await
     {
       Ok(_) => {
-        self.get_current_user_playlists().await;
+        self.get_current_user_playlists(None).await;
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;
@@ -1346,18 +1348,52 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn get_current_user_playlists(&mut self) {
+  async fn get_current_user_playlists(&mut self, offset: Option<u32>) {
+    let mut app = self.app.lock().await;
+
+    let call_offset: u32 = match app.playlists.get_results(None) {
+      Some(x) => match offset {
+        Some(o) => o,
+        None => x.offset,
+      },
+      None => 0 as u32,
+    };
+
     let playlists = self
       .spotify
-      .current_user_playlists(self.large_search_limit, None)
+      .current_user_playlists(self.large_search_limit, call_offset)
       .await;
 
     match playlists {
       Ok(p) => {
-        let mut app = self.app.lock().await;
-        app.playlists = Some(p);
-        // Select the first playlist
-        app.selected_playlist_index = Some(0);
+        // next not working as expected, so using items.is_empty
+        match p.items.is_empty() {
+          false => {
+            match app.playlists.get_results(None) {
+              Some(x) => {
+                let current_offset: u32 = match offset {
+                  Some(o) => o,
+                  None => x.offset,
+                };
+
+                let pos = app
+                  .playlists
+                  .pages
+                  .iter()
+                  .position(|x| x.offset == current_offset);
+
+                match pos {
+                  Some(pos) => app.playlists.set_page_at_index(p, pos),
+                  None => app.playlists.add_pages(p),
+                }
+              }
+              None => app.playlists.add_pages(p),
+            }
+
+            app.selected_playlist_index = Some(0);
+          }
+          true => {}
+        }
       }
       Err(e) => {
         self.handle_error(anyhow!(e)).await;

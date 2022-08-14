@@ -58,6 +58,20 @@ impl<T> ScrollableResultPages<T> {
     }
   }
 
+  pub fn index(&self) -> usize {
+    self.index
+  }
+
+  pub fn next_page(&mut self) {
+    if self.index + 1 < self.pages.len() {
+      self.index += 1;
+    }
+  }
+
+  pub fn previous_page(&mut self) {
+    self.index -= 1;
+  }
+
   pub fn get_results(&self, at_index: Option<usize>) -> Option<&T> {
     self.pages.get(at_index.unwrap_or(self.index))
   }
@@ -67,9 +81,16 @@ impl<T> ScrollableResultPages<T> {
   }
 
   pub fn add_pages(&mut self, new_pages: T) {
-    self.pages.push(new_pages);
     // Whenever a new page is added, set the active index to the end of the vector
+    self.pages.push(new_pages);
     self.index = self.pages.len() - 1;
+  }
+
+  pub fn set_page_at_index(&mut self, new_pages: T, at_index: usize) {
+    self.pages.push(new_pages);
+    self.pages.swap_remove(at_index);
+    //When a page is modified, the following pages must be invalidated
+    self.pages.truncate(at_index + 1);
   }
 }
 
@@ -284,11 +305,12 @@ pub struct App {
   pub saved_show_ids_set: HashSet<String>,
   pub large_search_limit: u32,
   pub library: Library,
-  pub playlist_offset: u32,
+  pub playlist_track_offset: u32,
   pub made_for_you_offset: u32,
   pub playlist_tracks: Option<Page<PlaylistTrack>>,
   pub made_for_you_tracks: Option<Page<PlaylistTrack>>,
-  pub playlists: Option<Page<SimplifiedPlaylist>>,
+  pub playlists: ScrollableResultPages<Page<SimplifiedPlaylist>>,
+  pub playlist_offset: u32,
   pub recently_played: SpotifyResultAndSelectedIndex<Option<CursorBasedPage<PlayHistory>>>,
   pub recommended_tracks: Vec<FullTrack>,
   pub recommendations_seed: String,
@@ -339,6 +361,7 @@ impl Default for App {
       artists: vec![],
       artist: None,
       user_config: UserConfig::new(),
+      playlist_offset: 0,
       saved_album_tracks_index: 0,
       recently_played: Default::default(),
       size: Rect::default(),
@@ -367,11 +390,11 @@ impl Default for App {
       input: vec![],
       input_idx: 0,
       input_cursor_position: 0,
-      playlist_offset: 0,
+      playlist_track_offset: 0,
       made_for_you_offset: 0,
       playlist_tracks: None,
       made_for_you_tracks: None,
-      playlists: None,
+      playlists: ScrollableResultPages::new(),
       recommended_tracks: vec![],
       recommendations_context: None,
       recommendations_seed: "".to_string(),
@@ -1022,10 +1045,12 @@ impl App {
   }
 
   pub fn user_unfollow_playlist(&mut self) {
-    if let (Some(playlists), Some(selected_index), Some(user)) =
-      (&self.playlists, self.selected_playlist_index, &self.user)
-    {
-      let selected_playlist = &playlists.items[selected_index];
+    if let (Some(selected_index), Some(user), Some(playlist_page)) = (
+      self.selected_playlist_index,
+      &self.user,
+      &self.playlists.get_results(None),
+    ) {
+      let selected_playlist = &playlist_page.items[selected_index];
       let selected_id = selected_playlist.id.clone();
       let user_id = user.id.clone();
       self.dispatch(IoEvent::UserUnfollowPlaylist(user_id, selected_id))
