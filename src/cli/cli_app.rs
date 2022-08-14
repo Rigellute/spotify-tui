@@ -200,9 +200,14 @@ impl<'a> CliApp<'a> {
         }
       }
       Type::Playlist => {
-        self.net.handle_network_event(IoEvent::GetPlaylists).await;
-        if let Some(playlists) = &self.net.app.lock().await.playlists {
-          playlists
+        //TODO:This will only return the playlists in the first page
+        self
+          .net
+          .handle_network_event(IoEvent::GetPlaylists(None))
+          .await;
+        let playlists = &self.net.app.lock().await.playlists;
+        match playlists.get_results(Some(0)) {
+          Some(playlists) => playlists
             .items
             .iter()
             .map(|p| {
@@ -212,9 +217,8 @@ impl<'a> CliApp<'a> {
               )
             })
             .collect::<Vec<String>>()
-            .join("\n")
-        } else {
-          "No playlists found".to_string()
+            .join("\n"),
+          None => "No playlist found".to_string(),
         }
       }
       Type::Liked => {

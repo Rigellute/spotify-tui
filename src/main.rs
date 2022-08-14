@@ -400,7 +400,7 @@ async fn start_ui(user_config: UserConfig, app: &Arc<Mutex<App>>) -> Result<()> 
     // Delay spotify request until first render, will have the effect of improving
     // startup speed
     if is_first_render {
-      app.dispatch(IoEvent::GetPlaylists);
+      app.dispatch(IoEvent::GetPlaylists(None));
       app.dispatch(IoEvent::GetUser);
       app.dispatch(IoEvent::GetCurrentPlayback);
       app.help_docs_size = ui::help::get_help_docs(&app.user_config.keys).len() as u32;

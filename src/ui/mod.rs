@@ -304,8 +304,8 @@ pub fn draw_playlist_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
   B: Backend,
 {
-  let playlist_items = match &app.playlists {
-    Some(p) => p.items.iter().map(|item| item.name.to_owned()).collect(),
+  let playlist_items = match app.playlists.get_results(None) {
+    Some(a) => a.items.iter().map(|item| item.name.to_owned()).collect(),
     None => vec![],
   };
 

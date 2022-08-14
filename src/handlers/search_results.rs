@@ -327,7 +327,7 @@ fn handle_enter_event_on_selected_block(app: &mut App) {
           // Go to playlist tracks table
           app.track_table.context = Some(TrackTableContext::PlaylistSearch);
           let playlist_id = playlist.id.to_owned();
-          app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
+          app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_track_offset));
         };
       }
     }
@@ -495,7 +495,7 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Enter => match app.search_results.selected_block {
       SearchResultBlock::Empty => handle_enter_event_on_hovered_block(app),
       SearchResultBlock::PlaylistSearch => {
-        app.playlist_offset = 0;
+        app.playlist_track_offset = 0;
         handle_enter_event_on_selected_block(app);
       }
       _ => handle_enter_event_on_selected_block(app),

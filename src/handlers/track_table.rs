@@ -44,17 +44,21 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.track_table.context {
         Some(context) => match context {
           TrackTableContext::MyPlaylists => {
-            if let (Some(playlists), Some(selected_playlist_index)) =
-              (&app.playlists, &app.selected_playlist_index)
-            {
+            if let (Some(playlist_page), Some(selected_playlist_index)) = (
+              &app.playlists.get_results(None),
+              &app.selected_playlist_index,
+            ) {
               if let Some(selected_playlist) =
-                playlists.items.get(selected_playlist_index.to_owned())
+                playlist_page.items.get(selected_playlist_index.to_owned())
               {
                 if let Some(playlist_tracks) = &app.playlist_tracks {
-                  if app.playlist_offset + app.large_search_limit < playlist_tracks.total {
-                    app.playlist_offset += app.large_search_limit;
+                  if app.playlist_track_offset + app.large_search_limit < playlist_tracks.total {
+                    app.playlist_track_offset += app.large_search_limit;
                     let playlist_id = selected_playlist.id.to_owned();
-                    app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
+                    app.dispatch(IoEvent::GetPlaylistTracks(
+                      playlist_id,
+                      app.playlist_track_offset,
+                    ));
                   }
                 }
               }
@@ -97,17 +101,21 @@ pub fn handler(key: Key, app: &mut App) {
       match &app.track_table.context {
         Some(context) => match context {
           TrackTableContext::MyPlaylists => {
-            if let (Some(playlists), Some(selected_playlist_index)) =
-              (&app.playlists, &app.selected_playlist_index)
-            {
-              if app.playlist_offset >= app.large_search_limit {
-                app.playlist_offset -= app.large_search_limit;
+            if let (Some(playlist_page), Some(selected_playlist_index)) = (
+              &app.playlists.get_results(None),
+              &app.selected_playlist_index,
+            ) {
+              if app.playlist_track_offset >= app.large_search_limit {
+                app.playlist_track_offset -= app.large_search_limit;
               };
               if let Some(selected_playlist) =
-                playlists.items.get(selected_playlist_index.to_owned())
+                playlist_page.items.get(selected_playlist_index.to_owned())
               {
                 let playlist_id = selected_playlist.id.to_owned();
-                app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
+                app.dispatch(IoEvent::GetPlaylistTracks(
+                  playlist_id,
+                  app.playlist_track_offset,
+                ));
               }
             };
           }
@@ -158,9 +166,13 @@ fn play_random_song(app: &mut App) {
   if let Some(context) = &app.track_table.context {
     match context {
       TrackTableContext::MyPlaylists => {
-        let (context_uri, track_json) = match (&app.selected_playlist_index, &app.playlists) {
-          (Some(selected_playlist_index), Some(playlists)) => {
-            if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned())
+        let (context_uri, track_json) = match (
+          &app.selected_playlist_index,
+          &app.playlists.get_results(None),
+        ) {
+          (Some(selected_playlist_index), Some(playlist_page)) => {
+            if let Some(selected_playlist) =
+              playlist_page.items.get(selected_playlist_index.to_owned())
             {
               (
                 Some(selected_playlist.uri.to_owned()),
@@ -279,9 +291,10 @@ fn jump_to_end(app: &mut App) {
   match &app.track_table.context {
     Some(context) => match context {
       TrackTableContext::MyPlaylists => {
-        if let (Some(playlists), Some(selected_playlist_index)) =
-          (&app.playlists, &app.selected_playlist_index)
-        {
+        if let (Some(playlists), Some(selected_playlist_index)) = (
+          &app.playlists.get_results(None),
+          &app.selected_playlist_index,
+        ) {
           if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned()) {
             let total_tracks = selected_playlist
               .tracks
@@ -291,9 +304,12 @@ fn jump_to_end(app: &mut App) {
               as u32;
 
             if app.large_search_limit < total_tracks {
-              app.playlist_offset = total_tracks - (total_tracks % app.large_search_limit);
+              app.playlist_track_offset = total_tracks - (total_tracks % app.large_search_limit);
               let playlist_id = selected_playlist.id.to_owned();
-              app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
+              app.dispatch(IoEvent::GetPlaylistTracks(
+                playlist_id,
+                app.playlist_track_offset,
+              ));
             }
           }
         }
@@ -318,8 +334,8 @@ fn on_enter(app: &mut App) {
     Some(context) => match context {
       TrackTableContext::MyPlaylists => {
         if let Some(_track) = tracks.get(*selected_index) {
-          let context_uri = match (&app.active_playlist_index, &app.playlists) {
-            (Some(active_playlist_index), Some(playlists)) => playlists
+          let context_uri = match (&app.active_playlist_index, &app.playlists.get_results(None)) {
+            (Some(active_playlist_index), Some(playlist_page)) => playlist_page
               .items
               .get(active_playlist_index.to_owned())
               .map(|selected_playlist| selected_playlist.uri.to_owned()),
@@ -329,7 +345,7 @@ fn on_enter(app: &mut App) {
           app.dispatch(IoEvent::StartPlayback(
             context_uri,
             None,
-            Some(app.track_table.selected_index + app.playlist_offset as usize),
+            Some(app.track_table.selected_index + app.playlist_track_offset as usize),
           ));
         };
       }
@@ -469,13 +485,19 @@ fn jump_to_start(app: &mut App) {
   match &app.track_table.context {
     Some(context) => match context {
       TrackTableContext::MyPlaylists => {
-        if let (Some(playlists), Some(selected_playlist_index)) =
-          (&app.playlists, &app.selected_playlist_index)
-        {
-          if let Some(selected_playlist) = playlists.items.get(selected_playlist_index.to_owned()) {
-            app.playlist_offset = 0;
+        if let (Some(selected_playlist_index), Some(playlist_page)) = (
+          &app.selected_playlist_index,
+          &app.playlists.get_results(None),
+        ) {
+          if let Some(selected_playlist) =
+            playlist_page.items.get(selected_playlist_index.to_owned())
+          {
+            app.playlist_track_offset = 0;
             let playlist_id = selected_playlist.id.to_owned();
-            app.dispatch(IoEvent::GetPlaylistTracks(playlist_id, app.playlist_offset));
+            app.dispatch(IoEvent::GetPlaylistTracks(
+              playlist_id,
+              app.playlist_track_offset,
+            ));
           }
         }
       }
