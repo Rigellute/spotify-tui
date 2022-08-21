@@ -297,7 +297,7 @@ If you want to play tracks, Spotify requires that you have a Premium account.
 
 ## Using with [spotifyd](https://github.com/Spotifyd/spotifyd)
 
-Follow the spotifyd documentation to get set up.
+Follow the [spotifyd documentation](https://spotifyd.github.io/spotifyd) to get set up.
 
 After that there is not much to it.
 
