@@ -13,6 +13,8 @@ const APP_CONFIG_DIR: &str = "spotify-tui";
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct UserTheme {
+  pub analysis_bar: Option<String>,
+  pub analysis_bar_text: Option<String>,
   pub active: Option<String>,
   pub banner: Option<String>,
   pub error_border: Option<String>,
@@ -381,6 +383,8 @@ impl UserConfig {
       };
     }
 
+    to_theme_item!(analysis_bar);
+    to_theme_item!(analysis_bar_text);
     to_theme_item!(active);
     to_theme_item!(banner);
     to_theme_item!(error_border);
