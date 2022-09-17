@@ -470,11 +470,17 @@ where
               album_artist.push_str(&app.user_config.padded_liked_icon());
             }
           }
+
+          let end_index = item.release_date.as_deref().unwrap().find("-").unwrap_or(item.release_date.as_deref().unwrap().len());
+          let album_release_year = item.release_date.as_deref().unwrap().get(0..end_index).unwrap();
+
+          let album_type_and_release_year = item.album_type.as_deref().unwrap_or("unknown").to_owned() + ", " + album_release_year;
+
           album_artist.push_str(&format!(
             "{} - {} ({})",
             item.name.to_owned(),
             create_artist_string(&item.artists),
-            item.album_type.as_deref().unwrap_or("unknown")
+            album_type_and_release_year
           ));
           album_artist
         })
@@ -1238,11 +1244,17 @@ where
             album_artist.push_str(&app.user_config.padded_liked_icon());
           }
         }
+
+        let end_index = item.release_date.as_deref().unwrap().find("-").unwrap_or(item.release_date.as_deref().unwrap().len());
+        let album_release_year = item.release_date.as_deref().unwrap().get(0..end_index).unwrap();
+
+        let album_type_and_release_year = item.album_type.as_deref().unwrap_or("unknown").to_owned() + ", " + album_release_year;
+
         album_artist.push_str(&format!(
           "{} - {} ({})",
           item.name.to_owned(),
           create_artist_string(&item.artists),
-          item.album_type.as_deref().unwrap_or("unknown")
+          album_type_and_release_year
         ));
         album_artist
       })
