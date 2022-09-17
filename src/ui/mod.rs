@@ -21,7 +21,7 @@ use tui::{
   Frame,
 };
 use util::{
-  create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
+  create_artist_string, create_album_type_and_release_year_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
   millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
@@ -471,16 +471,11 @@ where
             }
           }
 
-          let end_index = item.release_date.as_deref().unwrap().find("-").unwrap_or(item.release_date.as_deref().unwrap().len());
-          let album_release_year = item.release_date.as_deref().unwrap().get(0..end_index).unwrap();
-
-          let album_type_and_release_year = item.album_type.as_deref().unwrap_or("unknown").to_owned() + ", " + album_release_year;
-
           album_artist.push_str(&format!(
             "{} - {} ({})",
             item.name.to_owned(),
             create_artist_string(&item.artists),
-            album_type_and_release_year
+            create_album_type_and_release_year_string(item)
           ));
           album_artist
         })
@@ -1245,16 +1240,11 @@ where
           }
         }
 
-        let end_index = item.release_date.as_deref().unwrap().find("-").unwrap_or(item.release_date.as_deref().unwrap().len());
-        let album_release_year = item.release_date.as_deref().unwrap().get(0..end_index).unwrap();
-
-        let album_type_and_release_year = item.album_type.as_deref().unwrap_or("unknown").to_owned() + ", " + album_release_year;
-
         album_artist.push_str(&format!(
           "{} - {} ({})",
           item.name.to_owned(),
           create_artist_string(&item.artists),
-          album_type_and_release_year
+          create_album_type_and_release_year_string(item)
         ));
         album_artist
       })
