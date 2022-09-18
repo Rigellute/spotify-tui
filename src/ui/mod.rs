@@ -21,7 +21,7 @@ use tui::{
   Frame,
 };
 use util::{
-  create_artist_string, display_track_progress, get_artist_highlight_state, get_color,
+  create_artist_string, create_album_type_and_release_year_string, display_track_progress, get_artist_highlight_state, get_color,
   get_percentage_width, get_search_results_highlight_state, get_track_progress_percentage,
   millis_to_minutes, BASIC_VIEW_HEIGHT, SMALL_TERMINAL_WIDTH,
 };
@@ -470,11 +470,12 @@ where
               album_artist.push_str(&app.user_config.padded_liked_icon());
             }
           }
+
           album_artist.push_str(&format!(
             "{} - {} ({})",
             item.name.to_owned(),
             create_artist_string(&item.artists),
-            item.album_type.as_deref().unwrap_or("unknown")
+            create_album_type_and_release_year_string(item)
           ));
           album_artist
         })
@@ -1238,11 +1239,12 @@ where
             album_artist.push_str(&app.user_config.padded_liked_icon());
           }
         }
+
         album_artist.push_str(&format!(
           "{} - {} ({})",
           item.name.to_owned(),
           create_artist_string(&item.artists),
-          item.album_type.as_deref().unwrap_or("unknown")
+          create_album_type_and_release_year_string(item)
         ));
         album_artist
       })
