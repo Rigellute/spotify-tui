@@ -6,6 +6,7 @@
 
 ### Added
 
+- Show year of album `release_date` in Search panes and on Artist album panes [#1024](https://github.com/Rigellute/spotify-tui/pull/1024)
 - Show `album_type` in Search panes [#868](https://github.com/Rigellute/spotify-tui/pull/868)
 - Add option to set window title to "spt - Spotify TUI" on startup [#844](https://github.com/Rigellute/spotify-tui/pull/844)
 
