@@ -49,8 +49,9 @@ pub fn create_artist_string(artists: &[SimplifiedArtist]) -> String {
 }
 
 pub fn create_album_type_and_release_year_string(album_item: &SimplifiedAlbum) -> String {
-  let end_index = album_item.release_date.as_deref().unwrap().find("-").unwrap_or(album_item.release_date.as_deref().unwrap().len());
-  let album_release_year = album_item.release_date.as_deref().unwrap().get(0..end_index).unwrap();
+  // No matter the release_date_precision, release_date should always start with a four-digit string of the year (YYYY[-MM[-DD]]).
+  // Getting those first four letters/digits should always work.
+  let album_release_year = album_item.release_date.as_deref().unwrap().get(0..4).unwrap();
 
   album_item.album_type.as_deref().unwrap_or("unknown").to_owned() + ", " + album_release_year
 }
