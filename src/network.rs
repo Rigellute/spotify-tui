@@ -88,6 +88,10 @@ pub enum IoEvent {
   GetShow(String),
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
+  AddToPlaylist {
+    track_id: String,
+    playlist_id: String,
+  },
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -302,10 +306,26 @@ impl<'a> Network<'a> {
       IoEvent::AddItemToQueue(item) => {
         self.add_item_to_queue(item).await;
       }
+      IoEvent::AddToPlaylist {
+        track_id,
+        playlist_id,
+      } => {
+        self.add_to_playlist(track_id, playlist_id).await;
+      }
     };
 
     let mut app = self.app.lock().await;
     app.is_loading = false;
+  }
+
+  async fn add_to_playlist(&mut self, track_id: String, playlist_id: String) {
+    if let Err(e) = self
+      .spotify
+      .user_playlist_add_tracks("spotify", &playlist_id, &[track_id], None)
+      .await
+    {
+      self.handle_error(anyhow!(e)).await;
+    }
   }
 
   async fn handle_error(&mut self, e: anyhow::Error) {

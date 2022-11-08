@@ -1,3 +1,4 @@
+mod add_to_playlist;
 mod album_list;
 mod album_tracks;
 mod analysis;
@@ -167,6 +168,9 @@ fn handle_block_events(key: Key, app: &mut App) {
     }
     ActiveBlock::Dialog(_) => {
       dialog::handler(key, app);
+    }
+    ActiveBlock::AddToPlaylist => {
+      add_to_playlist::handler(key, app);
     }
   }
 }

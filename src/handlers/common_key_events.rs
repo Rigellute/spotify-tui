@@ -130,6 +130,12 @@ pub fn handle_right_event(app: &mut App) {
       RouteId::Home => {
         app.set_current_route_state(Some(ActiveBlock::Home), Some(ActiveBlock::Home));
       }
+      RouteId::AddToPlaylist(_) => {
+        app.set_current_route_state(
+          Some(ActiveBlock::AddToPlaylist),
+          Some(ActiveBlock::AddToPlaylist),
+        );
+      }
       RouteId::SelectedDevice => {}
       RouteId::Error => {}
       RouteId::Analysis => {}

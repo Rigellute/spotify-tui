@@ -272,6 +272,9 @@ where
     RouteId::Recommendations => {
       draw_recommendations_table(f, app, chunks[1]);
     }
+    RouteId::AddToPlaylist(_) => {
+      draw_add_to_playlist_block(f, app, chunks[1]);
+    }
     RouteId::Error => {} // This is handled as a "full screen" route in main.rs
     RouteId::SelectedDevice => {} // This is handled as a "full screen" route in main.rs
     RouteId::Analysis => {} // This is handled as a "full screen" route in main.rs
@@ -297,6 +300,33 @@ where
     &LIBRARY_OPTIONS,
     highlight_state,
     Some(app.library.selected_index),
+  );
+}
+
+pub fn draw_add_to_playlist_block<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
+where
+  B: Backend,
+{
+  let playlist_items = match &app.playlists {
+    Some(p) => p.items.iter().map(|item| item.name.to_owned()).collect(),
+    None => vec![],
+  };
+
+  let current_route = app.get_current_route();
+
+  let highlight_state = (
+    current_route.active_block == ActiveBlock::AddToPlaylist,
+    current_route.hovered_block == ActiveBlock::AddToPlaylist,
+  );
+
+  draw_selectable_list(
+    f,
+    app,
+    layout_chunk,
+    "Choose a playlist",
+    &playlist_items,
+    highlight_state,
+    app.selected_add_to_playlist_index,
   );
 }
 

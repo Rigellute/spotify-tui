@@ -138,6 +138,7 @@ pub enum ActiveBlock {
   Artists,
   BasicView,
   Dialog(DialogContext),
+  AddToPlaylist,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -159,6 +160,7 @@ pub enum RouteId {
   PodcastEpisodes,
   Recommendations,
   Dialog,
+  AddToPlaylist(String),
 }
 
 #[derive(Debug)]
@@ -298,6 +300,7 @@ pub struct App {
   pub selected_album_full: Option<SelectedFullAlbum>,
   pub selected_device_index: Option<usize>,
   pub selected_playlist_index: Option<usize>,
+  pub selected_add_to_playlist_index: Option<usize>,
   pub active_playlist_index: Option<usize>,
   pub size: Rect,
   pub small_search_limit: u32,
@@ -393,6 +396,7 @@ impl Default for App {
       seek_ms: None,
       selected_device_index: None,
       selected_playlist_index: None,
+      selected_add_to_playlist_index: Some(0),
       active_playlist_index: None,
       track_table: Default::default(),
       episode_table_context: EpisodeTableContext::Full,
