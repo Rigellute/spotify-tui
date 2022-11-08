@@ -2,8 +2,8 @@ use super::{
   super::app::{App, RecommendationsContext, TrackTable, TrackTableContext},
   common_key_events,
 };
-use crate::event::Key;
-use crate::network::IoEvent;
+use crate::{app::ActiveBlock, network::IoEvent};
+use crate::{app::RouteId, event::Key};
 use rand::{thread_rng, Rng};
 use serde_json::from_value;
 
@@ -149,8 +149,26 @@ pub fn handler(key: Key, app: &mut App) {
     Key::Char('r') => {
       handle_recommended_tracks(app);
     }
+    Key::Char('P') => {
+      add_to_playlist(app);
+    }
     _ if key == app.user_config.keys.add_item_to_queue => on_queue(app),
     _ => {}
+  }
+}
+
+fn add_to_playlist(app: &mut App) {
+  let TrackTable {
+    selected_index,
+    tracks,
+    ..
+  } = &app.track_table;
+
+  if let Some(track_id) = tracks
+    .get(*selected_index)
+    .and_then(|track| track.id.clone())
+  {
+    app.push_navigation_stack(RouteId::AddToPlaylist(track_id), ActiveBlock::AddToPlaylist)
   }
 }
 
