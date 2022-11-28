@@ -524,7 +524,7 @@ fn parse_theme_item(theme_item: &str) -> Result<Color> {
     "White" => Color::White,
     _ => {
       let colors = theme_item.split(',').collect::<Vec<&str>>();
-      if let (Some(r), Some(g), Some(b)) = (colors.get(0), colors.get(1), colors.get(2)) {
+      if let (Some(r), Some(g), Some(b)) = (colors.first(), colors.get(1), colors.get(2)) {
         Color::Rgb(
           r.trim().parse::<u8>()?,
           g.trim().parse::<u8>()?,

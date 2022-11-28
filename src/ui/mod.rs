@@ -145,7 +145,7 @@ where
   );
 
   let input_string: String = app.input.iter().collect();
-  let lines = Text::from((&input_string).as_str());
+  let lines = Text::from(input_string.as_str());
   let input = Paragraph::new(lines).block(
     Block::default()
       .borders(Borders::ALL)
@@ -392,7 +392,7 @@ where
           PlayingItem::Episode(episode) => Some(episode.id),
         })
       })
-      .unwrap_or_else(|| "".to_string());
+      .unwrap_or_default();
 
     let songs = match &app.search_results.tracks {
       Some(tracks) => tracks
@@ -400,7 +400,7 @@ where
         .iter()
         .map(|item| {
           let mut song_name = "".to_string();
-          let id = item.clone().id.unwrap_or_else(|| "".to_string());
+          let id = item.clone().id.unwrap_or_default();
           if currently_playing_id == id {
             song_name += "▶ "
           }
@@ -692,7 +692,7 @@ where
             .items
             .iter()
             .map(|item| TableItem {
-              id: item.id.clone().unwrap_or_else(|| "".to_string()),
+              id: item.id.clone().unwrap_or_default(),
               format: vec![
                 "".to_string(),
                 item.track_number.to_string(),
@@ -718,7 +718,7 @@ where
           .items
           .iter()
           .map(|item| TableItem {
-            id: item.id.clone().unwrap_or_else(|| "".to_string()),
+            id: item.id.clone().unwrap_or_default(),
             format: vec![
               "".to_string(),
               item.track_number.to_string(),
@@ -798,7 +798,7 @@ where
     .tracks
     .iter()
     .map(|item| TableItem {
-      id: item.id.clone().unwrap_or_else(|| "".to_string()),
+      id: item.id.clone().unwrap_or_default(),
       format: vec![
         "".to_string(),
         item.name.to_owned(),
@@ -877,7 +877,7 @@ where
     .tracks
     .iter()
     .map(|item| TableItem {
-      id: item.id.clone().unwrap_or_else(|| "".to_string()),
+      id: item.id.clone().unwrap_or_default(),
       format: vec![
         "".to_string(),
         item.name.to_owned(),
@@ -988,7 +988,7 @@ where
 
       let (item_id, name, duration_ms) = match track_item {
         PlayingItem::Track(track) => (
-          track.id.to_owned().unwrap_or_else(|| "".to_string()),
+          track.id.to_owned().unwrap_or_default(),
           track.name.to_owned(),
           track.duration_ms,
         ),
@@ -1612,7 +1612,7 @@ where
       .items
       .iter()
       .map(|item| TableItem {
-        id: item.track.id.clone().unwrap_or_else(|| "".to_string()),
+        id: item.track.id.clone().unwrap_or_default(),
         format: vec![
           "".to_string(),
           item.track.name.to_owned(),

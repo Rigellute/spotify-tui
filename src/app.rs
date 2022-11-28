@@ -1178,7 +1178,7 @@ impl App {
     self
       .user
       .to_owned()
-      .and_then(|user| Country::from_str(&user.country.unwrap_or_else(|| "".to_string())).ok())
+      .and_then(|user| Country::from_str(&user.country.unwrap_or_default()).ok())
   }
 
   pub fn calculate_help_menu_offset(&mut self) {

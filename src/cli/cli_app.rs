@@ -275,7 +275,7 @@ impl<'a> CliApp<'a> {
 
   pub async fn seek(&mut self, seconds_str: String) -> Result<()> {
     let seconds = match seconds_str.parse::<i32>() {
-      Ok(s) => s.abs() as u32,
+      Ok(s) => s.unsigned_abs(),
       Err(_) => return Err(anyhow!("failed to convert seconds to i32")),
     };
 
@@ -296,7 +296,7 @@ impl<'a> CliApp<'a> {
           PlayingItem::Episode(episode) => episode.duration_ms,
         };
 
-        (*ms as u32, duration)
+        (*ms, duration)
       } else {
         return Err(anyhow!("no context available"));
       }
