@@ -119,7 +119,7 @@ fn spotify_resource_id(base: &str, uri: &str, sep: &str, resource_type: &str) ->
   let id_string_with_query_params = uri.trim_start_matches(&uri_prefix);
   let query_idx = id_string_with_query_params
     .find('?')
-    .unwrap_or_else(|| id_string_with_query_params.len());
+    .unwrap_or(id_string_with_query_params.len());
   let id_string = id_string_with_query_params[0..query_idx].to_string();
   // If the lengths aren't equal, we must have found a match.
   let matched = id_string_with_query_params.len() != uri.len() && id_string.len() != uri.len();
