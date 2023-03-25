@@ -24,6 +24,7 @@ The terminal in the demo above is using the [Rigel theme](https://rigel.netlify.
     - [Snap](#snap)
     - [AUR](#aur)
     - [Nix](#nix)
+    - [Guix](#guix)
     - [Void Linux](#void-linux)
     - [Fedora/CentOS](#fedora-centos)
     - [Cargo](#cargo)
@@ -95,6 +96,14 @@ nix-env -iA nixpkgs.spotify-tui
 
 Where `nixpkgs` is the channel name in your configuration. For a more up-to-date installation, use the unstable channel.
 It is also possible to add the package to `environment.systemPackages` (for NixOS), or `home.packages` when using [home-manager](https://github.com/rycee/home-manager).
+
+### Guix
+
+Available as the package [spotify-tui](https://packages.guix.gnu.org/packages/spotify-tui). To install run:
+
+```bash
+guix install spotify-tui
+```
 
 ### Void Linux
 
