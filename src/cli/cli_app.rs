@@ -660,4 +660,54 @@ impl<'a> CliApp<'a> {
       _ => unreachable!(),
     }
   }
+
+  pub async fn playlist_new(&mut self, name: String, public: bool, description: String) -> Result<String>{
+    let mut user_id = None;
+
+    match self.net.spotify.current_user().await {
+      Ok(p) => {
+        user_id = Some(p.id);
+      }
+      Err(e) => {
+        self
+          .net
+          .app
+          .lock()
+          .await
+          .handle_error(anyhow!(e.to_string()));
+      }
+    }
+
+    if user_id.is_some() {
+      self
+        .net
+        .handle_network_event(IoEvent::PlaylistNew(user_id.unwrap(), name.clone(),  Some(public), description))
+        .await;
+    }
+
+
+    // Want to check if playlist is there?
+    self.net.handle_network_event(IoEvent::GetPlaylists).await;
+    if let Some(playlists) = &self.net.app.lock().await.playlists {
+      let added = playlists
+        .items
+        .iter()
+        .fold(false, |acc, p| {
+          //println!("playlist name: {}, new playlist name: {}", p.name, name);
+          if !acc {
+            p.name.eq(&name)
+          } else {
+            acc
+          }
+          });
+      if added {
+        Ok(format!("Playlist '{}' created.", name))
+      } else {
+        Err(anyhow!("Playlist {} not created.", name))
+      }
+    } else {
+      Err(anyhow!("Playlists not received"))
+    }
+
+  }
 }

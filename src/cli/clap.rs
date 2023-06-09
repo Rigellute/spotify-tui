@@ -385,3 +385,33 @@ specify it.",
         .multiple(false),
     )
 }
+
+
+pub fn playlist_subcommand() -> App<'static, 'static> {
+  SubCommand::with_name("playlist")
+    .version(env!("CARGO_PKG_VERSION"))
+    .author(env!("CARGO_PKG_AUTHORS"))
+    .about("Playlist creation, editing, and crafting.")
+    .long_about(
+      "Playlist stuff.",
+    )
+    .visible_alias("pl")
+    .arg(format_arg().default_value_ifs(&[
+      ("new", None, "%h - %a (%u)"),
+    ]))
+    .arg(
+      Arg::with_name("new")
+        .short("n")
+        .long("new")
+        .takes_value(true)
+        .value_names(&["NAME","PUBLIC","DESCRIPTION"])
+        .help("Creates a new playlist"),
+    )
+    .group(
+      ArgGroup::with_name("playlist_commands")
+        .args(&["new"])
+        .required(true)
+        .multiple(false),
+    )
+
+}

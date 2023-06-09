@@ -166,7 +166,8 @@ of the app. Beware that this comes at a CPU cost!",
     .subcommand(cli::playback_subcommand())
     .subcommand(cli::play_subcommand())
     .subcommand(cli::list_subcommand())
-    .subcommand(cli::search_subcommand());
+    .subcommand(cli::search_subcommand())
+    .subcommand(cli::playlist_subcommand());
 
   let matches = clap_app.clone().get_matches();
 
