@@ -386,25 +386,20 @@ specify it.",
     )
 }
 
-
 pub fn playlist_subcommand() -> App<'static, 'static> {
   SubCommand::with_name("playlist")
     .version(env!("CARGO_PKG_VERSION"))
     .author(env!("CARGO_PKG_AUTHORS"))
     .about("Playlist creation, editing, and crafting.")
-    .long_about(
-      "Playlist stuff.",
-    )
+    .long_about("Playlist stuff.")
     .visible_alias("pl")
-    .arg(format_arg().default_value_ifs(&[
-      ("new", None, "%h - %a (%u)"),
-    ]))
+    .arg(format_arg().default_value_ifs(&[("new", None, "%h - %a (%u)")]))
     .arg(
       Arg::with_name("new")
         .short("n")
         .long("new")
         .takes_value(true)
-        .value_names(&["NAME","PUBLIC","DESCRIPTION"])
+        .value_names(&["NAME", "PUBLIC", "DESCRIPTION"])
         .help("Creates a new playlist"),
     )
     .group(
@@ -413,5 +408,4 @@ pub fn playlist_subcommand() -> App<'static, 'static> {
         .required(true)
         .multiple(false),
     )
-
 }

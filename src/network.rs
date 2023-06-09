@@ -88,7 +88,7 @@ pub enum IoEvent {
   GetShow(String),
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
-  PlaylistNew(String,String,Option<bool>,String),
+  PlaylistNew(String, String, Option<bool>, String),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -304,8 +304,10 @@ impl<'a> Network<'a> {
         self.add_item_to_queue(item).await;
       }
 
-      IoEvent::PlaylistNew(userid,name,public,description) => {
-        self.playlist_new(userid, name, public, Some(description) ).await;
+      IoEvent::PlaylistNew(userid, name, public, description) => {
+        self
+          .playlist_new(userid, name, public, Some(description))
+          .await;
       }
     };
 
@@ -1495,7 +1497,13 @@ impl<'a> Network<'a> {
     }
   }
 
-  async fn playlist_new(&mut self, user_id: String, name: String, public: Option<bool>, description: Option<String>) {
+  async fn playlist_new(
+    &mut self,
+    user_id: String,
+    name: String,
+    public: Option<bool>,
+    description: Option<String>,
+  ) {
     match self
       .spotify
       .user_playlist_create(user_id.as_str(), name.as_str(), public, description)
@@ -1507,5 +1515,4 @@ impl<'a> Network<'a> {
       }
     }
   }
-
 }

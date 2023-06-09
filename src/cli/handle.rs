@@ -138,15 +138,22 @@ pub async fn handle_matches(
       )
     }
     "playlist" => {
-
       if matches.values_of("new").is_some() {
         let mut new_args = matches.values_of("new").unwrap();
+
         let name = new_args.next().unwrap();
+
         let public = if new_args.next().unwrap() == "true" {
           true
-        } else { false };
+        } else {
+          false
+        };
+
         let description = new_args.next().unwrap();
-        cli.playlist_new(name.to_string(), public, description.to_string()).await
+
+        cli
+          .playlist_new(name.to_string(), public, description.to_string())
+          .await
       } else {
         Err(anyhow!("No action"))
       }
