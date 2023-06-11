@@ -1,5 +1,8 @@
 # Spotify TUI
 
+> **Note**
+> make sure you have **Spotify Premium**.
+
 ![Continuous Integration](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg?branch=master&event=push)
 ![](https://img.shields.io/badge/license-MIT-blueviolet.svg)
 ![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
@@ -83,6 +86,16 @@ For those on Arch Linux you can find the package on AUR [here](https://aur.archl
 
 ```bash
 yay -S spotify-tui
+```
+
+if you want use the bin / git version, use this:
+
+```bash
+yay -S spotify-tui-bin 
+```
+
+```bash
+yay -S spotify-tui-git
 ```
 
 ### Nix
