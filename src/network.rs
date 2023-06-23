@@ -24,6 +24,12 @@ use rspotify::{
   util::get_token,
 };
 use serde_json::{map::Map, Value};
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
+use std::fs::{self, OpenOptions};
+use std::hash::{Hash, Hasher};
+use std::io::{BufRead, BufReader, Write};
+use std::path::PathBuf;
 use std::{
   sync::Arc,
   time::{Duration, Instant, SystemTime},
@@ -89,6 +95,7 @@ pub enum IoEvent {
   GetCurrentShowEpisodes(String, Option<u32>),
   AddItemToQueue(String),
   PlaylistNew(String, String, Option<bool>, String),
+  PlaylistImport(String, String, String, PathBuf),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -307,6 +314,11 @@ impl<'a> Network<'a> {
       IoEvent::PlaylistNew(userid, name, public, description) => {
         self
           .playlist_new(userid, name, public, Some(description))
+          .await;
+      }
+      IoEvent::PlaylistImport(user_id, import_from, import_to, import_file) => {
+        self
+          .playlist_import(user_id, import_from, import_to, import_file)
           .await;
       }
     };
@@ -1504,15 +1516,275 @@ impl<'a> Network<'a> {
     public: Option<bool>,
     description: Option<String>,
   ) {
-    match self
+    if let Err(e) = self
       .spotify
       .user_playlist_create(user_id.as_str(), name.as_str(), public, description)
       .await
     {
-      Ok(p) => (),
-      Err(e) => {
-        self.handle_error(anyhow!(e)).await;
+      self.handle_error(anyhow!(e)).await;
+    }
+  }
+
+  async fn playlist_import(
+    &mut self,
+    user_id: String,
+    import_from: String,
+    mut import_to: String,
+    import_file: PathBuf,
+  ) {
+    let import_to_playlist = self
+      .spotify
+      .user_playlist(
+        user_id.as_str(),
+        Some(import_to.as_mut_str()),
+        None,
+        Some(Country::UnitedStates),
+      )
+      .await;
+
+    if import_to_playlist.is_err() {
+      self
+        .handle_error(anyhow!(
+          "'import_to' playlist ({}) does not exist.",
+          import_to
+        ))
+        .await;
+      return;
+    }
+    let import_to_tracks = import_to_playlist.unwrap().tracks.items;
+
+    let mut ids = Vec::new();
+
+    // Get number of tracks
+    if let Ok(num_tracks) = self
+      .spotify
+      .user_playlist_tracks(
+        &user_id,
+        import_from.as_str(),
+        None,
+        50,
+        0,
+        Some(Country::UnitedStates),
+      )
+      .await
+    {
+      let mut dec = num_tracks.total as i32;
+      let mut offset = 0;
+
+      // Get new tracks and add to Vec until playlist empty
+      while dec > 0 {
+        if let Some(req) = self
+          .spotify
+          .user_playlist_tracks(
+            &user_id,
+            &import_from.as_str(),
+            None,
+            50,
+            offset,
+            Some(Country::UnitedStates),
+          )
+          .await
+          .ok()
+        {
+          for track in req.items.iter() {
+            let name = track.track.as_ref().unwrap().name.to_owned();
+            let id = track.track.as_ref().unwrap().id.to_owned().unwrap();
+            ids.push(format!("{}:{}", id, name));
+          }
+          dec = dec - 50;
+          offset = offset + 50;
+        }
       }
+
+      // Calculate hash of all track ids
+      let mut hasher = DefaultHasher::new();
+      ids.hash(&mut hasher);
+      let hash = hasher.finish();
+
+      if !import_file.exists() {
+        // Write hash to top of file
+        {
+          if fs::create_dir_all(import_file.parent().unwrap()).is_err() {
+            self
+              .handle_error(anyhow!(
+                "Could not write to import file at {}",
+                import_file.as_os_str().to_str().unwrap()
+              ))
+              .await;
+            return;
+          }
+
+          let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(&import_file)
+            .unwrap();
+
+          let mut hash_str = hash.to_string();
+          hash_str.push_str("\n");
+          if writeln!(file, "{}", hash_str).is_err() {
+            self
+              .handle_error(anyhow!(
+                "Could not write to import file at {}",
+                import_file.as_os_str().to_str().unwrap()
+              ))
+              .await;
+            return;
+          }
+        }
+
+        let mut file = OpenOptions::new().append(true).open(&import_file).unwrap();
+
+        for track in ids.iter() {
+          let id = track.split(':').next().unwrap().to_string();
+          if writeln!(file, "{}", track).is_err() {
+            self
+              .handle_error(anyhow!(
+                "Could not write to import file at {}",
+                import_file.as_os_str().to_str().unwrap()
+              ))
+              .await;
+            return;
+          }
+
+          let in_import_from = import_to_tracks.iter().fold(false, |acc, head| {
+            if !acc {
+              id.eq(&(head.track.as_ref().unwrap().id.as_ref().unwrap().to_owned()))
+            } else {
+              acc
+            }
+          });
+
+          if !in_import_from {
+            if let Err(e) = self
+              .spotify
+              .user_playlist_add_tracks(&user_id, &import_to, &[id], Some(0))
+              .await
+            {
+              self.handle_error(anyhow!(e)).await;
+            }
+          }
+        }
+      } else {
+        // Comapare hash, if no change, nothing
+        let file = OpenOptions::new().read(true).open(&import_file).unwrap();
+        let reader = BufReader::new(file);
+
+        let mut iter = reader.lines();
+        let old_hash = iter.next().unwrap().unwrap().trim().to_string();
+
+        if !old_hash.eq(&hash.to_string()) {
+          // Need to rewrite the file now
+          if let Err(e) = fs::remove_file(&import_file) {
+            self.handle_error(anyhow!(e)).await;
+          }
+
+          {
+            let mut file = OpenOptions::new()
+              .write(true)
+              .create(true)
+              .open(&import_file)
+              .unwrap();
+
+            let mut hash_str = hash.to_string();
+            hash_str.push_str("\n");
+            if writeln!(file, "{}", hash_str).is_err() {
+              self
+                .handle_error(anyhow!(
+                  "Could not write to import file at {}",
+                  import_file.as_os_str().to_str().unwrap()
+                ))
+                .await;
+              return;
+            }
+          }
+
+          let mut file = OpenOptions::new().append(true).open(import_file).unwrap();
+
+          for track in ids.iter() {
+            if let Err(e) = writeln!(file, "{}", track) {
+              self.handle_error(anyhow!(e)).await;
+            }
+          }
+
+          // If change, find ids which do not match
+          // Load in ids from file, get new ids, compare
+          // add all new ids
+          let mut old_ids: HashSet<String> = HashSet::new();
+          let mut new_ids: HashSet<String> = HashSet::new();
+
+          for id in ids {
+            new_ids.insert(id);
+          }
+
+          // Consume empty line
+          iter.next();
+
+          // Add all ids from file to old_ids
+          while let Some(Ok(id)) = iter.next() {
+            old_ids.insert(id.trim().to_string());
+          }
+
+          // Will start with old_ids, removing ids that are in both.
+          // At the end, we should have deleted ids in the old_ids hashset
+          let deleted_tracks = old_ids.difference(&new_ids);
+          for track in deleted_tracks {
+            let id = track.split(':').next().unwrap().to_string();
+            let mut input = String::new();
+            print!(
+              "The imported playlist has deleted {}, would you like to as well? [y/n]: ",
+              track
+            );
+            std::io::stdin().read_line(&mut input).unwrap();
+            if input.trim().eq(&String::from("y")) || input.trim().eq(&String::from("Y")) {
+              if let Err(e) = self
+                .spotify
+                .user_playlist_remove_all_occurrences_of_tracks(
+                  user_id.as_str(),
+                  &import_to,
+                  &[id],
+                  None,
+                )
+                .await
+              {
+                self.handle_error(anyhow!(e)).await;
+              }
+            }
+          }
+
+          // ids to add will be in the new_ids hashset
+          let new_tracks = new_ids.difference(&old_ids);
+
+          for track in new_tracks {
+            let id = track.split(':').next().unwrap().to_string();
+            let in_import_from = import_to_tracks.iter().fold(false, |acc, head| {
+              if !acc {
+                id.eq(&(head.track.as_ref().unwrap().id.as_ref().unwrap().to_owned()))
+              } else {
+                acc
+              }
+            });
+
+            if !in_import_from {
+              if let Err(e) = self
+                .spotify
+                .user_playlist_add_tracks(&user_id, &import_to, &[id], Some(0))
+                .await
+              {
+                self.handle_error(anyhow!(e)).await;
+              }
+            }
+          }
+        }
+      }
+    } else {
+      self
+        .handle_error(anyhow!(
+          "'import_from' playlist ({}) does not exist.",
+          import_from
+        ))
+        .await;
+      return;
     }
   }
 }

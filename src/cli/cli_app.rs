@@ -2,10 +2,14 @@ use crate::network::{IoEvent, Network};
 use crate::user_config::UserConfig;
 
 use super::util::{Flag, Format, FormatType, JumpDirection, Type};
+use std::path::Path;
 
 use anyhow::{anyhow, Result};
 use rand::{thread_rng, Rng};
 use rspotify::model::{context::CurrentlyPlaybackContext, PlayingItem};
+
+const CONFIG_DIR: &str = ".config";
+const APP_CONFIG_DIR: &str = "spotify-tui";
 
 pub struct CliApp<'a> {
   pub net: Network<'a>,
@@ -713,6 +717,106 @@ impl<'a> CliApp<'a> {
       }
     } else {
       Err(anyhow!("Playlists not received"))
+    }
+  }
+
+  // This will say that a playlist is deleted if it was never there. It does delete playlists if they were there though
+  pub async fn playlist_unfollow(&mut self, playlist_id: String) -> Result<String> {
+    let mut user_id = None;
+
+    match self.net.spotify.current_user().await {
+      Ok(p) => {
+        user_id = Some(p.id);
+      }
+      Err(e) => {
+        self
+          .net
+          .app
+          .lock()
+          .await
+          .handle_error(anyhow!(e.to_string()));
+      }
+    }
+
+    if user_id.is_some() {
+      self
+        .net
+        .handle_network_event(IoEvent::UserUnfollowPlaylist(
+          user_id.unwrap(),
+          playlist_id.clone(),
+        ))
+        .await;
+    }
+
+    self.net.handle_network_event(IoEvent::GetPlaylists).await;
+    if let Some(playlists) = &self.net.app.lock().await.playlists {
+      let found =
+        playlists.items.iter().fold(
+          false,
+          |acc, p| {
+            if !acc {
+              p.id.eq(&playlist_id)
+            } else {
+              acc
+            }
+          },
+        );
+      if !found {
+        Ok(format!("Playlist id '{}' deleted.", playlist_id))
+      } else {
+        Err(anyhow!("Playlist id '{}' not deleted.", playlist_id))
+      }
+    } else {
+      Err(anyhow!("Playlists not received"))
+    }
+  }
+
+  pub async fn playlist_import(
+    &mut self,
+    import_from: String,
+    import_to: String,
+  ) -> Result<String> {
+    let mut user_id = None;
+    match self.net.spotify.current_user().await {
+      Ok(p) => {
+        user_id = Some(p.id);
+      }
+      Err(e) => {
+        self
+          .net
+          .app
+          .lock()
+          .await
+          .handle_error(anyhow!(e.to_string()));
+      }
+    }
+
+    match dirs::home_dir() {
+      Some(home) => {
+        let path = Path::new(&home);
+        let config_dir = path.join(CONFIG_DIR);
+        let app_dir = config_dir.join(APP_CONFIG_DIR);
+        let imports_dir = app_dir.join("imports");
+        let playlist_dir = imports_dir.join(&import_to);
+        let import_file = playlist_dir.join(&import_from);
+
+        self.net.handle_network_event(IoEvent::GetPlaylists).await;
+        self
+          .net
+          .handle_network_event(IoEvent::PlaylistImport(
+            user_id.unwrap(),
+            import_from.to_owned(),
+            import_to.to_owned(),
+            import_file,
+          ))
+          .await;
+
+        Ok(format!(
+          "Tracks from {} were imported into {}",
+          import_from, import_to
+        ))
+      }
+      None => Err(anyhow!("No $HOME directory found, could not import.")),
     }
   }
 }

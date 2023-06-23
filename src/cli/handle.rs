@@ -154,6 +154,19 @@ pub async fn handle_matches(
         cli
           .playlist_new(name.to_string(), public, description.to_string())
           .await
+      } else if matches.values_of("delete").is_some() {
+        let mut args = matches.values_of("delete").unwrap();
+
+        let playlist_id = args.next().unwrap().to_string();
+
+        cli.playlist_unfollow(playlist_id).await
+      } else if matches.values_of("import").is_some() {
+        let mut args = matches.values_of("import").unwrap();
+
+        let import_from = args.next().unwrap().to_string();
+        let import_to = args.next().unwrap().to_string();
+
+        cli.playlist_import(import_from, import_to).await
       } else {
         Err(anyhow!("No action"))
       }

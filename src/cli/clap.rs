@@ -402,9 +402,25 @@ pub fn playlist_subcommand() -> App<'static, 'static> {
         .value_names(&["NAME", "PUBLIC", "DESCRIPTION"])
         .help("Creates a new playlist"),
     )
+    .arg(
+      Arg::with_name("delete")
+        .short("d")
+        .long("delete")
+        .takes_value(true)
+        .value_names(&["PLAYLIST_ID"])
+        .help("Unfollows a user playlist"),
+    )
+    .arg(
+      Arg::with_name("import")
+        .short("i")
+        .long("import")
+        .takes_value(true)
+        .value_names(&["IMPORT_FROM", "IMPORT_TO"])
+        .help("Imports all playlist items from 'IMPORT_FROM' to 'IMPORT_TO'"),
+    )
     .group(
       ArgGroup::with_name("playlist_commands")
-        .args(&["new"])
+        .args(&["new", "delete", "import"])
         .required(true)
         .multiple(false),
     )
