@@ -819,4 +819,78 @@ impl<'a> CliApp<'a> {
       None => Err(anyhow!("No $HOME directory found, could not import.")),
     }
   }
+
+  pub async fn playlist_fork(&mut self, playlist_id: String) -> Result<String> {
+    let mut user_id = None;
+    match self.net.spotify.current_user().await {
+      Ok(p) => {
+        user_id = Some(p.id);
+      }
+      Err(e) => {
+        self
+          .net
+          .app
+          .lock()
+          .await
+          .handle_error(anyhow!(e.to_string()));
+      }
+    }
+
+    match dirs::home_dir() {
+      Some(home) => {
+        let path = Path::new(&home);
+        let config_dir = path.join(CONFIG_DIR);
+        let app_dir = config_dir.join(APP_CONFIG_DIR);
+        let imports_dir = app_dir.join("imports");
+
+        self.net.handle_network_event(IoEvent::GetPlaylists).await;
+        self
+          .net
+          .handle_network_event(IoEvent::PlaylistFork(
+            user_id.unwrap(),
+            playlist_id.to_owned(),
+            imports_dir,
+          ))
+          .await;
+
+        Ok(format!("Playlist {} has been forked.", playlist_id))
+      }
+      None => Err(anyhow!("No $HOME directory found, could not import.")),
+    }
+  }
+
+  pub async fn playlists_update(&mut self) -> Result<String> {
+    let mut user_id = None;
+    match self.net.spotify.current_user().await {
+      Ok(p) => {
+        user_id = Some(p.id);
+      }
+      Err(e) => {
+        self
+          .net
+          .app
+          .lock()
+          .await
+          .handle_error(anyhow!(e.to_string()));
+      }
+    }
+
+    match dirs::home_dir() {
+      Some(home) => {
+        let path = Path::new(&home);
+        let config_dir = path.join(CONFIG_DIR);
+        let app_dir = config_dir.join(APP_CONFIG_DIR);
+        let imports_dir = app_dir.join("imports");
+
+        self.net.handle_network_event(IoEvent::GetPlaylists).await;
+        self
+          .net
+          .handle_network_event(IoEvent::PlaylistsUpdate(user_id.unwrap(), imports_dir))
+          .await;
+
+        Ok(format!("All playlists have been updated."))
+      }
+      None => Err(anyhow!("No $HOME directory found, could not import.")),
+    }
+  }
 }

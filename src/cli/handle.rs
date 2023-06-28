@@ -167,6 +167,14 @@ pub async fn handle_matches(
         let import_to = args.next().unwrap().to_string();
 
         cli.playlist_import(import_from, import_to).await
+      } else if matches.values_of("fork").is_some() {
+        let mut args = matches.values_of("fork").unwrap();
+
+        let playlist_id = args.next().unwrap().to_string();
+
+        cli.playlist_fork(playlist_id).await
+      } else if matches.values_of("update").is_some() {
+        cli.playlists_update().await
       } else {
         Err(anyhow!("No action"))
       }

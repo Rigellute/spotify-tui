@@ -418,9 +418,21 @@ pub fn playlist_subcommand() -> App<'static, 'static> {
         .value_names(&["IMPORT_FROM", "IMPORT_TO"])
         .help("Imports all playlist items from 'IMPORT_FROM' to 'IMPORT_TO'"),
     )
+    .arg(
+      Arg::with_name("fork")
+        .long("fork")
+        .takes_value(true)
+        .value_names(&["PLAYLIST_ID"])
+        .help("Copies attributes and tracks into a new user playlist"),
+    )
+    .arg(
+      Arg::with_name("update")
+        .long("update")
+        .help("Updates all playlists that have been imported or forked"),
+    )
     .group(
       ArgGroup::with_name("playlist_commands")
-        .args(&["new", "delete", "import"])
+        .args(&["new", "delete", "import", "fork", "update"])
         .required(true)
         .multiple(false),
     )

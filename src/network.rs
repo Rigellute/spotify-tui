@@ -96,6 +96,8 @@ pub enum IoEvent {
   AddItemToQueue(String),
   PlaylistNew(String, String, Option<bool>, String),
   PlaylistImport(String, String, String, PathBuf),
+  PlaylistFork(String, String, PathBuf),
+  PlaylistsUpdate(String, PathBuf),
 }
 
 pub fn get_spotify(token_info: TokenInfo) -> (Spotify, SystemTime) {
@@ -320,6 +322,12 @@ impl<'a> Network<'a> {
         self
           .playlist_import(user_id, import_from, import_to, import_file)
           .await;
+      }
+      IoEvent::PlaylistFork(user_id, playlist_id, import_dir) => {
+        self.playlist_fork(user_id, playlist_id, import_dir).await;
+      }
+      IoEvent::PlaylistsUpdate(user_id, import_dir) => {
+        self.playlists_update(user_id, import_dir).await;
       }
     };
 
@@ -1514,8 +1522,12 @@ impl<'a> Network<'a> {
     user_id: String,
     name: String,
     public: Option<bool>,
-    description: Option<String>,
+    mut description: Option<String>,
   ) {
+    if description.is_none() {
+      description = Some("".to_string());
+    }
+
     if let Err(e) = self
       .spotify
       .user_playlist_create(user_id.as_str(), name.as_str(), public, description)
@@ -1525,6 +1537,15 @@ impl<'a> Network<'a> {
     }
   }
 
+  // If there has been no previous import -
+  // Get import_to playlist and get its current tracks
+  // Get import_from playlist tracks
+  // Write tracks to import dir under import_to/import_from
+  // Add all tracks to import_to playlist
+  //
+  // If already imported -
+  // Check the difference in import vs old import
+  // Add new tracks, prompt for deletion of deleted tracks
   async fn playlist_import(
     &mut self,
     user_id: String,
@@ -1601,6 +1622,8 @@ impl<'a> Network<'a> {
       ids.hash(&mut hasher);
       let hash = hasher.finish();
 
+      println!("Importing {} into {}...", import_from, import_to);
+
       if !import_file.exists() {
         // Write hash to top of file
         {
@@ -1635,6 +1658,7 @@ impl<'a> Network<'a> {
 
         let mut file = OpenOptions::new().append(true).open(&import_file).unwrap();
 
+        println!("Copying {} tracks into {}...", ids.len(), import_to);
         for track in ids.iter() {
           let id = track.split(':').next().unwrap().to_string();
           if writeln!(file, "{}", track).is_err() {
@@ -1672,6 +1696,8 @@ impl<'a> Network<'a> {
 
         let mut iter = reader.lines();
         let old_hash = iter.next().unwrap().unwrap().trim().to_string();
+
+        println!("Comparing changes from last import...");
 
         if !old_hash.eq(&hash.to_string()) {
           // Need to rewrite the file now
@@ -1755,6 +1781,7 @@ impl<'a> Network<'a> {
           // ids to add will be in the new_ids hashset
           let new_tracks = new_ids.difference(&old_ids);
 
+          println!("Adding {} new tracks...", new_tracks.to_owned().count());
           for track in new_tracks {
             let id = track.split(':').next().unwrap().to_string();
             let in_import_from = import_to_tracks.iter().fold(false, |acc, head| {
@@ -1775,6 +1802,8 @@ impl<'a> Network<'a> {
               }
             }
           }
+        } else {
+          println!("No changes.");
         }
       }
     } else {
@@ -1785,6 +1814,180 @@ impl<'a> Network<'a> {
         ))
         .await;
       return;
+    }
+  }
+
+  async fn playlist_fork(&mut self, user_id: String, mut playlist_id: String, import_dir: PathBuf) {
+    // Get playlist info from id
+    // Copy all info for making
+    // make the new playlist
+    // import to the new playlist
+
+    let playlist_req = self
+      .spotify
+      .user_playlist(
+        user_id.as_str(),
+        Some(playlist_id.as_mut_str()),
+        None,
+        Some(Country::UnitedStates),
+      )
+      .await;
+
+    if playlist_req.is_err() {
+      self
+        .handle_error(anyhow!("playlist ({}) does not exist.", playlist_id))
+        .await;
+      return;
+    }
+    let playlist = playlist_req.ok().unwrap();
+
+    let forked_response = self
+      .spotify
+      .user_playlist_create(
+        user_id.as_str(),
+        &playlist.name,
+        playlist.public,
+        Some(playlist.description),
+      )
+      .await;
+
+    if let Err(e) = forked_response {
+      self.handle_error(anyhow!(e)).await;
+      return;
+    }
+
+    let forked = forked_response.unwrap();
+
+    println!(
+      "Forking '{}' into playlist id {}...",
+      playlist.name, forked.id
+    );
+
+    // Need to add copied playlist picture but it comes with the updated rspotify
+    let forked_dir = import_dir.join(forked.id.to_owned());
+
+    self
+      .playlist_import(
+        user_id,
+        playlist_id.to_owned(),
+        forked.id.to_owned(),
+        forked_dir.join(playlist_id),
+      )
+      .await;
+  }
+
+  async fn playlists_update(&mut self, user_id: String, import_dir: PathBuf) {
+    // go through each imported file and do the import
+
+    // Directories in import dir
+    let imported_dirs = fs::read_dir(import_dir.to_owned());
+    if let Err(e) = imported_dirs {
+      self.handle_error(anyhow!(e)).await;
+      return;
+    }
+
+    // Getting all ids of user followed playlists
+    let user_playlists = self
+      .spotify
+      .current_user_playlists(self.large_search_limit, None)
+      .await;
+    let mut ids = HashSet::new();
+    for pl in user_playlists.unwrap().items {
+      ids.insert(pl.id.to_owned());
+    }
+
+    println!("Updating playlists...\n");
+
+    // Deleting any imports that are not in user playlists list
+    let mut playlists_to_delete = Vec::new();
+
+    // for each dir in the imported_dirs
+    for playlist in imported_dirs.unwrap() {
+      let playlist_id = playlist
+        .as_ref()
+        .unwrap()
+        .file_name()
+        .into_string()
+        .unwrap();
+
+      let playlist_req = self
+        .spotify
+        .user_playlist(
+          user_id.as_str(),
+          Some(playlist_id.to_owned().as_mut_str()),
+          None,
+          Some(Country::UnitedStates),
+        )
+        .await;
+
+      // If playlist request fails or the playlist is not in user followed playlists
+      // add it to vec that will be used to delete playlists
+      if playlist_req.is_err() {
+        playlists_to_delete.push(playlist.unwrap());
+        continue;
+      }
+
+      let playlist_r = playlist_req.unwrap();
+
+      if !ids.contains(&playlist_r.id) {
+        playlists_to_delete.push(playlist.unwrap());
+        continue;
+      }
+      println!("Updating {}...", playlist_r.name);
+
+      // Files in import dirs
+      let imported_playlists = fs::read_dir(playlist.unwrap().path());
+      let mut imports_to_delete = Vec::new();
+
+      for imported in imported_playlists.unwrap() {
+        let imported_id = imported
+          .as_ref()
+          .unwrap()
+          .file_name()
+          .into_string()
+          .unwrap();
+        let imported_req = self
+          .spotify
+          .user_playlist(
+            user_id.as_str(),
+            Some(imported_id.to_owned().as_mut_str()),
+            None,
+            Some(Country::UnitedStates),
+          )
+          .await;
+
+        // If import fails, delete import
+        if imported_req.is_err() {
+          imports_to_delete.push(imported.unwrap());
+          continue;
+        }
+
+        println!("Importing {}", imported_req.unwrap().name);
+
+        // Use playlist dir and import file name to import again, updating the playlist
+        self
+          .playlist_import(
+            user_id.to_owned(),
+            imported_id.to_owned(),
+            playlist_id.to_owned(),
+            imported.unwrap().path(),
+          )
+          .await;
+
+        println!("");
+      }
+
+      for import in imports_to_delete.iter() {
+        if let Err(e) = fs::remove_file(import.path()) {
+          self.handle_error(anyhow!(e)).await;
+        }
+      }
+    }
+
+    for playlist in playlists_to_delete.iter() {
+      if let Err(e) = fs::remove_dir_all(playlist.path()) {
+        self.handle_error(anyhow!(e)).await;
+      }
     }
   }
 }
