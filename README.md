@@ -140,10 +140,9 @@ If you are using the Windows Subsystem for Linux, you'll need to [install additi
 
 First, make sure scoop installer is on your windows box, for instruction please visit [scoop.sh](https://scoop.sh)
 
-Then open powershell and run following two commands:
+Then open powershell and run following command:
 
 ```bash
-scoop bucket add scoop-bucket https://github.com/Rigellute/scoop-bucket
 scoop install spotify-tui
 ```
 
