@@ -855,7 +855,7 @@ impl<'a> CliApp<'a> {
 
         Ok(format!("Playlist {} has been forked.", playlist_id))
       }
-      None => Err(anyhow!("No $HOME directory found, could not import.")),
+      None => Err(anyhow!("No $HOME directory found, could not fork.")),
     }
   }
 
@@ -890,7 +890,9 @@ impl<'a> CliApp<'a> {
 
         Ok(format!("All playlists have been updated."))
       }
-      None => Err(anyhow!("No $HOME directory found, could not import.")),
+      None => Err(anyhow!(
+        "No $HOME directory found, could not update playlists."
+      )),
     }
   }
 }

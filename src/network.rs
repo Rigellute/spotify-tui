@@ -1517,6 +1517,7 @@ impl<'a> Network<'a> {
     }
   }
 
+  // Just creates new playlist
   async fn playlist_new(
     &mut self,
     user_id: String,
@@ -1549,7 +1550,7 @@ impl<'a> Network<'a> {
   async fn playlist_import(
     &mut self,
     user_id: String,
-    import_from: String,
+    mut import_from: String,
     mut import_to: String,
     import_file: PathBuf,
   ) {
@@ -1572,49 +1573,28 @@ impl<'a> Network<'a> {
         .await;
       return;
     }
-    let import_to_tracks = import_to_playlist.unwrap().tracks.items;
+
+    let mut import_to_tracks = HashSet::new();
+    for track in import_to_playlist.unwrap().tracks.items {
+      import_to_tracks.insert(track.track.unwrap().id.unwrap());
+    }
 
     let mut ids = Vec::new();
 
-    // Get number of tracks
-    if let Ok(num_tracks) = self
+    if let Ok(items) = self
       .spotify
-      .user_playlist_tracks(
-        &user_id,
-        import_from.as_str(),
+      .user_playlist(
+        user_id.as_str(),
+        Some(import_from.as_mut_str()),
         None,
-        50,
-        0,
         Some(Country::UnitedStates),
       )
       .await
     {
-      let mut dec = num_tracks.total as i32;
-      let mut offset = 0;
-
-      // Get new tracks and add to Vec until playlist empty
-      while dec > 0 {
-        if let Some(req) = self
-          .spotify
-          .user_playlist_tracks(
-            &user_id,
-            &import_from.as_str(),
-            None,
-            50,
-            offset,
-            Some(Country::UnitedStates),
-          )
-          .await
-          .ok()
-        {
-          for track in req.items.iter() {
-            let name = track.track.as_ref().unwrap().name.to_owned();
-            let id = track.track.as_ref().unwrap().id.to_owned().unwrap();
-            ids.push(format!("{}:{}", id, name));
-          }
-          dec = dec - 50;
-          offset = offset + 50;
-        }
+      for track in items.tracks.items {
+        let name = track.track.as_ref().unwrap().name.to_owned();
+        let id = track.track.as_ref().unwrap().id.to_owned().unwrap();
+        ids.push(format!("{}:{}", id, name));
       }
 
       // Calculate hash of all track ids
@@ -1625,8 +1605,8 @@ impl<'a> Network<'a> {
       println!("Importing {} into {}...", import_from, import_to);
 
       if !import_file.exists() {
-        // Write hash to top of file
         {
+          // Create import_to dir
           if fs::create_dir_all(import_file.parent().unwrap()).is_err() {
             self
               .handle_error(anyhow!(
@@ -1637,6 +1617,7 @@ impl<'a> Network<'a> {
             return;
           }
 
+          // Write hash to top of file
           let mut file = OpenOptions::new()
             .write(true)
             .create(true)
@@ -1656,8 +1637,8 @@ impl<'a> Network<'a> {
           }
         }
 
+        // Writing ids:name to import file
         let mut file = OpenOptions::new().append(true).open(&import_file).unwrap();
-
         println!("Copying {} tracks into {}...", ids.len(), import_to);
         for track in ids.iter() {
           let id = track.split(':').next().unwrap().to_string();
@@ -1671,15 +1652,8 @@ impl<'a> Network<'a> {
             return;
           }
 
-          let in_import_from = import_to_tracks.iter().fold(false, |acc, head| {
-            if !acc {
-              id.eq(&(head.track.as_ref().unwrap().id.as_ref().unwrap().to_owned()))
-            } else {
-              acc
-            }
-          });
-
-          if !in_import_from {
+          // if track not in import_to playlist, add it
+          if !import_to_tracks.contains(&id) {
             if let Err(e) = self
               .spotify
               .user_playlist_add_tracks(&user_id, &import_to, &[id], Some(0))
@@ -1690,6 +1664,7 @@ impl<'a> Network<'a> {
           }
         }
       } else {
+
         // Comapare hash, if no change, nothing
         let file = OpenOptions::new().read(true).open(&import_file).unwrap();
         let reader = BufReader::new(file);
@@ -1761,6 +1736,7 @@ impl<'a> Network<'a> {
               "The imported playlist has deleted {}, would you like to as well? [y/n]: ",
               track
             );
+
             std::io::stdin().read_line(&mut input).unwrap();
             if input.trim().eq(&String::from("y")) || input.trim().eq(&String::from("Y")) {
               if let Err(e) = self
@@ -1784,15 +1760,8 @@ impl<'a> Network<'a> {
           println!("Adding {} new tracks...", new_tracks.to_owned().count());
           for track in new_tracks {
             let id = track.split(':').next().unwrap().to_string();
-            let in_import_from = import_to_tracks.iter().fold(false, |acc, head| {
-              if !acc {
-                id.eq(&(head.track.as_ref().unwrap().id.as_ref().unwrap().to_owned()))
-              } else {
-                acc
-              }
-            });
 
-            if !in_import_from {
+            if !import_to_tracks.contains(&id) {
               if let Err(e) = self
                 .spotify
                 .user_playlist_add_tracks(&user_id, &import_to, &[id], Some(0))
