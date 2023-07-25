@@ -1,5 +1,6 @@
 # Spotify TUI
 
+
 ![Continuous Integration](https://github.com/Rigellute/spotify-tui/workflows/Continuous%20Integration/badge.svg?branch=master&event=push)
 ![](https://img.shields.io/badge/license-MIT-blueviolet.svg)
 ![](https://tokei.rs/b1/github/Rigellute/spotify-tui?category=code)
@@ -83,6 +84,16 @@ For those on Arch Linux you can find the package on AUR [here](https://aur.archl
 
 ```bash
 yay -S spotify-tui
+```
+
+if you want use the bin / git version, use this:
+
+```bash
+yay -S spotify-tui-bin 
+```
+
+```bash
+yay -S spotify-tui-git
 ```
 
 ### Nix
@@ -293,7 +304,7 @@ keybindings:
 
 This app uses the [Web API](https://developer.spotify.com/documentation/web-api/) from Spotify, which doesn't handle streaming itself. So you'll need either an official Spotify client open or a lighter weight alternative such as [spotifyd](https://github.com/Spotifyd/spotifyd).
 
-If you want to play tracks, Spotify requires that you have a Premium account.
+**If you want to play tracks, Spotify requires that you have a Premium account.**
 
 ## Using with [spotifyd](https://github.com/Spotifyd/spotifyd)
 
