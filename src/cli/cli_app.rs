@@ -304,7 +304,7 @@ impl<'a> CliApp<'a> {
 
     // Convert secs to ms
     let ms = seconds * 1000;
-    // Calculate new positon
+    // Calculate new position
     let position_to_seek = if seconds_str.starts_with('+') {
       current_pos + ms
     } else if seconds_str.starts_with('-') {
